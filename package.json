@@ -1,0 +1,23 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
+    "devDependencies": {
+        "@alpinejs/mask": "^3.15.2",
+        "@alpinejs/focus": "^3.15.2",
+        "@popperjs/core": "^2.11.8",
+        "alpinejs": "^3.15.2",
+        "axios": "^1.11.0",
+        "bootstrap": "^5.3.3",
+        "bootstrap-icons": "^1.11.3",
+        "concurrently": "^9.0.1",
+        "laravel-vite-plugin": "^2.0.0",
+        "sass": "^1.81.0",
+        "sortablejs": "^1.15.6",
+        "vite": "^7.0.7"
+    }
+}

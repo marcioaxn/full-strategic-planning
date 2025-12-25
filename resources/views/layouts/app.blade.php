@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="session-lifetime" content="{{ config('session.lifetime') }}">
+        <meta data-update-uri="{{ url('/livewire/update') }}">
+        <meta name="route-login" content="{{ route('login') }}">
+        <meta name="route-logout" content="{{ route('logout') }}">
+
+        <title>{{ config('app.name', 'Laravel') }}</title>
+
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('img/_0403eb0b-de95-4131-87cd-5c705ae95535.png') }}" />
+        <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('img/_0403eb0b-de95-4131-87cd-5c705ae95535.png') }}" />
+
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+
+        <!-- Styles / Scripts -->
+        @vite(['resources/scss/app.scss', 'resources/js/app.js'])
+        @livewireStyles
+
+        <!-- Global Theme Gradient Classes -->
+        <style>
+            /* ========== GLOBAL THEME GRADIENT CLASSES ========== */
+            /* These classes use CSS variables defined by the theme system */
+
+            /* Primary gradient for buttons, icons, and main elements */
+            .gradient-theme {
+                background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-light)) !important;
+            }
+
+            /* Gradient for active navigation items */
+            .gradient-theme-nav {
+                background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-light));
+                color: white;
+                box-shadow: 0 2px 8px rgba(var(--theme-primary-rgb), 0.3);
+            }
+
+            .gradient-theme-nav:hover {
+                box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.4);
+                color: white;
+            }
+
+            .gradient-theme-nav:hover i {
+                color: white !important;
+            }
+
+            /* Gradient for buttons */
+            .gradient-theme-btn {
+                background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-light));
+                border: none;
+                color: white;
+                box-shadow: 0 2px 8px rgba(var(--theme-primary-rgb), 0.25);
+                transition: all 0.2s ease;
+            }
+
+            .gradient-theme-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.35);
+                color: white;
+            }
+
+            /* Gradient for icons and badges */
+            .gradient-theme-icon {
+                background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-light));
+                color: white;
+            }
+
+            /* Gradient for large header sections */
+            .gradient-theme-header {
+                background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-light) 100%);
+                box-shadow: 0 8px 32px rgba(var(--theme-primary-rgb), 0.2);
+            }
+
+            /* Dark mode - same gradients work for both modes */
+            [data-bs-theme="dark"] .gradient-theme,
+            [data-bs-theme="dark"] .gradient-theme-nav,
+            [data-bs-theme="dark"] .gradient-theme-btn,
+            [data-bs-theme="dark"] .gradient-theme-icon,
+            [data-bs-theme="dark"] .gradient-theme-header {
+                /* Variables already adapt to dark mode, no changes needed */
+            }
+
+            [data-bs-theme="dark"] .gradient-theme-header {
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            }
+
+            /* ========== SESSION TIMER STYLES ========== */
+            .session-timer-wrapper {
+                padding: 0.375rem 0.75rem;
+                background: rgba(var(--bs-body-color-rgb), 0.05);
+                border-radius: 8px;
+                transition: all 0.3s ease;
+            }
+
+            [data-bs-theme="dark"] .session-timer-wrapper {
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .session-timer-display {
+                font-family: 'Courier New', Courier, monospace;
+                font-size: 0.875rem;
+                letter-spacing: 0.05em;
+                min-width: 65px;
+                text-align: center;
+                transition: all 0.3s ease;
+            }
+
+            .session-timer-display.text-warning {
+                color: var(--bs-warning) !important;
+                font-weight: 600 !important;
+            }
+
+            .session-timer-display.text-danger {
+                color: var(--bs-danger) !important;
+                font-weight: 700 !important;
+                animation: pulse-danger 1.5s ease-in-out infinite;
+            }
+
+            @keyframes pulse-danger {
+                0%, 100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.6;
+                }
+            }
+
+            .session-timer-wrapper:hover {
+                background: rgba(var(--bs-primary-rgb), 0.1);
+            }
+
+            [data-bs-theme="dark"] .session-timer-wrapper:hover {
+                background: rgba(var(--bs-primary-rgb), 0.15);
+            }
+        </style>
+    </head>
+    <body class="app-body bg-body-tertiary"
+          x-data="appLayout()"
+          x-init="init()"
+          x-on:app-toggle-sidebar.window="toggleSidebar()"
+          x-on:app-open-sidebar.window="openSidebar()"
+          x-on:app-close-sidebar.window="closeSidebar()">
+        <x-banner />
+
+        @php
+            $appNavigation = [
+                [
+                    'label' => __('Dashboard'),
+                    'route' => 'dashboard',
+                    'icon' => 'speedometer2'
+                ],
+                [
+                    'label' => __('Organizações'),
+                    'route' => 'organizacoes.index',
+                    'icon' => 'building'
+                ],
+                [
+                    'label' => __('Usuários'),
+                    'route' => 'usuarios.index',
+                    'icon' => 'people'
+                ],
+                [
+                    'label' => __('PEI'),
+                    'route' => 'pei.index',
+                    'icon' => 'clipboard-data'
+                ],
+                [
+                    'label' => __('Objetivos Estratégicos'),
+                    'route' => 'objetivos.index',
+                    'icon' => 'bullseye'
+                ],
+                [
+                    'label' => __('Planos de Ação'),
+                    'route' => 'planos.index',
+                    'icon' => 'list-task'
+                ],
+                [
+                    'label' => __('Indicadores'),
+                    'route' => 'indicadores.index',
+                    'icon' => 'graph-up'
+                ],
+                [
+                    'label' => __('Riscos'),
+                    'route' => 'riscos.index',
+                    'icon' => 'exclamation-triangle'
+                ],
+            ];
+        @endphp
+
+        <div class="app-shell d-flex min-vh-100">
+            @include('layouts.partials.sidebar', ['items' => $appNavigation])
+
+            <div class="app-main flex-grow-1 d-flex flex-column" :class="{'is-sidebar-collapsed': sidebarCollapsed}">
+                @livewire('navigation-menu')
+
+                @if (isset($header))
+                    <header class="app-page-header app-surface border-bottom shadow-sm">
+                        <div class="container-fluid py-3 px-3 px-lg-4">
+                            {{ $header }}
+                        </div>
+                    </header>
+                @endif
+
+                <main class="app-content flex-grow-1 py-4">
+                    <div class="container-fluid px-3 px-lg-4">
+                        {{ $slot }}
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        @stack('modals')
+
+        @livewireScripts
+
+        <script>
+            // Theme Color System
+            function applyTheme(theme) {
+                const root = document.documentElement;
+
+                // Define theme colors with harmonious gradients
+                // Define theme colors with harmonious gradients (Modern Palette)
+                // Define theme colors with harmonious gradients (Modern Palette)
+                const themeColors = {
+                    primary: {
+                        base: '#1B408E', // Deep Blue
+                        dark: '#143372',
+                        light: '#5375C2', // Lightened +8%
+                        lighter: '#7D99D6',
+                        rgb: '27, 64, 142'
+                    },
+                    secondary: {
+                        base: '#475569', // Slate 700
+                        dark: '#334155',
+                        light: '#A7B3C4', // Lightened +8%
+                        lighter: '#CBD5E1', // Slate 300
+                        rgb: '71, 85, 105'
+                    },
+                    success: {
+                        base: '#059669', // Emerald 600
+                        dark: '#047857',
+                        light: '#6EE7B7', // Emerald 300 (Lighter)
+                        lighter: '#A7F3D0',
+                        rgb: '5, 150, 105'
+                    },
+                    warning: {
+                        base: '#d97706', // Amber 600
+                        dark: '#b45309',
+                        light: '#FCD34D', // Amber 300 (Lighter)
+                        lighter: '#FDE68A',
+                        rgb: '217, 119, 6'
+                    },
+                    info: {
+                        base: '#0891b2', // Cyan 600
+                        dark: '#0e7490',
+                        light: '#67E8F9', // Cyan 300 (Lighter)
+                        lighter: '#A5F3FC',
+                        rgb: '8, 145, 178'
+                    }
+                };
+
+                const selectedTheme = themeColors[theme] || themeColors.primary;
+
+                // Apply CSS custom properties for base colors
+                root.style.setProperty('--bs-primary', selectedTheme.base);
+                root.style.setProperty('--bs-primary-rgb', selectedTheme.rgb);
+
+                // Apply gradient colors
+                root.style.setProperty('--theme-primary', selectedTheme.base);
+                root.style.setProperty('--theme-primary-dark', selectedTheme.dark);
+                root.style.setProperty('--theme-primary-light', selectedTheme.light);
+                root.style.setProperty('--theme-primary-lighter', selectedTheme.lighter);
+                root.style.setProperty('--theme-primary-rgb', selectedTheme.rgb);
+
+                // Set data attribute for theme-specific styling (text colors, etc.)
+                root.setAttribute('data-theme-color', theme);
+
+                // Store theme preference
+                localStorage.setItem('user-theme-color', theme);
+            }
+
+            function initializeTheme() {
+                const userTheme = '{{ Auth::user()->theme_color ?? "primary" }}';
+                applyTheme(userTheme);
+            }
+
+            // Apply theme on initial page load
+            document.addEventListener('DOMContentLoaded', initializeTheme);
+
+            // Apply theme on Livewire navigation (SPA navigation with wire:navigate)
+            document.addEventListener('livewire:navigated', initializeTheme);
+
+            // Apply theme when Livewire is loaded/reloaded
+            document.addEventListener('livewire:load', initializeTheme);
+
+            // Listen for theme updates from the profile page
+            window.addEventListener('theme-updated', function(event) {
+                applyTheme(event.detail.themeColor);
+
+                // Dispatch Livewire event to reload and apply theme globally
+                setTimeout(function() {
+                    window.location.reload();
+                }, 300);
+            });
+        </script>
+    </body>
+</html>
