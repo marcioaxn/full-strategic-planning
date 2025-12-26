@@ -44,12 +44,16 @@ class ListarOrganizacoes extends Component
         'page' => ['except' => 1],
     ];
 
+    protected $listeners = [
+        'organizacaoSelecionada' => '$refresh'
+    ];
+
     protected function rules(): array
     {
         return [
             'form.sgl_organizacao' => ['required', 'string', 'max:20'],
             'form.nom_organizacao' => ['required', 'string', 'max:255'],
-            'form.rel_cod_organizacao' => ['nullable', 'exists:tab_organizacoes,cod_organizacao'],
+            'form.rel_cod_organizacao' => ['nullable', 'exists:public.tab_organizacoes,cod_organizacao'],
         ];
     }
 
@@ -81,6 +85,18 @@ class ListarOrganizacoes extends Component
     {
         $query = Organization::query()->with('pai'); // Eager loading
         $search = trim($this->search);
+
+        // Filtro por Organização Selecionada Globalmente
+        $orgId = session('organizacao_selecionada_id');
+        if ($orgId) {
+            // Se houver uma selecionada, mostramos ela e suas filhas (hierarquia descendente)
+            $query->where(function($q) use ($orgId) {
+                $q->where('cod_organizacao', $orgId)
+                  ->orWhere('rel_cod_organizacao', $orgId);
+            });
+            // Nota: Para hierarquia profunda, precisaríamos de uma query recursiva ou carregar todos e filtrar.
+            // Por enquanto, mostramos a selecionada e suas filhas diretas.
+        }
 
         if ($search !== '') {
             $this->applySearchFilter($query, $search);

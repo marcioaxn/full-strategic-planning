@@ -35,6 +35,9 @@
                 <span id="sessionTimer" class="session-timer-display text-body-secondary small fw-mono">--:--:--</span>
             </div>
 
+            <!-- Seletor de Organização Global -->
+            @livewire('shared.seletor-organizacao')
+
             <button type="button"
                     id="appThemeSwitcher"
                     class="btn btn-outline-secondary btn-iconno-border no-border"

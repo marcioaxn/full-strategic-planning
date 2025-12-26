@@ -87,19 +87,6 @@
         </style>
     </head>
     <body>
-        <!-- Theme Switcher -->
-        <div class="theme-switcher-guest">
-            <button type="button"
-                    id="guestThemeSwitcher"
-                    class="btn btn-theme-toggle-guest"
-                    aria-label="Toggle theme"
-                    data-bs-toggle="tooltip"
-                    data-bs-placement="left"
-                    title="System">
-                <i class="bi bi-circle-half"></i>
-            </button>
-        </div>
-
         <div class="min-vh-100 d-flex align-items-center justify-content-center guest-container">
             {{ $slot }}
         </div>
@@ -241,6 +228,63 @@
 
                 // Set data attribute for theme-specific styling (text colors, etc.)
                 root.setAttribute('data-theme-color', 'primary');
+            })();
+        </script>
+
+        <!-- CSRF Token Auto-Refresh -->
+        <script>
+            (function() {
+                'use strict';
+
+                // Refresh CSRF token every 10 minutes (600000ms)
+                const REFRESH_INTERVAL = 600000; // 10 minutes
+
+                function refreshCsrfToken() {
+                    fetch('/refresh-csrf', {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'same-origin'
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to refresh CSRF token');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.csrf_token) {
+                            // Update all CSRF token meta tags
+                            const metaTag = document.querySelector('meta[name="csrf-token"]');
+                            if (metaTag) {
+                                metaTag.setAttribute('content', data.csrf_token);
+                            }
+
+                            // Update all CSRF input fields
+                            const csrfInputs = document.querySelectorAll('input[name="_token"]');
+                            csrfInputs.forEach(input => {
+                                input.value = data.csrf_token;
+                            });
+
+                            console.log('CSRF token refreshed successfully');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('CSRF token refresh error:', error);
+                    });
+                }
+
+                // Start auto-refresh
+                setInterval(refreshCsrfToken, REFRESH_INTERVAL);
+
+                // Also refresh on page visibility change (user returns to tab)
+                document.addEventListener('visibilitychange', function() {
+                    if (!document.hidden) {
+                        refreshCsrfToken();
+                    }
+                });
             })();
         </script>
     </body>

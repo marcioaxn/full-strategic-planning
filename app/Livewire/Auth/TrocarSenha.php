@@ -4,6 +4,7 @@ namespace App\Livewire\Auth;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 
 class TrocarSenha extends Component
@@ -12,10 +13,13 @@ class TrocarSenha extends Component
     public $novaSenha;
     public $novaSenha_confirmation;
 
-    protected $rules = [
-        'senhaAtual' => 'required|current_password',
-        'novaSenha' => 'required|min:8|confirmed|different:senhaAtual',
-    ];
+    protected function rules()
+    {
+        return [
+            'senhaAtual' => ['required', 'current_password'],
+            'novaSenha' => ['required', 'string', 'min:8', 'confirmed', 'different:senhaAtual'],
+        ];
+    }
 
     protected $messages = [
         'senhaAtual.required' => 'A senha atual é obrigatória.',
@@ -31,15 +35,30 @@ class TrocarSenha extends Component
         $this->validate();
 
         $user = Auth::user();
-
-        $user->forceFill([
-            'password' => Hash::make($this->novaSenha),
-            'trocarsenha' => 2, // Marca como trocada (integer 2)
-        ])->save();
-
-        session()->flash('status', 'Senha alterada com sucesso!');
         
-        return redirect()->route('dashboard');
+        // Atualização direta e persistência forçada
+        $user->password = Hash::make($this->novaSenha);
+        $user->trocarsenha = 2; // Já trocou
+        $user->save();
+
+        // Limpeza de sessão e logout
+        Auth::guard('web')->logout();
+        Session::invalidate();
+        Session::regenerateToken();
+
+        // Flash message que aparecerá na tela de login
+        session()->flash('status', 'Senha alterada com sucesso! Faça login com a nova senha.');
+        
+        return redirect()->route('login');
+    }
+
+    public function logout()
+    {
+        Auth::guard('web')->logout();
+        Session::invalidate();
+        Session::regenerateToken();
+        
+        return redirect()->route('login');
     }
 
     public function render()
