@@ -3,9 +3,14 @@
 use App\Livewire\LeadsTable;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('welcome');
+Route::get('/', \App\Livewire\PEI\MapaEstrategico::class)->name('welcome');
+
+// CSRF Token Refresh Endpoint
+Route::get('/refresh-csrf', function () {
+    return response()->json([
+        'csrf_token' => csrf_token()
+    ]);
+})->name('csrf.refresh');
 
 Route::middleware([
     'auth:sanctum',
@@ -22,12 +27,65 @@ Route::middleware([
     Route::get('/organizacoes', \App\Livewire\Organizacao\ListarOrganizacoes::class)->name('organizacoes.index');
     Route::get('/usuarios', \App\Livewire\Usuario\ListarUsuarios::class)->name('usuarios.index');
     
-    // Placeholder Routes for Phase 1 (Remaining)
-    Route::get('/pei', function() { return view('dashboard'); })->name('pei.index');
-    Route::get('/objetivos', function() { return view('dashboard'); })->name('objetivos.index');
-    Route::get('/planos', function() { return view('dashboard'); })->name('planos.index');
-    Route::get('/indicadores', function() { return view('dashboard'); })->name('indicadores.index');
-    Route::get('/riscos', function() { return view('dashboard'); })->name('riscos.index');
+    // Strategic Planning (PEI)
+    Route::get('/pei', \App\Livewire\PEI\MissaoVisao::class)->name('pei.index');
+    Route::get('/pei/valores', \App\Livewire\PEI\ListarValores::class)->name('pei.valores');
+    Route::get('/pei/perspectivas', \App\Livewire\PEI\ListarPerspectivas::class)->name('pei.perspectivas');
+    Route::get('/pei/mapa', \App\Livewire\PEI\MapaEstrategico::class)->name('pei.mapa');
+    Route::get('/objetivos', \App\Livewire\PEI\ListarObjetivos::class)->name('objetivos.index');
+    Route::get('/objetivos/{objetivoId}/futuro', \App\Livewire\PEI\GerenciarFuturoAlmejado::class)->name('objetivos.futuro');
+    
+        // Action Plans
+        Route::get('/planos', \App\Livewire\PlanoAcao\ListarPlanos::class)->name('planos.index');
+        Route::get('/planos/{planoId}/detalhes', \App\Livewire\PlanoAcao\DetalharPlano::class)->name('planos.detalhes');
+        Route::get('/planos/{planoId}/entregas', \App\Livewire\PlanoAcao\GerenciarEntregas::class)->name('planos.entregas');
+        Route::get('/planos/{planoId}/responsaveis', \App\Livewire\PlanoAcao\AtribuirResponsaveis::class)->name('planos.responsaveis');
+    
+                    // Indicators (KPIs)
+    
+                    Route::get('/indicadores', \App\Livewire\Indicador\ListarIndicadores::class)->name('indicadores.index');
+    
+                    Route::get('/indicadores/{indicadorId}/detalhes', \App\Livewire\Indicador\DetalharIndicador::class)->name('indicadores.detalhes');
+    
+                    Route::get('/indicadores/{indicadorId}/evolucao', \App\Livewire\Indicador\LancarEvolucao::class)->name('indicadores.evolucao');
+    
+                
+    
+                            // Risk Management
+                            Route::get('/riscos', \App\Livewire\Risco\ListarRiscos::class)->name('riscos.index');
+                            Route::get('/riscos/matriz', \App\Livewire\Risco\MatrizRiscos::class)->name('riscos.matriz');
+                            Route::get('/riscos/{riscoId}/mitigacao', \App\Livewire\Risco\GerenciarMitigacoes::class)->name('riscos.mitigacao');
+                            Route::get('/riscos/{riscoId}/ocorrencias', \App\Livewire\Risco\RegistrarOcorrencias::class)->name('riscos.ocorrencias');
+                        
+                            // Audit
+                            Route::get('/auditoria', \App\Livewire\Audit\ListarLogs::class)->name('audit.index');
+                            
+                            // Reports    
+                
+    
+                        Route::get('/relatorios/identidade/{organizacaoId}', [\App\Http\Controllers\RelatorioController::class, 'identidade'])->name('relatorios.identidade');
+    
+                
+    
+                            Route::get('/relatorios/objetivos/pdf', [\App\Http\Controllers\RelatorioController::class, 'objetivosPdf'])->name('relatorios.objetivos.pdf');
+    
+                
+    
+                            Route::get('/relatorios/objetivos/excel', [\App\Http\Controllers\RelatorioController::class, 'objetivosExcel'])->name('relatorios.objetivos.excel');
+    
+                
+    
+                                Route::get('/relatorios/indicadores/pdf/{organizacaoId?}', [\App\Http\Controllers\RelatorioController::class, 'indicadoresPdf'])->name('relatorios.indicadores.pdf');
+    
+                
+    
+                                Route::get('/relatorios/indicadores/excel/{organizacaoId?}', [\App\Http\Controllers\RelatorioController::class, 'indicadoresExcel'])->name('relatorios.indicadores.excel');
+    
+                
+    
+                                Route::get('/relatorios/executivo/{organizacaoId?}', [\App\Http\Controllers\RelatorioController::class, 'executivo'])->name('relatorios.executivo');
+    
+
 
     // Session ping endpoint for session renewal
     Route::post('/session/ping', function () {
