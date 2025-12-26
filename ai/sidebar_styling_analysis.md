@@ -1,5 +1,89 @@
 
 - **Date**: 2025-12-25
+- **Action**: Concluded Phase 7 - Audit & Refinements.
+- **Change**:
+    - Created `app/Livewire/Audit/ListarLogs.php` + view (System-wide Audit Trail).
+    - Implemented Visual Diff for audit records in modals.
+    - Updated `layouts/app.blade.php` to include permission-based sidebar filtering.
+    - Performed Query Review: Added Eager Loading to `ListarPerspectivas`.
+- **Reason**: Completion of Phase 7 as per roadmap.
+
+- **Date**: 2025-12-25
+- **Action**: Concluded Phase 6 - Risk Management.
+- **Change**:
+    - Created `app/Policies/RiscoPolicy.php`.
+    - Created `app/Livewire/Risco/ListarRiscos.php` + view (CRUD with automatic Matrix level calculation).
+    - Created `app/Livewire/Risco/GerenciarMitigacoes.php` + view (Mitigation plans management).
+    - Created `app/Livewire/Risco/RegistrarOcorrencias.php` + view (Risk materialization log with impact analysis).
+    - Created `app/Livewire/Risco/MatrizRiscos.php` + view (Visual 5x5 Heatmap).
+    - Integrated multi-objective association for risks.
+- **Reason**: Completion of Phase 6 as per roadmap.
+
+- **Date**: 2025-12-25
+- **Action**: Concluded Phase 5 - Dashboards & Reports.
+- **Change**:
+    - Installed `barryvdh/laravel-dompdf` and `maatwebsite/excel`.
+    - Updated `app/Livewire/Dashboard/Index.php` with real strategic metrics and Chart.js distribution.
+    - Created `app/Http/Controllers/RelatorioController.php` for binary responses.
+    - Created PDF views for Identity, Objectives, Indicators and Executive Consolidated report.
+    - Created Excel export classes for Objectives and Indicators.
+    - Added export buttons to all main strategic views.
+- **Reason**: Completion of Phase 5 as per roadmap.
+
+- **Date**: 2025-12-25
+- **Action**: Concluded Phase 4 - Indicators (KPIs).
+- **Change**:
+    - Created `app/Policies/IndicadorPolicy.php`.
+    - Created `app/Livewire/Indicador/ListarIndicadores.php` + view (CRUD with Goals and Base Line management via modals).
+    - Created `app/Livewire/Indicador/LancarEvolucao.php` + view (Results entry with file upload support).
+    - Created `app/Livewire/Indicador/DetalharIndicador.php` + view (Rich details view with Chart.js temporal evolution).
+    - Registered all routes in `web.php`.
+    - Implemented Performance Light (Farol) calculation logic.
+- **Reason**: Completion of Phase 4 as per roadmap.
+
+- **Date**: 2025-12-25
+- **Action**: Concluded Phase 3 - Action Plans.
+- **Change**:
+    - Created `app/Livewire/PlanoAcao/ListarPlanos.php` + view (Action Plans listing/CRUD).
+    - Created `app/Livewire/PlanoAcao/GerenciarEntregas.php` + view (Deliverables management with progress calculation).
+    - Created `app/Livewire/PlanoAcao/AtribuirResponsaveis.php` + view (Assigning managers via pivot table).
+    - Created `app/Livewire/PlanoAcao/DetalharPlano.php` + view (Rich details view with Audit Timeline).
+    - Registered all routes in `web.php`.
+    - Integrated Audit functionality in details view.
+- **Reason**: Completion of Phase 3 as per roadmap.
+
+- **Date**: 2025-12-25
+- **Action**: Started Phase 3 - Action Plans.
+- **Change**:
+    - Created `app/Policies/PlanoDeAcaoPolicy.php`.
+    - Created `app/Livewire/PlanoAcao/ListarPlanos.php` + view (CRUD Action Plans).
+    - Registered route `/planos` in `web.php`.
+- **Reason**: Implementation of Phase 3 tasks 3.1 and 3.2.
+
+- **Date**: 2025-12-25
+- **Action**: Concluded Phase 2 - Identity & BSC.
+- **Change**:
+    - Created `app/Livewire/PEI/MissaoVisao.php` + view (Strategic Identity).
+    - Created `app/Livewire/PEI/ListarValores.php` + view (Organizational Values CRUD).
+    - Created `app/Livewire/PEI/ListarPerspectivas.php` + view (BSC Perspectives).
+    - Created `app/Livewire/PEI/ListarObjetivos.php` + view (Strategic Objectives grouped by Perspective).
+    - Created `app/Livewire/PEI/GerenciarFuturoAlmejado.php` + view (Desired Future management).
+    - Created `app/Livewire/PEI/MapaEstrategico.php` + view (BSC Strategic Map visualization).
+    - Registered all routes in `web.php`.
+    - Updated sidebar navigation in `app.blade.php`.
+- **Reason**: Completion of Phase 2 as per roadmap.
+
+- **Date**: 2025-12-25
+- **Action**: Concluded Phase 1 - Global Organization Selector & Technical Fixes.
+- **Change**:
+    - Addressed review points: Updated `Organization.php`, `PerfilAcesso.php`, `User.php` and `ListarUsuarios.php` to use explicit `PUBLIC.` schema.
+    - Fixed validation in `ListarOrganizacoes.php` to use correct table name and schema.
+    - Created `app/Livewire/Shared/SeletorOrganizacao.php` and its view.
+    - Integrated `SeletorOrganizacao` into `navigation-menu.blade.php`.
+    - Implemented global filtering in `ListarOrganizacoes` and `ListarUsuarios` based on session context.
+- **Reason**: Completion of Phase 1 as per roadmap and addressing technical feedback from Claude review.
+
+- **Date**: 2025-12-25
 - **Action**: Started Phase 1 Implementation - Core CRUDs.
 - **Change**:
     - Created `app/Policies/OrganizationPolicy.php` and `app/Policies/UserPolicy.php`.

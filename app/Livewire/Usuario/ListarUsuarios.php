@@ -56,6 +56,10 @@ class ListarUsuarios extends Component
         'page' => ['except' => 1],
     ];
 
+    protected $listeners = [
+        'organizacaoSelecionada' => '$refresh'
+    ];
+
     protected function rules(): array
     {
         $rules = [
@@ -106,6 +110,14 @@ class ListarUsuarios extends Component
     {
         $query = User::query()->with(['organizacoes', 'perfisAcesso']);
         $search = trim($this->search);
+
+        // Filtro por Organização Selecionada Globalmente
+        $orgId = session('organizacao_selecionada_id');
+        if ($orgId) {
+            $query->whereHas('organizacoes', function ($q) use ($orgId) {
+                $q->where('public.tab_organizacoes.cod_organizacao', $orgId);
+            });
+        }
 
         if ($search !== '') {
             $query->where(function($q) use ($search) {
@@ -246,12 +258,12 @@ class ListarUsuarios extends Component
             // Mas precisamos garantir que removemos os registros corretos da tabela 'rel_users_tab_organizacoes_tab_perfil_acesso'
             
             // Vamos fazer via DB para garantir
-            DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')
+            DB::table('public.rel_users_tab_organizacoes_tab_perfil_acesso')
                 ->where('user_id', $user->id)
                 ->delete();
 
             foreach ($this->form['vinculos'] as $vinculo) {
-                DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')->insert([
+                DB::table('public.rel_users_tab_organizacoes_tab_perfil_acesso')->insert([
                     'id' => Str::uuid(),
                     'user_id' => $user->id,
                     'cod_organizacao' => $vinculo['org_id'],

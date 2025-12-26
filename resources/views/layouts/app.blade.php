@@ -164,9 +164,14 @@
                     'icon' => 'people'
                 ],
                 [
-                    'label' => __('PEI'),
+                    'label' => __('Identidade Estratégica'),
                     'route' => 'pei.index',
                     'icon' => 'clipboard-data'
+                ],
+                [
+                    'label' => __('Mapa Estratégico'),
+                    'route' => 'pei.mapa',
+                    'icon' => 'map'
                 ],
                 [
                     'label' => __('Objetivos Estratégicos'),
@@ -188,7 +193,21 @@
                     'route' => 'riscos.index',
                     'icon' => 'exclamation-triangle'
                 ],
+                [
+                    'label' => __('Auditoria'),
+                    'route' => 'audit.index',
+                    'icon' => 'shield-lock',
+                    'can' => 'isSuperAdmin' // Vou adicionar suporte a 'can' no partial da sidebar se necessário, ou filtrar aqui.
+                ],
             ];
+
+            // Filtro de navegação por permissão
+            $appNavigation = array_filter($appNavigation, function($item) {
+                if (isset($item['can'])) {
+                    return auth()->user()->isSuperAdmin();
+                }
+                return true;
+            });
         @endphp
 
         <div class="app-shell d-flex min-vh-100">
@@ -306,6 +325,75 @@
                     window.location.reload();
                 }, 300);
             });
+        </script>
+
+        <!-- CSRF Token Auto-Refresh -->
+        <script>
+            (function() {
+                'use strict';
+
+                // Refresh CSRF token every 10 minutes (600000ms)
+                const REFRESH_INTERVAL = 600000; // 10 minutes
+
+                function refreshCsrfToken() {
+                    fetch('/refresh-csrf', {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'same-origin'
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to refresh CSRF token');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.csrf_token) {
+                            // Update all CSRF token meta tags
+                            const metaTag = document.querySelector('meta[name="csrf-token"]');
+                            if (metaTag) {
+                                metaTag.setAttribute('content', data.csrf_token);
+                            }
+
+                            // Update all CSRF input fields
+                            const csrfInputs = document.querySelectorAll('input[name="_token"]');
+                            csrfInputs.forEach(input => {
+                                input.value = data.csrf_token;
+                            });
+
+                            // Update Livewire CSRF token if available
+                            if (window.Livewire && window.Livewire.components) {
+                                window.Livewire.components.componentsById.forEach(component => {
+                                    if (component.data && component.data._token) {
+                                        component.data._token = data.csrf_token;
+                                    }
+                                });
+                            }
+
+                            console.log('CSRF token refreshed successfully');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('CSRF token refresh error:', error);
+                    });
+                }
+
+                // Start auto-refresh
+                setInterval(refreshCsrfToken, REFRESH_INTERVAL);
+
+                // Also refresh on page visibility change (user returns to tab)
+                document.addEventListener('visibilitychange', function() {
+                    if (!document.hidden) {
+                        refreshCsrfToken();
+                    }
+                });
+
+                // Refresh when Livewire navigates (SPA navigation)
+                document.addEventListener('livewire:navigated', refreshCsrfToken);
+            })();
         </script>
     </body>
 </html>
