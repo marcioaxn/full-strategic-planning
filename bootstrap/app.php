@@ -41,23 +41,16 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->with('error', 'You need to be authenticated to access this page.');
         });
 
-        // Handle CSRF Token Mismatch
+        // Handle CSRF Token Mismatch (419 Page Expired)
         $exceptions->render(function (TokenMismatchException $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'CSRF token mismatch.'], 419);
             }
 
-            // Only redirect to welcome if user is not authenticated
-            if (!auth()->check()) {
-                return redirect()
-                    ->route('welcome')
-                    ->with('error', 'Your session has expired. Please try again.');
-            }
-
-            // For authenticated users, redirect to login to refresh token
+            // Redirect to login for both authenticated and non-authenticated users
             return redirect()
                 ->route('login')
-                ->with('status', 'Your session token has expired. Please sign in again.');
+                ->with('status', 'Your session has expired. Please sign in again.');
         });
 
         // Handle 403 Forbidden

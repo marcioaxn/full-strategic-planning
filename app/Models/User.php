@@ -92,7 +92,7 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(
             Organization::class,
-            'rel_users_tab_organizacoes',
+            'public.rel_users_tab_organizacoes',
             'user_id',
             'cod_organizacao',
             'id',
@@ -107,7 +107,7 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(
             PerfilAcesso::class,
-            'rel_users_tab_organizacoes_tab_perfil_acesso',
+            'public.rel_users_tab_organizacoes_tab_perfil_acesso',
             'user_id',
             'cod_perfil',
             'id',
