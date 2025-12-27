@@ -22,7 +22,8 @@ class ListarIndicadores extends Component
     use AuthorizesRequests;
 
     public $search = '';
-    public $filtroVinculo = ''; 
+    public $filtroVinculo = '';
+    public $filtroObjetivo = '';
     public $organizacaoId;
 
     // Modais
@@ -67,6 +68,7 @@ class ListarIndicadores extends Component
     protected $queryString = [
         'search' => ['except' => ''],
         'filtroVinculo' => ['except' => ''],
+        'filtroObjetivo' => ['except' => ''],
         'page' => ['except' => 1],
     ];
 
@@ -90,7 +92,9 @@ class ListarIndicadores extends Component
     {
         $peiAtivo = PEI::ativos()->first();
         if ($peiAtivo) {
-            $this->objetivos = ObjetivoEstrategico::where('cod_pei', $peiAtivo->cod_pei)->orderBy('nom_objetivo_estrategico')->get();
+            $this->objetivos = ObjetivoEstrategico::whereHas('perspectiva', function($query) use ($peiAtivo) {
+                $query->where('cod_pei', $peiAtivo->cod_pei);
+            })->orderBy('nom_objetivo_estrategico')->get();
         }
 
         if ($this->organizacaoId) {
@@ -252,12 +256,13 @@ class ListarIndicadores extends Component
     {
         $query = Indicador::query()->with(['objetivoEstrategico', 'planoDeAcao', 'evolucoes', 'metasPorAno']);
         if ($this->organizacaoId) {
-            $query->whereHas('organizacoes', function($q) { $q->where('public.tab_organizacoes.cod_organizacao', $this->organizacaoId); })
+            $query->whereHas('organizacoes', function($q) { $q->where('tab_organizacoes.cod_organizacao', $this->organizacaoId); })
                   ->orWhereHas('planoDeAcao', function($q) { $q->where('cod_organizacao', $this->organizacaoId); });
         }
         if ($this->search) { $query->where('nom_indicador', 'ilike', '%' . $this->search . '%'); }
-        if ($this->filtroVinculo === 'Objetivo') { $query->deObjetivo(); } 
+        if ($this->filtroVinculo === 'Objetivo') { $query->deObjetivo(); }
         elseif ($this->filtroVinculo === 'Plano') { $query->dePlano(); }
+        if ($this->filtroObjetivo) { $query->where('cod_objetivo_estrategico', $this->filtroObjetivo); }
 
         return view('livewire.indicador.listar-indicadores', [
             'indicadores' => $query->paginate(10)
