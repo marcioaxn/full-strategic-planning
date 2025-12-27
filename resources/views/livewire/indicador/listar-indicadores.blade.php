@@ -38,7 +38,7 @@
         </div>
     @endif
 
-    @if(!$organizacaoId)
+    @if(!$organizacaoId && !$filtroObjetivo)
         <div class="alert alert-warning shadow-sm border-0 d-flex align-items-center p-4" role="alert">
             <i class="bi bi-building-exclamation fs-2 me-4"></i>
             <div>
@@ -47,6 +47,23 @@
             </div>
         </div>
     @else
+        @if($filtroObjetivo)
+            @php
+                $objetivoFiltrado = \App\Models\PEI\ObjetivoEstrategico::find($filtroObjetivo);
+            @endphp
+            <div class="alert alert-info shadow-sm border-0 d-flex align-items-center justify-content-between p-3 mb-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-funnel-fill fs-4 me-3"></i>
+                    <div>
+                        <strong>Filtro ativo:</strong> Indicadores do objetivo
+                        <span class="badge bg-primary ms-2">{{ $objetivoFiltrado?->nom_objetivo_estrategico ?? 'Objetivo' }}</span>
+                    </div>
+                </div>
+                <a href="{{ route('indicadores.index') }}" class="btn btn-outline-info btn-sm" wire:navigate>
+                    <i class="bi bi-x-circle me-1"></i> Limpar filtro
+                </a>
+            </div>
+        @endif
         <!-- Filtros -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-3 bg-light rounded-3">
