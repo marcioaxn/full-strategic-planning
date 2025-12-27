@@ -226,10 +226,11 @@ class ListarPlanos extends Component
             ->with(['objetivoEstrategico', 'tipoExecucao', 'organizacao'])
             ->orderBy('dte_inicio', 'desc');
 
-        // Filtro por Organização
-        if ($this->organizacaoId) {
-            // Se tem organização selecionada, mostra planos dela
-            // Aqui poderíamos incluir filhas também, mas planos geralmente são específicos da unidade
+        // Se há filtro por objetivo específico, prioriza esse filtro
+        if ($this->filtroObjetivo) {
+            $query->where('cod_objetivo_estrategico', $this->filtroObjetivo);
+        } elseif ($this->organizacaoId) {
+            // Filtro padrão por organização (quando não há filtro por objetivo)
             $query->where('cod_organizacao', $this->organizacaoId);
         }
 
@@ -238,7 +239,7 @@ class ListarPlanos extends Component
             $query->where('dsc_plano_de_acao', 'ilike', '%' . $this->search . '%');
         }
 
-        // Filtros
+        // Filtros adicionais
         if ($this->filtroStatus) {
             $query->where('bln_status', $this->filtroStatus);
         }
@@ -250,10 +251,6 @@ class ListarPlanos extends Component
         if ($this->filtroAno) {
             $query->whereYear('dte_inicio', '<=', $this->filtroAno)
                   ->whereYear('dte_fim', '>=', $this->filtroAno);
-        }
-
-        if ($this->filtroObjetivo) {
-            $query->where('cod_objetivo_estrategico', $this->filtroObjetivo);
         }
 
         return view('livewire.plano-acao.listar-planos', [
