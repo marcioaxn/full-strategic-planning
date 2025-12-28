@@ -1,28 +1,42 @@
 # ROADMAP DE IMPLEMENTAÇÃO
 ## Sistema de Planejamento Estratégico
 
-**Versão:** 1.1
+**Versão:** 1.2
 **Data de Criação:** 23/12/2025
-**Última Atualização:** 24/12/2025 20:30
-**Desenvolvedor:** Solo (com assistência de Claude AI)
+**Última Atualização:** 26/12/2025 - Correções e Melhorias
+**Desenvolvedor:** Solo (com assistência de Claude AI - Opus 4.5)
 **Prazo Total Estimado:** 14-16 semanas
+
+---
+
+## 📌 DOCUMENTO COMPLEMENTAR
+
+> **IMPORTANTE:** Consulte também o documento **[08-ROADMAP-CORRECOES-MELHORIAS.md](./08-ROADMAP-CORRECOES-MELHORIAS.md)** que detalha 13 correções e melhorias implementadas em 26/12/2025, incluindo:
+> - Correção de prefixos de schema nas queries
+> - CRUDs para SWOT, PESTEL, Perspectivas e Ciclos PEI
+> - Menu centralizado de Relatórios
+> - Dashboard com novos gráficos
+> - Sidebar reorganizada por categorias
+> - Navbar público com suporte a dark mode
 
 ---
 
 ## 📊 STATUS ATUAL DO PROJETO
 
-**Última atualização:** 24/12/2025 às 20:30
+**Última atualização:** 26/12/2025 às 23:00
 
 ### ✅ CONCLUÍDO
 
-#### Migrations (100% - 43/43 executadas)
+#### Migrations (100% - 45/45 executadas)
 - ✅ Todas migrations do starter kit (users, sessions, tokens, etc.)
 - ✅ Todas migrations do banco legado (30 tabelas schema PUBLIC e PEI)
 - ✅ 4 migrations de Gestão de Riscos (novas)
 - ✅ Migration do Laravel Auditing (audits table)
 - ✅ Seed de dados iniciais (Unidade Central, 4 Perfis, 3 Tipos Execução, 100 Níveis)
+- ✅ **[NOVO]** Migration para tornar cod_plano_de_acao nullable
+- ✅ **[NOVO]** Migration para tabela tab_analise_ambiental (SWOT/PESTEL)
 
-#### Models Eloquent (100% - 26/26 criados)
+#### Models Eloquent (100% - 27/27 criados)
 - ✅ **PUBLIC Schema (6 models)**
   - User.php (atualizado com campos legados e relacionamentos)
   - Organization.php (hierarquia organizacional)
@@ -31,13 +45,14 @@
   - TabAudit.php (auditoria customizada)
   - TabStatus.php (lookup de status)
 
-- ✅ **PEI Schema (17 models)**
+- ✅ **PEI Schema (18 models)**
   - PEI.php, MissaoVisaoValores.php, Valor.php
   - Perspectiva.php, ObjetivoEstrategico.php, FuturoAlmejadoObjetivoEstrategico.php
   - TipoExecucao.php, PlanoDeAcao.php, Entrega.php
   - Indicador.php, EvolucaoIndicador.php, LinhaBaseIndicador.php, MetaPorAno.php
   - GrauSatisfacao.php, Arquivo.php
   - AtividadeCadeiaValor.php, ProcessoAtividadeCadeiaValor.php
+  - **[NOVO]** AnaliseAmbiental.php (SWOT e PESTEL)
 
 - ✅ **Gestão de Riscos (4 models)**
   - Risco.php (matriz 5x5, auto-cálculo de nível)
@@ -53,6 +68,20 @@
 - ✅ Livewire 3.6.4
 - ✅ Laravel Auditing (owen-it/laravel-auditing) - instalado e configurado
 - ✅ Composer autoloader atualizado (7702 classes)
+
+#### Componentes Livewire - CRUDs (26/12/2025)
+- ✅ **[NOVO]** ListarPeis.php - CRUD de Ciclos PEI
+- ✅ **[NOVO]** AnaliseSWOT.php - Análise SWOT (matriz 2x2)
+- ✅ **[NOVO]** AnalisePESTEL.php - Análise PESTEL (grid 3x2)
+- ✅ **[ATUALIZADO]** ListarPerspectivas.php - CRUD completo
+- ✅ **[NOVO]** ListarRelatorios.php - Menu centralizado de relatórios
+
+#### Melhorias de UI/UX (26/12/2025)
+- ✅ **[NOVO]** Dashboard com 3 gráficos (BSC, Planos, Riscos)
+- ✅ **[NOVO]** Sidebar organizada por categorias (Planejamento, Gestão, Administração)
+- ✅ **[NOVO]** Navbar público com suporte completo a dark mode
+- ✅ **[CORRIGIDO]** View de Identidade Estratégica (estava vazia)
+- ✅ **[CORRIGIDO]** Erro de sintaxe em Auditorias (escape de backslash)
 
 ### ⚠️ PENDENTE / EM ANDAMENTO
 
@@ -73,21 +102,36 @@
 - ✅ Componentes Livewire de Usuários (CRUD completo com vínculos) - CONCLUÍDO
 - ✅ Policies (OrganizationPolicy, UserPolicy) - CONCLUÍDO
 - ✅ Seletor de Organização - CONCLUÍDO
+- ✅ **[NOVO]** Geração automática de senha + envio por e-mail - CONCLUÍDO
 
-#### Demais Fases (2-7)
-- ❌ Todas as fases seguintes estão pendentes (0%)
+#### FASE 2 - Planejamento Estratégico (80% concluída ✅)
+- ✅ Identidade Estratégica (Missão, Visão, Valores) - CONCLUÍDO
+- ✅ Análise SWOT (Forças, Fraquezas, Oportunidades, Ameaças) - CONCLUÍDO
+- ✅ Análise PESTEL (Político, Econômico, Social, Tecnológico, Ambiental, Legal) - CONCLUÍDO
+- ✅ Perspectivas do BSC (CRUD completo) - CONCLUÍDO
+- ✅ Ciclos PEI (CRUD completo) - CONCLUÍDO
+- ⏳ Objetivos Estratégicos - Existente, revisar
+- ⏳ Mapa Estratégico - Existente, revisar
+
+#### Demais Fases (3-7)
+- ⏳ Fases parcialmente implementadas, requerem revisão
 
 ### 🎯 PRÓXIMOS PASSOS SUGERIDOS
 
-1. **Iniciar FASE 2** (4-5 dias):
-   - Criar componentes de Identidade Estratégica (Missão, Visão e Valores).
-   - Implementar gestão de Perspectivas do BSC.
-   - Desenvolver listagem e gestão de Objetivos Estratégicos.
-   - Criar visualização básica do Mapa Estratégico.
+1. **Revisar FASE 2**:
+   - Verificar componente de Objetivos Estratégicos
+   - Verificar Mapa Estratégico (versão autenticada)
+   - Testar fluxo completo de planejamento
 
-2. **Refinamentos**:
-   - Adicionar breadcrumbs dinâmicos.
-   - Melhorar confirmações de exclusão.
+2. **Iniciar FASE 3** - Planos de Ação:
+   - Revisar CRUD de Planos de Ação existente
+   - Implementar gestão de Entregas
+   - Vincular a Objetivos Estratégicos
+
+3. **Refinamentos Pendentes**:
+   - Revisar largura de modais e grids
+   - Adicionar breadcrumbs dinâmicos
+   - Melhorar confirmações de exclusão
 
 ---
 

@@ -344,18 +344,42 @@
                         <div class="col-12 col-lg-6">
                             <label for="password" class="form-label-modern">
                                 {{ __('Senha') }}
-                                @if(!$editing) <span class="text-danger">*</span> @else <span class="text-muted fw-normal small">(Deixe em branco para manter)</span> @endif
+                                @if($editing)
+                                    <span class="text-muted fw-normal small">(Deixe em branco para manter)</span>
+                                @elseif(!$gerarSenhaAutomatica)
+                                    <span class="text-danger">*</span>
+                                @endif
                             </label>
                             <input
                                 id="password"
                                 type="password"
                                 class="form-control form-control-modern @error('form.password') is-invalid @enderror"
-                                placeholder="********"
+                                placeholder="{{ $gerarSenhaAutomatica && !$editing ? 'Será gerada automaticamente' : '********' }}"
                                 wire:model="form.password"
+                                @if($gerarSenhaAutomatica && !$editing) disabled @endif
                             >
                             @error('form.password')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
+
+                            @if(!$editing)
+                                <div class="mt-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="gerarSenhaAutomatica" wire:model.live="gerarSenhaAutomatica">
+                                        <label class="form-check-label small" for="gerarSenhaAutomatica">
+                                            <i class="bi bi-magic me-1"></i>{{ __('Gerar senha automática') }}
+                                        </label>
+                                    </div>
+                                    @if($gerarSenhaAutomatica)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="enviarEmailBoasVindas" wire:model="enviarEmailBoasVindas">
+                                            <label class="form-check-label small" for="enviarEmailBoasVindas">
+                                                <i class="bi bi-envelope me-1"></i>{{ __('Enviar e-mail de boas-vindas com credenciais') }}
+                                            </label>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
 
                         <div class="col-12 col-lg-3">

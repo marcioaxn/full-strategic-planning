@@ -15,7 +15,7 @@ class Arquivo extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_arquivos';
+    protected $table = 'tab_arquivos';
 
     /**
      * Chave primária

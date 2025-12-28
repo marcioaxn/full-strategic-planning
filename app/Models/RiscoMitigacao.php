@@ -11,7 +11,7 @@ class RiscoMitigacao extends Model implements Auditable
 {
     use HasFactory, HasUuids, \OwenIt\Auditing\Auditable;
 
-    protected $table = 'pei.tab_risco_mitigacao';
+    protected $table = 'tab_risco_mitigacao';
     protected $primaryKey = 'cod_mitigacao';
     protected $keyType = 'string';
     public $incrementing = false;

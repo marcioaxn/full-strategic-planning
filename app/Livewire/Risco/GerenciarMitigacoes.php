@@ -45,7 +45,7 @@ class GerenciarMitigacoes extends Component
             ->get();
 
         $this->usuarios = User::whereHas('organizacoes', function($q) {
-            $q->where('public.tab_organizacoes.cod_organizacao', $this->risco->cod_organizacao);
+            $q->where('tab_organizacoes.cod_organizacao', $this->risco->cod_organizacao);
         })->orderBy('name')->get();
     }
 

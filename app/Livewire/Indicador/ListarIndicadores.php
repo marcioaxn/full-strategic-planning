@@ -22,7 +22,8 @@ class ListarIndicadores extends Component
     use AuthorizesRequests;
 
     public $search = '';
-    public $filtroVinculo = ''; 
+    public $filtroVinculo = '';
+    public $filtroObjetivo = '';
     public $organizacaoId;
 
     // Modais
@@ -67,6 +68,7 @@ class ListarIndicadores extends Component
     protected $queryString = [
         'search' => ['except' => ''],
         'filtroVinculo' => ['except' => ''],
+        'filtroObjetivo' => ['except' => ''],
         'page' => ['except' => 1],
     ];
 
@@ -90,7 +92,9 @@ class ListarIndicadores extends Component
     {
         $peiAtivo = PEI::ativos()->first();
         if ($peiAtivo) {
-            $this->objetivos = ObjetivoEstrategico::where('cod_pei', $peiAtivo->cod_pei)->orderBy('nom_objetivo_estrategico')->get();
+            $this->objetivos = ObjetivoEstrategico::whereHas('perspectiva', function($query) use ($peiAtivo) {
+                $query->where('cod_pei', $peiAtivo->cod_pei);
+            })->orderBy('nom_objetivo_estrategico')->get();
         }
 
         if ($this->organizacaoId) {
@@ -251,13 +255,37 @@ class ListarIndicadores extends Component
     public function render()
     {
         $query = Indicador::query()->with(['objetivoEstrategico', 'planoDeAcao', 'evolucoes', 'metasPorAno']);
-        if ($this->organizacaoId) {
-            $query->whereHas('organizacoes', function($q) { $q->where('public.tab_organizacoes.cod_organizacao', $this->organizacaoId); })
-                  ->orWhereHas('planoDeAcao', function($q) { $q->where('cod_organizacao', $this->organizacaoId); });
+
+        // Se há filtro por objetivo específico, prioriza esse filtro
+        if ($this->filtroObjetivo) {
+            // Busca indicadores diretamente vinculados ao objetivo
+            // OU vinculados a planos de ação desse objetivo
+            $query->where(function($q) {
+                $q->where('cod_objetivo_estrategico', $this->filtroObjetivo)
+                  ->orWhereHas('planoDeAcao', function($sub) {
+                      $sub->where('cod_objetivo_estrategico', $this->filtroObjetivo);
+                  });
+            });
+        } elseif ($this->organizacaoId) {
+            // Filtro padrão por organização (quando não há filtro por objetivo)
+            $query->where(function($q) {
+                $q->whereHas('organizacoes', function($sub) {
+                    $sub->where('tab_organizacoes.cod_organizacao', $this->organizacaoId);
+                })->orWhereHas('planoDeAcao', function($sub) {
+                    $sub->where('cod_organizacao', $this->organizacaoId);
+                });
+            });
         }
-        if ($this->search) { $query->where('nom_indicador', 'ilike', '%' . $this->search . '%'); }
-        if ($this->filtroVinculo === 'Objetivo') { $query->deObjetivo(); } 
-        elseif ($this->filtroVinculo === 'Plano') { $query->dePlano(); }
+
+        if ($this->search) {
+            $query->where('nom_indicador', 'ilike', '%' . $this->search . '%');
+        }
+
+        if ($this->filtroVinculo === 'Objetivo') {
+            $query->deObjetivo();
+        } elseif ($this->filtroVinculo === 'Plano') {
+            $query->dePlano();
+        }
 
         return view('livewire.indicador.listar-indicadores', [
             'indicadores' => $query->paginate(10)

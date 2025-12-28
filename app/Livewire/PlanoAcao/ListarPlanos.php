@@ -24,7 +24,8 @@ class ListarPlanos extends Component
     public $filtroStatus = '';
     public $filtroTipo = '';
     public $filtroAno = '';
-    
+    public $filtroObjetivo = '';
+
     // Filtro global de organização
     public $organizacaoId;
 
@@ -52,6 +53,7 @@ class ListarPlanos extends Component
         'search' => ['except' => ''],
         'filtroStatus' => ['except' => ''],
         'filtroTipo' => ['except' => ''],
+        'filtroObjetivo' => ['except' => ''],
         'page' => ['except' => 1],
     ];
 
@@ -78,10 +80,12 @@ class ListarPlanos extends Component
         // Carrega objetivos do PEI ativo
         $peiAtivo = PEI::ativos()->first();
         if ($peiAtivo) {
-            $this->objetivos = ObjetivoEstrategico::where('cod_pei', $peiAtivo->cod_pei) // Ajustado para usar cod_pei direto do model
-                ->with('perspectiva')
-                ->get()
-                ->sortBy(['perspectiva.num_nivel_hierarquico_apresentacao', 'num_nivel_hierarquico_apresentacao']);
+            $this->objetivos = ObjetivoEstrategico::whereHas('perspectiva', function($query) use ($peiAtivo) {
+                $query->where('cod_pei', $peiAtivo->cod_pei);
+            })
+            ->with('perspectiva')
+            ->get()
+            ->sortBy(['perspectiva.num_nivel_hierarquico_apresentacao', 'num_nivel_hierarquico_apresentacao']);
         } else {
             $this->objetivos = [];
         }
@@ -130,8 +134,8 @@ class ListarPlanos extends Component
     {
         $rules = [
             'dsc_plano_de_acao' => 'required|string|max:500',
-            'cod_tipo_execucao' => 'required|exists:pei.tab_tipo_execucao,cod_tipo_execucao',
-            'cod_objetivo_estrategico' => 'required|exists:pei.tab_objetivo_estrategico,cod_objetivo_estrategico',
+            'cod_tipo_execucao' => 'required|exists:tab_tipo_execucao,cod_tipo_execucao',
+            'cod_objetivo_estrategico' => 'required|exists:tab_objetivo_estrategico,cod_objetivo_estrategico',
             'dte_inicio' => 'required|date',
             'dte_fim' => 'required|date|after_or_equal:dte_inicio',
             'vlr_orcamento_previsto' => 'nullable|numeric|min:0',
@@ -222,10 +226,11 @@ class ListarPlanos extends Component
             ->with(['objetivoEstrategico', 'tipoExecucao', 'organizacao'])
             ->orderBy('dte_inicio', 'desc');
 
-        // Filtro por Organização
-        if ($this->organizacaoId) {
-            // Se tem organização selecionada, mostra planos dela
-            // Aqui poderíamos incluir filhas também, mas planos geralmente são específicos da unidade
+        // Se há filtro por objetivo específico, prioriza esse filtro
+        if ($this->filtroObjetivo) {
+            $query->where('cod_objetivo_estrategico', $this->filtroObjetivo);
+        } elseif ($this->organizacaoId) {
+            // Filtro padrão por organização (quando não há filtro por objetivo)
             $query->where('cod_organizacao', $this->organizacaoId);
         }
 
@@ -234,7 +239,7 @@ class ListarPlanos extends Component
             $query->where('dsc_plano_de_acao', 'ilike', '%' . $this->search . '%');
         }
 
-        // Filtros
+        // Filtros adicionais
         if ($this->filtroStatus) {
             $query->where('bln_status', $this->filtroStatus);
         }
@@ -242,7 +247,7 @@ class ListarPlanos extends Component
         if ($this->filtroTipo) {
             $query->where('cod_tipo_execucao', $this->filtroTipo);
         }
-        
+
         if ($this->filtroAno) {
             $query->whereYear('dte_inicio', '<=', $this->filtroAno)
                   ->whereYear('dte_fim', '>=', $this->filtroAno);

@@ -26,15 +26,174 @@
         </div>
     @endif
 
-    @if(!$organizacaoId)
+    @if(!$organizacaoId && !$filtroObjetivo)
         <div class="alert alert-warning shadow-sm border-0 d-flex align-items-center p-4" role="alert">
             <i class="bi bi-building-exclamation fs-2 me-4"></i>
             <div>
-                <h5 class="alert-heading fw-bold mb-1">Selecione uma Organização</h5>
-                <p class="mb-0">Selecione uma organização no menu superior para gerenciar os planos de ação.</p>
+                <h5 class="alert-heading fw-bold mb-1">Selecione uma Organizacao</h5>
+                <p class="mb-0">Selecione uma organizacao no menu superior para gerenciar os planos de acao.</p>
             </div>
         </div>
     @else
+        @if($filtroObjetivo)
+            @php
+                $objetivoFiltrado = \App\Models\PEI\ObjetivoEstrategico::with(['perspectiva.pei', 'indicadores.evolucoes', 'indicadores.metasPorAno', 'planosAcao.entregas'])->find($filtroObjetivo);
+            @endphp
+
+            {{-- Contexto Completo do Objetivo --}}
+            @include('livewire.partials.objetivo-contexto', ['objetivo' => $objetivoFiltrado])
+
+            {{-- Cards de Resumo e Grafico dos Planos --}}
+            @if($objetivoFiltrado && $objetivoFiltrado->planosAcao->count() > 0)
+                @php
+                    $planosDoObjetivo = $objetivoFiltrado->planosAcao;
+                    $totalPlanos = $planosDoObjetivo->count();
+                    $planosConcluidos = $planosDoObjetivo->where('bln_status', 'Concluido')->count();
+                    $planosEmAndamento = $planosDoObjetivo->where('bln_status', 'Em Andamento')->count();
+                    $planosNaoIniciados = $planosDoObjetivo->where('bln_status', 'Nao Iniciado')->count();
+                    $planosAtrasados = $planosDoObjetivo->filter(fn($p) => $p->dte_fim < now() && $p->bln_status !== 'Concluido')->count();
+
+                    $orcamentoTotal = $planosDoObjetivo->sum('vlr_orcamento_previsto');
+                    $totalEntregas = 0;
+                    $entregasConcluidas = 0;
+                    foreach ($planosDoObjetivo as $p) {
+                        $totalEntregas += $p->entregas->count();
+                        $entregasConcluidas += $p->entregas->where('bln_status', 'Concluida')->count();
+                    }
+                    $percentualEntregas = $totalEntregas > 0 ? round(($entregasConcluidas / $totalEntregas) * 100, 1) : 0;
+                @endphp
+
+                <div class="row g-3 mb-4">
+                    <!-- Cards de Status -->
+                    <div class="col-md-8">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white py-3">
+                                <h6 class="mb-0 fw-bold">
+                                    <i class="bi bi-pie-chart text-info me-2"></i>Status dos Planos
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-5">
+                                        <canvas id="chartStatusPlanos" height="150"></canvas>
+                                    </div>
+                                    <div class="col-md-7">
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <div class="d-flex align-items-center p-2 bg-success bg-opacity-10 rounded">
+                                                    <div class="rounded-circle bg-success me-2" style="width:12px;height:12px;"></div>
+                                                    <div>
+                                                        <div class="fw-bold">{{ $planosConcluidos }}</div>
+                                                        <small class="text-muted">Concluidos</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="d-flex align-items-center p-2 bg-primary bg-opacity-10 rounded">
+                                                    <div class="rounded-circle bg-primary me-2" style="width:12px;height:12px;"></div>
+                                                    <div>
+                                                        <div class="fw-bold">{{ $planosEmAndamento }}</div>
+                                                        <small class="text-muted">Em Andamento</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="d-flex align-items-center p-2 bg-secondary bg-opacity-10 rounded">
+                                                    <div class="rounded-circle bg-secondary me-2" style="width:12px;height:12px;"></div>
+                                                    <div>
+                                                        <div class="fw-bold">{{ $planosNaoIniciados }}</div>
+                                                        <small class="text-muted">Nao Iniciados</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="d-flex align-items-center p-2 bg-danger bg-opacity-10 rounded">
+                                                    <div class="rounded-circle bg-danger me-2" style="width:12px;height:12px;"></div>
+                                                    <div>
+                                                        <div class="fw-bold">{{ $planosAtrasados }}</div>
+                                                        <small class="text-muted">Atrasados</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card de Resumo Financeiro e Entregas -->
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white py-3">
+                                <h6 class="mb-0 fw-bold">
+                                    <i class="bi bi-cash-stack text-warning me-2"></i>Resumo
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <small class="text-muted text-uppercase">Orcamento Total Previsto</small>
+                                    <h4 class="fw-bold text-success mb-0">
+                                        R$ {{ number_format($orcamentoTotal, 2, ',', '.') }}
+                                    </h4>
+                                </div>
+                                <hr>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small class="text-muted">Entregas Concluidas</small>
+                                        <small class="fw-bold">{{ $entregasConcluidas }}/{{ $totalEntregas }}</small>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-info" style="width: {{ $percentualEntregas }}%;"></div>
+                                    </div>
+                                    <small class="text-muted">{{ $percentualEntregas }}% concluido</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    (function() {
+                        function initChartStatusPlanos() {
+                            const ctx = document.getElementById('chartStatusPlanos');
+                            if (ctx && typeof Chart !== 'undefined') {
+                                // Destruir grafico existente se houver
+                                if (ctx.chartInstance) {
+                                    ctx.chartInstance.destroy();
+                                }
+                                ctx.chartInstance = new Chart(ctx, {
+                                    type: 'doughnut',
+                                    data: {
+                                        labels: ['Concluidos', 'Em Andamento', 'Nao Iniciados', 'Atrasados'],
+                                        datasets: [{
+                                            data: [{{ $planosConcluidos }}, {{ $planosEmAndamento }}, {{ $planosNaoIniciados }}, {{ $planosAtrasados }}],
+                                            backgroundColor: ['#198754', '#0d6efd', '#6c757d', '#dc3545'],
+                                            borderWidth: 0
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: { display: false }
+                                        },
+                                        cutout: '65%'
+                                    }
+                                });
+                            }
+                        }
+                        // Inicializar na carga inicial e na navegacao Livewire
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', initChartStatusPlanos);
+                        } else {
+                            initChartStatusPlanos();
+                        }
+                        document.addEventListener('livewire:navigated', initChartStatusPlanos);
+                    })();
+                </script>
+            @endif
+        @endif
         <!-- Filtros -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-3 bg-light rounded-3">
