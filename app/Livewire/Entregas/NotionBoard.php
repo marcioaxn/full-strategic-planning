@@ -738,9 +738,12 @@ class NotionBoard extends Component
 
     /**
      * Método chamado pelo wire:poll para atualizar a view
+     * O Livewire executa este método e automaticamente re-renderiza o componente,
+     * buscando os dados atualizados do banco no método render().
      */
     public function poll(): void
     {
+        // Apenas para manter o polling ativo e forçar o re-render
         $this->calcularProgresso();
     }
 }

@@ -182,9 +182,9 @@
         </button>
     </div>
 
-    <div class="offcanvas-body-modern">
+    <div class="offcanvas-body-modern flex-grow-1 overflow-auto">
         <!-- User Info -->
-        <div class="offcanvas-user-card">
+        <div class="offcanvas-user-card mb-4">
             <div class="d-flex align-items-center gap-3">
                 <div class="user-avatar-wrapper-mobile">
                     <img src="{{ Auth::user()->profile_photo_url }}"
@@ -193,14 +193,10 @@
                     <div class="user-status-indicator"></div>
                 </div>
                 <div class="flex-grow-1 overflow-hidden">
-                    <p class="user-name-mobile"
-                       data-bs-toggle="tooltip"
-                       title="{{ Auth::user()->name }}">
+                    <p class="user-name-mobile mb-0 fw-bold text-truncate" title="{{ Auth::user()->name }}">
                         {{ Auth::user()->name }}
                     </p>
-                    <p class="user-email-mobile"
-                       data-bs-toggle="tooltip"
-                       title="{{ Auth::user()->email }}">
+                    <p class="user-email-mobile mb-0 small text-muted text-truncate" title="{{ Auth::user()->email }}">
                         {{ Auth::user()->email }}
                     </p>
                 </div>
@@ -208,7 +204,7 @@
         </div>
 
         <!-- Navigation Mobile -->
-        <nav class="nav nav-pills flex-column gap-2" id="mobileAccordion">
+        <nav class="nav nav-pills flex-column gap-1 mb-4" id="mobileAccordion">
             @foreach ($items as $item)
                 @if(isset($item['single']) && $item['single'])
                     @php
@@ -216,10 +212,10 @@
                     @endphp
                     <a href="{{ route($item['route']) }}"
                        wire:navigate
-                       class="nav-link-modern-mobile d-flex align-items-center gap-2 {{ $isActive ? 'active gradient-theme-nav' : '' }}"
+                       class="nav-link-modern-mobile d-flex align-items-center gap-2 py-2 px-3 {{ $isActive ? 'active gradient-theme-nav' : '' }}"
                        data-bs-dismiss="offcanvas">
                         <i class="bi bi-{{ $item['icon'] }} fs-5 flex-shrink-0"></i>
-                        <span>{{ $item['label'] }}</span>
+                        <span class="fw-medium">{{ $item['label'] }}</span>
                     </a>
                 @elseif(isset($item['children']))
                     @php
@@ -233,15 +229,15 @@
                         }
                     @endphp
                     
-                    <div class="nav-group-mobile mt-2">
-                        <button class="nav-link-modern-mobile w-100 d-flex align-items-center justify-content-between gap-2 border-0 bg-transparent {{ $hasActiveChild ? 'text-primary' : '' }}"
+                    <div class="nav-group-mobile mb-1">
+                        <button class="nav-link-modern-mobile w-100 d-flex align-items-center justify-content-between gap-2 py-2 px-3 border-0 bg-transparent {{ $hasActiveChild ? 'text-primary fw-bold' : '' }}"
                                 type="button"
                                 data-bs-toggle="collapse"
                                 data-bs-target="#{{ $groupId }}"
                                 aria-expanded="{{ $hasActiveChild ? 'true' : 'false' }}">
                             <div class="d-flex align-items-center gap-2">
                                 <i class="bi bi-{{ $item['icon'] }} fs-5 flex-shrink-0"></i>
-                                <span class="fw-semibold">{{ $item['label'] }}</span>
+                                <span class="fw-bold">{{ $item['label'] }}</span>
                             </div>
                             <i class="bi bi-chevron-down transition-transform fs-7 {{ $hasActiveChild ? 'rotate-180' : '' }}"></i>
                         </button>
@@ -249,17 +245,17 @@
                         <div id="{{ $groupId }}" 
                              class="collapse {{ $hasActiveChild ? 'show' : '' }}"
                              data-bs-parent="#mobileAccordion">
-                            <div class="nav flex-column gap-2 ps-3 py-2 border-start ms-3 mt-1">
+                            <div class="nav flex-column gap-1 ps-4 mt-1 border-start ms-3">
                                 @foreach($item['children'] as $child)
                                     @php
                                         $isChildActive = request()->routeIs($child['route']);
                                     @endphp
                                     <a href="{{ route($child['route']) }}"
                                        wire:navigate
-                                       class="nav-link-modern-mobile d-flex align-items-center gap-2 {{ $isChildActive ? 'active gradient-theme-nav' : '' }}"
+                                       class="nav-link-modern-mobile d-flex align-items-center gap-2 py-2 px-3 {{ $isChildActive ? 'active gradient-theme-nav' : '' }}"
                                        data-bs-dismiss="offcanvas">
                                         <i class="bi bi-{{ $child['icon'] }} fs-6 flex-shrink-0"></i>
-                                        <span>{{ $child['label'] }}</span>
+                                        <span class="small">{{ $child['label'] }}</span>
                                     </a>
                                 @endforeach
                             </div>
@@ -268,19 +264,21 @@
                 @endif
             @endforeach
         </nav>
+    </div>
 
-        <!-- Action Buttons -->
-        <div class="offcanvas-actions">
+    <!-- Footer Fixo do Offcanvas -->
+    <div class="offcanvas-footer-modern p-4 border-top">
+        <div class="d-grid gap-2">
             <a href="{{ route('profile.show') }}"
                wire:navigate
-               class="btn btn-profile-modern gradient-theme-btn"
+               class="btn btn-profile-modern gradient-theme-btn py-2"
                data-bs-dismiss="offcanvas">
                 <i class="bi bi-person-circle me-2"></i>{{ __('Manage profile') }}
             </a>
 
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="btn btn-logout-modern w-100">
+                <button type="submit" class="btn btn-logout-modern w-100 py-2">
                     <i class="bi bi-box-arrow-right me-2"></i>{{ __('Log Out') }}
                 </button>
             </form>
@@ -605,10 +603,13 @@
 }
 
 .offcanvas-body-modern {
-    padding: 1.5rem;
+    padding: 1.25rem;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+}
+
+.offcanvas-footer-modern {
+    background: var(--bs-body-bg);
 }
 
 /* User Card Mobile */

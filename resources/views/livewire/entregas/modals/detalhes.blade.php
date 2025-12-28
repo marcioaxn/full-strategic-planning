@@ -43,22 +43,25 @@
     <div class="notion-side-panel-section bg-white">
         <div class="notion-property-grid">
             {{-- Status --}}
-            <div class="notion-property-row">
+            <div class="notion-property-row" wire:key="status-row-{{ $entrega->cod_entrega }}-{{ $entrega->updated_at->timestamp }}">
                 <div class="notion-property-label">
                     <i class="bi bi-record-circle me-2"></i>Status
                 </div>
                 <div class="notion-property-value">
                     @can('update', $plano)
-                        <div class="dropdown w-100">
-                            <button class="notion-property-btn dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown">
+                        <div class="dropdown w-100" wire:key="status-dropdown-{{ $entrega->cod_entrega }}" wire:ignore.self>
+                            <button class="notion-property-btn dropdown-toggle w-100 text-start" 
+                                    type="button" 
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
                                 <span class="notion-badge-status status-{{ Str::slug($entrega->bln_status) }}">
                                     <i class="bi bi-circle-fill me-1" style="font-size: 6px;"></i>
                                     {{ $entrega->bln_status }}
                                 </span>
                             </button>
-                            <ul class="dropdown-menu border-0 shadow-lg p-1">
+                            <ul class="dropdown-menu border-0 shadow-lg p-1" wire:ignore>
                                 @foreach(\App\Models\PEI\Entrega::STATUS_OPTIONS as $status)
-                                    <li>
+                                    <li wire:key="opt-status-{{ $status }}">
                                         <button class="dropdown-item rounded-2 small" wire:click="atualizarStatus('{{ $entrega->cod_entrega }}', '{{ $status }}')">
                                             {{ $status }}
                                         </button>
@@ -75,23 +78,26 @@
             </div>
 
             {{-- Prioridade --}}
-            <div class="notion-property-row">
+            <div class="notion-property-row" wire:key="prio-row-{{ $entrega->cod_entrega }}-{{ $entrega->updated_at->timestamp }}">
                 <div class="notion-property-label">
                     <i class="bi bi-flag me-2"></i>Prioridade
                 </div>
                 <div class="notion-property-value">
                     @can('update', $plano)
                         @php $prio = $entrega->getPrioridadeInfo(); @endphp
-                        <div class="dropdown w-100">
-                            <button class="notion-property-btn dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown">
+                        <div class="dropdown w-100" wire:key="prio-dropdown-{{ $entrega->cod_entrega }}" wire:ignore.self>
+                            <button class="notion-property-btn dropdown-toggle w-100 text-start" 
+                                    type="button" 
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
                                 <span class="notion-badge-priority notion-priority-{{ $entrega->cod_prioridade }}">
                                     <i class="bi bi-{{ $prio['icon'] }} me-1"></i>
                                     {{ $prio['label'] }}
                                 </span>
                             </button>
-                            <ul class="dropdown-menu border-0 shadow-lg p-1">
+                            <ul class="dropdown-menu border-0 shadow-lg p-1" wire:ignore>
                                 @foreach(\App\Models\PEI\Entrega::PRIORIDADE_OPTIONS as $key => $info)
-                                    <li>
+                                    <li wire:key="opt-prio-{{ $key }}">
                                         <button class="dropdown-item rounded-2 small" wire:click="atualizarPrioridade('{{ $entrega->cod_entrega }}', '{{ $key }}')">
                                             <i class="bi bi-{{ $info['icon'] }} me-2"></i>{{ $info['label'] }}
                                         </button>
