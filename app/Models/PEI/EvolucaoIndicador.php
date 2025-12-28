@@ -16,7 +16,7 @@ class EvolucaoIndicador extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_evolucao_indicador';
+    protected $table = 'tab_evolucao_indicador';
 
     /**
      * Chave primária

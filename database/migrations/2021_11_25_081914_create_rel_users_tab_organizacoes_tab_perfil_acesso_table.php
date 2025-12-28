@@ -16,7 +16,7 @@ return new class extends Migration
             $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->foreignUuid('user_id')->references('id')->on('users')->cascadeOnDelete();
             $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('tab_organizacoes')->cascadeOnDelete();
-            $table->foreignUuid('cod_plano_de_acao')->references('cod_plano_de_acao')->on('pei.tab_plano_de_acao')->cascadeOnDelete();
+            $table->foreignUuid('cod_plano_de_acao')->nullable()->references('cod_plano_de_acao')->on('tab_plano_de_acao')->cascadeOnDelete();
             $table->foreignUuid('cod_perfil')->references('cod_perfil')->on('tab_perfil_acesso')->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();

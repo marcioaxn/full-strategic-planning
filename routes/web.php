@@ -26,19 +26,26 @@ Route::middleware([
     // Strategic Planning Module
     Route::get('/organizacoes', \App\Livewire\Organizacao\ListarOrganizacoes::class)->name('organizacoes.index');
     Route::get('/usuarios', \App\Livewire\Usuario\ListarUsuarios::class)->name('usuarios.index');
+    Route::get('/graus-satisfacao', \App\Livewire\PEI\ListarGrausSatisfacao::class)->name('graus-satisfacao.index');
     
     // Strategic Planning (PEI)
     Route::get('/pei', \App\Livewire\PEI\MissaoVisao::class)->name('pei.index');
+    Route::get('/pei/ciclos', \App\Livewire\PEI\ListarPeis::class)->name('pei.ciclos');
     Route::get('/pei/valores', \App\Livewire\PEI\ListarValores::class)->name('pei.valores');
     Route::get('/pei/perspectivas', \App\Livewire\PEI\ListarPerspectivas::class)->name('pei.perspectivas');
+    Route::get('/pei/swot', \App\Livewire\PEI\AnaliseSWOT::class)->name('pei.swot');
+    Route::get('/pei/pestel', \App\Livewire\PEI\AnalisePESTEL::class)->name('pei.pestel');
     Route::get('/pei/mapa', \App\Livewire\PEI\MapaEstrategico::class)->name('pei.mapa');
     Route::get('/objetivos', \App\Livewire\PEI\ListarObjetivos::class)->name('objetivos.index');
     Route::get('/objetivos/{objetivoId}/futuro', \App\Livewire\PEI\GerenciarFuturoAlmejado::class)->name('objetivos.futuro');
     
+    // Entregas (Estilo Notion)
+    Route::get('/entregas', \App\Livewire\Entregas\NotionBoard::class)->name('entregas.index');
+    
         // Action Plans
         Route::get('/planos', \App\Livewire\PlanoAcao\ListarPlanos::class)->name('planos.index');
         Route::get('/planos/{planoId}/detalhes', \App\Livewire\PlanoAcao\DetalharPlano::class)->name('planos.detalhes');
-        Route::get('/planos/{planoId}/entregas', \App\Livewire\PlanoAcao\GerenciarEntregas::class)->name('planos.entregas');
+        Route::get('/planos/{planoId}/entregas', \App\Livewire\Entregas\NotionBoard::class)->name('planos.entregas');
         Route::get('/planos/{planoId}/responsaveis', \App\Livewire\PlanoAcao\AtribuirResponsaveis::class)->name('planos.responsaveis');
     
                     // Indicators (KPIs)
@@ -59,8 +66,11 @@ Route::middleware([
                         
                             // Audit
                             Route::get('/auditoria', \App\Livewire\Audit\ListarLogs::class)->name('audit.index');
-                            
-                            // Reports    
+
+                            // Reports Menu
+                            Route::get('/relatorios', \App\Livewire\Relatorio\ListarRelatorios::class)->name('relatorios.index');
+
+                            // Reports PDF/Excel    
                 
     
                         Route::get('/relatorios/identidade/{organizacaoId}', [\App\Http\Controllers\RelatorioController::class, 'identidade'])->name('relatorios.identidade');
@@ -84,8 +94,14 @@ Route::middleware([
                 
     
                                 Route::get('/relatorios/executivo/{organizacaoId?}', [\App\Http\Controllers\RelatorioController::class, 'executivo'])->name('relatorios.executivo');
-    
 
+                                // Relatórios de Planos de Ação
+                                Route::get('/relatorios/planos/pdf', [\App\Http\Controllers\RelatorioController::class, 'planosPdf'])->name('relatorios.planos.pdf');
+                                Route::get('/relatorios/planos/excel', [\App\Http\Controllers\RelatorioController::class, 'planosExcel'])->name('relatorios.planos.excel');
+
+                                // Relatórios de Riscos
+                                Route::get('/relatorios/riscos/pdf', [\App\Http\Controllers\RelatorioController::class, 'riscosPdf'])->name('relatorios.riscos.pdf');
+                                Route::get('/relatorios/riscos/excel', [\App\Http\Controllers\RelatorioController::class, 'riscosExcel'])->name('relatorios.riscos.excel');
 
     // Session ping endpoint for session renewal
     Route::post('/session/ping', function () {

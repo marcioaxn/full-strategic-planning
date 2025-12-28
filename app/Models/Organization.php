@@ -20,7 +20,7 @@ class Organization extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'public.tab_organizacoes';
+    protected $table = 'tab_organizacoes';
 
     /**
      * Chave primária

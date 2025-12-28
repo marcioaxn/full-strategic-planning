@@ -58,13 +58,27 @@ class ListarObjetivos extends Component
         $this->showModal = true;
     }
 
+    /**
+     * Hook do Livewire que dispara quando cod_perspectiva é alterado
+     * Melhora UX sugerindo a próxima ordem automaticamente
+     */
+    public function updatedCodPerspectiva($value)
+    {
+        if (!$this->objetivoId && $value) {
+            $proximaOrdem = ObjetivoEstrategico::where('cod_perspectiva', $value)
+                ->max('num_nivel_hierarquico_apresentacao');
+            
+            $this->num_nivel_hierarquico_apresentacao = ($proximaOrdem ?? 0) + 1;
+        }
+    }
+
     public function save()
     {
         $this->validate([
             'nom_objetivo_estrategico' => 'required|string|max:255',
             'dsc_objetivo_estrategico' => 'nullable|string|max:1000',
             'num_nivel_hierarquico_apresentacao' => 'required|integer|min:1',
-            'cod_perspectiva' => 'required|exists:pei.tab_perspectiva,cod_perspectiva',
+            'cod_perspectiva' => 'required|exists:tab_perspectiva,cod_perspectiva',
         ]);
 
         ObjetivoEstrategico::updateOrCreate(

@@ -20,7 +20,7 @@ class Indicador extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_indicador';
+    protected $table = 'tab_indicador';
 
     /**
      * Chave primária
@@ -112,7 +112,7 @@ class Indicador extends Model implements Auditable
     {
         return $this->belongsToMany(
             Organization::class,
-            'pei.rel_indicador_objetivo_estrategico_organizacao',
+            'rel_indicador_objetivo_estrategico_organizacao',
             'cod_indicador',
             'cod_organizacao',
             'cod_indicador',
@@ -133,27 +133,115 @@ class Indicador extends Model implements Auditable
     }
 
     /**
-     * Calcular percentual de atingimento (última medição vs. meta anual)
+     * Calcular percentual de atingimento baseado nas evoluções do ano.
+     *
+     * Lógica:
+     * - Para indicadores ACUMULADOS (bln_acumulado = 'Sim'): soma todos os valores do período
+     * - Para indicadores NÃO ACUMULADOS: usa o último valor disponível
+     *
+     * Tipos de polaridade (dsc_tipo):
+     * - '+' (quanto maior, melhor): (realizado / previsto) × 100
+     * - '-' (quanto menor, melhor): (previsto / realizado) × 100 (invertido)
+     * - '=' (manter estável): mesmo cálculo do '+'
+     *
+     * @param int|null $ano Ano para cálculo (padrão: ano atual)
+     * @param int|null $mes Mês limite para cálculo (padrão: mês atual ou 12 se ano passado)
+     * @return float Percentual de atingimento (0-100+)
      */
-    public function calcularAtingimento(int $ano = null): float
+    public function calcularAtingimento(int $ano = null, int $mes = null): float
     {
         $ano = $ano ?? now()->year;
+        $mes = $mes ?? ($ano == now()->year ? now()->month : 12);
 
-        $meta = $this->metasPorAno()->where('num_ano', $ano)->first();
-        if (!$meta || $meta->meta == 0) {
-            return 0;
-        }
-
-        $ultimaEvolucao = $this->evolucoes()
+        // Buscar evoluções do ano até o mês especificado
+        $evolucoes = $this->evolucoes()
             ->where('num_ano', $ano)
-            ->orderBy('num_mes', 'desc')
-            ->first();
+            ->where('num_mes', '<=', $mes)
+            ->orderBy('num_mes')
+            ->get();
 
-        if (!$ultimaEvolucao || $ultimaEvolucao->vlr_realizado === null) {
+        if ($evolucoes->isEmpty()) {
             return 0;
         }
 
-        return ($ultimaEvolucao->vlr_realizado / $meta->meta) * 100;
+        // Calcular valores baseado no tipo de acumulação
+        $totalPrevisto = 0;
+        $totalRealizado = 0;
+
+        if ($this->bln_acumulado === 'Sim') {
+            // Indicador ACUMULADO: soma todos os valores do período
+            $totalPrevisto = $evolucoes->sum('vlr_previsto');
+            $totalRealizado = $evolucoes->sum('vlr_realizado');
+        } else {
+            // Indicador NÃO ACUMULADO: usa o último valor disponível
+            $ultimaEvolucao = $evolucoes->last();
+            if ($ultimaEvolucao) {
+                $totalPrevisto = $ultimaEvolucao->vlr_previsto ?? 0;
+                $totalRealizado = $ultimaEvolucao->vlr_realizado ?? 0;
+            }
+        }
+
+        // Se não houver valor previsto, tentar usar meta anual como fallback
+        if ($totalPrevisto == 0) {
+            $meta = $this->metasPorAno()->where('num_ano', $ano)->first();
+            if (!$meta || $meta->meta == 0) {
+                return 0;
+            }
+
+            if ($this->bln_acumulado === 'Sim') {
+                // Meta anual proporcional aos meses com evolução
+                $mesesComEvolucao = $evolucoes->count();
+                $totalPrevisto = ($meta->meta / 12) * $mesesComEvolucao;
+            } else {
+                // Meta mensal (meta anual / 12)
+                $totalPrevisto = $meta->meta / 12;
+            }
+        }
+
+        if ($totalPrevisto == 0) {
+            return 0;
+        }
+
+        // Calcular percentual baseado no tipo de polaridade
+        return $this->calcularPercentualPorTipo($totalRealizado, $totalPrevisto);
+    }
+
+    /**
+     * Calcular percentual baseado no tipo de polaridade do indicador.
+     *
+     * NOTA: Atualmente todos os indicadores usam polaridade '+' (quanto maior, melhor).
+     * O campo dsc_tipo armazena a CATEGORIA do indicador (Efetividade, Eficiência, etc.),
+     * não a polaridade. Para implementar polaridade diferente, seria necessário:
+     * 1. Adicionar campo dsc_polaridade (+, -, =) na tabela
+     * 2. Ajustar o match abaixo para usar esse campo
+     *
+     * Tipos de polaridade suportados (para implementação futura):
+     * - '+' (quanto maior, melhor): (realizado / previsto) × 100
+     * - '-' (quanto menor, melhor): (previsto / realizado) × 100 (invertido)
+     * - '=' (manter estável): mesmo cálculo do '+'
+     *
+     * @param float $realizado Valor realizado
+     * @param float $previsto Valor previsto
+     * @return float Percentual calculado
+     */
+    protected function calcularPercentualPorTipo(float $realizado, float $previsto): float
+    {
+        if ($previsto == 0) {
+            return 0;
+        }
+
+        // Por enquanto, todos os indicadores usam polaridade '+' (quanto maior, melhor)
+        // TODO: Adicionar campo dsc_polaridade para suportar polaridades diferentes
+        // $polaridade = $this->dsc_polaridade ?? '+';
+
+        // Cálculo padrão: (realizado / previsto) × 100
+        return ($realizado / $previsto) * 100;
+
+        // Implementação futura com suporte a polaridade:
+        // return match ($polaridade) {
+        //     '-' => $realizado > 0 ? ($previsto / $realizado) * 100 : 100,
+        //     '+', '=', default => ($realizado / $previsto) * 100,
+        // };
     }
 
     /**

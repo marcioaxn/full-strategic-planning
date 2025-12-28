@@ -27,7 +27,7 @@ class IndicadorPolicy
         }
 
         // Se o indicador está vinculado a uma organização específica via pivot table
-        if ($indicador->organizacoes()->where('public.tab_organizacoes.cod_organizacao', session('organizacao_selecionada_id'))->exists()) {
+        if ($indicador->organizacoes()->where('tab_organizacoes.cod_organizacao', session('organizacao_selecionada_id'))->exists()) {
             return true;
         }
 

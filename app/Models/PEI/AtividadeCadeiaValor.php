@@ -16,7 +16,7 @@ class AtividadeCadeiaValor extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_atividade_cadeia_valor';
+    protected $table = 'tab_atividade_cadeia_valor';
 
     /**
      * Chave primária

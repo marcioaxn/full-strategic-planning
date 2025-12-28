@@ -5,10 +5,12 @@ namespace App\Livewire\Usuario;
 use App\Models\User;
 use App\Models\Organization;
 use App\Models\PerfilAcesso;
+use App\Mail\WelcomeUserMail;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -34,6 +36,10 @@ class ListarUsuarios extends Component
         'trocarsenha' => 0,
         'vinculos' => [], // Array de ['org_id' => ..., 'perfil_id' => ...]
     ];
+
+    // Opções para geração automática de senha
+    public bool $gerarSenhaAutomatica = true;
+    public bool $enviarEmailBoasVindas = true;
 
     // Dados auxiliares para o modal
     public $vinculoTemporario = [
@@ -71,7 +77,12 @@ class ListarUsuarios extends Component
         ];
 
         if (!$this->editing) {
-            $rules['form.password'] = ['required', 'string', 'min:8'];
+            // Se gerar senha automática, não precisa informar senha manual
+            if ($this->gerarSenhaAutomatica) {
+                $rules['form.password'] = ['nullable', 'string', 'min:8'];
+            } else {
+                $rules['form.password'] = ['required', 'string', 'min:8'];
+            }
         } else {
             $rules['form.password'] = ['nullable', 'string', 'min:8'];
         }
@@ -115,7 +126,7 @@ class ListarUsuarios extends Component
         $orgId = session('organizacao_selecionada_id');
         if ($orgId) {
             $query->whereHas('organizacoes', function ($q) use ($orgId) {
-                $q->where('public.tab_organizacoes.cod_organizacao', $orgId);
+                $q->where('tab_organizacoes.cod_organizacao', $orgId);
             });
         }
 
@@ -228,8 +239,11 @@ class ListarUsuarios extends Component
     public function save(): void
     {
         $this->validate();
-        
-        DB::transaction(function () {
+
+        $senhaGerada = null;
+        $isNovoUsuario = !$this->editing;
+
+        DB::transaction(function () use (&$senhaGerada, $isNovoUsuario) {
             $data = [
                 'name' => $this->form['name'],
                 'email' => $this->form['email'],
@@ -237,7 +251,14 @@ class ListarUsuarios extends Component
                 'trocarsenha' => $this->form['trocarsenha'],
             ];
 
-            if (!empty($this->form['password'])) {
+            // Determinar a senha
+            if ($isNovoUsuario && $this->gerarSenhaAutomatica) {
+                // Gerar senha automática segura (12 caracteres)
+                $senhaGerada = Str::password(12);
+                $data['password'] = Hash::make($senhaGerada);
+                // Forçar troca de senha no primeiro acesso
+                $data['trocarsenha'] = 1;
+            } elseif (!empty($this->form['password'])) {
                 $data['password'] = Hash::make($this->form['password']);
             }
 
@@ -250,20 +271,21 @@ class ListarUsuarios extends Component
                 $this->authorize('create', User::class);
                 $user = User::create($data);
                 $message = __('Usuário criado com sucesso.');
+
+                // Enviar e-mail de boas-vindas se configurado
+                if ($this->enviarEmailBoasVindas && $senhaGerada) {
+                    Mail::to($user->email)->queue(new WelcomeUserMail($user, $senhaGerada));
+                    $message .= ' E-mail de boas-vindas enviado.';
+                }
             }
 
             // Atualizar Vínculos (Detach All + Attach All)
-            // Cuidado: detach() sem argumentos remove tudo da pivot table user_perfil?
-            // Sim, $user->perfisAcesso()->detach() remove todos os perfis desse usuário.
-            // Mas precisamos garantir que removemos os registros corretos da tabela 'rel_users_tab_organizacoes_tab_perfil_acesso'
-            
-            // Vamos fazer via DB para garantir
-            DB::table('public.rel_users_tab_organizacoes_tab_perfil_acesso')
+            DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')
                 ->where('user_id', $user->id)
                 ->delete();
 
             foreach ($this->form['vinculos'] as $vinculo) {
-                DB::table('public.rel_users_tab_organizacoes_tab_perfil_acesso')->insert([
+                DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')->insert([
                     'id' => Str::uuid(),
                     'user_id' => $user->id,
                     'cod_organizacao' => $vinculo['org_id'],
@@ -272,10 +294,8 @@ class ListarUsuarios extends Component
                     'updated_at' => now(),
                 ]);
             }
-            
-            // Também atualizar a tabela simples 'rel_users_tab_organizacoes' para compatibilidade?
-            // O User.php tem relacionamento organizacoes() via 'rel_users_tab_organizacoes'.
-            // Vamos manter sincronizado.
+
+            // Manter sincronizada a tabela simples para compatibilidade
             $user->organizacoes()->sync(collect($this->form['vinculos'])->pluck('org_id')->unique());
 
             $this->notify($message);
@@ -332,8 +352,10 @@ class ListarUsuarios extends Component
             'trocarsenha' => 0,
             'vinculos' => [],
         ];
-        
+
         $this->vinculoTemporario = ['org_id' => '', 'perfil_id' => ''];
+        $this->gerarSenhaAutomatica = true;
+        $this->enviarEmailBoasVindas = true;
         $this->editing = null;
     }
 

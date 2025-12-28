@@ -38,15 +38,119 @@
         </div>
     @endif
 
-    @if(!$organizacaoId)
+    @if(!$organizacaoId && !$filtroObjetivo)
         <div class="alert alert-warning shadow-sm border-0 d-flex align-items-center p-4" role="alert">
             <i class="bi bi-building-exclamation fs-2 me-4"></i>
             <div>
-                <h5 class="alert-heading fw-bold mb-1">Selecione uma Organização</h5>
-                <p class="mb-0">Selecione uma organização no menu superior para listar e gerenciar indicadores.</p>
+                <h5 class="alert-heading fw-bold mb-1">Selecione uma Organizacao</h5>
+                <p class="mb-0">Selecione uma organizacao no menu superior para listar e gerenciar indicadores.</p>
             </div>
         </div>
     @else
+        @if($filtroObjetivo)
+            @php
+                $objetivoFiltrado = \App\Models\PEI\ObjetivoEstrategico::with(['perspectiva.pei', 'indicadores.evolucoes', 'indicadores.metasPorAno', 'planosAcao'])->find($filtroObjetivo);
+            @endphp
+
+            {{-- Contexto Completo do Objetivo --}}
+            @include('livewire.partials.objetivo-contexto', ['objetivo' => $objetivoFiltrado])
+
+            {{-- Grafico de Evolucao dos Indicadores --}}
+            @if($objetivoFiltrado && $objetivoFiltrado->indicadores->count() > 0)
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold">
+                                <i class="bi bi-graph-up text-primary me-2"></i>Evolucao dos Indicadores
+                            </h6>
+                            <small class="text-muted">Ultimos 6 meses</small>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartEvolucaoIndicadores" height="120"></canvas>
+                    </div>
+                </div>
+
+                @php
+                    // Preparar dados para o grafico
+                    $meses = [];
+                    $dadosGrafico = [];
+                    for ($i = 5; $i >= 0; $i--) {
+                        $data = now()->subMonths($i);
+                        $meses[] = $data->translatedFormat('M/y');
+                    }
+
+                    foreach ($objetivoFiltrado->indicadores->take(5) as $ind) {
+                        $valores = [];
+                        for ($i = 5; $i >= 0; $i--) {
+                            $data = now()->subMonths($i);
+                            $evolucao = $ind->evolucoes
+                                ->where('num_ano', $data->year)
+                                ->where('num_mes', $data->month)
+                                ->first();
+                            $valores[] = $evolucao ? round(($evolucao->vlr_realizado / max($evolucao->vlr_previsto, 1)) * 100, 1) : null;
+                        }
+                        $dadosGrafico[] = [
+                            'label' => Str::limit($ind->nom_indicador, 25),
+                            'data' => $valores
+                        ];
+                    }
+                @endphp
+
+                <script>
+                    (function() {
+                        function initChartEvolucao() {
+                            const ctx = document.getElementById('chartEvolucaoIndicadores');
+                            if (ctx && typeof Chart !== 'undefined') {
+                                // Destruir grafico existente se houver
+                                if (ctx.chartInstance) {
+                                    ctx.chartInstance.destroy();
+                                }
+                                const cores = ['#0d6efd', '#198754', '#0dcaf0', '#ffc107', '#dc3545'];
+                                ctx.chartInstance = new Chart(ctx, {
+                                    type: 'line',
+                                    data: {
+                                        labels: @json($meses),
+                                        datasets: @json($dadosGrafico).map((item, idx) => ({
+                                            label: item.label,
+                                            data: item.data,
+                                            borderColor: cores[idx % cores.length],
+                                            backgroundColor: cores[idx % cores.length] + '20',
+                                            tension: 0.3,
+                                            fill: false,
+                                            pointRadius: 4,
+                                            pointHoverRadius: 6
+                                        }))
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } },
+                                            tooltip: { mode: 'index', intersect: false }
+                                        },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                max: 150,
+                                                ticks: { callback: v => v + '%' }
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                        // Inicializar na carga inicial e na navegacao Livewire
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', initChartEvolucao);
+                        } else {
+                            initChartEvolucao();
+                        }
+                        document.addEventListener('livewire:navigated', initChartEvolucao);
+                    })();
+                </script>
+            @endif
+        @endif
         <!-- Filtros -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-3 bg-light rounded-3">
