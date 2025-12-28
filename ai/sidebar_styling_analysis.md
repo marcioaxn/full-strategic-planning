@@ -1,3 +1,8 @@
+- **Date**: 2025-12-28
+- **Action**: Enhanced Visual Styling of Strategic Map.
+- **Change**:
+    - Modified `resources/views/livewire/pei/mapa-estrategico.blade.php` to lighten the perspective headers background by 55% using `color-mix`.
+- **Reason**: User request to improve visual hierarchy and aesthetics of the Strategic Map.
 
 - **Date**: 2025-12-25
 - **Action**: Concluded Phase 7 - Audit & Refinements.
