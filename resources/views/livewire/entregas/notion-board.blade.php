@@ -1,4 +1,4 @@
-<div class="notion-board" wire:poll.10s="poll">
+<div class="notion-board" wire:poll.5s="poll">
     {{-- Header --}}
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
