@@ -74,12 +74,14 @@ class ListarRiscos extends Component
     {
         $peiAtivo = PEI::ativos()->first();
         if ($peiAtivo) {
-            $this->objetivos = ObjetivoEstrategico::where('cod_pei', $peiAtivo->cod_pei)->orderBy('nom_objetivo_estrategico')->get();
+            $this->objetivos = ObjetivoEstrategico::whereHas('perspectiva', function($query) use ($peiAtivo) {
+                $query->where('cod_pei', $peiAtivo->cod_pei);
+            })->orderBy('nom_objetivo_estrategico')->get();
         }
 
         if ($this->organizacaoId) {
             $this->usuarios = User::whereHas('organizacoes', function($q) {
-                $q->where('public.tab_organizacoes.cod_organizacao', $this->organizacaoId);
+                $q->where('tab_organizacoes.cod_organizacao', $this->organizacaoId);
             })->orderBy('name')->get();
         }
     }

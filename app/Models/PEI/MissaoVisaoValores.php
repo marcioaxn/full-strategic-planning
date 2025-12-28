@@ -18,7 +18,7 @@ class MissaoVisaoValores extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_missao_visao_valores';
+    protected $table = 'tab_missao_visao_valores';
 
     /**
      * Chave primária

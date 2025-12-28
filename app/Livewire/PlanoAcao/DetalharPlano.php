@@ -32,9 +32,9 @@ class DetalharPlano extends Component
 
     public function carregarResponsaveis()
     {
-        $this->responsaveis = DB::table('public.rel_users_tab_organizacoes_tab_perfil_acesso as pivot')
+        $this->responsaveis = DB::table('rel_users_tab_organizacoes_tab_perfil_acesso as pivot')
             ->join('users', 'users.id', '=', 'pivot.user_id')
-            ->join('public.tab_perfil_acesso as perfil', 'perfil.cod_perfil', '=', 'pivot.cod_perfil')
+            ->join('tab_perfil_acesso as perfil', 'perfil.cod_perfil', '=', 'pivot.cod_perfil')
             ->where('pivot.cod_plano_de_acao', $this->plano->cod_plano_de_acao)
             ->select('users.name', 'perfil.dsc_perfil')
             ->get();

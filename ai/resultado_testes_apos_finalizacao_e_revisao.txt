@@ -1,0 +1,25 @@
+Claude, fiz vários testes onde era possível efetuar teste e a lista de partes que faltaram fazer, partes que não funcionam e melhorias é grande. Dessa forma, eu sugiro a criação de um novo roadmap, eu não sei o que diz as melhores práticas em relação a isso - se faz um novo roadmap ou mantém o antigo e agrega a lista que irei passar. Veja o que diz as boas práticas e siga dessa forma. Segue a lista abaixo, tentarei ser claro mais caso haja alguma dúvida é só questionar:
+
+1.  no projeto está declarado em Models, componentes Livewire ou Controllers [public.nome_tabela] e seguindo as boas práticas, não é necessário declarar a tabela public, apenas o nome da tabela, uma vez que os schemas estão declarados no arquivo database.php. Dessa forma é necessário efetuar uma varredura e retirar [public.] onde estiver declarado. Aliás, o mesmo deve ser feito se houver a declaração [pei.nome_tabela];
+
+2.  a parte de [Organizações] não é possível inserir ou editar devido ao problema descrito no item [1.] quanto ao [public.];
+
+3.  ao testar a parte de [Usuários] constatei que a UI/UX não está adequada por meio das boas práticas e a evidência é uma modal estreita na largura e poderia utilizar melhor o espaço podendo ser mais larga, os grids ou as colunas estão utilizando um espaço pequeno e deixando-as "encavaladas" e isso é péssimo para o usuário e nesse caso podemos utilizar grids ou colunas com espaços mariores. Dessa forma, eu preciso que revise não somente a modal ou formulários específicos do Usuário, mas de todo o projeto. Outra problema - ao tentar inseriri um novo usuário ocorreu esse novo problema [SQLSTATE[23502]: Not null violation: 7 ERROR: null value in column "cod_plano_de_acao" violates not-null constraint DETAIL: Failing row contains (411e6790-1088-45f7-82e8-1ec0d5b8f893, 019b5b1c-5d26-73ff-b0fd-63303d07f009, 3834910f-66f7-46d8-9104-2904d59e1241, null, c00b9ebc-7014-4d37-97dc-7875e55fff3b, 2025-12-26 14:42:24, 2025-12-26 14:42:24, null). (Connection: pgsql, SQL: insert into "public"."rel_users_tab_organizacoes_tab_perfil_acesso" ("id", "user_id", "cod_organizacao", "cod_perfil", "created_at", "updated_at") values (411e6790-1088-45f7-82e8-1ec0d5b8f893, 019b5b1c-5d26-73ff-b0fd-63303d07f009, 3834910f-66f7-46d8-9104-2904d59e1241, c00b9ebc-7014-4d37-97dc-7875e55fff3b, 2025-12-26 14:42:24, 2025-12-26 14:42:24))] e precisa ser solucionado. No formulário de inserir novo Usuário não cadastramos senha, isso é uma má prática - a senha é contruída pelo backend de forma aleatória com 12 caracteres, sendo 2 do tipo especiais, 1 letra maiúscula e o restante entre letras e números, e os números são obrigatórios. E ela, a senha, é encaminhada por mensagem de e-mail ao novo usuário; A parte de edição de usuário eu não pude fazer testes pois não pude cadastrar um novo usuário e nem aparecia outros usuários para edição;
+
+4.  a parte de [Identidade Estratégica] não aparece absolutamente nada e precisa aparecer;
+
+5.  não existe um CRUD para o PEI [Planejamento Estratégico Integrado];
+
+6.  não existe um CRUD para a matriz SWOT ou o PESTEL e tudo que precisava ter o projeto para ser de fato um sistema de planejamento estratégico COMPLETO, como é o propósito inicial do projeto;
+
+7.  não existe um CRUD para a Perspectiva;
+
+8.  a parte de [Auditorias] aparece esse erro [syntax error, unexpected single-quoted string ", $m)); ?></option>", expecting ")"]. É necessário solucionar;
+
+9.  o dashboard só tem apenas um gráfico e as possibilidades de outros gráficos não foram implementados. Crie dentro do possível outros gráficos que auxilie a gestão;
+
+10.  não há um menu específico para [Relatórios] e é necessário implementar, inclusive com a possibilidade de mais de 3 tipos de relatórios diferentes e ambos com o filtro temporal por dia, por semana, por mês e por ano. E tudo o mais que seja necessário para a gestão. É necessário filtros por Organização, Ano, Período, Perspectiva, etc;
+
+11.  o menu sidebar está numa desordem e precisa ser organizado, inclusive por tema, tipo Administração, Gestão, etc;
+
+12.  o navbar que é utilizado para as páginas sem autenticação está utilizando de forma precária o UI/UX e precisa ser melhorado, inclusive o modo dark não funciona nesse navbar. O navbar utilizado nas páginas com autenticação está perfeito e não pode ser tocado, ele precisa continuar da forma que está. Apenas o navbar sem autenticação precisa ser melhorado em 99%.

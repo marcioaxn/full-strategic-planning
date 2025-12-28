@@ -14,7 +14,7 @@ class GrauSatisfacao extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_grau_satisfcao';
+    protected $table = 'tab_grau_satisfcao';
 
     /**
      * Chave primária

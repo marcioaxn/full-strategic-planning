@@ -154,30 +154,43 @@
                 </div>
 
                 <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        const ctx = document.getElementById('chartStatusPlanos');
-                        if (ctx) {
-                            new Chart(ctx, {
-                                type: 'doughnut',
-                                data: {
-                                    labels: ['Concluidos', 'Em Andamento', 'Nao Iniciados', 'Atrasados'],
-                                    datasets: [{
-                                        data: [{{ $planosConcluidos }}, {{ $planosEmAndamento }}, {{ $planosNaoIniciados }}, {{ $planosAtrasados }}],
-                                        backgroundColor: ['#198754', '#0d6efd', '#6c757d', '#dc3545'],
-                                        borderWidth: 0
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    plugins: {
-                                        legend: { display: false }
-                                    },
-                                    cutout: '65%'
+                    (function() {
+                        function initChartStatusPlanos() {
+                            const ctx = document.getElementById('chartStatusPlanos');
+                            if (ctx && typeof Chart !== 'undefined') {
+                                // Destruir grafico existente se houver
+                                if (ctx.chartInstance) {
+                                    ctx.chartInstance.destroy();
                                 }
-                            });
+                                ctx.chartInstance = new Chart(ctx, {
+                                    type: 'doughnut',
+                                    data: {
+                                        labels: ['Concluidos', 'Em Andamento', 'Nao Iniciados', 'Atrasados'],
+                                        datasets: [{
+                                            data: [{{ $planosConcluidos }}, {{ $planosEmAndamento }}, {{ $planosNaoIniciados }}, {{ $planosAtrasados }}],
+                                            backgroundColor: ['#198754', '#0d6efd', '#6c757d', '#dc3545'],
+                                            borderWidth: 0
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: { display: false }
+                                        },
+                                        cutout: '65%'
+                                    }
+                                });
+                            }
                         }
-                    });
+                        // Inicializar na carga inicial e na navegacao Livewire
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', initChartStatusPlanos);
+                        } else {
+                            initChartStatusPlanos();
+                        }
+                        document.addEventListener('livewire:navigated', initChartStatusPlanos);
+                    })();
                 </script>
             @endif
         @endif
