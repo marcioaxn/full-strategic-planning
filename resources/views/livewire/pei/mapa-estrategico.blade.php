@@ -172,60 +172,76 @@
                 @php $totalPerspectivas = count($perspectivas); @endphp
                 @foreach($perspectivas as $index => $perspectiva)
                     @php
-                        $cores = $this->getCoresPerspectiva($perspectiva->num_nivel_hierarquico_apresentacao);
                         $isLast = ($index === $totalPerspectivas - 1);
+                        $cores = $this->getCoresPerspectiva($perspectiva['num_nivel_hierarquico_apresentacao']);
+                        $corSatisfacao = $perspectiva['cor_satisfacao'];
                     @endphp
 
                     <div class="card border-2 {{ $cores['border'] }} shadow-sm mb-3 overflow-hidden perspectiva-card">
-                        <!-- Header da Perspectiva -->
-                        <div class="card-header {{ $cores['bg'] }} {{ $cores['text'] }} py-3">
+                        <!-- Header da Perspectiva (Cores de Referência Restauradas) -->
+                        <div class="card-header {{ $cores['bg'] }} {{ $cores['text'] }} py-3 d-flex justify-content-between align-items-center">
                             <h5 class="mb-0 fw-bold">
-                                <i class="bi bi-layers me-2"></i>{{ $perspectiva->dsc_perspectiva }}
+                                <i class="bi bi-layers me-2"></i>{{ $perspectiva['dsc_perspectiva'] }}
                             </h5>
+                            
+                            <div class="d-flex align-items-center gap-2">
+                                {{-- Memória de Cálculo (Auditabilidade) --}}
+                                <button class="btn btn-link p-0 text-white opacity-75 hover-opacity-100" 
+                                        wire:click="abrirMemoriaCalculo({{ $index }})" 
+                                        title="{{ __('Ver memória de cálculo') }}">
+                                    <i class="bi bi-info-circle fs-5"></i>
+                                </button>
+
+                                {{-- Badge de Atingimento com Cor de Satisfação --}}
+                                <span class="badge shadow-sm d-flex align-items-center gap-1" 
+                                      style="background-color: {{ $corSatisfacao }} !important; color: white !important; border: 1px solid rgba(255,255,255,0.4); font-size: 0.85rem; padding: 0.5rem 0.8rem;">
+                                    <i class="bi bi-graph-up"></i> {{ $perspectiva['atingimento_medio'] }}%
+                                </span>
+                            </div>
                         </div>
 
                         <!-- Objetivos Estrategicos -->
                         <div class="card-body {{ $cores['bg_light'] }} p-3">
-                            @if($perspectiva->objetivos->count() > 0)
+                            @if(count($perspectiva['objetivos']) > 0)
                                 <div class="row g-3">
-                                    @foreach($perspectiva->objetivos as $objetivo)
+                                    @foreach($perspectiva['objetivos'] as $objetivo)
                                         @php
-                                            $indicadores = $this->calcularAtingimentoIndicadores($objetivo);
-                                            $planos = $this->calcularStatusPlanos($objetivo);
+                                            $indicadoresResumo = $objetivo['resumo_indicadores'];
+                                            $planosResumo = $objetivo['resumo_planos'];
                                         @endphp
                                         <div class="col-sm-6 col-md-4 col-lg-3">
                                             <div class="card h-100 border-0 shadow objetivo-card"
                                                  @auth
                                                  style="cursor: pointer;"
-                                                 onclick="window.location.href='{{ route('objetivos.index') }}?search={{ urlencode($objetivo->nom_objetivo_estrategico) }}'"
+                                                 onclick="window.location.href='{{ route('objetivos.index') }}?search={{ urlencode($objetivo['nom_objetivo_estrategico']) }}'"
                                                  @endauth>
                                                 <!-- Nome do Objetivo -->
                                                 <div class="card-body p-3">
-                                                    <p class="fw-semibold text-dark mb-3 objetivo-nome" title="{{ $objetivo->nom_objetivo_estrategico }}">
-                                                        {{ Str::limit($objetivo->nom_objetivo_estrategico, 80) }}
+                                                    <p class="fw-semibold text-dark mb-3 objetivo-nome" title="{{ $objetivo['nom_objetivo_estrategico'] }}">
+                                                        {{ Str::limit($objetivo['nom_objetivo_estrategico'], 80) }}
                                                     </p>
 
                                                     <!-- Indicadores -->
                                                     <div class="mb-2">
-                                                        <a href="{{ route('indicadores.index', ['filtroObjetivo' => $objetivo->cod_objetivo_estrategico]) }}"
+                                                        <a href="{{ route('indicadores.index', ['filtroObjetivo' => $objetivo['cod_objetivo_estrategico']]) }}"
                                                            class="text-decoration-none indicador-link"
                                                            @guest onclick="event.stopPropagation(); alert('Faça login para acessar os indicadores'); return false;" @endguest
                                                            @auth onclick="event.stopPropagation();" @endauth>
                                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                                 <small class="text-muted">
                                                                     <i class="bi bi-graph-up me-1"></i>
-                                                                    <span class="fw-bold text-dark">{{ $indicadores['quantidade'] }}</span>
-                                                                    {{ $indicadores['quantidade'] == 1 ? 'indicador' : 'indicadores' }}
+                                                                    <span class="fw-bold text-dark">{{ $indicadoresResumo['quantidade'] }}</span>
+                                                                    {{ $indicadoresResumo['quantidade'] == 1 ? 'indicador' : 'indicadores' }}
                                                                 </small>
-                                                                <small class="fw-bold" style="color: {{ $indicadores['cor'] }};">
-                                                                    {{ $indicadores['percentual'] }}%
+                                                                <small class="fw-bold" style="color: {{ $indicadoresResumo['cor'] }};">
+                                                                    {{ $indicadoresResumo['percentual'] }}%
                                                                 </small>
                                                             </div>
                                                             <div class="progress" style="height: 6px;">
                                                                 <div class="progress-bar"
                                                                      role="progressbar"
-                                                                     style="width: {{ min($indicadores['percentual'], 100) }}%; background-color: {{ $indicadores['cor'] }};"
-                                                                     aria-valuenow="{{ $indicadores['percentual'] }}"
+                                                                     style="width: {{ min($indicadoresResumo['percentual'], 100) }}%; background-color: {{ $indicadoresResumo['cor'] }};"
+                                                                     aria-valuenow="{{ $indicadoresResumo['percentual'] }}"
                                                                      aria-valuemin="0"
                                                                      aria-valuemax="100"></div>
                                                             </div>
@@ -234,25 +250,25 @@
 
                                                     <!-- Planos de Acao -->
                                                     <div>
-                                                        <a href="{{ route('planos.index', ['filtroObjetivo' => $objetivo->cod_objetivo_estrategico]) }}"
+                                                        <a href="{{ route('planos.index', ['filtroObjetivo' => $objetivo['cod_objetivo_estrategico']]) }}"
                                                            class="text-decoration-none plano-link"
                                                            @guest onclick="event.stopPropagation(); alert('Faça login para acessar os planos de ação'); return false;" @endguest
                                                            @auth onclick="event.stopPropagation();" @endauth>
                                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                                 <small class="text-muted">
                                                                     <i class="bi bi-list-check me-1"></i>
-                                                                    <span class="fw-bold text-dark">{{ $planos['quantidade'] }}</span>
-                                                                    {{ $planos['quantidade'] == 1 ? 'plano' : 'planos' }}
+                                                                    <span class="fw-bold text-dark">{{ $planosResumo['quantidade'] }}</span>
+                                                                    {{ $planosResumo['quantidade'] == 1 ? 'plano' : 'planos' }}
                                                                 </small>
-                                                                <small class="fw-bold" style="color: {{ $planos['cor'] }};">
-                                                                    {{ $planos['concluidos'] }}/{{ $planos['quantidade'] }}
+                                                                <small class="fw-bold" style="color: {{ $planosResumo['cor'] }};">
+                                                                    {{ $planosResumo['concluidos'] }}/{{ $planosResumo['quantidade'] }}
                                                                 </small>
                                                             </div>
                                                             <div class="progress" style="height: 6px;">
                                                                 <div class="progress-bar"
                                                                      role="progressbar"
-                                                                     style="width: {{ min($planos['percentual'], 100) }}%; background-color: {{ $planos['cor'] }};"
-                                                                     aria-valuenow="{{ $planos['percentual'] }}"
+                                                                     style="width: {{ min($planosResumo['percentual'], 100) }}%; background-color: {{ $planosResumo['cor'] }};"
+                                                                     aria-valuenow="{{ $planosResumo['percentual'] }}"
                                                                      aria-valuemin="0"
                                                                      aria-valuemax="100"></div>
                                                             </div>
@@ -276,7 +292,7 @@
                     @if(!$isLast)
                         <div class="text-center mb-3">
                             <div class="arrow-connector">
-                                <i class="bi bi-arrow-up-circle-fill fs-3 text-{{ str_replace('border-', '', $cores['border']) }}"></i>
+                                <i class="bi bi-arrow-up-circle-fill fs-3 {{ str_replace('bg-', 'text-', $cores['bg']) }}"></i>
                             </div>
                         </div>
                     @endif
@@ -345,7 +361,90 @@
         </div>
     @endif
 
+    {{-- Modal de Memória de Cálculo --}}
+    @if($showCalcModal && $detalhesCalculo)
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold text-primary">{{ __('Memória de Cálculo') }}</h5>
+                        <button type="button" class="btn-close" wire:click="fecharMemoriaCalculo"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-4">
+                            <h6 class="text-muted small text-uppercase fw-bold mb-1">{{ __('Perspectiva') }}</h6>
+                            <h4 class="fw-bold">{{ $detalhesCalculo['titulo'] }}</h4>
+                        </div>
+
+                        <div class="alert d-flex align-items-center justify-content-between p-3 border-0 rounded-3" style="background-color: {{ $detalhesCalculo['cor'] }}15;">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="icon-shape rounded-circle text-white p-3" style="background-color: {{ $detalhesCalculo['cor'] }};">
+                                    <i class="bi bi-calculator fs-4"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-bold" style="color: {{ $detalhesCalculo['cor'] }};">{{ __('Desempenho Médio') }}</h6>
+                                    <p class="mb-0 small text-muted">{{ __('Média simples do atingimento de todos os indicadores vinculados.') }}</p>
+                                </div>
+                            </div>
+                            <h2 class="fw-bold mb-0" style="color: {{ $detalhesCalculo['cor'] }};">{{ $detalhesCalculo['media'] }}%</h2>
+                        </div>
+
+                        <div class="mt-4">
+                            <h6 class="fw-bold mb-3"><i class="bi bi-list-check me-2"></i>{{ __('Dados Considerados:') }}</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover align-middle">
+                                    <thead class="bg-light small text-muted text-uppercase">
+                                        <tr>
+                                            <th>{{ __('Objetivo') }}</th>
+                                            <th>{{ __('Indicador') }}</th>
+                                            <th class="text-end">{{ __('Atingimento') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($detalhesCalculo['indicadores'] as $item)
+                                            <tr>
+                                                <td class="small fw-semibold">{{ $item['objetivo'] }}</td>
+                                                <td class="small">{{ $item['indicador'] }}</td>
+                                                <td class="text-end fw-bold" style="color: {{ $item['cor'] }};">
+                                                    {{ $item['atingimento'] }}%
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 p-3 bg-light rounded-3 small text-muted border-start border-4 border-info">
+                            <i class="bi bi-info-circle-fill me-2 text-info"></i>
+                            {{ __('O cálculo atual reflete o desempenho dos indicadores de resultado. O progresso físico das entregas dos planos de ação é monitorado separadamente para fins de controle operacional.') }}
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary px-4" wire:click="fecharMemoriaCalculo">{{ __('Fechar') }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <script>
+        document.addEventListener('livewire:navigated', () => {
+            initPopovers();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initPopovers();
+        });
+
+        function initPopovers() {
+            const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+            [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
+        }
+    </script>
+
     <style>
+        .cursor-help { cursor: help; }
         /* ========== Identidade Estrategica ========== */
         .identity-card {
             transition: transform 0.2s ease, box-shadow 0.2s ease;

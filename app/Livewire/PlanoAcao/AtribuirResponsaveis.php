@@ -45,16 +45,16 @@ class AtribuirResponsaveis extends Component
     {
         // 1. Carregar Responsáveis Atuais
         // Buscamos na pivot table
-        $this->responsaveis = DB::table('public.rel_users_tab_organizacoes_tab_perfil_acesso as pivot')
+        $this->responsaveis = DB::table('rel_users_tab_organizacoes_tab_perfil_acesso as pivot')
             ->join('users', 'users.id', '=', 'pivot.user_id')
-            ->join('public.tab_perfil_acesso as perfil', 'perfil.cod_perfil', '=', 'pivot.cod_perfil')
+            ->join('tab_perfil_acesso as perfil', 'perfil.cod_perfil', '=', 'pivot.cod_perfil')
             ->where('pivot.cod_plano_de_acao', $this->plano->cod_plano_de_acao)
             ->select('users.name', 'users.email', 'perfil.dsc_perfil', 'pivot.id', 'pivot.user_id', 'pivot.cod_perfil')
             ->get();
 
         // 2. Carregar Usuários da mesma Organização (para o select)
         $this->usuariosDisponiveis = User::whereHas('organizacoes', function($q) {
-            $q->where('public.tab_organizacoes.cod_organizacao', $this->plano->cod_organizacao);
+            $q->where('tab_organizacoes.cod_organizacao', $this->plano->cod_organizacao);
         })->orderBy('name')->get();
     }
 
@@ -68,7 +68,7 @@ class AtribuirResponsaveis extends Component
         ]);
 
         // Verificar duplicata
-        $existe = DB::table('public.rel_users_tab_organizacoes_tab_perfil_acesso')
+        $existe = DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')
             ->where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)
             ->where('user_id', $this->novo_usuario_id)
             ->where('cod_perfil', $this->novo_perfil_id)
@@ -80,7 +80,7 @@ class AtribuirResponsaveis extends Component
         }
 
         // Inserir na pivot
-        DB::table('public.rel_users_tab_organizacoes_tab_perfil_acesso')->insert([
+        DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')->insert([
             'id' => Str::uuid(),
             'user_id' => $this->novo_usuario_id,
             'cod_organizacao' => $this->plano->cod_organizacao,
@@ -100,7 +100,7 @@ class AtribuirResponsaveis extends Component
     {
         $this->authorize('update', $this->plano);
 
-        DB::table('public.rel_users_tab_organizacoes_tab_perfil_acesso')
+        DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')
             ->where('id', $pivotId)
             ->delete();
 

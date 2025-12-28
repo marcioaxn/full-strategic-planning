@@ -11,7 +11,7 @@ class RiscoOcorrencia extends Model implements Auditable
 {
     use HasFactory, HasUuids, \OwenIt\Auditing\Auditable;
 
-    protected $table = 'pei.tab_risco_ocorrencia';
+    protected $table = 'tab_risco_ocorrencia';
     protected $primaryKey = 'cod_ocorrencia';
     protected $keyType = 'string';
     public $incrementing = false;

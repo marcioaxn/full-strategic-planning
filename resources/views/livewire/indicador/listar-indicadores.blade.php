@@ -98,43 +98,56 @@
                 @endphp
 
                 <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        const ctx = document.getElementById('chartEvolucaoIndicadores');
-                        if (ctx) {
-                            const cores = ['#0d6efd', '#198754', '#0dcaf0', '#ffc107', '#dc3545'];
-                            new Chart(ctx, {
-                                type: 'line',
-                                data: {
-                                    labels: @json($meses),
-                                    datasets: @json($dadosGrafico).map((item, idx) => ({
-                                        label: item.label,
-                                        data: item.data,
-                                        borderColor: cores[idx % cores.length],
-                                        backgroundColor: cores[idx % cores.length] + '20',
-                                        tension: 0.3,
-                                        fill: false,
-                                        pointRadius: 4,
-                                        pointHoverRadius: 6
-                                    }))
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    plugins: {
-                                        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } },
-                                        tooltip: { mode: 'index', intersect: false }
+                    (function() {
+                        function initChartEvolucao() {
+                            const ctx = document.getElementById('chartEvolucaoIndicadores');
+                            if (ctx && typeof Chart !== 'undefined') {
+                                // Destruir grafico existente se houver
+                                if (ctx.chartInstance) {
+                                    ctx.chartInstance.destroy();
+                                }
+                                const cores = ['#0d6efd', '#198754', '#0dcaf0', '#ffc107', '#dc3545'];
+                                ctx.chartInstance = new Chart(ctx, {
+                                    type: 'line',
+                                    data: {
+                                        labels: @json($meses),
+                                        datasets: @json($dadosGrafico).map((item, idx) => ({
+                                            label: item.label,
+                                            data: item.data,
+                                            borderColor: cores[idx % cores.length],
+                                            backgroundColor: cores[idx % cores.length] + '20',
+                                            tension: 0.3,
+                                            fill: false,
+                                            pointRadius: 4,
+                                            pointHoverRadius: 6
+                                        }))
                                     },
-                                    scales: {
-                                        y: {
-                                            beginAtZero: true,
-                                            max: 150,
-                                            ticks: { callback: v => v + '%' }
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } },
+                                            tooltip: { mode: 'index', intersect: false }
+                                        },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                max: 150,
+                                                ticks: { callback: v => v + '%' }
+                                            }
                                         }
                                     }
-                                }
-                            });
+                                });
+                            }
                         }
-                    });
+                        // Inicializar na carga inicial e na navegacao Livewire
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', initChartEvolucao);
+                        } else {
+                            initChartEvolucao();
+                        }
+                        document.addEventListener('livewire:navigated', initChartEvolucao);
+                    })();
                 </script>
             @endif
         @endif

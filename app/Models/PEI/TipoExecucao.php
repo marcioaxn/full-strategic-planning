@@ -15,7 +15,7 @@ class TipoExecucao extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_tipo_execucao';
+    protected $table = 'tab_tipo_execucao';
 
     /**
      * Chave primária

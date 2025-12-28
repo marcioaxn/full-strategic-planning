@@ -15,7 +15,7 @@ class FuturoAlmejadoObjetivoEstrategico extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_futuro_almejado_objetivo_estrategico';
+    protected $table = 'tab_futuro_almejado_objetivo_estrategico';
 
     /**
      * Chave primária

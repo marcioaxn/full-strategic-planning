@@ -16,7 +16,15 @@
 <body>
     <div class="header">
         <h2 style="margin: 0; color: #1B408E;">Relatório de Indicadores de Desempenho</h2>
-        <div style="margin-top: 5px;">Unidade: {{ $organizacao->nom_organizacao }} | Referência: {{ now()->format('d/m/Y') }}</div>
+        
+        <!-- Bloco de Filtros Aplicados -->
+        @if(isset($filtros))
+            <div style="margin-top: 10px; padding: 8px; background: #f8f9fa; border: 1px solid #dee2e6; display: inline-block; border-radius: 5px; font-size: 10px;">
+                <span style="margin-right: 15px;"><strong>Ano:</strong> {{ $filtros['ano'] }}</span>
+                <span style="margin-right: 15px;"><strong>Período:</strong> {{ $filtros['periodo'] }}</span>
+                <span><strong>Unidade:</strong> {{ $filtros['organizacao'] }}</span>
+            </div>
+        @endif
     </div>
 
     <table>

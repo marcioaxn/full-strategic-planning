@@ -22,7 +22,7 @@ class IndicadoresExport implements FromCollection, WithHeadings, WithMapping
 
         if ($this->organizacaoId) {
             $query->whereHas('organizacoes', function($q) {
-                $q->where('public.tab_organizacoes.cod_organizacao', $this->organizacaoId);
+                $q->where('tab_organizacoes.cod_organizacao', $this->organizacaoId);
             })->orWhereHas('planoDeAcao', function($q) {
                 $q->where('cod_organizacao', $this->organizacaoId);
             });

@@ -17,6 +17,15 @@
     <div class="header">
         <h2 style="margin: 0; color: #1B408E;">Relatório de Objetivos Estratégicos</h2>
         <div style="margin-top: 5px;">Plano Estratégico Institucional: {{ $pei->dsc_pei }} ({{ $pei->num_ano_inicio_pei }} - {{ $pei->num_ano_fim_pei }})</div>
+        
+        <!-- Bloco de Filtros Aplicados -->
+        @if(isset($filtros))
+            <div style="margin-top: 10px; padding: 8px; background: #f8f9fa; border: 1px solid #dee2e6; display: inline-block; border-radius: 5px; font-size: 10px;">
+                <span style="margin-right: 15px;"><strong>Ano:</strong> {{ $filtros['ano'] }}</span>
+                <span style="margin-right: 15px;"><strong>Perspectiva:</strong> {{ $filtros['perspectiva'] }}</span>
+                <span><strong>Unidade:</strong> {{ $filtros['organizacao'] }}</span>
+            </div>
+        @endif
     </div>
 
     @foreach($perspectivas as $p)
