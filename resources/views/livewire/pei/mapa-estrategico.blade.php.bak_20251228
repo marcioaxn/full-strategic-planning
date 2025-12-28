@@ -75,12 +75,9 @@
             </div>
         </div>
     @else
-        <div class="container-fluid px-lg-5 py-3 mb-0 pb-0">
+        <div class="container-fluid px-lg-5 py-3">
             <!-- Título Organizacional -->
-            <div class="text-center mb-4 mt-2">
-                <h5 class="fw-bold text-uppercase letter-spacing-2 text-muted-custom mb-3">
-                    Mapa Estratégico
-                </h5>
+            <div class="text-center mb-5 mt-2">
                 <h5 class="fw-bold text-uppercase letter-spacing-2 text-muted-custom">
                     <i class="bi bi-building me-2"></i>{{ $organizacaoNome }}
                 </h5>
@@ -88,7 +85,7 @@
             </div>
 
             <!-- ========== IDENTIDADE ESTRATÉGICA ========== -->
-            <div class="row g-4 mb-4">
+            <div class="row g-4 mb-5">
                 <div class="col-md-4">
                     <div class="identity-box shadow-sm border h-100">
                         <div class="d-flex align-items-center mb-3">
@@ -139,7 +136,7 @@
                         <div class="card shadow-sm perspectiva-full-card" style="border: 2px solid var(--bs-{{ $corBordaRef }}) !important;">
                             <!-- Header da Perspectiva -->
                             <div class="perspectiva-header-modern px-4 py-3 d-flex justify-content-between align-items-center" 
-                                 style="background-color: color-mix(in srgb, var(--bs-{{ $corBordaRef }}-bg-subtle), white 55%) !important; border-bottom: 2px solid var(--bs-{{ $corBordaRef }}) !important;">
+                                 style="background-color: var(--bs-{{ $corBordaRef }}-bg-subtle) !important; border-bottom: 2px solid var(--bs-{{ $corBordaRef }}) !important;">
                                 <div class="persp-title-group">
                                     <h5 class="persp-name text-uppercase fw-800 mb-0">{{ $p['dsc_perspectiva'] }}</h5>
                                 </div>
