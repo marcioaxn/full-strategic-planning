@@ -2,176 +2,209 @@
 
 namespace App\Livewire\Dashboard;
 
-use App\Models\Organization;
-use App\Models\PEI\ObjetivoEstrategico;
-use App\Models\PEI\PlanoDeAcao;
-use App\Models\PEI\Indicador;
-use App\Models\PEI\Perspectiva;
 use App\Models\PEI\PEI;
+use App\Models\PEI\Objetivo;
+use App\Models\PEI\Indicador;
+use App\Models\PEI\PlanoDeAcao;
+use App\Models\PEI\Entrega;
+use App\Models\PEI\EntregaComentario;
+use App\Models\PEI\Perspectiva;
+use App\Models\Organization;
 use App\Models\Risco;
-use App\Models\PEI\EvolucaoIndicador;
-use App\Models\PEI\MetaPorAno;
-use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Session;
-
-use App\Models\PEI\GrauSatisfacao;
+use Illuminate\Support\Facades\Auth;
 
 #[Layout('layouts.app')]
 class Index extends Component
 {
     public $organizacaoId;
+    public $organizacaoNome;
     public $peiAtivo;
 
     protected $listeners = [
-        'organizacaoSelecionada' => 'atualizarDashboard'
+        'organizacaoSelecionada' => 'atualizarOrganizacao'
     ];
 
     public function mount()
     {
         $this->organizacaoId = Session::get('organizacao_selecionada_id');
         $this->peiAtivo = PEI::ativos()->first();
+        $this->carregarNomeOrganizacao();
     }
 
-    public function atualizarDashboard($id)
+    public function atualizarOrganizacao($id)
     {
         $this->organizacaoId = $id;
+        $this->carregarNomeOrganizacao();
+    }
+
+    private function carregarNomeOrganizacao()
+    {
+        if ($this->organizacaoId) {
+            $org = Organization::find($this->organizacaoId);
+            $this->organizacaoNome = $org ? $org->nom_organizacao : 'Unidade Não Encontrada';
+        } else {
+            $this->organizacaoNome = 'Todas as Unidades';
+        }
     }
 
     public function render()
     {
-        $orgId = $this->organizacaoId;
-        $userId = auth()->id();
+        $stats = $this->getStats();
         
-        // Base queries filtradas por Organização
-        $queryPlanos = PlanoDeAcao::query();
-        $queryIndicadores = Indicador::query();
-        
-        if ($orgId) {
-            $queryPlanos->where('cod_organizacao', $orgId);
-            $queryIndicadores->where(function($q) use ($orgId) {
-                $q->whereHas('organizacoes', function($sq) use ($orgId) {
-                    $sq->where('tab_organizacoes.cod_organizacao', $orgId);
-                })->orWhereHas('planoDeAcao', function($sq) use ($orgId) {
-                    $sq->where('cod_organizacao', $orgId);
-                });
-            });
+        return view('livewire.dashboard.index', [
+            'stats' => $stats,
+            'minhasEntregas' => $this->getMinhasEntregas(),
+            'comentariosRecentes' => $this->getComentariosRecentes(),
+            'chartBSC' => $this->getChartBSC(),
+            'chartRiscosNivel' => $this->getChartRiscosNivel(),
+            'chartPlanos' => $this->getChartPlanos(),
+        ]);
+    }
+
+    private function getStats()
+    {
+        $codPei = $this->peiAtivo?->cod_pei;
+
+        // Cálculo de Progresso dos Planos
+        $planosQuery = PlanoDeAcao::query();
+        if ($this->organizacaoId) {
+            $planosQuery->where('cod_organizacao', $this->organizacaoId);
         }
+        $planos = $planosQuery->get();
+        
+        $totalProgresso = 0;
+        foreach ($planos as $plano) {
+            $totalProgresso += $plano->calcularProgressoEntregas();
+        }
+        $mediaProgresso = $planos->count() > 0 ? $totalProgresso / $planos->count() : 0;
 
-        // --- 1. Minhas Entregas (Foco no Usuário) ---
-        $minhasEntregas = \App\Models\PEI\Entrega::with(['planoDeAcao', 'labels'])
-            ->whereHas('responsaveis', function($q) use ($userId) {
-                $q->where('users.id', $userId);
-            })
-            ->where('bln_status', '!=', 'Concluído')
-            ->orderBy('dte_prazo', 'asc')
-            ->get();
+        return [
+            'totalObjetivos' => $this->peiAtivo ? Objetivo::whereHas('perspectiva', function($q) use ($codPei) {
+                $q->where('cod_pei', $codPei);
+            })->count() : 0,
 
-        $comentariosRecentes = \App\Models\PEI\EntregaComentario::with(['usuario', 'entrega'])
-            ->whereHas('entrega.responsaveis', function($q) use ($userId) {
-                $q->where('users.id', $userId);
+            'progressoPlanos' => $mediaProgresso,
+
+            'riscosCriticos' => $this->organizacaoId ? Risco::where('cod_organizacao', $this->organizacaoId)
+                ->where('cod_pei', $codPei)
+                ->criticos()
+                ->count() : 0,
+        ];
+    }
+
+    private function getMinhasEntregas()
+    {
+        return Entrega::whereHas('responsaveis', function($q) {
+            $q->where('users.id', Auth::id());
+        })
+        ->where('bln_status', '!=', 'Concluído')
+        ->with('planoDeAcao')
+        ->orderBy('dte_prazo')
+        ->get();
+    }
+
+    private function getComentariosRecentes()
+    {
+        return EntregaComentario::with(['usuario', 'entrega'])
+            ->whereHas('entrega.planoDeAcao', function($q) {
+                if ($this->organizacaoId) {
+                    $q->where('cod_organizacao', $this->organizacaoId);
+                }
             })
-            ->where('cod_usuario', '!=', $userId)
             ->latest()
             ->take(5)
             ->get();
+    }
 
-        // --- 2. Estatísticas Estratégicas (KPIs) ---
-        $stats = [
-            'totalObjetivos' => $this->peiAtivo ? ObjetivoEstrategico::whereHas('perspectiva', function($q) {
-                $q->where('cod_pei', $this->peiAtivo->cod_pei);
-            })->count() : 0,
-            'totalPlanos' => (clone $queryPlanos)->count(),
-            'progressoPlanos' => (clone $queryPlanos)->get()->avg(fn($p) => $p->calcularProgressoEntregas()) ?? 0,
-            'riscosCriticos' => Risco::where('cod_organizacao', $orgId)
-                                    ->whereRaw('(num_probabilidade * num_impacto) >= 15')->count(),
-            'indicadoresAtrasados' => (clone $queryIndicadores)->whereDoesntHave('evolucoes', function($q) {
-                $q->where('num_ano', now()->year)->where('num_mes', now()->month);
-            })->count(),
+    private function getChartBSC()
+    {
+        if (!$this->peiAtivo) return [];
+
+        return Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
+            ->orderBy('num_nivel_hierarquico_apresentacao')
+            ->get()
+            ->map(function($p) {
+                // Cálculo simplificado de média por perspectiva para o gráfico
+                $objetivos = $p->objetivos;
+                $atingimentos = $objetivos->map(fn($o) => $o->calcularAtingimentoConsolidado());
+                $media = $atingimentos->count() > 0 ? $atingimentos->avg() : 0;
+
+                return [
+                    'label' => $p->dsc_perspectiva,
+                    'count' => round($media, 1),
+                    'color' => $this->getCorAtingimento($media)
+                ];
+            });
+    }
+
+    private function getChartRiscosNivel()
+    {
+        if (!$this->organizacaoId) return ['labels' => [], 'data' => [], 'colors' => []];
+
+        $riscos = Risco::where('cod_organizacao', $this->organizacaoId)
+            ->where('cod_pei', $this->peiAtivo?->cod_pei)
+            ->get();
+
+        $niveis = [
+            'Crítico' => ['count' => 0, 'color' => '#dc3545'],
+            'Alto' => ['count' => 0, 'color' => '#fd7e14'],
+            'Médio' => ['count' => 0, 'color' => '#ffc107'],
+            'Baixo' => ['count' => 0, 'color' => '#198754'],
         ];
 
-        // --- 3. Desempenho por Perspectiva (BSC) ---
-        $chartBSC = [];
-        $graus = GrauSatisfacao::orderBy('vlr_minimo')->get();
-
-        if ($this->peiAtivo) {
-            $perspectivas = Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
-                ->with(['objetivos.indicadores'])
-                ->ordenadoPorNivel()
-                ->get();
-
-            foreach ($perspectivas as $p) {
-                $somaPersp = 0;
-                $contPersp = 0;
-                foreach($p->objetivos as $obj) {
-                    foreach($obj->indicadores as $ind) {
-                        $somaPersp += $ind->calcularAtingimento();
-                        $contPersp++;
-                    }
-                }
-                $atingimento = $contPersp > 0 ? round($somaPersp / $contPersp, 1) : 0;
-                
-                // Determinar cor baseada no grau de satisfação
-                $cor = '#1B408E'; // Default Deep Blue
-                foreach ($graus as $grau) {
-                    if ($atingimento >= $grau->vlr_minimo && $atingimento <= $grau->vlr_maximo) {
-                        $cor = $grau->cor; // CORRIGIDO: de dsc_cor para cor
-                        break;
-                    }
-                }
-
-                $chartBSC[] = [
-                    'label' => $p->dsc_perspectiva,
-                    'count' => $atingimento,
-                    'color' => $cor,
-                    'id' => $p->cod_perspectiva
-                ];
+        foreach ($riscos as $r) {
+            $label = $r->getNivelRiscoLabel();
+            if (isset($niveis[$label])) {
+                $niveis[$label]['count']++;
             }
         }
 
-        // --- 4. Riscos por Nível (Substituindo Evolução) ---
-        $riscosNiveis = Risco::where('cod_organizacao', $orgId)
-            ->selectRaw('
-                CASE
-                    WHEN (num_probabilidade * num_impacto) >= 15 THEN \'Crítico\'
-                    WHEN (num_probabilidade * num_impacto) >= 10 THEN \'Alto\'
-                    WHEN (num_probabilidade * num_impacto) >= 5 THEN \'Médio\'
-                    ELSE \'Baixo\'
-                END as nivel,
-                count(*) as total
-            ')
-            ->groupByRaw('nivel')
-            ->pluck('total', 'nivel')->toArray();
+        return [
+            'labels' => array_keys($niveis),
+            'data' => array_column($niveis, 'count'),
+            'colors' => array_column($niveis, 'color'),
+        ];
+    }
 
-        $chartRiscosNivel = [
-            'labels' => ['Crítico', 'Alto', 'Médio', 'Baixo'],
-            'data' => [
-                $riscosNiveis['Crítico'] ?? 0,
-                $riscosNiveis['Alto'] ?? 0,
-                $riscosNiveis['Médio'] ?? 0,
-                $riscosNiveis['Baixo'] ?? 0,
-            ],
-            'colors' => ['#dc3545', '#fd7e14', '#ffc107', '#198754']
+    private function getChartPlanos()
+    {
+        $planosQuery = PlanoDeAcao::query();
+        if ($this->organizacaoId) {
+            $planosQuery->where('cod_organizacao', $this->organizacaoId);
+        }
+        
+        $planos = $planosQuery->get();
+        
+        $status = [
+            'Concluído' => ['count' => 0, 'color' => '#198754'],
+            'Em Andamento' => ['count' => 0, 'color' => '#0d6efd'],
+            'Não Iniciado' => ['count' => 0, 'color' => '#6c757d'],
+            'Atrasado' => ['count' => 0, 'color' => '#dc3545'],
         ];
 
-        // --- 5. Status Planos ---
-        $planosStatus = (clone $queryPlanos)->selectRaw('bln_status as status, count(*) as total')->groupBy('bln_status')->pluck('total', 'status')->toArray();
-        $chartPlanos = [
-            ['label' => 'Concluído', 'count' => $planosStatus['Concluído'] ?? 0, 'color' => '#198754'],
-            ['label' => 'Em Andamento', 'count' => $planosStatus['Em Andamento'] ?? 0, 'color' => '#0d6efd'],
-            ['label' => 'Atrasado', 'count' => $planosStatus['Atrasado'] ?? 0, 'color' => '#dc3545'],
-            ['label' => 'Não Iniciado', 'count' => $planosStatus['Não Iniciado'] ?? 0, 'color' => '#6c757d'],
-        ];
+        foreach ($planos as $p) {
+            $st = $p->bln_status;
+            if (isset($status[$st])) {
+                $status[$st]['count']++;
+            }
+        }
 
-        return view('livewire.dashboard.index', [
-            'stats' => $stats,
-            'minhasEntregas' => $minhasEntregas,
-            'comentariosRecentes' => $comentariosRecentes,
-            'chartBSC' => $chartBSC,
-            'chartRiscosNivel' => $chartRiscosNivel,
-            'chartPlanos' => $chartPlanos,
-            'organizacaoNome' => Session::get('organizacao_selecionada_sgl', 'Global')
-        ]);
+        return collect($status)->map(fn($v, $k) => [
+            'label' => $k,
+            'count' => $v['count'],
+            'color' => $v['color']
+        ])->values()->toArray();
+    }
+
+    private function getCorAtingimento($percentual)
+    {
+        if ($percentual >= 100) return '#198754';
+        if ($percentual >= 80) return '#0d6efd';
+        if ($percentual >= 60) return '#0dcaf0';
+        if ($percentual >= 40) return '#ffc107';
+        return '#dc3545';
     }
 }

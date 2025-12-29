@@ -2386,7 +2386,7 @@ class MapaEstrategicoPublico extends Component
                                 @else
                                     <p class="text-muted mb-0">
                                         <i class="bi bi-info-circle me-2"></i>
-                                        Nenhum objetivo estratégico cadastrado para esta perspectiva.
+                                        Nenhum objetivo cadastrado para esta perspectiva.
                                     </p>
                                 @endif
                             </div>

@@ -30,7 +30,7 @@
         // Buscar detalhes dos indicadores para transparencia no calculo
         $indicadoresDiretos = $objetivo->indicadores()->with(['evolucoes', 'metasPorAno'])->get();
         $indicadoresPlanos = \App\Models\PEI\Indicador::whereHas('planoDeAcao', function ($q) use ($objetivo) {
-            $q->where('cod_objetivo_estrategico', $objetivo->cod_objetivo_estrategico);
+            $q->where('cod_objetivo', $objetivo->cod_objetivo);
         })->with(['evolucoes', 'metasPorAno', 'planoDeAcao'])->get();
         $todosIndicadores = $indicadoresDiretos->merge($indicadoresPlanos)->unique('cod_indicador');
 
@@ -60,7 +60,7 @@
                 'realizado' => $totalRealizado,
                 'atingimento' => round($atingimento, 1),
                 'contribuicao' => round($atingimento * $peso, 1),
-                'vinculo' => $ind->cod_objetivo_estrategico ? 'Objetivo' : 'Plano de Acao',
+                'vinculo' => $ind->cod_objetivo ? 'Objetivo' : 'Plano de Acao',
             ];
             $somaPesos += $peso;
         }
@@ -119,9 +119,9 @@
                         </div>
                     </div>
                     <div class="flex-grow-1">
-                        <h5 class="fw-bold mb-1">{{ $objetivo->nom_objetivo_estrategico }}</h5>
-                        @if($objetivo->dsc_objetivo_estrategico)
-                            <p class="text-muted mb-0 small">{{ $objetivo->dsc_objetivo_estrategico }}</p>
+                        <h5 class="fw-bold mb-1">{{ $objetivo->nom_objetivo }}</h5>
+                        @if($objetivo->dsc_objetivo)
+                            <p class="text-muted mb-0 small">{{ $objetivo->dsc_objetivo }}</p>
                         @endif
                     </div>
                 </div>
@@ -150,7 +150,7 @@
                          title="<strong>Media Ponderada</strong><br>Soma(Atingimento x Peso) / Soma(Pesos)<br><small class='text-muted'>Clique em 'Ver calculo' para detalhes</small>">
                         <div class="card-body py-2 px-3 text-center">
                             <div class="d-flex align-items-center justify-content-center gap-1">
-                                <div class="fs-4 fw-bold text-{{ $corFarol }}">{{ $mediaAtingimento }}%</div>
+                                <div class="fs-4 fw-bold text-{{ $corFarol }}">@brazil_percent($mediaAtingimento, 1)</div>
                                 <i class="bi bi-info-circle text-muted small" style="cursor: help;"></i>
                             </div>
                             <small class="text-muted">
@@ -200,14 +200,14 @@
 
             <!-- Botao para expandir detalhes do calculo -->
             <div class="mt-3 text-center">
-                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#detalhesCalculo{{ $objetivo->cod_objetivo_estrategico }}" aria-expanded="false">
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#detalhesCalculo{{ $objetivo->cod_objetivo }}" aria-expanded="false">
                     <i class="bi bi-calculator me-1"></i>Ver como e calculado
                     <i class="bi bi-chevron-down ms-1"></i>
                 </button>
             </div>
 
             <!-- Secao Colapsavel: Detalhes do Calculo -->
-            <div class="collapse mt-3" id="detalhesCalculo{{ $objetivo->cod_objetivo_estrategico }}">
+            <div class="collapse mt-3" id="detalhesCalculo{{ $objetivo->cod_objetivo }}">
                 <div class="card bg-light border-0">
                     <div class="card-body">
                         <!-- Legenda de Cores do Farol -->
@@ -220,7 +220,7 @@
                                     <div class="d-flex align-items-center px-2 py-1 bg-white rounded border">
                                         <span class="rounded-circle me-2" style="width: 12px; height: 12px; background-color: {{ $grau->cor }}; display: inline-block;"></span>
                                         <small>
-                                            {{ number_format($grau->vlr_minimo, 0) }}% - {{ number_format($grau->vlr_maximo, 0) }}%
+                                            @brazil_percent($grau->vlr_minimo, 0) - @brazil_percent($grau->vlr_maximo, 0)
                                             @if($grau->dsc_grau_satisfacao)
                                                 <span class="text-muted">({{ $grau->dsc_grau_satisfacao }})</span>
                                             @endif
@@ -305,19 +305,19 @@
                                                         </span>
                                                     </td>
                                                     <td class="text-end">
-                                                        <small>{{ number_format($det['previsto'], 2, ',', '.') }}</small>
+                                                        <small>@brazil_number($det['previsto'], 2)</small>
                                                         @if($det['unidade'])
                                                             <small class="text-muted">{{ $det['unidade'] }}</small>
                                                         @endif
                                                     </td>
                                                     <td class="text-end">
-                                                        <small>{{ number_format($det['realizado'], 2, ',', '.') }}</small>
+                                                        <small>@brazil_number($det['realizado'], 2)</small>
                                                     </td>
                                                     <td class="text-center">
                                                         <span class="badge bg-dark bg-opacity-10 text-dark">{{ $det['peso'] }}</span>
                                                     </td>
                                                     <td class="text-end fw-bold">
-                                                        {{ $det['atingimento'] }}%
+                                                        @brazil_percent($det['atingimento'], 1)
                                                     </td>
                                                     <td class="text-end">
                                                         <small class="text-muted">{{ $det['contribuicao'] }}</small>
@@ -330,7 +330,7 @@
                                                 <td colspan="4" class="text-end">Total:</td>
                                                 <td class="text-center">{{ $somaPesos }}</td>
                                                 <td colspan="2" class="text-end">
-                                                    <span class="text-{{ $corFarol }}">{{ $mediaAtingimento }}%</span>
+                                                    <span class="text-{{ $corFarol }}">@brazil_percent($mediaAtingimento, 1)</span>
                                                     <small class="text-muted fw-normal d-block">
                                                         ({{ array_sum(array_column($detalhesIndicadores, 'contribuicao')) }} / {{ $somaPesos }})
                                                     </small>
@@ -362,12 +362,12 @@
                     Ano de referencia: {{ now()->year }}
                 </small>
                 <div class="d-flex gap-2">
-                    <a href="{{ route('indicadores.index', ['filtroObjetivo' => $objetivo->cod_objetivo_estrategico]) }}"
+                    <a href="{{ route('indicadores.index', ['filtroObjetivo' => $objetivo->cod_objetivo]) }}"
                        class="btn btn-sm btn-outline-primary {{ request()->routeIs('indicadores.*') ? 'active' : '' }}"
                        wire:navigate>
                         <i class="bi bi-graph-up me-1"></i>Indicadores
                     </a>
-                    <a href="{{ route('planos.index', ['filtroObjetivo' => $objetivo->cod_objetivo_estrategico]) }}"
+                    <a href="{{ route('planos.index', ['filtroObjetivo' => $objetivo->cod_objetivo]) }}"
                        class="btn btn-sm btn-outline-info {{ request()->routeIs('planos.*') ? 'active' : '' }}"
                        wire:navigate>
                         <i class="bi bi-list-check me-1"></i>Planos

@@ -4,7 +4,7 @@ namespace App\Livewire\Indicador;
 
 use App\Models\PEI\Indicador;
 use App\Models\PEI\PEI;
-use App\Models\PEI\ObjetivoEstrategico;
+use App\Models\PEI\Objetivo;
 use App\Models\PEI\PlanoDeAcao;
 use App\Models\PEI\LinhaBaseIndicador;
 use App\Models\PEI\MetaPorAno;
@@ -40,7 +40,7 @@ class ListarIndicadores extends Component
         'nom_indicador' => '',
         'dsc_indicador' => '',
         'dsc_tipo' => 'Objetivo',
-        'cod_objetivo_estrategico' => '',
+        'cod_objetivo' => '',
         'cod_plano_de_acao' => '',
         'txt_observacao' => '',
         'dsc_meta' => '',
@@ -64,6 +64,7 @@ class ListarIndicadores extends Component
     public $objetivos = [];
     public $planos = [];
     public $periodosOptions = ['Mensal', 'Bimestral', 'Trimestral', 'Semestral', 'Anual'];
+    public $grausSatisfacao = [];
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -90,11 +91,12 @@ class ListarIndicadores extends Component
 
     public function carregarListasAuxiliares()
     {
+        $this->grausSatisfacao = \App\Models\PEI\GrauSatisfacao::orderBy('vlr_minimo')->get();
         $peiAtivo = PEI::ativos()->first();
         if ($peiAtivo) {
-            $this->objetivos = ObjetivoEstrategico::whereHas('perspectiva', function($query) use ($peiAtivo) {
+            $this->objetivos = Objetivo::whereHas('perspectiva', function($query) use ($peiAtivo) {
                 $query->where('cod_pei', $peiAtivo->cod_pei);
-            })->orderBy('nom_objetivo_estrategico')->get();
+            })->orderBy('nom_objetivo')->get();
         }
 
         if ($this->organizacaoId) {
@@ -122,7 +124,7 @@ class ListarIndicadores extends Component
             'nom_indicador' => $indicador->nom_indicador,
             'dsc_indicador' => $indicador->dsc_indicador,
             'dsc_tipo' => $indicador->dsc_tipo ?? ($indicador->cod_plano_de_acao ? 'Plano' : 'Objetivo'),
-            'cod_objetivo_estrategico' => $indicador->cod_objetivo_estrategico,
+            'cod_objetivo' => $indicador->cod_objetivo,
             'cod_plano_de_acao' => $indicador->cod_plano_de_acao,
             'txt_observacao' => $indicador->txt_observacao,
             'dsc_meta' => $indicador->dsc_meta,
@@ -148,7 +150,7 @@ class ListarIndicadores extends Component
 
         $data = $this->form;
         if ($data['dsc_tipo'] === 'Objetivo') { $data['cod_plano_de_acao'] = null; } 
-        else { $data['cod_objetivo_estrategico'] = null; }
+        else { $data['cod_objetivo'] = null; }
 
         if ($this->indicadorId) {
             $indicador = Indicador::findOrFail($this->indicadorId);
@@ -245,7 +247,7 @@ class ListarIndicadores extends Component
         $this->indicadorId = null;
         $this->form = [
             'nom_indicador' => '', 'dsc_indicador' => '', 'dsc_tipo' => 'Objetivo',
-            'cod_objetivo_estrategico' => '', 'cod_plano_de_acao' => '', 'txt_observacao' => '',
+            'cod_objetivo' => '', 'cod_plano_de_acao' => '', 'txt_observacao' => '',
             'dsc_meta' => '', 'dsc_unidade_medida' => '', 'num_peso' => 1, 'bln_acumulado' => 'Não',
             'dsc_formula' => '', 'dsc_fonte' => '', 'dsc_periodo_medicao' => 'Mensal',
             'dsc_referencial_comparativo' => '', 'dsc_atributos' => '',
@@ -254,16 +256,16 @@ class ListarIndicadores extends Component
 
     public function render()
     {
-        $query = Indicador::query()->with(['objetivoEstrategico', 'planoDeAcao', 'evolucoes', 'metasPorAno']);
+        $query = Indicador::query()->with(['objetivo', 'planoDeAcao', 'evolucoes', 'metasPorAno']);
 
         // Se há filtro por objetivo específico, prioriza esse filtro
         if ($this->filtroObjetivo) {
             // Busca indicadores diretamente vinculados ao objetivo
             // OU vinculados a planos de ação desse objetivo
             $query->where(function($q) {
-                $q->where('cod_objetivo_estrategico', $this->filtroObjetivo)
+                $q->where('cod_objetivo', $this->filtroObjetivo)
                   ->orWhereHas('planoDeAcao', function($sub) {
-                      $sub->where('cod_objetivo_estrategico', $this->filtroObjetivo);
+                      $sub->where('cod_objetivo', $this->filtroObjetivo);
                   });
             });
         } elseif ($this->organizacaoId) {

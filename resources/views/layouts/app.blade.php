@@ -193,6 +193,11 @@
                             'icon' => 'bullseye'
                         ],
                         [
+                            'label' => __('Objetivos Estratégicos'),
+                            'route' => 'objetivos-estrategicos.index',
+                            'icon' => 'shield-check'
+                        ],
+                        [
                             'label' => __('Planos de Ação'),
                             'route' => 'planos.index',
                             'icon' => 'list-task'

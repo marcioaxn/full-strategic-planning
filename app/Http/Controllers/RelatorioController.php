@@ -7,8 +7,11 @@ use App\Models\PEI\PEI;
 use App\Models\PEI\Perspectiva;
 use App\Models\PEI\MissaoVisaoValores;
 use App\Models\PEI\Valor;
+use App\Models\PEI\Objetivo;
+use App\Models\PEI\ObjetivoEstrategico;
 use App\Models\PEI\Indicador;
 use App\Models\PEI\PlanoDeAcao;
+use App\Models\PEI\GrauSatisfacao;
 use App\Models\Risco;
 use App\Exports\ObjetivosExport;
 use App\Exports\IndicadoresExport;
@@ -20,6 +23,123 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class RelatorioController extends Controller
 {
+    // ... outros métodos ...
+
+    public function executivo(Request $request, $organizacaoId = null)
+    {
+        $organizacaoId = $organizacaoId ?? $request->query('organizacaoId') ?? session('organizacao_selecionada_id');
+        if (!$organizacaoId) return back();
+
+        $ano = $request->query('ano') ?? date('Y');
+        $periodo = $request->query('periodo') ?? 'anual';
+        $perspectivaId = $request->query('perspectiva');
+
+        // Traduzir período para mês limite de cálculo
+        $mesLimite = 12;
+        switch($periodo) {
+            case '1_semestre': $mesLimite = 6; break;
+            case '2_semestre': $mesLimite = 12; break;
+            case '1_trimestre': $mesLimite = 3; break;
+            case '2_trimestre': $mesLimite = 6; break;
+            case '3_trimestre': $mesLimite = 9; break;
+            case '4_trimestre': $mesLimite = 12; break;
+            default: $mesLimite = ($ano == date('Y') ? date('n') : 12);
+        }
+
+        $organizacao = Organization::findOrFail($organizacaoId);
+        $identidade = MissaoVisaoValores::where('cod_organizacao', $organizacaoId)->first() ?? new MissaoVisaoValores();
+        
+        $pei = PEI::ativos()->first();
+        
+        // 1. Valores e Objetivos Estratégicos (Nova Entidade)
+        $valores = Valor::where('cod_pei', $pei?->cod_pei)
+            ->where('cod_organizacao', $organizacaoId)
+            ->orderBy('nom_valor')
+            ->get();
+
+        $objetivosEstrategicos = ObjetivoEstrategico::where('cod_pei', $pei?->cod_pei)
+            ->where('cod_organizacao', $organizacaoId)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        // 2. Perspectivas e Objetivos (BSC)
+        $queryPerspectivas = Perspectiva::where('cod_pei', $pei?->cod_pei);
+        if ($perspectivaId) {
+            $queryPerspectivas->where('cod_perspectiva', $perspectivaId);
+        }
+        $perspectivas = $queryPerspectivas->with(['objetivos.indicadores'])->ordenadoPorNivel()->get();
+        
+        // 3. Planos de Ação (Ordenados por Perspectiva > Objetivo > Plano)
+        $planos = PlanoDeAcao::where('cod_organizacao', $organizacaoId)
+            ->with(['entregas', 'objetivo.perspectiva'])
+            ->where(function($q) use ($ano) {
+                $q->whereYear('dte_inicio', '<=', $ano)
+                  ->whereYear('dte_fim', '>=', $ano);
+            })
+            ->get()
+            ->sortBy([
+                ['objetivo.perspectiva.num_nivel_hierarquico_apresentacao', 'asc'],
+                ['objetivo.num_nivel_hierarquico_apresentacao', 'asc'],
+                ['dsc_plano_de_acao', 'asc']
+            ]);
+
+        // 4. Análise SWOT
+        $swot = \App\Models\PEI\AnaliseAmbiental::swot() 
+            ->where('cod_pei', $pei?->cod_pei)
+            ->where('cod_organizacao', $organizacaoId)
+            ->get()
+            ->groupBy('dsc_categoria');
+
+        // 5. Gestão de Riscos (Sumário e Lista Detalhada)
+        $riscosDetalhado = Risco::where('cod_organizacao', $organizacaoId)
+            ->where('cod_pei', $pei?->cod_pei)
+            ->orderByRaw('(num_probabilidade * num_impacto) DESC')
+            ->get();
+
+        $riscosSummary = Risco::where('cod_organizacao', $organizacaoId)
+            ->selectRaw("
+                CASE
+                    WHEN (num_probabilidade * num_impacto) >= 15 THEN 'Crítico'
+                    WHEN (num_probabilidade * num_impacto) >= 10 THEN 'Alto'
+                    WHEN (num_probabilidade * num_impacto) >= 5 THEN 'Médio'
+                    ELSE 'Baixo'
+                END as nivel,
+                count(*) as total
+            ")
+            ->groupByRaw('nivel')
+            ->pluck('total', 'nivel')
+            ->toArray();
+
+        // 6. Graus de Satisfação (Para coerência de cores)
+        $grausSatisfacao = GrauSatisfacao::orderBy('vlr_minimo')->get();
+
+        // Mapeamento de nomes de períodos
+        $periodosMap = [
+            'anual' => 'Anual (Completo)',
+            '1_semestre' => '1º Semestre',
+            '2_semestre' => '2º Semestre',
+            '1_trimestre' => '1º Trimestre',
+            '2_trimestre' => '2º Trimestre',
+            '3_trimestre' => '3º Trimestre',
+            '4_trimestre' => '4º Trimestre',
+        ];
+        $periodoNome = $periodosMap[$periodo] ?? $periodo;
+
+        $filtros = [
+            'ano' => $ano,
+            'mesLimite' => $mesLimite,
+            'periodo' => $periodoNome,
+            'perspectiva' => $perspectivaId ? Perspectiva::find($perspectivaId)?->dsc_perspectiva : 'Todas'
+        ];
+
+        $pdf = Pdf::loadView('relatorios.executivo', compact(
+            'organizacao', 'identidade', 'valores', 'objetivosEstrategicos', 
+            'perspectivas', 'planos', 'filtros', 'swot', 'riscosSummary', 'riscosDetalhado', 'grausSatisfacao'
+        ));
+        
+        return $pdf->download("Relatorio_Executivo_{$organizacao->sgl_organizacao}_{$ano}.pdf");
+    }
+
     public function identidade($organizacaoId)
     {
         $organizacao = Organization::findOrFail($organizacaoId);
@@ -80,7 +200,7 @@ class RelatorioController extends Controller
                 $q->where('cod_organizacao', $organizacaoId);
             });
         }
-        $indicadores = $query->with(['objetivoEstrategico', 'planoDeAcao'])->get();
+        $indicadores = $query->with(['objetivo', 'planoDeAcao'])->get();
 
         $periodosMap = [
             'anual' => 'Anual (Completo)',
@@ -106,83 +226,6 @@ class RelatorioController extends Controller
     {
         $organizacaoId = $organizacaoId ?? session('organizacao_selecionada_id');
         return Excel::download(new IndicadoresExport($organizacaoId), "Indicadores_Desempenho.xlsx");
-    }
-
-    public function executivo(Request $request, $organizacaoId = null)
-    {
-        $organizacaoId = $organizacaoId ?? $request->query('organizacaoId') ?? session('organizacao_selecionada_id');
-        if (!$organizacaoId) return back();
-
-        $ano = $request->query('ano') ?? date('Y');
-        $periodo = $request->query('periodo') ?? 'anual';
-        $perspectivaId = $request->query('perspectiva');
-
-        $organizacao = Organization::findOrFail($organizacaoId);
-        $identidade = MissaoVisaoValores::where('cod_organizacao', $organizacaoId)->first() ?? new MissaoVisaoValores();
-        
-        $pei = PEI::ativos()->first();
-        
-        // 1. Perspectivas e Objetivos
-        $queryPerspectivas = Perspectiva::where('cod_pei', $pei?->cod_pei);
-        if ($perspectivaId) {
-            $queryPerspectivas->where('cod_perspectiva', $perspectivaId);
-        }
-        $perspectivas = $queryPerspectivas->with(['objetivos.indicadores'])->ordenadoPorNivel()->get();
-        
-        // 2. Planos de Ação
-        $planos = PlanoDeAcao::where('cod_organizacao', $organizacaoId)
-            ->with('entregas')
-            ->where(function($q) use ($ano) {
-                $q->whereYear('dte_inicio', '<=', $ano)
-                  ->whereYear('dte_fim', '>=', $ano);
-            })
-            ->orderBy('dte_fim')->get();
-
-        // 3. Análise SWOT (Novo)
-        $swot = \App\Models\PEI\AnaliseAmbiental::swot()
-            ->where('cod_pei', $pei?->cod_pei)
-            ->where('cod_organizacao', $organizacaoId)
-            ->get()
-            ->groupBy('dsc_categoria');
-
-        // 4. Gestão de Riscos (Novo - Sumário)
-        $riscosSummary = Risco::where('cod_organizacao', $organizacaoId)
-            ->selectRaw('
-                CASE
-                    WHEN (num_probabilidade * num_impacto) >= 15 THEN \'Crítico\'
-                    WHEN (num_probabilidade * num_impacto) >= 10 THEN \'Alto\'
-                    WHEN (num_probabilidade * num_impacto) >= 5 THEN \'Médio\'
-                    ELSE \'Baixo\'
-                END as nivel,
-                count(*) as total
-            ')
-            ->groupByRaw('nivel')
-            ->pluck('total', 'nivel')
-            ->toArray();
-
-        // Mapeamento de nomes de períodos
-        $periodosMap = [
-            'anual' => 'Anual (Completo)',
-            '1_semestre' => '1º Semestre',
-            '2_semestre' => '2º Semestre',
-            '1_trimestre' => '1º Trimestre',
-            '2_trimestre' => '2º Trimestre',
-            '3_trimestre' => '3º Trimestre',
-            '4_trimestre' => '4º Trimestre',
-        ];
-        $periodoNome = $periodosMap[$periodo] ?? $periodo;
-
-        $filtros = [
-            'ano' => $ano,
-            'periodo' => $periodoNome,
-            'perspectiva' => $perspectivaId ? Perspectiva::find($perspectivaId)?->dsc_perspectiva : 'Todas'
-        ];
-
-        $pdf = Pdf::loadView('relatorios.executivo', compact(
-            'organizacao', 'identidade', 'perspectivas', 'planos', 'filtros', 'swot', 'riscosSummary'
-        ));
-        
-        return $pdf->download("Relatorio_Executivo_{$organizacao->sgl_organizacao}_{$ano}.pdf");
     }
 
     public function planosPdf(Request $request)

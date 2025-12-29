@@ -37,6 +37,7 @@ Route::middleware([
     Route::get('/pei/pestel', \App\Livewire\PEI\AnalisePESTEL::class)->name('pei.pestel');
     Route::get('/pei/mapa', \App\Livewire\PEI\MapaEstrategico::class)->name('pei.mapa');
     Route::get('/objetivos', \App\Livewire\PEI\ListarObjetivos::class)->name('objetivos.index');
+    Route::get('/objetivos-estrategicos', \App\Livewire\PEI\GerenciarObjetivosEstrategicos::class)->name('objetivos-estrategicos.index');
     Route::get('/objetivos/{objetivoId}/futuro', \App\Livewire\PEI\GerenciarFuturoAlmejado::class)->name('objetivos.futuro');
     
     // Entregas (Estilo Notion)

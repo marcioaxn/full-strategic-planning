@@ -98,7 +98,7 @@ Com base nas tabelas existentes, o sistema legado já suporta:
 - Missão
 - Visão
 - Valores (múltiplos)
-- Futuro Almejado por Objetivo Estratégico
+- Futuro Almejado por Objetivo
 
 #### ✅ Módulo de Balanced Scorecard (BSC)
 - 4 Perspectivas padrão

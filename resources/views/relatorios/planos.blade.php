@@ -58,7 +58,7 @@
                 @endphp
                 <tr>
                     <td style="font-weight: bold;">{{ $plano->dsc_plano_de_acao }}</td>
-                    <td style="font-size: 9px;">{{ $plano->objetivo?->nom_objetivo_estrategico ?? '-' }}</td>
+                    <td style="font-size: 9px;">{{ $plano->objetivo?->nom_objetivo ?? '-' }}</td>
                     <td style="text-align: center;">{{ $plano->dte_inicio?->format('d/m/Y') ?? '-' }}</td>
                     <td style="text-align: center;">{{ $plano->dte_fim?->format('d/m/Y') ?? '-' }}</td>
                     <td style="text-align: center;">

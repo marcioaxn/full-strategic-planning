@@ -3,15 +3,14 @@
 namespace App\Livewire\PlanoAcao;
 
 use App\Models\PEI\PlanoDeAcao;
-use App\Models\PEI\TipoExecucao;
-use App\Models\PEI\ObjetivoEstrategico;
 use App\Models\PEI\PEI;
+use App\Models\PEI\Objetivo;
+use App\Models\PEI\TipoExecucao;
 use App\Models\Organization;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Session;
 
 #[Layout('layouts.app')]
@@ -25,8 +24,6 @@ class ListarPlanos extends Component
     public $filtroTipo = '';
     public $filtroAno = '';
     public $filtroObjetivo = '';
-
-    // Filtro global de organização
     public $organizacaoId;
 
     public bool $showModal = false;
@@ -35,24 +32,26 @@ class ListarPlanos extends Component
 
     // Campos do Formulário
     public $dsc_plano_de_acao;
+    public $cod_objetivo;
     public $cod_tipo_execucao;
-    public $cod_objetivo_estrategico;
     public $dte_inicio;
     public $dte_fim;
-    public $vlr_orcamento_previsto;
+    public $vlr_orcamento_previsto = 0;
     public $bln_status = 'Não Iniciado';
     public $cod_ppa;
     public $cod_loa;
 
-    // Dados para Dropdowns
-    public $tiposExecucao = [];
+    // Listas auxiliares
     public $objetivos = [];
-    public $statusOptions = ['Não Iniciado', 'Em Andamento', 'Concluído', 'Suspenso', 'Cancelado'];
+    public $tiposExecucao = [];
+    public $statusOptions = ['Não Iniciado', 'Em Andamento', 'Concluído', 'Atrasado', 'Suspenso', 'Cancelado'];
+    public $grausSatisfacao = [];
 
     protected $queryString = [
         'search' => ['except' => ''],
         'filtroStatus' => ['except' => ''],
         'filtroTipo' => ['except' => ''],
+        'filtroAno' => ['except' => ''],
         'filtroObjetivo' => ['except' => ''],
         'page' => ['except' => 1],
     ];
@@ -77,17 +76,12 @@ class ListarPlanos extends Component
 
     public function carregarObjetivos()
     {
-        // Carrega objetivos do PEI ativo
+        $this->grausSatisfacao = \App\Models\PEI\GrauSatisfacao::orderBy('vlr_minimo')->get();
         $peiAtivo = PEI::ativos()->first();
         if ($peiAtivo) {
-            $this->objetivos = ObjetivoEstrategico::whereHas('perspectiva', function($query) use ($peiAtivo) {
+            $this->objetivos = Objetivo::whereHas('perspectiva', function($query) use ($peiAtivo) {
                 $query->where('cod_pei', $peiAtivo->cod_pei);
-            })
-            ->with('perspectiva')
-            ->get()
-            ->sortBy(['perspectiva.num_nivel_hierarquico_apresentacao', 'num_nivel_hierarquico_apresentacao']);
-        } else {
-            $this->objetivos = [];
+            })->with('perspectiva')->orderBy('nom_objetivo')->get();
         }
     }
 
@@ -101,10 +95,8 @@ class ListarPlanos extends Component
         $this->authorize('create', PlanoDeAcao::class);
         $this->resetForm();
         
-        // Se houver uma organização selecionada, define no form (embora não esteja explicitamente no form visual, será salvo no backend)
-        // Se não houver, o usuário precisará selecionar (mas por enquanto estamos assumindo o contexto global)
         if (!$this->organizacaoId) {
-            $this->dispatch('notify', message: 'Selecione uma organização no menu superior para criar um plano.', style: 'warning');
+            $this->dispatch('notify', message: 'Selecione uma organização no menu superior.', style: 'warning');
             return;
         }
 
@@ -118,8 +110,8 @@ class ListarPlanos extends Component
 
         $this->planoId = $id;
         $this->dsc_plano_de_acao = $plano->dsc_plano_de_acao;
+        $this->cod_objetivo = $plano->cod_objetivo;
         $this->cod_tipo_execucao = $plano->cod_tipo_execucao;
-        $this->cod_objetivo_estrategico = $plano->cod_objetivo_estrategico;
         $this->dte_inicio = $plano->dte_inicio?->format('Y-m-d');
         $this->dte_fim = $plano->dte_fim?->format('Y-m-d');
         $this->vlr_orcamento_previsto = $plano->vlr_orcamento_previsto;
@@ -132,89 +124,68 @@ class ListarPlanos extends Component
 
     public function save()
     {
-        $rules = [
-            'dsc_plano_de_acao' => 'required|string|max:500',
-            'cod_tipo_execucao' => 'required|exists:tab_tipo_execucao,cod_tipo_execucao',
-            'cod_objetivo_estrategico' => 'required|exists:tab_objetivo_estrategico,cod_objetivo_estrategico',
+        $this->validate([
+            'dsc_plano_de_acao' => 'required|string|max:255',
+            'cod_objetivo' => 'required|exists:pei.tab_objetivo,cod_objetivo',
+            'cod_tipo_execucao' => 'required|exists:pei.tab_tipo_execucao,cod_tipo_execucao',
             'dte_inicio' => 'required|date',
             'dte_fim' => 'required|date|after_or_equal:dte_inicio',
             'vlr_orcamento_previsto' => 'nullable|numeric|min:0',
-            'bln_status' => 'required|in:' . implode(',', $this->statusOptions),
-            'cod_ppa' => 'nullable|string|max:20',
-            'cod_loa' => 'nullable|string|max:20',
-        ];
-
-        $this->validate($rules);
-
-        if (!$this->organizacaoId && !$this->planoId) {
-             $this->dispatch('notify', message: 'Erro: Organização não identificada.', style: 'danger');
-             return;
-        }
+        ]);
 
         $data = [
             'dsc_plano_de_acao' => $this->dsc_plano_de_acao,
+            'cod_objetivo' => $this->cod_objetivo,
             'cod_tipo_execucao' => $this->cod_tipo_execucao,
-            'cod_objetivo_estrategico' => $this->cod_objetivo_estrategico,
             'dte_inicio' => $this->dte_inicio,
             'dte_fim' => $this->dte_fim,
-            'vlr_orcamento_previsto' => $this->vlr_orcamento_previsto ?? 0,
+            'vlr_orcamento_previsto' => $this->vlr_orcamento_previsto,
             'bln_status' => $this->bln_status,
             'cod_ppa' => $this->cod_ppa,
             'cod_loa' => $this->cod_loa,
+            'cod_organizacao' => $this->organizacaoId,
         ];
 
         if ($this->planoId) {
-            $plano = PlanoDeAcao::findOrFail($this->planoId);
-            $this->authorize('update', $plano);
-            $plano->update($data);
-            $message = 'Plano atualizado com sucesso!';
+            PlanoDeAcao::findOrFail($this->planoId)->update($data);
+            $msg = 'Plano de ação atualizado com sucesso!';
         } else {
-            $this->authorize('create', PlanoDeAcao::class);
-            $data['cod_organizacao'] = $this->organizacaoId;
-            // Nível hierárquico padrão = 1 (pode ser ajustado futuramente)
-            $data['num_nivel_hierarquico_apresentacao'] = 1;
-            
             PlanoDeAcao::create($data);
-            $message = 'Plano criado com sucesso!';
+            $msg = 'Plano de ação criado com sucesso!';
         }
 
         $this->showModal = false;
         $this->resetForm();
-        session()->flash('message', $message);
+        session()->flash('message', $msg);
         session()->flash('style', 'success');
     }
 
     public function confirmDelete($id)
     {
-        $plano = PlanoDeAcao::findOrFail($id);
-        $this->authorize('delete', $plano);
         $this->planoId = $id;
         $this->showDeleteModal = true;
     }
 
     public function delete()
     {
-        if ($this->planoId) {
-            $plano = PlanoDeAcao::findOrFail($this->planoId);
-            $this->authorize('delete', $plano);
-            $plano->delete();
-            
-            session()->flash('message', 'Plano excluído com sucesso!');
-            session()->flash('style', 'success');
-        }
+        $plano = PlanoDeAcao::findOrFail($this->planoId);
+        $this->authorize('delete', $plano);
+        
+        $plano->delete();
         $this->showDeleteModal = false;
-        $this->planoId = null;
+        session()->flash('message', 'Plano de ação excluído!');
+        session()->flash('style', 'danger');
     }
 
     public function resetForm()
     {
         $this->planoId = null;
         $this->dsc_plano_de_acao = '';
+        $this->cod_objetivo = '';
         $this->cod_tipo_execucao = '';
-        $this->cod_objetivo_estrategico = '';
-        $this->dte_inicio = '';
-        $this->dte_fim = '';
-        $this->vlr_orcamento_previsto = '';
+        $this->dte_inicio = null;
+        $this->dte_fim = null;
+        $this->vlr_orcamento_previsto = 0;
         $this->bln_status = 'Não Iniciado';
         $this->cod_ppa = '';
         $this->cod_loa = '';
@@ -223,23 +194,18 @@ class ListarPlanos extends Component
     public function render()
     {
         $query = PlanoDeAcao::query()
-            ->with(['objetivoEstrategico', 'tipoExecucao', 'organizacao'])
-            ->orderBy('dte_inicio', 'desc');
+            ->with(['objetivo', 'tipoExecucao', 'organizacao']);
 
-        // Se há filtro por objetivo específico, prioriza esse filtro
         if ($this->filtroObjetivo) {
-            $query->where('cod_objetivo_estrategico', $this->filtroObjetivo);
+            $query->where('cod_objetivo', $this->filtroObjetivo);
         } elseif ($this->organizacaoId) {
-            // Filtro padrão por organização (quando não há filtro por objetivo)
             $query->where('cod_organizacao', $this->organizacaoId);
         }
 
-        // Busca textual
         if ($this->search) {
             $query->where('dsc_plano_de_acao', 'ilike', '%' . $this->search . '%');
         }
 
-        // Filtros adicionais
         if ($this->filtroStatus) {
             $query->where('bln_status', $this->filtroStatus);
         }
@@ -249,12 +215,14 @@ class ListarPlanos extends Component
         }
 
         if ($this->filtroAno) {
-            $query->whereYear('dte_inicio', '<=', $this->filtroAno)
-                  ->whereYear('dte_fim', '>=', $this->filtroAno);
+            $query->where(function($q) {
+                $q->whereYear('dte_inicio', $this->filtroAno)
+                  ->orWhereYear('dte_fim', $this->filtroAno);
+            });
         }
 
         return view('livewire.plano-acao.listar-planos', [
-            'planos' => $query->paginate(10)
+            'planos' => $query->orderBy('dte_fim')->paginate(10)
         ]);
     }
 }

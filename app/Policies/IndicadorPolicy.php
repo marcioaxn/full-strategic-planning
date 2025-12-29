@@ -32,7 +32,7 @@ class IndicadorPolicy
         }
 
         // Se o indicador está vinculado a um objetivo/plano da organização do usuário
-        if ($indicador->objetivoEstrategico && $user->organizacoes->contains('cod_organizacao', $indicador->objetivoEstrategico->cod_organizacao)) {
+        if ($indicador->objetivo && $user->organizacoes->contains('cod_organizacao', $indicador->objetivo->cod_organizacao)) {
             return true;
         }
 
