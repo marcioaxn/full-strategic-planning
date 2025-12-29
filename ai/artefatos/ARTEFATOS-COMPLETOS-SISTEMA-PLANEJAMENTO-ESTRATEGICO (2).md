@@ -320,7 +320,7 @@ Critérios de Aceitação:
 - Campo de categoria (dropdown)
 - Campo de nível de impacto (1-5 ou Baixo/Alto)
 - Campo de probabilidade (para Ameaças e Oportunidades)
-- Opção de vinculação com Objetivo Estratégico
+- Opção de vinculação com Objetivo
 - Salvar e abrir novo item ou fechar
 - Validação de campos obrigatórios
 \`\`\`
@@ -482,10 +482,10 @@ Critérios de Aceitação:
 - Ordenação por prioridade
 \`\`\`
 
-**US-071: Criar Objetivo Estratégico**
+**US-071: Criar Objetivo**
 \`\`\`
 Como: Administrador da Unidade
-Preciso: Criar novo objetivo estratégico vinculado a uma perspectiva
+Preciso: Criar novo objetivo vinculado a uma perspectiva
 Para: Estruturar a estratégia
 
 Critérios de Aceitação:
@@ -503,7 +503,7 @@ Critérios de Aceitação:
 **US-072: Vincular KPI a Objetivo**
 \`\`\`
 Como: Gestor de Indicadores
-Preciso: Associar um KPI/Indicador a um objetivo estratégico
+Preciso: Associar um KPI/Indicador a um objetivo
 Para: Medir o sucesso do objetivo
 
 Critérios de Aceitação:
@@ -2527,7 +2527,7 @@ class SwotAnalysis extends Component
 
 ## 11. FLUXOS DE NEGÓCIO
 
-### 11.1 Fluxo: Criar Objetivo Estratégico
+### 11.1 Fluxo: Criar Objetivo
 
 \`\`\`
 1. Usuário clica em "Novo Objetivo"

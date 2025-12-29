@@ -4,7 +4,7 @@ namespace App\Livewire\PEI;
 
 use App\Models\PEI\PEI;
 use App\Models\PEI\Perspectiva;
-use App\Models\PEI\ObjetivoEstrategico;
+use App\Models\PEI\Objetivo;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -16,8 +16,8 @@ class ListarObjetivos extends Component
 
     public bool $showModal = false;
     public $objetivoId;
-    public $nom_objetivo_estrategico;
-    public $dsc_objetivo_estrategico;
+    public $nom_objetivo;
+    public $dsc_objetivo;
     public $num_nivel_hierarquico_apresentacao;
     public $cod_perspectiva;
 
@@ -49,10 +49,10 @@ class ListarObjetivos extends Component
 
     public function edit($id)
     {
-        $obj = ObjetivoEstrategico::findOrFail($id);
+        $obj = Objetivo::findOrFail($id);
         $this->objetivoId = $id;
-        $this->nom_objetivo_estrategico = $obj->nom_objetivo_estrategico;
-        $this->dsc_objetivo_estrategico = $obj->dsc_objetivo_estrategico;
+        $this->nom_objetivo = $obj->nom_objetivo;
+        $this->dsc_objetivo = $obj->dsc_objetivo;
         $this->num_nivel_hierarquico_apresentacao = $obj->num_nivel_hierarquico_apresentacao;
         $this->cod_perspectiva = $obj->cod_perspectiva;
         $this->showModal = true;
@@ -65,7 +65,7 @@ class ListarObjetivos extends Component
     public function updatedCodPerspectiva($value)
     {
         if (!$this->objetivoId && $value) {
-            $proximaOrdem = ObjetivoEstrategico::where('cod_perspectiva', $value)
+            $proximaOrdem = Objetivo::where('cod_perspectiva', $value)
                 ->max('num_nivel_hierarquico_apresentacao');
             
             $this->num_nivel_hierarquico_apresentacao = ($proximaOrdem ?? 0) + 1;
@@ -75,17 +75,17 @@ class ListarObjetivos extends Component
     public function save()
     {
         $this->validate([
-            'nom_objetivo_estrategico' => 'required|string|max:255',
-            'dsc_objetivo_estrategico' => 'nullable|string|max:1000',
+            'nom_objetivo' => 'required|string|max:255',
+            'dsc_objetivo' => 'nullable|string|max:1000',
             'num_nivel_hierarquico_apresentacao' => 'required|integer|min:1',
-            'cod_perspectiva' => 'required|exists:tab_perspectiva,cod_perspectiva',
+            'cod_perspectiva' => 'required|exists:pei.tab_perspectiva,cod_perspectiva',
         ]);
 
-        ObjetivoEstrategico::updateOrCreate(
-            ['cod_objetivo_estrategico' => $this->objetivoId],
+        Objetivo::updateOrCreate(
+            ['cod_objetivo' => $this->objetivoId],
             [
-                'nom_objetivo_estrategico' => $this->nom_objetivo_estrategico,
-                'dsc_objetivo_estrategico' => $this->dsc_objetivo_estrategico,
+                'nom_objetivo' => $this->nom_objetivo,
+                'dsc_objetivo' => $this->dsc_objetivo,
                 'num_nivel_hierarquico_apresentacao' => $this->num_nivel_hierarquico_apresentacao,
                 'cod_perspectiva' => $this->cod_perspectiva,
             ]
@@ -93,21 +93,21 @@ class ListarObjetivos extends Component
 
         $this->showModal = false;
         $this->carregarPerspectivas();
-        session()->flash('status', 'Objetivo estratégico salvo com sucesso!');
+        session()->flash('status', 'Objetivo salvo com sucesso!');
     }
 
     public function delete($id)
     {
-        ObjetivoEstrategico::findOrFail($id)->delete();
+        Objetivo::findOrFail($id)->delete();
         $this->carregarPerspectivas();
-        session()->flash('status', 'Objetivo estratégico excluído com sucesso!');
+        session()->flash('status', 'Objetivo excluído com sucesso!');
     }
 
     public function resetForm()
     {
         $this->objetivoId = null;
-        $this->nom_objetivo_estrategico = '';
-        $this->dsc_objetivo_estrategico = '';
+        $this->nom_objetivo = '';
+        $this->dsc_objetivo = '';
         $this->num_nivel_hierarquico_apresentacao = 1;
         $this->cod_perspectiva = '';
     }

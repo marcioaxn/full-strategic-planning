@@ -35,7 +35,7 @@
         <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h6 class="fw-bold mb-0">Progresso Consolidado</h6>
-                <span class="fw-bold text-primary fs-5">{{ number_format($progresso, 1) }}%</span>
+                <span class="fw-bold text-primary fs-5">@brazil_percent($progresso, 1)</span>
             </div>
             <div class="progress rounded-pill" style="height: 10px;">
                 <div class="progress-bar gradient-theme" 

@@ -138,12 +138,12 @@
             <div class="card h-100 border-info shadow-sm">
                 <div class="card-header bg-info text-white">
                     <h6 class="mb-0">
-                        <i class="bi bi-bullseye me-2"></i>{{ __('Objetivos Estratégicos') }}
+                        <i class="bi bi-bullseye me-2"></i>{{ __('Objetivos') }}
                     </h6>
                 </div>
                 <div class="card-body">
                     <p class="card-text text-muted small">
-                        {{ __('Lista de todos os objetivos estratégicos organizados por perspectiva.') }}
+                        {{ __('Lista de todos os objetivos organizados por perspectiva.') }}
                     </p>
                     <ul class="list-unstyled small text-muted mb-0">
                         <li><i class="bi bi-check text-success me-1"></i> {{ __('Objetivos por perspectiva') }}</li>

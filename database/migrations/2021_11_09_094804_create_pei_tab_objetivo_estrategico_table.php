@@ -13,9 +13,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('pei.tab_objetivo_estrategico', function (Blueprint $table) {
-            $table->uuid('cod_objetivo_estrategico')->primary()->default(DB::raw('gen_random_uuid()'));
-            $table->text('nom_objetivo_estrategico')->nullable(false);
-            $table->text('dsc_objetivo_estrategico')->nullable(false);
+            $table->uuid('cod_objetivo')->primary()->default(DB::raw('gen_random_uuid()'));
+            $table->text('nom_objetivo')->nullable(false);
+            $table->text('dsc_objetivo')->nullable(false);
             $table->smallInteger('num_nivel_hierarquico_apresentacao')->nullable(false);
             $table->foreignUuid('cod_perspectiva')->references('cod_perspectiva')->on('pei.tab_perspectiva')->cascadeOnDelete();
             $table->timestamps();

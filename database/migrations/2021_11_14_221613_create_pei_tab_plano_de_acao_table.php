@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('pei.tab_plano_de_acao', function (Blueprint $table) {
             $table->uuid('cod_plano_de_acao')->primary()->default(DB::raw('gen_random_uuid()'));
-            $table->foreignUuid('cod_objetivo_estrategico')->references('cod_objetivo_estrategico')->on('pei.tab_objetivo_estrategico')->cascadeOnDelete();
+            $table->foreignUuid('cod_objetivo')->references('cod_objetivo')->on('pei.tab_objetivo_estrategico')->cascadeOnDelete();
             $table->foreignUuid('cod_tipo_execucao')->references('cod_tipo_execucao')->on('pei.tab_tipo_execucao')->cascadeOnDelete();
             $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('tab_organizacoes')->cascadeOnDelete();
             $table->smallInteger('num_nivel_hierarquico_apresentacao')->nullable(false);
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->softDeletes();
 
             // Índices para melhorar performance
-            $table->index('cod_objetivo_estrategico');
+            $table->index('cod_objetivo');
             $table->index('cod_organizacao');
             $table->index('bln_status');
         });

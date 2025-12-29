@@ -6,7 +6,7 @@
                 <div class="header-icon gradient-theme-icon">
                     <i class="bi bi-bullseye"></i>
                 </div>
-                <h1 class="h3 fw-bold mb-0">{{ __('Objetivos Estratégicos') }}</h1>
+                <h1 class="h3 fw-bold mb-0">{{ __('Objetivos') }}</h1>
             </div>
             <p class="text-muted mb-0">
                 @if($peiAtivo)
@@ -62,7 +62,7 @@
                         <thead class="bg-light bg-opacity-25 small text-muted text-uppercase fw-bold">
                             <tr>
                                 <th class="ps-4" style="width: 80px;">{{ __('Ordem') }}</th>
-                                <th>{{ __('Objetivo Estratégico') }}</th>
+                                <th>{{ __('Objetivo') }}</th>
                                 <th>{{ __('Descrição') }}</th>
                                 <th class="text-end pe-4">{{ __('Ações') }}</th>
                             </tr>
@@ -74,19 +74,19 @@
                                         {{ $objetivo->num_nivel_hierarquico_apresentacao }}
                                     </td>
                                     <td>
-                                        <div class="fw-bold text-dark">{{ $objetivo->nom_objetivo_estrategico }}</div>
+                                        <div class="fw-bold text-dark">{{ $objetivo->nom_objetivo }}</div>
                                     </td>
                                     <td>
-                                        <div class="text-muted small text-truncate" style="max-width: 400px;" title="{{ $objetivo->dsc_objetivo_estrategico }}">
-                                            {{ $objetivo->dsc_objetivo_estrategico ?: __('Sem descrição') }}
+                                        <div class="text-muted small text-truncate" style="max-width: 400px;" title="{{ $objetivo->dsc_objetivo }}">
+                                            {{ $objetivo->dsc_objetivo ?: __('Sem descrição') }}
                                         </div>
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="d-flex justify-content-end gap-1">
-                                            <button wire:click="edit('{{ $objetivo->cod_objetivo_estrategico }}')" class="btn btn-sm btn-icon btn-ghost-primary rounded-circle" title="{{ __('Editar') }}">
+                                            <button wire:click="edit('{{ $objetivo->cod_objetivo }}')" class="btn btn-sm btn-icon btn-ghost-primary rounded-circle" title="{{ __('Editar') }}">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            <button wire:click="delete('{{ $objetivo->cod_objetivo_estrategico }}')" wire:confirm="{{ __('Tem certeza que deseja excluir este objetivo?') }}" class="btn btn-sm btn-icon btn-ghost-danger rounded-circle" title="{{ __('Excluir') }}">
+                                            <button wire:click="delete('{{ $objetivo->cod_objetivo }}')" wire:confirm="{{ __('Tem certeza que deseja excluir este objetivo?') }}" class="btn btn-sm btn-icon btn-ghost-danger rounded-circle" title="{{ __('Excluir') }}">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
@@ -132,7 +132,7 @@
                     <div class="modal-header gradient-theme-header text-white border-0">
                         <h5 class="modal-title fw-bold">
                             <i class="bi bi-{{ $objetivoId ? 'pencil' : 'plus-circle' }} me-2"></i>
-                            {{ $objetivoId ? __('Editar Objetivo Estratégico') : __('Novo Objetivo Estratégico') }}
+                            {{ $objetivoId ? __('Editar Objetivo') : __('Novo Objetivo') }}
                         </h5>
                         <button type="button" class="btn-close btn-close-white" wire:click="$set('showModal', false)"></button>
                     </div>
@@ -141,8 +141,8 @@
                             <div class="row g-3">
                                 <div class="col-12">
                                     <label class="form-label fw-bold small text-muted text-uppercase">{{ __('Título do Objetivo') }} <span class="text-danger">*</span></label>
-                                    <input type="text" wire:model="nom_objetivo_estrategico" class="form-control @error('nom_objetivo_estrategico') is-invalid @enderror" placeholder="{{ __('Ex: Aumentar a eficiência operacional') }}">
-                                    @error('nom_objetivo_estrategico') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <input type="text" wire:model="nom_objetivo" class="form-control @error('nom_objetivo') is-invalid @enderror" placeholder="{{ __('Ex: Aumentar a eficiência operacional') }}">
+                                    @error('nom_objetivo') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
                                 <div class="col-md-8">
@@ -164,8 +164,8 @@
 
                                 <div class="col-12">
                                     <label class="form-label fw-bold small text-muted text-uppercase">{{ __('Descrição detalhada') }}</label>
-                                    <textarea wire:model="dsc_objetivo_estrategico" class="form-control @error('dsc_objetivo_estrategico') is-invalid @enderror" rows="4" placeholder="{{ __('Explique o que se pretende alcançar com este objetivo...') }}"></textarea>
-                                    @error('dsc_objetivo_estrategico') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <textarea wire:model="dsc_objetivo" class="form-control @error('dsc_objetivo') is-invalid @enderror" rows="4" placeholder="{{ __('Explique o que se pretende alcançar com este objetivo...') }}"></textarea>
+                                    @error('dsc_objetivo') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                             </div>
                         </div>

@@ -1,4 +1,11 @@
 - **Date**: 2025-12-28
+- **Action**: Standardized Terminology: 'Objetivo Estratégico' -> 'Objetivo'.
+- **Change**:
+    - Performed global replacement of the phrase "objetivo estratégico" (and its case variations) with "objetivo" across all source code (`app/`, `resources/`, `routes/`, `database/`) and documentation (`ai/`, `*.md`).
+    - Careful literal replacement ensured that database columns (snake_case) and model names (CamelCase) like `ObjetivoEstrategico` were NOT affected, as they do not contain spaces.
+- **Reason**: User request to simplify and standardize the terminology used throughout the project.
+
+- **Date**: 2025-12-28
 - **Action**: Enhanced Visual Styling of Strategic Map.
 - **Change**:
     - Modified `resources/views/livewire/pei/mapa-estrategico.blade.php` to lighten the perspective headers background by 55% using `color-mix`.
