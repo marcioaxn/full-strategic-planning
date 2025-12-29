@@ -121,7 +121,7 @@
                             </div>
                             <h4 class="mb-0 fw-bold">Valores Organizacionais</h4>
                         </div>
-                        <a href="{{ route('pei.valores') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                        <a href="{{ route('valores') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
                             Gerenciar <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>

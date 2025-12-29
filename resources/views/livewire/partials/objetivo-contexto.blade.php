@@ -101,7 +101,7 @@
                         <i class="bi bi-layers me-2"></i>{{ $perspectiva?->dsc_perspectiva ?? 'Perspectiva' }}
                     </h6>
                 </div>
-                <a href="{{ route('pei.mapa') }}" class="btn btn-sm btn-light" wire:navigate title="Voltar ao Mapa Estrategico">
+                <a href="{{ route('mapa') }}" class="btn btn-sm btn-light" wire:navigate title="Voltar ao Mapa Estrategico">
                     <i class="bi bi-map me-1"></i> Mapa
                 </a>
             </div>

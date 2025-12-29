@@ -11,7 +11,7 @@ class EvolucaoIndicadorSeeder extends Seeder
 {
     public function run(): void
     {
-        $peiAtivo = PEI::where('bln_ativo', true)->first();
+        $peiAtivo = PEI::first();
         if (!$peiAtivo) return;
 
         // Buscar indicadores vinculados a este PEI (diretos ou via plano)
@@ -37,7 +37,7 @@ class EvolucaoIndicadorSeeder extends Seeder
                     'num_mes' => $mes,
                     'vlr_previsto' => $previsto,
                     'vlr_realizado' => $realizado,
-                    'txt_observacao' => "Lançamento automático via Seeder para o mês $mes.",
+                    'txt_avaliacao' => "Lançamento automático via Seeder para o mês $mes.",
                 ]);
             }
         }
