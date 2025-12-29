@@ -33,7 +33,7 @@ app/
 │   ├── TabAudit.php
 │   ├── TabStatus.php
 │   └── PEI/
-│       ├── PEI.php
+│       ├── php
 │       ├── MissaoVisaoValores.php
 │       ├── Valor.php
 │       ├── FuturoAlmejadoObjetivoEstrategico.php
@@ -57,7 +57,7 @@ app/
 | Elemento | Padrão | Exemplo |
 |----------|--------|---------|
 | Nome da Classe | PascalCase | `PlanoDeAcao` |
-| Nome da Tabela | snake_case | `pei.tab_plano_de_acao` |
+| Nome da Tabela | snake_case | `tab_plano_de_acao` |
 | Chave Primária | `cod_*` ou `id` | `cod_plano_de_acao` |
 | Chaves Estrangeiras | `cod_*` ou `*_id` | `cod_organizacao`, `user_id` |
 | Relacionamentos | camelCase | `planosAcao()`, `organizacao()` |
@@ -584,9 +584,9 @@ class PerfilAcesso extends Model
 
 ## 3. MODELS DO SCHEMA PEI
 
-### 3.1 PEI.php
+### 3.1 php
 
-**Localização:** `app/Models/PEI/PEI.php`
+**Localização:** `app/Models/PEI/php`
 
 ```php
 <?php
@@ -606,7 +606,7 @@ class PEI extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_pei';
+    protected $table = 'tab_pei';
 
     /**
      * Chave primária
@@ -747,7 +747,7 @@ class PlanoDeAcao extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_plano_de_acao';
+    protected $table = 'tab_plano_de_acao';
 
     /**
      * Chave primária
@@ -929,7 +929,7 @@ class Indicador extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_indicador';
+    protected $table = 'tab_indicador';
 
     /**
      * Chave primária
@@ -1021,7 +1021,7 @@ class Indicador extends Model implements Auditable
     {
         return $this->belongsToMany(
             Organization::class,
-            'pei.rel_indicador_objetivo_estrategico_organizacao',
+            'rel_indicador_objetivo_estrategico_organizacao',
             'cod_indicador',
             'cod_organizacao',
             'cod_indicador',
@@ -1258,7 +1258,7 @@ class Risco extends Model implements Auditable
 {
     use HasFactory, HasUuids, SoftDeletes, \OwenIt\Auditing\Auditable;
 
-    protected $table = 'pei.tab_risco';
+    protected $table = 'tab_risco';
     protected $primaryKey = 'cod_risco';
     protected $keyType = 'string';
     public $incrementing = false;
@@ -1310,7 +1310,7 @@ class Risco extends Model implements Auditable
     {
         return $this->belongsToMany(
             ObjetivoEstrategico::class,
-            'pei.tab_risco_objetivo',
+            'tab_risco_objetivo',
             'cod_risco',
             'cod_objetivo_estrategico'
         )->withTimestamps();
@@ -1472,7 +1472,7 @@ class RiscoObjetivo extends Model
 {
     use HasUuids;
 
-    protected $table = 'pei.tab_risco_objetivo';
+    protected $table = 'tab_risco_objetivo';
     protected $primaryKey = 'cod_risco_objetivo';
     protected $keyType = 'string';
     public $incrementing = false;
@@ -1520,7 +1520,7 @@ class RiscoMitigacao extends Model implements Auditable
 {
     use HasFactory, HasUuids, \OwenIt\Auditing\Auditable;
 
-    protected $table = 'pei.tab_risco_mitigacao';
+    protected $table = 'tab_risco_mitigacao';
     protected $primaryKey = 'cod_mitigacao';
     protected $keyType = 'string';
     public $incrementing = false;
@@ -1625,7 +1625,7 @@ class RiscoOcorrencia extends Model implements Auditable
 {
     use HasFactory, HasUuids, \OwenIt\Auditing\Auditable;
 
-    protected $table = 'pei.tab_risco_ocorrencia';
+    protected $table = 'tab_risco_ocorrencia';
     protected $primaryKey = 'cod_ocorrencia';
     protected $keyType = 'string';
     public $incrementing = false;

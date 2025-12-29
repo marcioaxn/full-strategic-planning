@@ -89,7 +89,7 @@ class EntregaLabel extends Model
     {
         return $this->belongsToMany(
             Entrega::class,
-            'pei.rel_entrega_labels',
+            'rel_entrega_labels',
             'cod_label',
             'cod_entrega'
         );

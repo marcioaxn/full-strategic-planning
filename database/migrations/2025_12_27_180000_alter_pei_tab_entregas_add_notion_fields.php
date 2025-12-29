@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('pei.tab_entregas', function (Blueprint $table) {
+        Schema::table('tab_entregas', function (Blueprint $table) {
             // ========================================
             // HIERARQUIA E SUBTAREFAS
             // ========================================
@@ -113,15 +113,15 @@ return new class extends Migration
         // ========================================
         
         // FK para hierarquia (auto-referência)
-        Schema::table('pei.tab_entregas', function (Blueprint $table) {
+        Schema::table('tab_entregas', function (Blueprint $table) {
             $table->foreign('cod_entrega_pai', 'fk_entregas_entrega_pai')
                   ->references('cod_entrega')
-                  ->on('pei.tab_entregas')
+                  ->on('tab_entregas')
                   ->nullOnDelete();
         });
         
         // FK para responsável
-        Schema::table('pei.tab_entregas', function (Blueprint $table) {
+        Schema::table('tab_entregas', function (Blueprint $table) {
             $table->foreign('cod_responsavel', 'fk_entregas_responsavel')
                   ->references('id')
                   ->on('users')
@@ -135,7 +135,7 @@ return new class extends Migration
         // Copiar num_nivel_hierarquico_apresentacao para num_ordem
         // e definir valores padrão para novos campos
         DB::statement("
-            UPDATE pei.tab_entregas 
+            UPDATE tab_entregas 
             SET 
                 num_ordem = COALESCE(num_nivel_hierarquico_apresentacao, 0),
                 dsc_tipo = 'task',
@@ -150,7 +150,7 @@ return new class extends Migration
         // ========================================
         
         DB::statement("
-            COMMENT ON TABLE pei.tab_entregas IS 
+            COMMENT ON TABLE tab_entregas IS 
             'Tabela de entregas com suporte a interface estilo Notion. 
             Migrada para incluir campos de hierarquia, propriedades e ordenação.
             Campos novos: cod_entrega_pai, dsc_tipo, json_propriedades, dte_prazo, 
@@ -164,7 +164,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('pei.tab_entregas', function (Blueprint $table) {
+        Schema::table('tab_entregas', function (Blueprint $table) {
             // Remover foreign keys primeiro
             $table->dropForeign('fk_entregas_entrega_pai');
             $table->dropForeign('fk_entregas_responsavel');

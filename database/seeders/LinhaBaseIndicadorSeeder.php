@@ -11,7 +11,7 @@ class LinhaBaseIndicadorSeeder extends Seeder
 {
     public function run(): void
     {
-        $peiAtivo = PEI::where('bln_ativo', true)->first();
+        $peiAtivo = PEI::first();
         if (!$peiAtivo) return;
 
         $indicadores = Indicador::whereHas('objetivo.perspectiva', function($q) use ($peiAtivo) {

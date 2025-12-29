@@ -11,7 +11,7 @@ class RiscoObjetivoSeeder extends Seeder
 {
     public function run(): void
     {
-        $peiAtivo = PEI::where('bln_ativo', true)->first();
+        $peiAtivo = PEI::first();
         if (!$peiAtivo) return;
 
         $objetivos = Objetivo::whereHas('perspectiva', function($q) use ($peiAtivo) {

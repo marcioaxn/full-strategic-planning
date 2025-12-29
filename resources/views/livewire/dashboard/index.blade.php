@@ -85,7 +85,7 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between">
                     <h6 class="fw-bold mb-0">Desempenho por Perspectiva (Atingimento %)</h6>
-                    <a href="{{ route('pei.mapa') }}" class="small text-decoration-none" wire:navigate>Mapa Estratégico <i class="bi bi-box-arrow-up-right"></i></a>
+                    <a href="{{ route('mapa') }}" class="small text-decoration-none" wire:navigate>Mapa Estratégico <i class="bi bi-box-arrow-up-right"></i></a>
                 </div>
                 <div class="card-body px-4 pb-4">
                     <div style="height: 320px;">

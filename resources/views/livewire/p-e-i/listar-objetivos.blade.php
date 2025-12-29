@@ -116,7 +116,7 @@
                     <p class="empty-state-text">
                         {{ __('Antes de criar objetivos, você precisa cadastrar as Perspectivas do BSC para este ciclo.') }}
                     </p>
-                    <a href="{{ route('pei.perspectivas') }}" class="btn btn-primary mt-3" wire:navigate>
+                    <a href="{{ route('perspectivas') }}" class="btn btn-primary mt-3" wire:navigate>
                         <i class="bi bi-layers me-1"></i> {{ __('Gerenciar Perspectivas') }}
                     </a>
                 </div>

@@ -1265,7 +1265,7 @@ Para as funcionalidades que não existem no banco legado:
 #### Análise SWOT
 
 \`\`\`sql
-CREATE TABLE pei.tab_analise_swot (
+CREATE TABLE tab_analise_swot (
     cod_analise_swot UUID PRIMARY KEY,
     cod_pei UUID NOT NULL,
     cod_organizacao UUID NOT NULL,
@@ -1279,16 +1279,16 @@ CREATE TABLE pei.tab_analise_swot (
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP,
-    FOREIGN KEY (cod_pei) REFERENCES pei.tab_pei(cod_pei),
+    FOREIGN KEY (cod_pei) REFERENCES tab_pei(cod_pei),
     FOREIGN KEY (cod_organizacao) REFERENCES tab_organizacoes(cod_organizacao),
-    FOREIGN KEY (cod_objetivo_estrategico) REFERENCES pei.tab_objetivo_estrategico(cod_objetivo_estrategico)
+    FOREIGN KEY (cod_objetivo_estrategico) REFERENCES tab_objetivo_estrategico(cod_objetivo_estrategico)
 );
 \`\`\`
 
 #### Análise PESTEL
 
 \`\`\`sql
-CREATE TABLE pei.tab_analise_pestel (
+CREATE TABLE tab_analise_pestel (
     cod_analise_pestel UUID PRIMARY KEY,
     cod_pei UUID NOT NULL,
     cod_organizacao UUID NOT NULL,
@@ -1300,7 +1300,7 @@ CREATE TABLE pei.tab_analise_pestel (
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP,
-    FOREIGN KEY (cod_pei) REFERENCES pei.tab_pei(cod_pei),
+    FOREIGN KEY (cod_pei) REFERENCES tab_pei(cod_pei),
     FOREIGN KEY (cod_organizacao) REFERENCES tab_organizacoes(cod_organizacao)
 );
 \`\`\`
@@ -1308,7 +1308,7 @@ CREATE TABLE pei.tab_analise_pestel (
 #### Canvas de Modelo de Negócio
 
 \`\`\`sql
-CREATE TABLE pei.tab_canvas_modelo_negocio (
+CREATE TABLE tab_canvas_modelo_negocio (
     cod_canvas UUID PRIMARY KEY,
     cod_pei UUID NOT NULL,
     cod_organizacao UUID NOT NULL,
@@ -1326,7 +1326,7 @@ CREATE TABLE pei.tab_canvas_modelo_negocio (
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP,
-    FOREIGN KEY (cod_pei) REFERENCES pei.tab_pei(cod_pei),
+    FOREIGN KEY (cod_pei) REFERENCES tab_pei(cod_pei),
     FOREIGN KEY (cod_organizacao) REFERENCES tab_organizacoes(cod_organizacao)
 );
 \`\`\`
@@ -1334,7 +1334,7 @@ CREATE TABLE pei.tab_canvas_modelo_negocio (
 #### 5 Forças de Porter
 
 \`\`\`sql
-CREATE TABLE pei.tab_forças_porter (
+CREATE TABLE tab_forças_porter (
     cod_forca_porter UUID PRIMARY KEY,
     cod_pei UUID NOT NULL,
     cod_organizacao UUID NOT NULL,
@@ -1351,7 +1351,7 @@ CREATE TABLE pei.tab_forças_porter (
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP,
-    FOREIGN KEY (cod_pei) REFERENCES pei.tab_pei(cod_pei),
+    FOREIGN KEY (cod_pei) REFERENCES tab_pei(cod_pei),
     FOREIGN KEY (cod_organizacao) REFERENCES tab_organizacoes(cod_organizacao)
 );
 \`\`\`
@@ -1359,7 +1359,7 @@ CREATE TABLE pei.tab_forças_porter (
 #### Matriz BCG (Boston Consulting Group)
 
 \`\`\`sql
-CREATE TABLE pei.tab_matriz_bcg (
+CREATE TABLE tab_matriz_bcg (
     cod_bcg UUID PRIMARY KEY,
     cod_pei UUID NOT NULL,
     cod_organizacao UUID NOT NULL,
@@ -1371,7 +1371,7 @@ CREATE TABLE pei.tab_matriz_bcg (
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP,
-    FOREIGN KEY (cod_pei) REFERENCES pei.tab_pei(cod_pei),
+    FOREIGN KEY (cod_pei) REFERENCES tab_pei(cod_pei),
     FOREIGN KEY (cod_organizacao) REFERENCES tab_organizacoes(cod_organizacao)
 );
 \`\`\`
@@ -1379,7 +1379,7 @@ CREATE TABLE pei.tab_matriz_bcg (
 #### Comentários e Discussões
 
 \`\`\`sql
-CREATE TABLE pei.tab_comentarios (
+CREATE TABLE tab_comentarios (
     cod_comentario UUID PRIMARY KEY,
     table_name VARCHAR(255) NOT NULL,
     table_id UUID NOT NULL,
@@ -1601,7 +1601,7 @@ class PerfilAcesso extends Model
 
 ### 7.2 Models do Schema PEI
 
-#### PEI.php
+#### php
 
 \`\`\`php
 <?php
@@ -1615,7 +1615,7 @@ class PEI extends Model
 {
     use HasUuids, SoftDeletes;
 
-    protected $table = 'pei.tab_pei';
+    protected $table = 'tab_pei';
     protected $primaryKey = 'cod_pei';
     protected $keyType = 'string';
     public $incrementing = false;
@@ -1658,7 +1658,7 @@ class MissaoVisaoValores extends Model
 {
     use HasUuids, SoftDeletes;
 
-    protected $table = 'pei.tab_missao_visao_valores';
+    protected $table = 'tab_missao_visao_valores';
     protected $primaryKey = 'cod_missao_visao_valores';
     protected $keyType = 'string';
     public $incrementing = false;
@@ -1697,7 +1697,7 @@ class Perspectiva extends Model
 {
     use HasUuids, SoftDeletes;
 
-    protected $table = 'pei.tab_perspectiva';
+    protected $table = 'tab_perspectiva';
     protected $primaryKey = 'cod_perspectiva';
     protected $keyType = 'string';
     public $incrementing = false;
@@ -1746,7 +1746,7 @@ class ObjetivoEstrategico extends Model
 {
     use HasUuids, SoftDeletes;
 
-    protected $table = 'pei.tab_objetivo_estrategico';
+    protected $table = 'tab_objetivo_estrategico';
     protected $primaryKey = 'cod_objetivo_estrategico';
     protected $keyType = 'string';
     public $incrementing = false;
@@ -1809,7 +1809,7 @@ class PlanoDeAcao extends Model
 {
     use HasUuids, SoftDeletes;
 
-    protected $table = 'pei.tab_plano_de_acao';
+    protected $table = 'tab_plano_de_acao';
     protected $primaryKey = 'cod_plano_de_acao';
     protected $keyType = 'string';
     public $incrementing = false;
@@ -1893,7 +1893,7 @@ class Indicador extends Model
 {
     use HasUuids, SoftDeletes;
 
-    protected $table = 'pei.tab_indicador';
+    protected $table = 'tab_indicador';
     protected $primaryKey = 'cod_indicador';
     protected $keyType = 'string';
     public $incrementing = false;
@@ -1990,7 +1990,7 @@ class EvolucaoIndicador extends Model
 {
     use HasUuids, SoftDeletes;
 
-    protected $table = 'pei.tab_evolucao_indicador';
+    protected $table = 'tab_evolucao_indicador';
     protected $primaryKey = 'cod_evolucao_indicador';
     protected $keyType = 'string';
     public $incrementing = false;
@@ -2088,7 +2088,7 @@ class AnaliseSwot extends Model
 {
     use HasUuids, SoftDeletes;
 
-    protected $table = 'pei.tab_analise_swot';
+    protected $table = 'tab_analise_swot';
     protected $primaryKey = 'cod_analise_swot';
     protected $keyType = 'string';
     public $incrementing = false;
@@ -2255,7 +2255,7 @@ strategic-planning-system/
 │   │   ├── Acao.php
 │   │   ├── Audit.php
 │   │   ├── PEI/
-│   │   │   ├── PEI.php
+│   │   │   ├── php
 │   │   │   ├── Perspectiva.php
 │   │   │   ├── ObjetivoEstrategico.php
 │   │   │   ├── PlanoDeAcao.php
@@ -2377,7 +2377,7 @@ strategic-planning-system/
 │   ├── database.php
 │   ├── auth.php
 │   ├── audit.php (Config auditoria customizada)
-│   └── pei.php (Config específica do PEI)
+│   └── php (Config específica do PEI)
 ├── storage/
 ├── .env.example
 ├── .gitignore
@@ -2907,12 +2907,12 @@ class SwotAnalysis extends Component
 **Performance:**
 \`\`\`sql
 -- Índices críticos
-CREATE INDEX idx_plano_acao_objetivo ON pei.tab_plano_de_acao(cod_objetivo_estrategico);
-CREATE INDEX idx_plano_acao_organizacao ON pei.tab_plano_de_acao(cod_organizacao);
-CREATE INDEX idx_indicador_plano ON pei.tab_indicador(cod_plano_de_acao);
-CREATE INDEX idx_indicador_objetivo ON pei.tab_indicador(cod_objetivo_estrategico);
-CREATE INDEX idx_evolucao_ano_mes ON pei.tab_evolucao_indicador(num_ano, num_mes);
-CREATE INDEX idx_swot_org ON pei.tab_analise_swot(cod_organizacao);
+CREATE INDEX idx_plano_acao_objetivo ON tab_plano_de_acao(cod_objetivo_estrategico);
+CREATE INDEX idx_plano_acao_organizacao ON tab_plano_de_acao(cod_organizacao);
+CREATE INDEX idx_indicador_plano ON tab_indicador(cod_plano_de_acao);
+CREATE INDEX idx_indicador_objetivo ON tab_indicador(cod_objetivo_estrategico);
+CREATE INDEX idx_evolucao_ano_mes ON tab_evolucao_indicador(num_ano, num_mes);
+CREATE INDEX idx_swot_org ON tab_analise_swot(cod_organizacao);
 CREATE INDEX idx_user_org ON rel_users_tab_organizacoes(user_id, cod_organizacao);
 \`\`\`
 

@@ -12,12 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.tab_entregas', function (Blueprint $table) {
+        Schema::create('tab_entregas', function (Blueprint $table) {
             $table->uuid('cod_entrega')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->foreignUuid('cod_plano_de_acao')
                   ->nullable()
                   ->references('cod_plano_de_acao')
-                  ->on('pei.tab_plano_de_acao')
+                  ->on('tab_plano_de_acao')
                   ->cascadeOnDelete();
             $table->text('dsc_entrega');
             $table->string('bln_status')->nullable(false);
@@ -36,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_entregas');
+        Schema::dropIfExists('tab_entregas');
     }
 };

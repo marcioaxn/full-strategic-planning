@@ -16,7 +16,7 @@ class Perspectiva extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_perspectiva';
+    protected $table = 'tab_perspectiva';
 
     /**
      * Chave primária

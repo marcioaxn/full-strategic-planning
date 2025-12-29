@@ -76,7 +76,7 @@ class ListarPeis extends Component
             'num_ano_inicio_pei' => 'required|integer|min:2000|max:2100',
             'num_ano_fim_pei' => 'required|integer|min:2000|max:2100|gte:num_ano_inicio_pei',
         ], [
-            'num_ano_fim_pei.gte' => 'O ano de término deve ser maior ou igual ao ano de início.',
+            'num_ano_fim_gte' => 'O ano de término deve ser maior ou igual ao ano de início.',
         ]);
 
         $data = [
