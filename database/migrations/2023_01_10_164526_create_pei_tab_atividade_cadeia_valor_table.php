@@ -12,10 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.tab_atividade_cadeia_valor', function (Blueprint $table) {
+        Schema::create('tab_atividade_cadeia_valor', function (Blueprint $table) {
             $table->uuid('cod_atividade_cadeia_valor')->primary()->default(DB::raw('gen_random_uuid()'));
-            $table->foreignUuid('cod_pei')->references('cod_pei')->on('pei.tab_pei')->cascadeOnDelete();
-            $table->foreignUuid('cod_perspectiva')->references('cod_perspectiva')->on('pei.tab_perspectiva')->cascadeOnDelete();
+            $table->foreignUuid('cod_pei')->references('cod_pei')->on('tab_pei')->cascadeOnDelete();
+            $table->foreignUuid('cod_perspectiva')->references('cod_perspectiva')->on('tab_perspectiva')->cascadeOnDelete();
             $table->text('dsc_atividade')->nullable(false);
             $table->timestamps();
             $table->softDeletes();
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_atividade_cadeia_valor');
+        Schema::dropIfExists('tab_atividade_cadeia_valor');
     }
 };

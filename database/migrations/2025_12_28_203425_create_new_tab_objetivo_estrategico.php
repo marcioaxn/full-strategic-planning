@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.tab_objetivo_estrategico', function (Blueprint $table) {
+        Schema::create('tab_objetivo_estrategico', function (Blueprint $table) {
             $table->uuid('cod_objetivo_estrategico')->primary();
             $table->text('nom_objetivo_estrategico');
             
@@ -26,7 +26,7 @@ return new class extends Migration
             // Foreign Keys
             $table->foreign('cod_pei')
                   ->references('cod_pei')
-                  ->on('pei.tab_pei')
+                  ->on('tab_pei')
                   ->onDelete('cascade');
 
             $table->foreign('cod_organizacao')
@@ -41,6 +41,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_objetivo_estrategico');
+        Schema::dropIfExists('tab_objetivo_estrategico');
     }
 };

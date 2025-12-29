@@ -12,9 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.tab_meta_por_ano', function (Blueprint $table) {
+        Schema::create('tab_meta_por_ano', function (Blueprint $table) {
             $table->uuid('cod_meta_por_ano')->primary()->default(DB::raw('gen_random_uuid()'));
-            $table->foreignUuid('cod_indicador')->references('cod_indicador')->on('pei.tab_indicador')->cascadeOnDelete();
+            $table->foreignUuid('cod_indicador')->references('cod_indicador')->on('tab_indicador')->cascadeOnDelete();
             $table->smallInteger('num_ano')->nullable(false);
             $table->decimal('meta', 15, 2)->nullable(true);
             $table->timestamps();
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_meta_por_ano');
+        Schema::dropIfExists('tab_meta_por_ano');
     }
 };

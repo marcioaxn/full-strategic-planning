@@ -78,7 +78,7 @@ class ListarObjetivos extends Component
             'nom_objetivo' => 'required|string|max:255',
             'dsc_objetivo' => 'nullable|string|max:1000',
             'num_nivel_hierarquico_apresentacao' => 'required|integer|min:1',
-            'cod_perspectiva' => 'required|exists:pei.tab_perspectiva,cod_perspectiva',
+            'cod_perspectiva' => 'required|exists:tab_perspectiva,cod_perspectiva',
         ]);
 
         Objetivo::updateOrCreate(

@@ -13,7 +13,7 @@ class RiscoMitigacaoSeeder extends Seeder
 {
     public function run(): void
     {
-        $peiAtivo = PEI::ativos()->first();
+        $peiAtivo = PEI::first();
         if (!$peiAtivo) {
             $this->command->warn('Nenhum PEI ativo encontrado.');
             return;
@@ -48,11 +48,11 @@ class RiscoMitigacaoSeeder extends Seeder
 
                 $mitigacoes[] = [
                     'cod_risco' => $risco->cod_risco,
-                    'txt_descricao' => $this->gerarDescricaoMitigacao($risco->dsc_categoria),
+                    'dsc_tipo_mitigacao' => $tipos[array_rand($tipos)],
+                    'txt_acao_mitigacao' => $this->gerarDescricaoMitigacao($risco->dsc_categoria),
                     'cod_responsavel' => $usuarios->random()->id,
                     'dte_prazo' => $dataPrazo,
                     'dsc_status' => $status,
-                    'vlr_custo_estimado' => rand(5000, 500000) / 100,
                     'created_at' => now()->subDays(rand(1, 180)),
                     'updated_at' => now(),
                 ];

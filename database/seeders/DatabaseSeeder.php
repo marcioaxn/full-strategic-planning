@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Lead;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -24,9 +23,5 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('1352@765@1452'),
             ]
         );
-
-        Lead::factory()
-            ->count(25)
-            ->create();
     }
 }

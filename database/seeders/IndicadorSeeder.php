@@ -12,7 +12,7 @@ class IndicadorSeeder extends Seeder
 {
     public function run(): void
     {
-        $peiAtivo = PEI::where('bln_ativo', true)->first();
+        $peiAtivo = PEI::first();
         if (!$peiAtivo) return;
 
         // 1. Criar Indicadores para Objetivos

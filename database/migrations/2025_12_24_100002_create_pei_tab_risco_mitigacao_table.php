@@ -12,9 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.tab_risco_mitigacao', function (Blueprint $table) {
+        Schema::create('tab_risco_mitigacao', function (Blueprint $table) {
             $table->uuid('cod_mitigacao')->primary()->default(DB::raw('gen_random_uuid()'));
-            $table->foreignUuid('cod_risco')->references('cod_risco')->on('pei.tab_risco')->cascadeOnDelete();
+            $table->foreignUuid('cod_risco')->references('cod_risco')->on('tab_risco')->cascadeOnDelete();
             $table->string('dsc_tipo_mitigacao', 50)->nullable(false); // Prevenir, Reduzir, Transferir, Aceitar
             $table->text('txt_acao_mitigacao')->nullable(false);
             $table->foreignUuid('cod_responsavel')->nullable()->references('id')->on('users')->nullOnDelete();
@@ -37,6 +37,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_risco_mitigacao');
+        Schema::dropIfExists('tab_risco_mitigacao');
     }
 };

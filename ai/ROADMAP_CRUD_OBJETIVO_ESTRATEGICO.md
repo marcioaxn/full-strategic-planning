@@ -2,12 +2,12 @@
 
 ## Missão
 Construir um CRUD completo para a **nova** entidade **Objetivo Estratégico**. 
-**Nota Crítica:** Esta é uma nova tabela (`pei.tab_objetivo_estrategico`), que não se confunde com a tabela de "Objetivos" (`pei.tab_objetivo`) já existente no sistema.
+**Nota Crítica:** Esta é uma nova tabela (`tab_objetivo_estrategico`), que não se confunde com a tabela de "Objetivos" (`tab_objetivo`) já existente no sistema.
 
 ## Status das Atividades
 
 ### 1. Banco de Dados & Modelagem
-- [x] Criar Migration para a NOVA tabela `pei.tab_objetivo_estrategico` - ✅
+- [x] Criar Migration para a NOVA tabela `tab_objetivo_estrategico` - ✅
 - [x] Criar Model `App\Models\PEI\ObjetivoEstrategico` apontando para a nova tabela - ✅
 - [x] Criar Seeder `ObjetivoEstrategicoSeeder` para dados iniciais - ✅
 

@@ -39,7 +39,7 @@
                 </div>
             </div>
         </nav>
-        @include('livewire.pei.partials.mapa-navbar-styles')
+        @include('livewire.partials.mapa-navbar-styles')
         <div style="margin-top: 90px;"></div>
     @endguest
 
