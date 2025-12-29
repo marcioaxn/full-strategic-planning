@@ -6,7 +6,7 @@ SQLSTATE[23502]: Not null violation: 7 ERROR: null value in column "cod_pei" vio
 
 2.  o CRUD para a Análise SWOT está perfeito, mas falta uma visão por meio da matriz. Embora o CRUD tenha sido construído com o desenho da matriz se faz necessária a visão da matriz sem os detalhes de cadastro ou edição. Um desenho é crucial;
 
-3.  da mesma forma como a missão e a visão precisam se relacionar com o PEI, a Análise SWOT, a Perspectiva, os Objetivos Estratégicos, o Plano de Ação, os Indicadores também precisam se relacionar com o PEI. Dessa forma o usuário precisa indicar o PEI para que os dados sejam salvos;
+3.  da mesma forma como a missão e a visão precisam se relacionar com o PEI, a Análise SWOT, a Perspectiva, os Objetivos Estratégicos, o Plano de Ação, os Indicadores também precisam se relacionar com o  Dessa forma o usuário precisa indicar o PEI para que os dados sejam salvos;
 
 4.  no sidebar é necessário o uso obrigatório do [wire:navigate] assim utilizaremos de forma inteligente os recursos do Livewire, senão para que existiriam tais recursos?
 

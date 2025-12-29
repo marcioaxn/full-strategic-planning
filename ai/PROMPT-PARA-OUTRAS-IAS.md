@@ -117,7 +117,7 @@ $appNavigation = [
     ],
     [
         'label' => __('PEI'),
-        'route' => 'pei.index',
+        'route' => 'index',
         'icon' => 'clipboard-data'
     ],
     [
@@ -239,12 +239,12 @@ D:\Apache24\htdocs\seae\
 
 ```sql
 -- Primary Key sempre: cod_<nome_tabela>
-pei.tab_plano_de_acao.cod_plano (UUID, PK)
+tab_plano_de_acao.cod_plano (UUID, PK)
 
 -- Foreign Key sempre: cod_<tabela_relacionada>
-pei.tab_plano_de_acao.cod_objetivo_estrategico (UUID, FK)
-pei.tab_plano_de_acao.cod_organizacao (UUID, FK)
-pei.tab_plano_de_acao.cod_pei (UUID, FK)
+tab_plano_de_acao.cod_objetivo_estrategico (UUID, FK)
+tab_plano_de_acao.cod_organizacao (UUID, FK)
+tab_plano_de_acao.cod_pei (UUID, FK)
 ```
 
 ### Tabelas Principais
@@ -329,7 +329,7 @@ class PlanoDeAcao extends Model implements Auditable
 {
     use HasFactory, HasUuids, SoftDeletes, \OwenIt\Auditing\Auditable;
 
-    protected $table = 'pei.tab_plano_de_acao';
+    protected $table = 'tab_plano_de_acao';
     protected $primaryKey = 'cod_plano';
     protected $keyType = 'string';
     public $incrementing = false;

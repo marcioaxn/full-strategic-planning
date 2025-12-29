@@ -13,33 +13,11 @@ return new class extends Migration
     public function up(): void
     {
         // 1. Renomear Tabelas (Usando DB::statement para garantir compatibilidade Postgres com schemas)
-        DB::statement('ALTER TABLE pei.tab_objetivo_estrategico RENAME TO tab_objetivo');
-        DB::statement('ALTER TABLE pei.tab_futuro_almejado_objetivo_estrategico RENAME TO tab_futuro_almejado_objetivo');
-        DB::statement('ALTER TABLE pei.rel_indicador_objetivo_estrategico_organizacao RENAME TO rel_indicador_objetivo_organizacao');
+        DB::statement('ALTER TABLE tab_objetivo_estrategico RENAME TO tab_objetivo');
+        DB::statement('ALTER TABLE tab_futuro_almejado_objetivo_estrategico RENAME TO tab_futuro_almejado_objetivo');
+        DB::statement('ALTER TABLE rel_indicador_objetivo_estrategico_organizacao RENAME TO rel_indicador_objetivo_organizacao');
 
-        // 2. Renomear Colunas na tabela principal pei.tab_objetivo
-        Schema::table('pei.tab_objetivo', function (Blueprint $table) {
-            $table->renameColumn('cod_objetivo', 'cod_objetivo');
-            $table->renameColumn('nom_objetivo', 'nom_objetivo');
-            $table->renameColumn('dsc_objetivo', 'dsc_objetivo');
-        });
-
-        // 3. Renomear Colunas de FK em outras tabelas
-        Schema::table('pei.tab_plano_de_acao', function (Blueprint $table) {
-            $table->renameColumn('cod_objetivo', 'cod_objetivo');
-        });
-
-        Schema::table('pei.tab_indicador', function (Blueprint $table) {
-            $table->renameColumn('cod_objetivo', 'cod_objetivo');
-        });
-
-        Schema::table('pei.tab_futuro_almejado_objetivo', function (Blueprint $table) {
-            $table->renameColumn('cod_objetivo', 'cod_objetivo');
-        });
-
-        Schema::table('pei.tab_risco_objetivo', function (Blueprint $table) {
-            $table->renameColumn('cod_objetivo', 'cod_objetivo');
-        });
+        // As colunas já possuem os nomes corretos, não é necessário renomeá-las
     }
 
     /**
@@ -47,33 +25,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // 1. Reverter Colunas de FK
-        Schema::table('pei.tab_risco_objetivo', function (Blueprint $table) {
-            $table->renameColumn('cod_objetivo', 'cod_objetivo');
-        });
-
-        Schema::table('pei.tab_futuro_almejado_objetivo', function (Blueprint $table) {
-            $table->renameColumn('cod_objetivo', 'cod_objetivo');
-        });
-
-        Schema::table('pei.tab_indicador', function (Blueprint $table) {
-            $table->renameColumn('cod_objetivo', 'cod_objetivo');
-        });
-
-        Schema::table('pei.tab_plano_de_acao', function (Blueprint $table) {
-            $table->renameColumn('cod_objetivo', 'cod_objetivo');
-        });
-
-        // 2. Reverter Colunas na tabela pei.tab_objetivo
-        Schema::table('pei.tab_objetivo', function (Blueprint $table) {
-            $table->renameColumn('dsc_objetivo', 'dsc_objetivo');
-            $table->renameColumn('nom_objetivo', 'nom_objetivo');
-            $table->renameColumn('cod_objetivo', 'cod_objetivo');
-        });
-
-        // 3. Reverter Tabelas
-        DB::statement('ALTER TABLE pei.rel_indicador_objetivo_organizacao RENAME TO rel_indicador_objetivo_estrategico_organizacao');
-        DB::statement('ALTER TABLE pei.tab_futuro_almejado_objetivo RENAME TO tab_futuro_almejado_objetivo_estrategico');
-        DB::statement('ALTER TABLE pei.tab_objetivo RENAME TO tab_objetivo_estrategico');
+        // Reverter Tabelas
+        DB::statement('ALTER TABLE rel_indicador_objetivo_organizacao RENAME TO rel_indicador_objetivo_estrategico_organizacao');
+        DB::statement('ALTER TABLE tab_futuro_almejado_objetivo RENAME TO tab_futuro_almejado_objetivo_estrategico');
+        DB::statement('ALTER TABLE tab_objetivo RENAME TO tab_objetivo_estrategico');
     }
 };

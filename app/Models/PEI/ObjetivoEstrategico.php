@@ -18,7 +18,7 @@ class ObjetivoEstrategico extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_objetivo_estrategico';
+    protected $table = 'tab_objetivo_estrategico';
 
     /**
      * Chave primária

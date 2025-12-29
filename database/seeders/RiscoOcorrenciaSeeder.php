@@ -12,7 +12,7 @@ class RiscoOcorrenciaSeeder extends Seeder
 {
     public function run(): void
     {
-        $peiAtivo = PEI::ativos()->first();
+        $peiAtivo = PEI::first();
         if (!$peiAtivo) {
             $this->command->warn('Nenhum PEI ativo encontrado.');
             return;
@@ -44,8 +44,8 @@ class RiscoOcorrenciaSeeder extends Seeder
                 $ocorrencias[] = [
                     'cod_risco' => $risco->cod_risco,
                     'dte_ocorrencia' => now()->subDays(rand(1, 365)),
-                    'txt_descricao' => $this->gerarDescricaoOcorrencia(),
-                    'num_impacto_real' => rand(1, 5),
+                    'txt_descricao_ocorrencia' => $this->gerarDescricaoOcorrencia(),
+                    'vlr_impacto_financeiro' => rand(1000, 100000),
                     'txt_acoes_tomadas' => $this->gerarAcoes(),
                     'txt_licoes_aprendidas' => $this->gerarLicoes(),
                     'created_at' => now()->subDays(rand(1, 365)),

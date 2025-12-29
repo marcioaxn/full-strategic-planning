@@ -5,7 +5,7 @@
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-1">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('pei.index') }}" class="text-decoration-none">PEI</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('index') }}" class="text-decoration-none">PEI</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Objetivos</li>
                     </ol>
                 </nav>
@@ -53,7 +53,7 @@
             <i class="bi bi-exclamation-triangle-fill fs-2 me-4"></i>
             <div>
                 <h5 class="alert-heading fw-bold mb-1">Nenhuma Perspectiva Cadastrada</h5>
-                <p class="mb-0">Cadastre primeiro as perspectivas do BSC em <a href="{{ route('pei.perspectivas') }}" class="alert-link">Gerenciar Perspectivas</a>.</p>
+                <p class="mb-0">Cadastre primeiro as perspectivas do BSC em <a href="{{ route('perspectivas') }}" class="alert-link">Gerenciar Perspectivas</a>.</p>
             </div>
         </div>
     @else
