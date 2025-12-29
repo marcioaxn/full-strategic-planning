@@ -6,10 +6,10 @@
                     <ol class="breadcrumb mb-1">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('pei.index') }}" class="text-decoration-none">PEI</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Objetivos Estratégicos</li>
+                        <li class="breadcrumb-item active" aria-current="page">Objetivos</li>
                     </ol>
                 </nav>
-                <h2 class="h4 fw-bold mb-0">Objetivos Estratégicos</h2>
+                <h2 class="h4 fw-bold mb-0">Objetivos</h2>
             </div>
             <div class="d-flex gap-2">
                 @if($peiAtivo)
@@ -45,7 +45,7 @@
             <i class="bi bi-exclamation-octagon-fill fs-2 me-4"></i>
             <div>
                 <h5 class="alert-heading fw-bold mb-1">Nenhum PEI Ativo Encontrado</h5>
-                <p class="mb-0">É necessário um PEI vigente para gerenciar objetivos estratégicos.</p>
+                <p class="mb-0">É necessário um PEI vigente para gerenciar objetivos.</p>
             </div>
         </div>
     @elseif($perspectivas->isEmpty())
@@ -87,21 +87,21 @@
                                                     {{ $obj->num_nivel_hierarquico_apresentacao }}
                                                 </div>
                                                 <div class="flex-grow-1">
-                                                    <h6 class="mb-1 fw-bold">{{ $obj->nom_objetivo_estrategico }}</h6>
+                                                    <h6 class="mb-1 fw-bold">{{ $obj->nom_objetivo }}</h6>
                                                     <p class="text-muted small mb-0 text-truncate" style="max-width: 600px;">
-                                                        {{ $obj->dsc_objetivo_estrategico ?: 'Sem descrição.' }}
+                                                        {{ $obj->dsc_objetivo ?: 'Sem descrição.' }}
                                                     </p>
                                                 </div>
                                                 <div class="ms-auto d-flex gap-2">
-                                                    <a href="{{ route('objetivos.futuro', $obj->cod_objetivo_estrategico) }}" 
+                                                    <a href="{{ route('objetivos.futuro', $obj->cod_objetivo) }}" 
                                                        class="btn btn-sm btn-outline-info border-0"
                                                        title="Futuro Almejado">
                                                         <i class="bi bi-rocket-takeoff"></i>
                                                     </a>
-                                                    <button wire:click="edit('{{ $obj->cod_objetivo_estrategico }}')" class="btn btn-sm btn-outline-secondary border-0">
+                                                    <button wire:click="edit('{{ $obj->cod_objetivo }}')" class="btn btn-sm btn-outline-secondary border-0">
                                                         <i class="bi bi-pencil"></i>
                                                     </button>
-                                                    <button wire:click="delete('{{ $obj->cod_objetivo_estrategico }}')" 
+                                                    <button wire:click="delete('{{ $obj->cod_objetivo }}')" 
                                                             class="btn btn-sm btn-outline-danger border-0"
                                                             onclick="return confirm('Tem certeza?')">
                                                         <i class="bi bi-trash"></i>
@@ -136,7 +136,7 @@
                 <div class="modal-content border-0 shadow-lg">
                     <div class="modal-header gradient-theme text-white border-0">
                         <h5 class="modal-title fw-bold">
-                            {{ $objetivoId ? 'Editar Objetivo Estratégico' : 'Novo Objetivo Estratégico' }}
+                            {{ $objetivoId ? 'Editar Objetivo' : 'Novo Objetivo' }}
                         </h5>
                         <button type="button" class="btn-close btn-close-white" wire:click="$set('showModal', false)"></button>
                     </div>
@@ -145,8 +145,8 @@
                             <div class="row g-3">
                                 <div class="col-12">
                                     <label class="form-label text-muted small text-uppercase fw-bold">Título do Objetivo</label>
-                                    <input type="text" wire:model="nom_objetivo_estrategico" class="form-control @error('nom_objetivo_estrategico') is-invalid @enderror" placeholder="Ex: Aumentar a eficiência operacional">
-                                    @error('nom_objetivo_estrategico') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <input type="text" wire:model="nom_objetivo" class="form-control @error('nom_objetivo') is-invalid @enderror" placeholder="Ex: Aumentar a eficiência operacional">
+                                    @error('nom_objetivo') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                                 <div class="col-md-8">
                                     <label class="form-label text-muted small text-uppercase fw-bold">Perspectiva BSC</label>
@@ -165,8 +165,8 @@
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label text-muted small text-uppercase fw-bold">Descrição Detalhada</label>
-                                    <textarea wire:model="dsc_objetivo_estrategico" class="form-control @error('dsc_objetivo_estrategico') is-invalid @enderror" rows="4" placeholder="Descreva o que se pretende alcançar com este objetivo..."></textarea>
-                                    @error('dsc_objetivo_estrategico') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <textarea wire:model="dsc_objetivo" class="form-control @error('dsc_objetivo') is-invalid @enderror" rows="4" placeholder="Descreva o que se pretende alcançar com este objetivo..."></textarea>
+                                    @error('dsc_objetivo') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                             </div>
                         </div>

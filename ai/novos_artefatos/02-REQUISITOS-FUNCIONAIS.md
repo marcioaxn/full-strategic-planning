@@ -550,7 +550,7 @@
 
 **Tabelas:** `pei.tab_objetivo_estrategico`, `pei.tab_futuro_almejado_objetivo_estrategico`, `pei.tab_plano_de_acao`, `pei.tab_indicador`
 
-### RF-07.3: Criar Objetivo Estratégico
+### RF-07.3: Criar Objetivo
 
 **Descrição:** Adicionar novo objetivo.
 
@@ -567,7 +567,7 @@
 
 **Permissão:** Super Admin, Admin Unidade
 
-### RF-07.4: Editar Objetivo Estratégico
+### RF-07.4: Editar Objetivo
 
 **Descrição:** Editar objetivo existente.
 
@@ -621,7 +621,7 @@
 **Critérios de Aceitação:**
 - Tabela com: Tipo, Descrição, Objetivo, Organização, Data Início/Fim, Status
 - Filtro por tipo de execução (Ação/Iniciativa/Projeto)
-- Filtro por objetivo estratégico
+- Filtro por objetivo
 - Filtro por organização
 - Filtro por status
 - Filtro por período (data início/fim)
@@ -635,7 +635,7 @@
 **Campos exibidos:**
 - `cod_tipo_execucao` (Ação/Iniciativa/Projeto)
 - `dsc_plano_de_acao` (truncado)
-- Objetivo Estratégico (nome)
+- Objetivo (nome)
 - Organização (sigla)
 - `dte_inicio` e `dte_fim`
 - `bln_status`
@@ -664,7 +664,7 @@
 - Formulário com: Descrição, Tipo, Objetivo, Organização, Datas, Orçamento, Status
 - Descrição: obrigatório, máximo 2000 caracteres
 - Tipo de Execução: dropdown (Ação/Iniciativa/Projeto), obrigatório
-- Objetivo Estratégico: dropdown, obrigatório
+- Objetivo: dropdown, obrigatório
 - Organização: dropdown, obrigatório
 - Nível Hierárquico: número 1-100
 - Data Início: obrigatório
@@ -755,8 +755,8 @@
 
 **Critérios de Aceitação:**
 - Tabela com: Nome, Tipo, Unidade, Objetivo/Plano vinculado, Status
-- Filtro por tipo (Objetivo Estratégico / Plano de Ação)
-- Filtro por objetivo estratégico
+- Filtro por tipo (Objetivo / Plano de Ação)
+- Filtro por objetivo
 - Filtro por plano de ação
 - Filtro por organização
 - Busca por nome
@@ -801,7 +801,7 @@
 - Formulário com múltiplos campos:
   - Nome: obrigatório, máximo 500 caracteres
   - Descrição: obrigatório, máximo 2000 caracteres
-  - Tipo: dropdown (Objetivo Estratégico / Plano de Ação)
+  - Tipo: dropdown (Objetivo / Plano de Ação)
   - Vinculação: dropdown de objetivos OU planos (dependendo do tipo)
   - Unidade de Medida: obrigatório, varchar (ex: %, R$, qtd)
   - Meta: textarea, opcional

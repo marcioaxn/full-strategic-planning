@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('pei.tab_risco_objetivo', function (Blueprint $table) {
             $table->foreignUuid('cod_risco')->references('cod_risco')->on('pei.tab_risco')->cascadeOnDelete();
-            $table->foreignUuid('cod_objetivo_estrategico')->references('cod_objetivo_estrategico')->on('pei.tab_objetivo_estrategico')->cascadeOnDelete();
+            $table->foreignUuid('cod_objetivo')->references('cod_objetivo')->on('pei.tab_objetivo_estrategico')->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();
 
             // Chave primária composta
-            $table->primary(['cod_risco', 'cod_objetivo_estrategico'], 'pk_risco_objetivo');
+            $table->primary(['cod_risco', 'cod_objetivo'], 'pk_risco_objetivo');
         });
     }
 

@@ -792,7 +792,7 @@ class PlanoDeAcao extends Model implements Auditable
     ];
 
     /**
-     * Relacionamento: Objetivo Estratégico
+     * Relacionamento: Objetivo
      */
     public function objetivoEstrategico(): BelongsTo
     {
@@ -983,7 +983,7 @@ class Indicador extends Model implements Auditable
     }
 
     /**
-     * Relacionamento: Objetivo Estratégico (opcional)
+     * Relacionamento: Objetivo (opcional)
      */
     public function objetivoEstrategico(): BelongsTo
     {
@@ -1084,7 +1084,7 @@ class Indicador extends Model implements Auditable
      */
 
     /**
-     * Scope: Indicadores de objetivo estratégico
+     * Scope: Indicadores de objetivo
      */
     public function scopeDeObjetivo($query)
     {

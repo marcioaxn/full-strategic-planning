@@ -42,5 +42,14 @@ class AppServiceProvider extends ServiceProvider
                 ->middleware('web')
                 ->name('livewire.update');
         });
+
+        // Custom Blade Directives for Brazilian Formatting
+        \Illuminate\Support\Facades\Blade::directive('brazil_number', function ($expression) {
+            return "<?php echo number_format($expression, ',', '.'); ?>";
+        });
+
+        \Illuminate\Support\Facades\Blade::directive('brazil_percent', function ($expression) {
+            return "<?php echo number_format($expression, ',', '.') . '%'; ?>";
+        });
     }
 }

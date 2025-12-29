@@ -38,12 +38,12 @@
                     
                     <div class="row g-4 mb-4">
                         <div class="col-md-6">
-                            <label class="text-muted small text-uppercase fw-bold d-block">Objetivo Estratégico</label>
+                            <label class="text-muted small text-uppercase fw-bold d-block">Objetivo</label>
                             <p class="mb-0 fw-semibold">
                                 <i class="bi bi-bullseye text-primary me-2"></i>
-                                {{ $plano->objetivoEstrategico->nom_objetivo_estrategico ?? 'N/A' }}
+                                {{ $plano->objetivo->nom_objetivo ?? 'N/A' }}
                             </p>
-                            <small class="text-muted ps-4">{{ $plano->objetivoEstrategico->perspectiva->dsc_perspectiva ?? '' }}</small>
+                            <small class="text-muted ps-4">{{ $plano->objetivo->perspectiva->dsc_perspectiva ?? '' }}</small>
                         </div>
                         <div class="col-md-3">
                             <label class="text-muted small text-uppercase fw-bold d-block">Tipo</label>
@@ -68,7 +68,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="text-muted small text-uppercase fw-bold d-block">Orçamento</label>
-                            <p class="mb-0 fw-mono">R$ {{ number_format($plano->vlr_orcamento_previsto, 2, ',', '.') }}</p>
+                            <p class="mb-0 fw-mono">R$ @brazil_number($plano->vlr_orcamento_previsto, 2)</p>
                         </div>
                         <div class="col-md-3">
                             <label class="text-muted small text-uppercase fw-bold d-block">Vínculos Orç.</label>
@@ -88,7 +88,7 @@
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="small text-muted">Progresso via Entregas</span>
-                            <span class="fw-bold text-primary">{{ number_format($progresso, 1) }}%</span>
+                            <span class="fw-bold text-primary">@brazil_percent($progresso, 1)</span>
                         </div>
                         <div class="progress rounded-pill" style="height: 10px;">
                             <div class="progress-bar gradient-theme" style="width: {{ $progresso }}%"></div>

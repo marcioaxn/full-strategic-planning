@@ -266,10 +266,10 @@
                                         <div class="mb-0 overflow-auto" style="max-height: 200px;">
                                             @foreach($objetivos as $obj)
                                                 <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="checkbox" value="{{ $obj->cod_objetivo_estrategico }}" 
-                                                           wire:model="form.objetivos_vinculados" id="obj_{{ $obj->cod_objetivo_estrategico }}">
-                                                    <label class="form-check-label small" for="obj_{{ $obj->cod_objetivo_estrategico }}">
-                                                        {{ Str::limit($obj->nom_objetivo_estrategico, 50) }}
+                                                    <input class="form-check-input" type="checkbox" value="{{ $obj->cod_objetivo }}" 
+                                                           wire:model="form.objetivos_vinculados" id="obj_{{ $obj->cod_objetivo }}">
+                                                    <label class="form-check-label small" for="obj_{{ $obj->cod_objetivo }}">
+                                                        {{ Str::limit($obj->nom_objetivo, 50) }}
                                                     </label>
                                                 </div>
                                             @endforeach

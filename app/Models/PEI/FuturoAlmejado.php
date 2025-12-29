@@ -8,14 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class FuturoAlmejadoObjetivoEstrategico extends Model
+class FuturoAlmejado extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
 
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_futuro_almejado_objetivo_estrategico';
+    protected $table = 'pei.tab_futuro_almejado_objetivo';
 
     /**
      * Chave primária
@@ -37,14 +37,14 @@ class FuturoAlmejadoObjetivoEstrategico extends Model
      */
     protected $fillable = [
         'dsc_futuro_almejado',
-        'cod_objetivo_estrategico',
+        'cod_objetivo',
     ];
 
     /**
-     * Relacionamento: Objetivo Estratégico
+     * Relacionamento: Objetivo
      */
-    public function objetivoEstrategico(): BelongsTo
+    public function objetivo(): BelongsTo
     {
-        return $this->belongsTo(ObjetivoEstrategico::class, 'cod_objetivo_estrategico', 'cod_objetivo_estrategico');
+        return $this->belongsTo(Objetivo::class, 'cod_objetivo', 'cod_objetivo');
     }
 }

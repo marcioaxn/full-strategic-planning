@@ -4,7 +4,7 @@ namespace App\Livewire\Risco;
 
 use App\Models\Risco;
 use App\Models\PEI\PEI;
-use App\Models\PEI\ObjetivoEstrategico;
+use App\Models\PEI\Objetivo;
 use App\Models\Organization;
 use App\Models\User;
 use Livewire\Attributes\Layout;
@@ -74,9 +74,9 @@ class ListarRiscos extends Component
     {
         $peiAtivo = PEI::ativos()->first();
         if ($peiAtivo) {
-            $this->objetivos = ObjetivoEstrategico::whereHas('perspectiva', function($query) use ($peiAtivo) {
+            $this->objetivos = Objetivo::whereHas('perspectiva', function($query) use ($peiAtivo) {
                 $query->where('cod_pei', $peiAtivo->cod_pei);
-            })->orderBy('nom_objetivo_estrategico')->get();
+            })->orderBy('nom_objetivo')->get();
         }
 
         if ($this->organizacaoId) {
@@ -101,7 +101,7 @@ class ListarRiscos extends Component
 
     public function edit($id)
     {
-        $risco = Risco::with('objetivosEstrategicos')->findOrFail($id);
+        $risco = Risco::with('objetivos')->findOrFail($id);
         $this->authorize('update', $risco);
 
         $this->riscoId = $id;
@@ -115,7 +115,7 @@ class ListarRiscos extends Component
             'txt_consequencias' => $risco->txt_consequencias,
             'cod_responsavel_monitoramento' => $risco->cod_responsavel_monitoramento,
             'dsc_status' => $risco->dsc_status,
-            'objetivos_vinculados' => $risco->objetivosEstrategicos->pluck('cod_objetivo_estrategico')->toArray(),
+            'objetivos_vinculados' => $risco->objetivos->pluck('cod_objetivo')->toArray(),
         ];
 
         $this->showModal = true;
@@ -147,7 +147,7 @@ class ListarRiscos extends Component
         }
 
         // Sincronizar objetivos
-        $risco->objetivosEstrategicos()->sync($this->form['objetivos_vinculados']);
+        $risco->objetivos()->sync($this->form['objetivos_vinculados']);
 
         $this->showModal = false;
         session()->flash('status', 'Risco salvo com sucesso!');
@@ -181,7 +181,7 @@ class ListarRiscos extends Component
 
     public function render()
     {
-        $query = Risco::query()->with(['responsavel', 'objetivosEstrategicos']);
+        $query = Risco::query()->with(['responsavel', 'objetivos']);
 
         if ($this->organizacaoId) {
             $query->where('cod_organizacao', $this->organizacaoId);

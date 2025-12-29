@@ -6,6 +6,7 @@ use App\Models\PEI\PEI;
 use App\Models\PEI\Perspectiva;
 use App\Models\PEI\MissaoVisaoValores;
 use App\Models\PEI\Valor;
+use App\Models\PEI\ObjetivoEstrategico;
 use App\Models\PEI\GrauSatisfacao;
 use App\Models\Organization;
 use Livewire\Attributes\Layout;
@@ -21,6 +22,7 @@ class MapaEstrategico extends Component
     public $organizacaoNome;
     public $missaoVisao;
     public $valores = [];
+    public $objetivosEstrategicos = [];
     public $grausSatisfacao = [];
 
     // Propriedades para Modal de Memória de Cálculo
@@ -42,35 +44,19 @@ class MapaEstrategico extends Component
 
     public function mount()
     {
-        // Se estiver logado, usa a organização da sessão.
-        // Se não, tenta pegar a Unidade Central ou a primeira disponível para visualização pública.
+        // Define a organização inicial
         if (Auth::check()) {
             $this->organizacaoId = Session::get('organizacao_selecionada_id');
         } else {
-            // Unidade Central padrão para o público (UUID fixo da migration)
             $this->organizacaoId = '3834910f-66f7-46d8-9104-2904d59e1241';
         }
 
         $this->peiAtivo = PEI::ativos()->first();
-        $this->atualizarOrganizacao($this->organizacaoId);
     }
 
     public function atualizarOrganizacao($id)
     {
         $this->organizacaoId = $id;
-
-        // Carregar graus de satisfacao PRIMEIRO
-        $this->carregarGrausSatisfacao();
-
-        if ($id) {
-            $org = Organization::find($id);
-            $this->organizacaoNome = $org ? $org->nom_organizacao : 'Sistema SEAE';
-        }
-
-        if ($this->peiAtivo) {
-            $this->carregarMapa();
-            $this->carregarIdentidadeEstrategica();
-        }
     }
 
     public function carregarGrausSatisfacao()
@@ -80,6 +66,8 @@ class MapaEstrategico extends Component
 
     public function carregarMapa()
     {
+        if (!$this->peiAtivo) return;
+
         $this->perspectivas = Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
             ->with(['objetivos' => function($query) {
                 $query->with(['indicadores', 'planosAcao'])->ordenadoPorNivel();
@@ -91,9 +79,7 @@ class MapaEstrategico extends Component
                 $contPersp = 0;
                 $listaIndicadoresMemoria = [];
 
-                // Processar cada objetivo da perspectiva
                 $p->objetivos->map(function($obj) use (&$somaPersp, &$contPersp, &$listaIndicadoresMemoria) {
-                    // 1. Cálculo de Indicadores do Objetivo
                     $indicadores = $obj->indicadores;
                     $totalInd = $indicadores->count();
                     $somaAtingObj = 0;
@@ -105,7 +91,7 @@ class MapaEstrategico extends Component
                         $contPersp++;
                         
                         $listaIndicadoresMemoria[] = [
-                            'objetivo' => $obj->nom_objetivo_estrategico,
+                            'objetivo' => $obj->nom_objetivo,
                             'indicador' => $ind->nom_indicador,
                             'atingimento' => round($ating, 1),
                             'cor' => $this->getCorPorPercentual($ating)
@@ -119,17 +105,26 @@ class MapaEstrategico extends Component
                         'cor' => $this->getCorPorPercentual($mediaAtingObj)
                     ];
 
-                    // 2. Cálculo de Planos de Ação do Objetivo
                     $planos = $obj->planosAcao;
                     $totalPlanos = $planos->count();
                     $concluidos = $planos->where('bln_status', 'Concluído')->count();
                     $percentualPlanos = $totalPlanos > 0 ? ($concluidos / $totalPlanos) * 100 : 0;
                     
+                    // Determinar cor do plano baseado na nova regra
+                    $corPlano = '#475569'; // secondary
+                    if ($totalPlanos > 0) {
+                        if ($concluidos == $totalPlanos) {
+                            $corPlano = '#429B22'; // success
+                        } else if ($planos->whereIn('bln_status', ['Em Andamento', 'Atrasado'])->count() > 0) {
+                            $corPlano = '#F3C72B'; // warning
+                        }
+                    }
+
                     $obj->resumo_planos = [
                         'quantidade' => $totalPlanos,
                         'concluidos' => $concluidos,
                         'percentual' => round($percentualPlanos, 1),
-                        'cor' => $this->getCorPorPercentual($percentualPlanos)
+                        'cor' => $corPlano
                     ];
 
                     return $obj;
@@ -165,95 +160,31 @@ class MapaEstrategico extends Component
 
     public function carregarIdentidadeEstrategica()
     {
-        // Carregar Missão e Visão
+        if (!$this->peiAtivo) return;
+
         $this->missaoVisao = MissaoVisaoValores::where('cod_pei', $this->peiAtivo->cod_pei)
             ->where('cod_organizacao', $this->organizacaoId)
             ->first();
 
-        // Carregar Valores
         $this->valores = Valor::where('cod_pei', $this->peiAtivo->cod_pei)
             ->where('cod_organizacao', $this->organizacaoId)
             ->orderBy('nom_valor')
             ->get();
+
+        $this->objetivosEstrategicos = ObjetivoEstrategico::where('cod_pei', $this->peiAtivo->cod_pei)
+            ->where('cod_organizacao', $this->organizacaoId)
+            ->orderBy('created_at', 'asc')
+            ->get();
     }
 
-    /**
-     * Calcula o percentual de atingimento dos indicadores de um objetivo
-     */
-    public function calcularAtingimentoIndicadores($objetivo): array
-    {
-        $indicadores = $objetivo->indicadores;
-        $total = $indicadores->count();
-
-        if ($total === 0) {
-            return [
-                'quantidade' => 0,
-                'percentual' => 0,
-                'cor' => '#6c757d'
-            ];
-        }
-
-        $soma = 0;
-        foreach ($indicadores as $ind) {
-            $soma += $ind->calcularAtingimento();
-        }
-
-        $media = $soma / $total;
-
-        // Determinar cor baseado no percentual
-        $cor = $this->getCorPorPercentual($media);
-
-        return [
-            'quantidade' => $total,
-            'percentual' => round($media, 1),
-            'cor' => $cor
-        ];
-    }
-
-    /**
-     * Calcula o status dos planos de ação de um objetivo
-     */
-    public function calcularStatusPlanos($objetivo): array
-    {
-        $planos = $objetivo->planosAcao;
-        $total = $planos->count();
-
-        if ($total === 0) {
-            return [
-                'quantidade' => 0,
-                'concluidos' => 0,
-                'percentual' => 0,
-                'cor' => '#6c757d'
-            ];
-        }
-
-        $concluidos = $planos->where('bln_status', 'Concluído')->count();
-        $percentual = ($concluidos / $total) * 100;
-
-        // Determinar cor baseado no percentual
-        $cor = $this->getCorPorPercentual($percentual);
-
-        return [
-            'quantidade' => $total,
-            'concluidos' => $concluidos,
-            'percentual' => round($percentual, 1),
-            'cor' => $cor
-        ];
-    }
-
-    /**
-     * Retorna a cor baseada no percentual (usando graus de satisfacao dinamicos)
-     */
     public function getCorPorPercentual($percentual): string
     {
-        // Buscar nos graus de satisfacao cadastrados
         foreach ($this->grausSatisfacao as $grau) {
             if ($percentual >= $grau->vlr_minimo && $percentual <= $grau->vlr_maximo) {
                 return $grau->cor;
             }
         }
 
-        // Fallback caso nao encontre (Usando Hexadecimais)
         if ($percentual >= 100) return '#198754';
         if ($percentual >= 80) return '#0d6efd';
         if ($percentual >= 60) return '#0dcaf0';
@@ -261,9 +192,6 @@ class MapaEstrategico extends Component
         return '#dc3545';
     }
 
-    /**
-     * Retorna as cores para uma perspectiva baseado no nível
-     */
     public function getCoresPerspectiva($nivel): array
     {
         return $this->coresPerspectivas[$nivel] ?? $this->coresPerspectivas[1];
@@ -271,7 +199,19 @@ class MapaEstrategico extends Component
 
     public function render()
     {
-        // Define o layout dinamicamente: 'app' para logados, 'guest' para público
+        // Re-executa o carregamento a cada requisição (incluindo poll)
+        $this->carregarGrausSatisfacao();
+        
+        if ($this->organizacaoId) {
+            $org = Organization::find($this->organizacaoId);
+            $this->organizacaoNome = $org ? $org->nom_organizacao : 'Sistema SEAE';
+        }
+
+        if ($this->peiAtivo) {
+            $this->carregarMapa();
+            $this->carregarIdentidadeEstrategica();
+        }
+
         $layout = Auth::check() ? 'layouts.app' : 'layouts.guest';
 
         return view('livewire.pei.mapa-estrategico')

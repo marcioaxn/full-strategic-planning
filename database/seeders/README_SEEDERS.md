@@ -23,7 +23,7 @@ Os seeders criarão dados para as seguintes tabelas:
 
 ### 1. Planos de Ação
 - **Tabela:** `tab_plano_de_acao`
-- **Quantidade:** 3-5 planos por objetivo estratégico
+- **Quantidade:** 3-5 planos por objetivo
 - **Dados:** Descrição, datas, orçamento, status, PPA/LOA
 
 ### 2. Entregas
