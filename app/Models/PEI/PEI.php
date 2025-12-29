@@ -15,7 +15,7 @@ class PEI extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_pei';
+    protected $table = 'pei.tab_pei';
 
     /**
      * Chave primária

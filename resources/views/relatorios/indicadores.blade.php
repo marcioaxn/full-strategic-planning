@@ -44,10 +44,10 @@
                     <td style="font-weight: bold;">{{ $ind->nom_indicador }}</td>
                     <td>{{ $ind->dsc_unidade_medida }}</td>
                     <td style="font-size: 9px;">
-                        {{ $ind->cod_objetivo_estrategico ? 'OBJ: '.$ind->objetivoEstrategico->nom_objetivo_estrategico : 'PLAN: '.$ind->planoDeAcao->dsc_plano_de_acao }}
+                        {{ $ind->cod_objetivo ? 'OBJ: '.$ind->objetivo->nom_objetivo : 'PLAN: '.$ind->planoDeAcao->dsc_plano_de_acao }}
                     </td>
                     <td style="text-align: center;">{{ $ind->dsc_meta }}</td>
-                    <td style="text-align: center; font-weight: bold;">{{ number_format($ind->calcularAtingimento(), 1) }}%</td>
+                    <td style="text-align: center; font-weight: bold;">@brazil_percent($ind->calcularAtingimento(), 1)</td>
                     <td style="text-align: center;">
                         <div class="farol" style="background-color: {{ $ind->getCorFarol() ?: '#eee' }}"></div>
                     </td>

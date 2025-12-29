@@ -44,7 +44,7 @@
 - [ ] **Cabeçalho Contextual**
   - Nome do PEI ativo
   - Perspectiva relacionada (cor, nome, nível)
-  - Objetivo estratégico completo
+  - Objetivo completo
   - Responsáveis quando aplicável
 
 - [ ] **Metadados do Objetivo**

@@ -2,8 +2,8 @@
 
 namespace App\Livewire\PEI;
 
-use App\Models\PEI\ObjetivoEstrategico;
-use App\Models\PEI\FuturoAlmejadoObjetivoEstrategico;
+use App\Models\PEI\Objetivo;
+use App\Models\PEI\FuturoAlmejado;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -19,13 +19,13 @@ class GerenciarFuturoAlmejado extends Component
 
     public function mount($objetivoId)
     {
-        $this->objetivo = ObjetivoEstrategico::findOrFail($objetivoId);
+        $this->objetivo = Objetivo::findOrFail($objetivoId);
         $this->carregarFuturos();
     }
 
     public function carregarFuturos()
     {
-        $this->futuros = FuturoAlmejadoObjetivoEstrategico::where('cod_objetivo_estrategico', $this->objetivo->cod_objetivo_estrategico)
+        $this->futuros = FuturoAlmejado::where('cod_objetivo', $this->objetivo->cod_objetivo)
             ->get();
     }
 
@@ -37,7 +37,7 @@ class GerenciarFuturoAlmejado extends Component
 
     public function edit($id)
     {
-        $f = FuturoAlmejadoObjetivoEstrategico::findOrFail($id);
+        $f = FuturoAlmejado::findOrFail($id);
         $this->futuroId = $id;
         $this->dsc_futuro_almejado = $f->dsc_futuro_almejado;
         $this->showModal = true;
@@ -49,11 +49,11 @@ class GerenciarFuturoAlmejado extends Component
             'dsc_futuro_almejado' => 'required|string|max:1000',
         ]);
 
-        FuturoAlmejadoObjetivoEstrategico::updateOrCreate(
+        FuturoAlmejado::updateOrCreate(
             ['cod_futuro_almejado' => $this->futuroId],
             [
                 'dsc_futuro_almejado' => $this->dsc_futuro_almejado,
-                'cod_objetivo_estrategico' => $this->objetivo->cod_objetivo_estrategico,
+                'cod_objetivo' => $this->objetivo->cod_objetivo,
             ]
         );
 
@@ -64,7 +64,7 @@ class GerenciarFuturoAlmejado extends Component
 
     public function delete($id)
     {
-        FuturoAlmejadoObjetivoEstrategico::findOrFail($id)->delete();
+        FuturoAlmejado::findOrFail($id)->delete();
         $this->carregarFuturos();
         session()->flash('status', 'Futuro almejado excluído com sucesso!');
     }

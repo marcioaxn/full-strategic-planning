@@ -38,7 +38,7 @@ class PlanosExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             'Plano de Ação',
-            'Objetivo Estratégico',
+            'Objetivo',
             'Data Início',
             'Data Fim',
             'Status',
@@ -57,7 +57,7 @@ class PlanosExport implements FromCollection, WithHeadings, WithMapping
 
         return [
             $plano->dsc_plano_de_acao,
-            $plano->objetivo?->nom_objetivo_estrategico ?? '-',
+            $plano->objetivo?->nom_objetivo ?? '-',
             $plano->dte_inicio?->format('d/m/Y') ?? '-',
             $plano->dte_fim?->format('d/m/Y') ?? '-',
             $plano->bln_status ?? 'Não Definido',

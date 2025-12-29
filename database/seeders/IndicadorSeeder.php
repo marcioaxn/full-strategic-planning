@@ -2,185 +2,70 @@
 
 namespace Database\Seeders;
 
-use App\Models\PEI\Indicador;
-use App\Models\PEI\ObjetivoEstrategico;
-use App\Models\PEI\PlanoDeAcao;
 use App\Models\PEI\PEI;
+use App\Models\PEI\Objetivo;
+use App\Models\PEI\Indicador;
+use App\Models\PEI\PlanoDeAcao;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class IndicadorSeeder extends Seeder
 {
     public function run(): void
     {
-        $peiAtivo = PEI::ativos()->first();
-        if (!$peiAtivo) {
-            $this->command->warn('Nenhum PEI ativo encontrado.');
-            return;
-        }
+        $peiAtivo = PEI::where('bln_ativo', true)->first();
+        if (!$peiAtivo) return;
 
-        $objetivos = ObjetivoEstrategico::whereHas('perspectiva', function($q) use ($peiAtivo) {
+        // 1. Criar Indicadores para Objetivos
+        $objetivos = Objetivo::whereHas('perspectiva', function($q) use ($peiAtivo) {
             $q->where('cod_pei', $peiAtivo->cod_pei);
         })->get();
-        $planos = PlanoDeAcao::whereIn('cod_objetivo_estrategico', $objetivos->pluck('cod_objetivo_estrategico'))->get();
 
-        if ($objetivos->isEmpty()) {
-            $this->command->warn('Nenhum objetivo encontrado.');
-            return;
-        }
-
-        // Limpar indicadores existentes
-        DB::table('tab_indicador')
-            ->where(function($q) use ($objetivos, $planos) {
-                $q->whereIn('cod_objetivo_estrategico', $objetivos->pluck('cod_objetivo_estrategico'))
-                  ->orWhereIn('cod_plano_de_acao', $planos->pluck('cod_plano_de_acao'));
-            })
-            ->delete();
-
-        $this->command->info('Criando Indicadores...');
-
-        $indicadores = [];
-
-        // Indicadores de Objetivo Estratégico (2-3 por objetivo)
         foreach ($objetivos as $objetivo) {
-            $numIndicadores = rand(2, 3);
-
-            for ($i = 1; $i <= $numIndicadores; $i++) {
-                $indicadores[] = $this->criarIndicadorObjetivo($objetivo, $i);
+            // Criar 1 a 2 indicadores por objetivo
+            $qtd = rand(1, 2);
+            for ($i = 1; $i <= $qtd; $i++) {
+                Indicador::create($this->criarIndicadorObjetivo($objetivo, $i));
             }
         }
 
-        // Indicadores de Plano de Ação (1-2 por plano, 30% dos planos)
-        $planosComIndicador = $planos->random(min($planos->count(), (int)($planos->count() * 0.3)));
-        foreach ($planosComIndicador as $plano) {
-            $numIndicadores = rand(1, 2);
-
-            for ($i = 1; $i <= $numIndicadores; $i++) {
-                $indicadores[] = $this->criarIndicadorPlano($plano, $i);
-            }
+        // 2. Criar Indicadores para Planos de Ação
+        $planos = PlanoDeAcao::all();
+        foreach ($planos as $plano) {
+            Indicador::create([
+                'cod_plano_de_acao' => $plano->cod_plano_de_acao,
+                'nom_indicador' => "Taxa de Execução: " . $plano->dsc_plano_de_acao,
+                'dsc_indicador' => "Mede o percentual de conclusão das entregas do plano.",
+                'dsc_tipo' => 'Plano',
+                'dsc_meta' => '100%',
+                'dsc_unidade_medida' => 'Percentual (%)',
+                'num_peso' => 1,
+                'bln_acumulado' => 'Não',
+                'dsc_formula' => '(Entregas Concluídas / Total de Entregas) * 100',
+                'dsc_fonte' => 'Sistema SEAE - Módulo de Entregas',
+                'dsc_periodo_medicao' => 'Mensal',
+            ]);
         }
-
-        // Inserir em lotes
-        foreach (array_chunk($indicadores, 50) as $chunk) {
-            Indicador::insert($chunk);
-        }
-
-        $this->command->info('✓ ' . count($indicadores) . ' Indicadores criados com sucesso!');
     }
 
-    private function criarIndicadorObjetivo(ObjetivoEstrategico $objetivo, int $numero): array
+    private function criarIndicadorObjetivo(Objetivo $objetivo, int $numero): array
     {
-        $templates = [
-            [
-                'tipo' => 'Resultado',
-                'nome' => 'Taxa de Implementacao',
-                'descricao' => 'Percentual de implementacao das acoes previstas',
-                'unidade' => '%',
-                'formula' => '(Acoes Implementadas / Total de Acoes) * 100',
-                'fonte' => 'Sistema de Gestao Estrategica',
-                'periodo' => 'Trimestral',
-                'acumulado' => 'Nao'
-            ],
-            [
-                'tipo' => 'Eficiencia',
-                'nome' => 'Indice de Eficiencia Operacional',
-                'descricao' => 'Mede a eficiencia na execucao das atividades',
-                'unidade' => 'Indice',
-                'formula' => 'Resultado Realizado / Recurso Utilizado',
-                'fonte' => 'Relatorios Gerenciais',
-                'periodo' => 'Mensal',
-                'acumulado' => 'Nao'
-            ],
-            [
-                'tipo' => 'Efetividade',
-                'nome' => 'Grau de Satisfacao',
-                'descricao' => 'Nivel de satisfacao das partes interessadas',
-                'unidade' => 'Pontos',
-                'formula' => 'Media das Avaliacoes * 20',
-                'fonte' => 'Pesquisa de Satisfacao',
-                'periodo' => 'Semestral',
-                'acumulado' => 'Nao'
-            ],
-            [
-                'tipo' => 'Resultado',
-                'nome' => 'Percentual de Conclusao',
-                'descricao' => 'Taxa de conclusao das entregas do objetivo',
-                'unidade' => '%',
-                'formula' => '(Entregas Concluidas / Total Entregas) * 100',
-                'fonte' => 'Modulo de Monitoramento',
-                'periodo' => 'Mensal',
-                'acumulado' => 'Sim'
-            ],
+        $nomes = [
+            1 => "Índice de Atingimento: " . $objetivo->nom_objetivo,
+            2 => "Eficiência Operacional: " . $objetivo->nom_objetivo,
         ];
-
-        $template = $templates[($numero - 1) % count($templates)];
 
         return [
-            'cod_objetivo_estrategico' => $objetivo->cod_objetivo_estrategico,
-            'cod_plano_de_acao' => null,
-            'dsc_tipo' => $template['tipo'],
-            'nom_indicador' => $template['nome'] . ' - ' . mb_substr($objetivo->dsc_objetivo_estrategico, 0, 30),
-            'dsc_indicador' => $template['descricao'],
-            'txt_observacao' => 'Indicador vinculado ao objetivo estrategico para mensuracao de resultados',
-            'dsc_meta' => 'Atingir ' . rand(70, 95) . '% ao final do ciclo',
-            'dsc_atributos' => 'Especifico, Mensuravel, Atingivel, Relevante, Temporal',
-            'dsc_referencial_comparativo' => 'Benchmark de mercado e historico interno',
-            'dsc_unidade_medida' => $template['unidade'],
-            'num_peso' => rand(1, 5),
-            'bln_acumulado' => $template['acumulado'],
-            'dsc_formula' => $template['formula'],
-            'dsc_fonte' => $template['fonte'],
-            'dsc_periodo_medicao' => $template['periodo'],
-            'created_at' => now(),
-            'updated_at' => now(),
-        ];
-    }
-
-    private function criarIndicadorPlano(PlanoDeAcao $plano, int $numero): array
-    {
-        $templates = [
-            [
-                'tipo' => 'Processo',
-                'nome' => 'Taxa de Execucao Orcamentaria',
-                'descricao' => 'Percentual do orcamento executado',
-                'unidade' => '%',
-                'formula' => '(Valor Executado / Orcamento Previsto) * 100',
-                'fonte' => 'Sistema Financeiro',
-                'periodo' => 'Mensal',
-                'acumulado' => 'Sim'
-            ],
-            [
-                'tipo' => 'Processo',
-                'nome' => 'Prazo de Entrega',
-                'descricao' => 'Percentual de entregas no prazo',
-                'unidade' => '%',
-                'formula' => '(Entregas no Prazo / Total de Entregas) * 100',
-                'fonte' => 'Cronograma do Projeto',
-                'periodo' => 'Mensal',
-                'acumulado' => 'Nao'
-            ],
-        ];
-
-        $template = $templates[($numero - 1) % count($templates)];
-
-        return [
-            'cod_objetivo_estrategico' => null,
-            'cod_plano_de_acao' => $plano->cod_plano_de_acao,
-            'dsc_tipo' => $template['tipo'],
-            'nom_indicador' => $template['nome'] . ' - ' . mb_substr($plano->dsc_plano_de_acao, 0, 30),
-            'dsc_indicador' => $template['descricao'],
-            'txt_observacao' => 'Indicador de acompanhamento do plano de acao',
-            'dsc_meta' => 'Atingir ' . rand(80, 100) . '%',
-            'dsc_atributos' => 'Especifico, Mensuravel, Atingivel',
-            'dsc_referencial_comparativo' => 'Historico de projetos similares',
-            'dsc_unidade_medida' => $template['unidade'],
+            'cod_objetivo' => $objetivo->cod_objetivo,
+            'nom_indicador' => $nomes[$numero] ?? "Indicador $numero de " . $objetivo->nom_objetivo,
+            'dsc_indicador' => "Indicador estratégico vinculado ao objetivo " . $objetivo->nom_objetivo,
+            'dsc_tipo' => 'Objetivo',
+            'dsc_meta' => '90%',
+            'dsc_unidade_medida' => 'Índice',
             'num_peso' => rand(1, 3),
-            'bln_acumulado' => $template['acumulado'],
-            'dsc_formula' => $template['formula'],
-            'dsc_fonte' => $template['fonte'],
-            'dsc_periodo_medicao' => $template['periodo'],
-            'created_at' => now(),
-            'updated_at' => now(),
+            'bln_acumulado' => rand(0, 1) ? 'Sim' : 'Não',
+            'dsc_formula' => 'Cálculo definido pela área técnica',
+            'dsc_fonte' => 'Relatórios Gerenciais',
+            'dsc_periodo_medicao' => 'Mensal',
         ];
     }
 }

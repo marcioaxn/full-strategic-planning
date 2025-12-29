@@ -66,7 +66,7 @@
                             @foreach($graus as $grau)
                                 <div class="d-flex align-items-center">
                                     <span class="rounded-circle me-2" style="width: 16px; height: 16px; background-color: {{ $grau->cor }};"></span>
-                                    <small>{{ $grau->dsc_grau_satisfcao }} ({{ number_format($grau->vlr_minimo, 2, ',', '.') }}-{{ number_format($grau->vlr_maximo, 2, ',', '.') }}%)</small>
+                                    <small>{{ $grau->dsc_grau_satisfcao }} (@brazil_number($grau->vlr_minimo, 2)-@brazil_percent($grau->vlr_maximo, 2))</small>
                                 </div>
                             @endforeach
                         </div>
@@ -101,10 +101,10 @@
                                         <code class="bg-light px-2 py-1 rounded">{{ $grau->cor }}</code>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-secondary-subtle text-secondary">{{ number_format($grau->vlr_minimo, 2, ',', '.') }}%</span>
+                                        <span class="badge bg-secondary-subtle text-secondary">@brazil_percent($grau->vlr_minimo, 2)</span>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-primary-subtle text-primary">{{ number_format($grau->vlr_maximo, 2, ',', '.') }}%</span>
+                                        <span class="badge bg-primary-subtle text-primary">@brazil_percent($grau->vlr_maximo, 2)</span>
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm">

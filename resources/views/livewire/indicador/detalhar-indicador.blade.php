@@ -47,8 +47,8 @@
                     </div>
                     <div class="mb-0">
                         <label class="small text-muted text-uppercase fw-bold d-block">Vínculo</label>
-                        @if($indicador->cod_objetivo_estrategico)
-                            <small class="text-primary fw-bold"><i class="bi bi-bullseye"></i> Objetivo: {{ $indicador->objetivoEstrategico->nom_objetivo_estrategico }}</small>
+                        @if($indicador->cod_objetivo)
+                            <small class="text-primary fw-bold"><i class="bi bi-bullseye"></i> Objetivo: {{ $indicador->objetivo->nom_objetivo }}</small>
                         @else
                             <small class="text-info fw-bold"><i class="bi bi-list-task"></i> Plano: {{ $indicador->planoDeAcao->dsc_plano_de_acao }}</small>
                         @endif
@@ -75,8 +75,8 @@
                             @foreach($anos as $ano)
                                 <tr>
                                     <td>{{ $ano }}</td>
-                                    <td>{{ number_format($indicador->linhaBase->where('num_ano', $ano)->first()?->num_linha_base ?? 0, 2, ',', '.') }}</td>
-                                    <td class="fw-bold">{{ number_format($indicador->metasPorAno->where('num_ano', $ano)->first()?->meta ?? 0, 2, ',', '.') }}</td>
+                                    <td>@brazil_number($indicador->linhaBase->where('num_ano', $ano)->first()?->num_linha_base ?? 0, 2)</td>
+                                    <td class="fw-bold">@brazil_number($indicador->metasPorAno->where('num_ano', $ano)->first()?->meta ?? 0, 2)</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -129,15 +129,15 @@
                                 @endphp
                                 <tr>
                                     <td class="ps-4">{{ $nome }}</td>
-                                    <td>{{ $ev ? number_format($ev->vlr_previsto, 2, ',', '.') : '-' }}</td>
-                                    <td class="fw-bold">{{ $ev ? number_format($ev->vlr_realizado, 2, ',', '.') : '-' }}</td>
+                                    <td>@if($ev) @brazil_number($ev->vlr_previsto, 2) @else - @endif</td>
+                                    <td class="fw-bold">@if($ev) @brazil_number($ev->vlr_realizado, 2) @else - @endif</td>
                                     <td>
                                         @if($ev)
                                             <div class="d-flex align-items-center">
                                                 <div class="progress flex-grow-1 me-2" style="height: 6px;">
                                                     <div class="progress-bar bg-{{ $ating >= 100 ? 'success' : ($ating >= 80 ? 'warning' : 'danger') }}" style="width: {{ min($ating, 100) }}%"></div>
                                                 </div>
-                                                <span class="fw-bold">{{ number_format($ating, 1) }}%</span>
+                                                <span class="fw-bold">@brazil_percent($ating, 1)</span>
                                             </div>
                                         @else
                                             <span class="text-muted opacity-50">-</span>

@@ -20,7 +20,7 @@ class Indicador extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_indicador';
+    protected $table = 'pei.tab_indicador';
 
     /**
      * Chave primária
@@ -42,7 +42,7 @@ class Indicador extends Model implements Auditable
      */
     protected $fillable = [
         'cod_plano_de_acao',
-        'cod_objetivo_estrategico',
+        'cod_objetivo',
         'dsc_tipo',
         'nom_indicador',
         'dsc_indicador',
@@ -74,11 +74,11 @@ class Indicador extends Model implements Auditable
     }
 
     /**
-     * Relacionamento: Objetivo Estratégico (opcional)
+     * Relacionamento: Objetivo (opcional)
      */
-    public function objetivoEstrategico(): BelongsTo
+    public function objetivo(): BelongsTo
     {
-        return $this->belongsTo(ObjetivoEstrategico::class, 'cod_objetivo_estrategico', 'cod_objetivo_estrategico');
+        return $this->belongsTo(Objetivo::class, 'cod_objetivo', 'cod_objetivo');
     }
 
     /**
@@ -112,7 +112,7 @@ class Indicador extends Model implements Auditable
     {
         return $this->belongsToMany(
             Organization::class,
-            'rel_indicador_objetivo_estrategico_organizacao',
+            'pei.rel_indicador_objetivo_organizacao',
             'cod_indicador',
             'cod_organizacao',
             'cod_indicador',
@@ -263,11 +263,11 @@ class Indicador extends Model implements Auditable
      */
 
     /**
-     * Scope: Indicadores de objetivo estratégico
+     * Scope: Indicadores de objetivo
      */
     public function scopeDeObjetivo($query)
     {
-        return $query->whereNotNull('cod_objetivo_estrategico');
+        return $query->whereNotNull('cod_objetivo');
     }
 
     /**

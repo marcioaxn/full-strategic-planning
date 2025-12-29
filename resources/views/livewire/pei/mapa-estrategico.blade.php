@@ -122,6 +122,25 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Card de Objetivos Estratégicos --}}
+                <div class="col-12">
+                    <div class="identity-box shadow-sm border h-100 text-center">
+                        <div class="d-flex align-items-center justify-content-center mb-3">
+                            <div class="icon-circle-mini bg-warning bg-opacity-10 text-warning me-2"><i class="bi bi-shield-check"></i></div>
+                            <label class="identity-label mb-0">Objetivos Estratégicos</label>
+                        </div>
+                        <div class="d-flex flex-wrap gap-3 mt-2 justify-content-center">
+                            @forelse($objetivosEstrategicos as $obj)
+                                <span class="value-tag-modern shadow-sm border-warning border-opacity-50 py-2 px-4" style="background: rgba(var(--bs-warning-rgb), 0.05); font-size: 1.1rem;">
+                                    <i class="bi bi-check2-circle text-warning me-2"></i> {{ $obj->nom_objetivo_estrategico }}
+                                </span>
+                            @empty
+                                <span class="text-muted small italic opacity-50">Objetivos estratégicos não definidos para esta unidade.</span>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- ========== MAPA DE PERSPECTIVAS ========== -->
@@ -138,8 +157,8 @@
                     <div class="perspectiva-row mb-2">
                         <div class="card shadow-sm perspectiva-full-card" style="border: 2px solid var(--bs-{{ $corBordaRef }}) !important;">
                             <!-- Header da Perspectiva -->
-                            <div class="perspectiva-header-modern px-4 py-3 d-flex justify-content-between align-items-center" 
-                                 style="background-color: color-mix(in srgb, var(--bs-{{ $corBordaRef }}-bg-subtle), white 55%) !important; border-bottom: 2px solid var(--bs-{{ $corBordaRef }}) !important;">
+                            <div class="perspectiva-header-modern px-4 py-3 d-flex justify-content-between align-items-center"
+                                 style="background-color: color-mix(in srgb, var(--bs-{{ $corBordaRef }}-bg-subtle), white 77%) !important; border-bottom: 2px solid var(--bs-{{ $corBordaRef }}) !important;">
                                 <div class="persp-title-group">
                                     <h5 class="persp-name text-uppercase fw-800 mb-0">{{ $p['dsc_perspectiva'] }}</h5>
                                 </div>
@@ -150,7 +169,7 @@
                                     </button>
 
                                     <div class="performance-badge-modern shadow-sm" style="background-color: {{ $corSatisfacao }};">
-                                        <i class="bi bi-graph-up-arrow me-1"></i> {{ $p['atingimento_medio'] }}%
+                                        <i class="bi bi-graph-up-arrow me-1"></i> @brazil_percent($p['atingimento_medio'], 1)
                                     </div>
                                 </div>
                             </div>
@@ -164,19 +183,19 @@
                                         @endphp
                                         <div class="col-md-4 col-lg-3">
                                             <div class="objetivo-card-modern shadow-sm border h-100" 
-                                                 @auth onclick="window.location.href='{{ route('objetivos.index') }}?search={{ urlencode($objetivo['nom_objetivo_estrategico']) }}'" @endauth>
+                                                 @auth onclick="window.location.href='{{ route('objetivos.index') }}?search={{ urlencode($objetivo['nom_objetivo']) }}'" @endauth>
                                                 <div class="obj-content p-3">
-                                                    <p class="obj-title mb-3" title="{{ $objetivo['nom_objetivo_estrategico'] }}">
-                                                        {{ Str::limit($objetivo['nom_objetivo_estrategico'], 70) }}
+                                                    <p class="obj-title mb-3" title="{{ $objetivo['nom_objetivo'] }}">
+                                                        {{ Str::limit($objetivo['nom_objetivo'], 70) }}
                                                     </p>
                                                     
                                                     {{-- Indicadores --}}
                                                     <div class="obj-stat-box mb-2">
-                                                        <a href="{{ route('indicadores.index', ['filtroObjetivo' => $objetivo['cod_objetivo_estrategico']]) }}" 
+                                                        <a wire:navigate href="{{ route('indicadores.index', ['filtroObjetivo' => $objetivo['cod_objetivo']]) }}" 
                                                            class="text-decoration-none indicador-link" @auth onclick="event.stopPropagation();" @endauth>
                                                             <div class="d-flex justify-content-between mb-1 align-items-center">
                                                                 <span class="stat-label-modern"><i class="bi bi-graph-up me-1"></i>Indicadores</span>
-                                                                <span class="stat-value-modern" style="color: {{ $ind['cor'] }};">{{ $ind['percentual'] }}%</span>
+                                                                <span class="stat-value-modern" style="color: {{ $ind['cor'] }};">@brazil_percent($ind['percentual'], 1)</span>
                                                             </div>
                                                             <div class="stat-progress-container bg-light-custom">
                                                                 <div class="stat-progress-fill" style="width: {{ min($ind['percentual'], 100) }}%; background-color: {{ $ind['cor'] }};"></div>
@@ -186,7 +205,7 @@
 
                                                     {{-- Planos --}}
                                                     <div class="obj-stat-box">
-                                                        <a href="{{ route('planos.index', ['filtroObjetivo' => $objetivo['cod_objetivo_estrategico']]) }}" 
+                                                        <a wire:navigate href="{{ route('planos.index', ['filtroObjetivo' => $objetivo['cod_objetivo']]) }}" 
                                                            class="text-decoration-none plano-link" @auth onclick="event.stopPropagation();" @endauth>
                                                             <div class="d-flex justify-content-between mb-1 align-items-center">
                                                                 <span class="stat-label-modern"><i class="bi bi-list-check me-1"></i>Planos</span>
@@ -201,7 +220,7 @@
                                             </div>
                                         </div>
                                     @empty
-                                        <div class="col-12 text-center py-4 opacity-50 small italic">Nenhum objetivo estratégico definido.</div>
+                                        <div class="col-12 text-center py-4 opacity-50 small italic">Nenhum objetivo definido.</div>
                                     @endforelse
                                 </div>
                             </div>
@@ -218,14 +237,25 @@
 
             {{-- Legenda Refinada --}}
             <div class="legenda-wrapper mt-5 mb-4">
-                <div class="d-flex align-items-center justify-content-center flex-wrap gap-4 px-4 py-3">
-                    <span class="small fw-bold text-muted text-uppercase letter-spacing-1">Legenda desempenho:</span>
-                    @foreach($grausSatisfacao as $grau)
-                        <div class="d-flex align-items-center">
-                            <span class="legenda-color-dot me-2 shadow-sm" style="background-color: {{ $grau->cor }};"></span>
-                            <small class="text-body fw-medium">{{ $grau->dsc_grau_satisfcao }} <span class="text-muted fw-normal" style="font-size: 0.9rem;">( {{ number_format($grau->vlr_minimo, 2) }} - {{ number_format($grau->vlr_maximo, 2) }}% )</span></small>
-                        </div>
-                    @endforeach
+                <div class="d-flex flex-column gap-3 px-4 py-3 bg-white bg-opacity-50 rounded-4 shadow-sm">
+                    <div class="d-flex align-items-center justify-content-center flex-wrap gap-4">
+                        <span class="small fw-bold text-muted text-uppercase letter-spacing-1">Desempenho (Indicadores):</span>
+                        @foreach($grausSatisfacao as $grau)
+                            <div class="d-flex align-items-center">
+                                <span class="legenda-color-dot me-2 shadow-sm" style="background-color: {{ $grau->cor }};"></span>
+                                <small class="text-body fw-medium">{{ $grau->dsc_grau_satisfcao }} <span class="text-muted fw-normal" style="font-size: 0.9rem;">( @brazil_number($grau->vlr_minimo, 2) - @brazil_percent($grau->vlr_maximo, 2) )</span></small>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="d-flex align-items-center justify-content-center flex-wrap gap-4 border-top pt-3">
+                        <span class="small fw-bold text-muted text-uppercase letter-spacing-1">Status (Planos de Ação):</span>
+                        @foreach(\App\Models\PEI\PlanoDeAcao::getStatusLegend() as $item)
+                            <div class="d-flex align-items-center">
+                                <span class="legenda-color-dot me-2 shadow-sm" style="background-color: {{ $item['color'] }};"></span>
+                                <small class="text-body fw-medium">{{ $item['label'] }}</small>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </div>
         </div>
@@ -248,7 +278,7 @@
                             </div>
                             <div class="text-end">
                                 <span class="text-muted small fw-bold text-uppercase letter-spacing-1">Média de Atingimento</span>
-                                <h2 class="fw-800 mb-0" style="color: {{ $detalhesCalculo['cor'] }};">{{ $detalhesCalculo['media'] }}%</h2>
+                                <h2 class="fw-800 mb-0" style="color: {{ $detalhesCalculo['cor'] }};">@brazil_percent($detalhesCalculo['media'], 1)</h2>
                             </div>
                         </div>
 
@@ -266,7 +296,7 @@
                                         <tr>
                                             <td class="small fw-bold px-3">{{ $item['objetivo'] }}</td>
                                             <td class="small opacity-75">{{ $item['indicador'] }}</td>
-                                            <td class="text-end fw-800 px-3" style="color: {{ $item['cor'] }};">{{ $item['atingimento'] }}%</td>
+                                            <td class="text-end fw-800 px-3" style="color: {{ $item['cor'] }};">@brazil_percent($item['atingimento'], 1)</td>
                                         </tr>
                                     @endforeach
                                 </tbody>

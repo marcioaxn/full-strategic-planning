@@ -10,7 +10,7 @@
                     </ol>
                 </nav>
                 <h2 class="h4 fw-bold mb-0">Futuro Almejado</h2>
-                <p class="text-muted small mb-0">{{ $objetivo->nom_objetivo_estrategico }}</p>
+                <p class="text-muted small mb-0">{{ $objetivo->nom_objetivo }}</p>
             </div>
             <button wire:click="create" class="btn btn-primary gradient-theme-btn">
                 <i class="bi bi-plus-lg me-2"></i>Adicionar Item
