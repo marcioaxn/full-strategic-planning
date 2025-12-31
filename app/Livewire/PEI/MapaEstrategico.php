@@ -39,7 +39,8 @@ class MapaEstrategico extends Component
     ];
 
     protected $listeners = [
-        'organizacaoSelecionada' => 'atualizarOrganizacao'
+        'organizacaoSelecionada' => 'atualizarOrganizacao',
+        'peiSelecionado' => 'atualizarPEI'
     ];
 
     public function mount()
@@ -51,12 +52,30 @@ class MapaEstrategico extends Component
             $this->organizacaoId = '3834910f-66f7-46d8-9104-2904d59e1241';
         }
 
-        $this->peiAtivo = PEI::ativos()->first();
+        $this->carregarPEI();
     }
 
     public function atualizarOrganizacao($id)
     {
         $this->organizacaoId = $id;
+    }
+
+    public function atualizarPEI($id)
+    {
+        $this->peiAtivo = PEI::find($id);
+    }
+
+    private function carregarPEI()
+    {
+        $peiId = Session::get('pei_selecionado_id');
+
+        if ($peiId) {
+            $this->peiAtivo = PEI::find($peiId);
+        }
+
+        if (!$this->peiAtivo) {
+            $this->peiAtivo = PEI::ativos()->first();
+        }
     }
 
     public function carregarGrausSatisfacao()

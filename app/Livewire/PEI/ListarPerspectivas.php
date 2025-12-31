@@ -6,6 +6,7 @@ use App\Models\PEI\PEI;
 use App\Models\PEI\Perspectiva;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Illuminate\Support\Facades\Session;
 
 #[Layout('layouts.app')]
 class ListarPerspectivas extends Component
@@ -18,12 +19,35 @@ class ListarPerspectivas extends Component
     public $dsc_perspectiva;
     public $num_nivel_hierarquico_apresentacao;
 
+    protected $listeners = [
+        'peiSelecionado' => 'atualizarPEI'
+    ];
+
     public function mount()
     {
-        $this->peiAtivo = PEI::ativos()->first();
-        
+        $this->carregarPEI();
+
         if ($this->peiAtivo) {
             $this->carregarPerspectivas();
+        }
+    }
+
+    public function atualizarPEI($id)
+    {
+        $this->peiAtivo = PEI::find($id);
+        $this->carregarPerspectivas();
+    }
+
+    private function carregarPEI()
+    {
+        $peiId = Session::get('pei_selecionado_id');
+
+        if ($peiId) {
+            $this->peiAtivo = PEI::find($peiId);
+        }
+
+        if (!$this->peiAtivo) {
+            $this->peiAtivo = PEI::ativos()->first();
         }
     }
 

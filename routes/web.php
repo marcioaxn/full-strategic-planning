@@ -45,7 +45,7 @@ Route::middleware([
     
         // Action Plans
         Route::get('/planos', \App\Livewire\PlanoAcao\ListarPlanos::class)->name('planos.index');
-        Route::get('/planos/{planoId}/detalhes', \App\Livewire\PlanoAcao\DetalharPlano::class)->name('planos.detalhes');
+        Route::get('/planos/{id}/detalhes', \App\Livewire\PlanoAcao\DetalharPlano::class)->name('planos.detalhes');
         Route::get('/planos/{planoId}/entregas', \App\Livewire\Entregas\NotionBoard::class)->name('planos.entregas');
         Route::get('/planos/{planoId}/responsaveis', \App\Livewire\PlanoAcao\AtribuirResponsaveis::class)->name('planos.responsaveis');
     
@@ -53,7 +53,7 @@ Route::middleware([
     
                     Route::get('/indicadores', \App\Livewire\Indicador\ListarIndicadores::class)->name('indicadores.index');
     
-                    Route::get('/indicadores/{indicadorId}/detalhes', \App\Livewire\Indicador\DetalharIndicador::class)->name('indicadores.detalhes');
+                    Route::get('/indicadores/{id}/detalhes', \App\Livewire\Indicador\DetalharIndicador::class)->name('indicadores.detalhes');
     
                     Route::get('/indicadores/{indicadorId}/evolucao', \App\Livewire\Indicador\LancarEvolucao::class)->name('indicadores.evolucao');
     

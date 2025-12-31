@@ -36,13 +36,33 @@ class AnaliseSWOT extends Component
     public $txt_observacao = '';
 
     protected $listeners = [
-        'organizacaoSelecionada' => 'atualizarOrganizacao'
+        'organizacaoSelecionada' => 'atualizarOrganizacao',
+        'peiSelecionado' => 'atualizarPEI'
     ];
 
     public function mount()
     {
-        $this->peiAtivo = PEI::ativos()->first();
+        $this->carregarPEI();
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+    }
+
+    public function atualizarPEI($id)
+    {
+        $this->peiAtivo = PEI::find($id);
+        $this->carregarDados();
+    }
+
+    private function carregarPEI()
+    {
+        $peiId = Session::get('pei_selecionado_id');
+
+        if ($peiId) {
+            $this->peiAtivo = PEI::find($peiId);
+        }
+
+        if (!$this->peiAtivo) {
+            $this->peiAtivo = PEI::ativos()->first();
+        }
     }
 
     public function atualizarOrganizacao($id)

@@ -73,13 +73,37 @@ class ListarIndicadores extends Component
         'page' => ['except' => 1],
     ];
 
+    public $peiAtivo;
+
     protected $listeners = [
-        'organizacaoSelecionada' => 'atualizarOrganizacao'
+        'organizacaoSelecionada' => 'atualizarOrganizacao',
+        'peiSelecionado' => 'atualizarPEI'
     ];
 
     public function mount()
     {
+        $this->carregarPEI();
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+    }
+
+    public function atualizarPEI($id)
+    {
+        $this->peiAtivo = PEI::find($id);
+        $this->carregarListasAuxiliares();
+        $this->resetPage();
+    }
+
+    private function carregarPEI()
+    {
+        $peiId = Session::get('pei_selecionado_id');
+
+        if ($peiId) {
+            $this->peiAtivo = PEI::find($peiId);
+        }
+
+        if (!$this->peiAtivo) {
+            $this->peiAtivo = PEI::ativos()->first();
+        }
     }
 
     public function atualizarOrganizacao($id)
@@ -92,10 +116,10 @@ class ListarIndicadores extends Component
     public function carregarListasAuxiliares()
     {
         $this->grausSatisfacao = \App\Models\PEI\GrauSatisfacao::orderBy('vlr_minimo')->get();
-        $peiAtivo = PEI::ativos()->first();
-        if ($peiAtivo) {
-            $this->objetivos = Objetivo::whereHas('perspectiva', function($query) use ($peiAtivo) {
-                $query->where('cod_pei', $peiAtivo->cod_pei);
+
+        if ($this->peiAtivo) {
+            $this->objetivos = Objetivo::whereHas('perspectiva', function($query) {
+                $query->where('cod_pei', $this->peiAtivo->cod_pei);
             })->orderBy('nom_objetivo')->get();
         }
 
