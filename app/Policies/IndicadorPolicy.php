@@ -27,12 +27,12 @@ class IndicadorPolicy
         }
 
         // Se o indicador está vinculado a uma organização específica via pivot table
-        if ($indicador->organizacoes()->where('public.tab_organizacoes.cod_organizacao', session('organizacao_selecionada_id'))->exists()) {
+        if ($indicador->organizacoes()->where('tab_organizacoes.cod_organizacao', session('organizacao_selecionada_id'))->exists()) {
             return true;
         }
 
         // Se o indicador está vinculado a um objetivo/plano da organização do usuário
-        if ($indicador->objetivoEstrategico && $user->organizacoes->contains('cod_organizacao', $indicador->objetivoEstrategico->cod_organizacao)) {
+        if ($indicador->objetivo && $user->organizacoes->contains('cod_organizacao', $indicador->objetivo->cod_organizacao)) {
             return true;
         }
 

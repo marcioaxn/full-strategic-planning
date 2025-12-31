@@ -193,7 +193,7 @@ novos_artefatos/
 - Lógica de cálculo de desempenho e coloração dinâmica
 - Integração com Chart.js (gráficos doughnut e barras horizontais)
 - Padrões de UI baseados exclusivamente no starter kit Bootstrap 5 atual
-- Sistema de cores baseado em `pei.tab_grau_satisfacao`
+- Sistema de cores baseado em `tab_grau_satisfacao`
 - Montagem dinâmica conforme preenchimento do usuário
 - Checklist de implementação detalhado
 
@@ -260,15 +260,15 @@ npm install bootstrap @popperjs/core
 |--------|-----------|-------------------|
 | **1. Organizações** | Hierarquia de unidades | `tab_organizacoes` |
 | **2. Usuários** | CRUD e permissões | `users`, `tab_perfil_acesso` |
-| **3. PEI** | Ciclos de planejamento | `pei.tab_pei` |
-| **4. Identidade** | Missão, Visão, Valores | `pei.tab_missao_visao_valores`, `pei.tab_valores` |
-| **5. BSC** | Perspectivas e Objetivos | `pei.tab_perspectiva`, `pei.tab_objetivo_estrategico` |
-| **6. Planos de Ação** | Ações, Iniciativas, Projetos | `pei.tab_plano_de_acao`, `pei.tab_entregas` |
-| **7. Indicadores** | KPIs com evolução mensal | `pei.tab_indicador`, `pei.tab_evolucao_indicador` |
-| **8. Cadeia de Valor** | Processos e atividades | `pei.tab_atividade_cadeia_valor` |
+| **3. PEI** | Ciclos de planejamento | `tab_pei` |
+| **4. Identidade** | Missão, Visão, Valores | `tab_missao_visao_valores`, `tab_valores` |
+| **5. BSC** | Perspectivas e Objetivos | `tab_perspectiva`, `tab_objetivo_estrategico` |
+| **6. Planos de Ação** | Ações, Iniciativas, Projetos | `tab_plano_de_acao`, `tab_entregas` |
+| **7. Indicadores** | KPIs com evolução mensal | `tab_indicador`, `tab_evolucao_indicador` |
+| **8. Cadeia de Valor** | Processos e atividades | `tab_atividade_cadeia_valor` |
 | **9. Dashboards** | Painéis executivos | (calculados) |
 | **10. Relatórios** | PDF e Excel | (gerados) |
-| **11. Gestão de Riscos** | Identificação, avaliação e mitigação de riscos estratégicos | `pei.tab_risco`, `pei.tab_risco_mitigacao`, `pei.tab_risco_ocorrencia` |
+| **11. Gestão de Riscos** | Identificação, avaliação e mitigação de riscos estratégicos | `tab_risco`, `tab_risco_mitigacao`, `tab_risco_ocorrencia` |
 | **12. Auditoria** | Logs de alterações | `tab_audit`, `audits` |
 
 ### Tecnologias Utilizadas

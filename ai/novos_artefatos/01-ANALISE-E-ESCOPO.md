@@ -66,25 +66,25 @@ O cliente possui um **sistema legado de planejamento estratégico** funcionando 
 
 | Tabela | Descrição | Status |
 |--------|-----------|--------|
-| `pei.tab_pei` | Ciclos de planejamento (ex: PEI 2024-2028) | ✅ OK |
-| `pei.tab_missao_visao_valores` | Missão e Visão da organização | ✅ OK |
-| `pei.tab_valores` | Valores organizacionais (separados) | ✅ OK |
-| `pei.tab_futuro_almejado_objetivo_estrategico` | Futuro almejado por objetivo | ✅ OK |
-| `pei.tab_perspectiva` | 4 Perspectivas BSC | ✅ OK |
-| `pei.tab_nivel_hierarquico` | 100 níveis de hierarquia (1-100) | ✅ OK |
-| `pei.tab_objetivo_estrategico` | Objetivos estratégicos por perspectiva | ✅ OK |
-| `pei.tab_tipo_execucao` | Ação / Iniciativa / Projeto | ✅ OK |
-| `pei.tab_plano_de_acao` | Planos de ação (ações, iniciativas, projetos) | ✅ OK |
-| `pei.tab_entregas` | Entregas dos planos de ação | ✅ OK |
-| `pei.tab_indicador` | Indicadores (KPIs) | ✅ OK |
-| `pei.tab_evolucao_indicador` | Evolução mensal dos indicadores | ✅ OK |
-| `pei.tab_linha_base_indicador` | Linha de base (baseline) | ✅ OK |
-| `pei.tab_meta_por_ano` | Metas anuais | ✅ OK |
-| `pei.rel_indicador_objetivo_estrategico_organizacao` | Indicador ↔ Organização | ✅ OK |
-| `pei.tab_grau_satisfacao` | Farol de desempenho (cores e faixas) | ✅ OK |
-| `pei.tab_arquivos` | Anexos de evidências | ✅ OK |
-| `pei.tab_atividade_cadeia_valor` | Atividades da cadeia de valor | ✅ OK |
-| `pei.tab_processos_atividade_cadeia_valor` | Processos (entrada → transformação → saída) | ✅ OK |
+| `tab_pei` | Ciclos de planejamento (ex: PEI 2024-2028) | ✅ OK |
+| `tab_missao_visao_valores` | Missão e Visão da organização | ✅ OK |
+| `tab_valores` | Valores organizacionais (separados) | ✅ OK |
+| `tab_futuro_almejado_objetivo_estrategico` | Futuro almejado por objetivo | ✅ OK |
+| `tab_perspectiva` | 4 Perspectivas BSC | ✅ OK |
+| `tab_nivel_hierarquico` | 100 níveis de hierarquia (1-100) | ✅ OK |
+| `tab_objetivo_estrategico` | Objetivos estratégicos por perspectiva | ✅ OK |
+| `tab_tipo_execucao` | Ação / Iniciativa / Projeto | ✅ OK |
+| `tab_plano_de_acao` | Planos de ação (ações, iniciativas, projetos) | ✅ OK |
+| `tab_entregas` | Entregas dos planos de ação | ✅ OK |
+| `tab_indicador` | Indicadores (KPIs) | ✅ OK |
+| `tab_evolucao_indicador` | Evolução mensal dos indicadores | ✅ OK |
+| `tab_linha_base_indicador` | Linha de base (baseline) | ✅ OK |
+| `tab_meta_por_ano` | Metas anuais | ✅ OK |
+| `rel_indicador_objetivo_estrategico_organizacao` | Indicador ↔ Organização | ✅ OK |
+| `tab_grau_satisfacao` | Farol de desempenho (cores e faixas) | ✅ OK |
+| `tab_arquivos` | Anexos de evidências | ✅ OK |
+| `tab_atividade_cadeia_valor` | Atividades da cadeia de valor | ✅ OK |
+| `tab_processos_atividade_cadeia_valor` | Processos (entrada → transformação → saída) | ✅ OK |
 
 ### 2.3 Funcionalidades Existentes (Já no Banco)
 
@@ -98,7 +98,7 @@ Com base nas tabelas existentes, o sistema legado já suporta:
 - Missão
 - Visão
 - Valores (múltiplos)
-- Futuro Almejado por Objetivo Estratégico
+- Futuro Almejado por Objetivo
 
 #### ✅ Módulo de Balanced Scorecard (BSC)
 - 4 Perspectivas padrão
@@ -153,13 +153,13 @@ Com base nas tabelas existentes, o sistema legado já suporta:
 
 | Funcionalidade Solicitada | Existe no Banco? | Tabela Correspondente |
 |---------------------------|------------------|----------------------|
-| Missão, Visão, Valores | ✅ SIM | `pei.tab_missao_visao_valores`, `pei.tab_valores` |
-| Objetivos Estratégicos | ✅ SIM | `pei.tab_objetivo_estrategico` |
-| Perspectivas BSC | ✅ SIM | `pei.tab_perspectiva` |
-| Planos de Ação | ✅ SIM | `pei.tab_plano_de_acao` |
-| Indicadores (KPIs) | ✅ SIM | `pei.tab_indicador` |
-| Evolução de Indicadores | ✅ SIM | `pei.tab_evolucao_indicador` |
-| Cadeia de Valor | ✅ SIM | `pei.tab_atividade_cadeia_valor` |
+| Missão, Visão, Valores | ✅ SIM | `tab_missao_visao_valores`, `tab_valores` |
+| Objetivos Estratégicos | ✅ SIM | `tab_objetivo_estrategico` |
+| Perspectivas BSC | ✅ SIM | `tab_perspectiva` |
+| Planos de Ação | ✅ SIM | `tab_plano_de_acao` |
+| Indicadores (KPIs) | ✅ SIM | `tab_indicador` |
+| Evolução de Indicadores | ✅ SIM | `tab_evolucao_indicador` |
+| Cadeia de Valor | ✅ SIM | `tab_atividade_cadeia_valor` |
 | Auditoria | ✅ SIM | `tab_audit`, `audits` |
 | Hierarquia Organizacional | ✅ SIM | `tab_organizacoes` |
 

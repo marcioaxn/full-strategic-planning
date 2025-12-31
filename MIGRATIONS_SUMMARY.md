@@ -70,45 +70,45 @@ Foram criadas/modificadas **39 migration files** que incluem:
 
 | Migration | Tabela | Descrição |
 |-----------|--------|-----------|
-| `2021_10_31_171917_create_pei_tab_pei_table.php` | `pei.tab_pei` | Ciclos de planejamento (ano início/fim) |
-| `2021_11_01_212118_create_pei_tab_missao_visao_valores_table.php` | `pei.tab_missao_visao_valores` | Missão e Visão |
-| `2024_06_18_114518_create_pei_tab_valores_table.php` | `pei.tab_valores` | Valores organizacionais (múltiplos) |
+| `2021_10_31_171917_create_pei_tab_pei_table.php` | `tab_pei` | Ciclos de planejamento (ano início/fim) |
+| `2021_11_01_212118_create_pei_tab_missao_visao_valores_table.php` | `tab_missao_visao_valores` | Missão e Visão |
+| `2024_06_18_114518_create_pei_tab_valores_table.php` | `tab_valores` | Valores organizacionais (múltiplos) |
 
 #### 3.2 Balanced Scorecard (BSC)
 
 | Migration | Tabela | Descrição |
 |-----------|--------|-----------|
-| `2021_11_08_185623_create_pei_tab_perspectiva_table.php` | `pei.tab_perspectiva` | 4 perspectivas BSC |
-| `2021_11_09_094804_create_pei_tab_objetivo_estrategico_table.php` | `pei.tab_objetivo_estrategico` | Objetivos estratégicos |
-| `2021_11_09_095359_create_pei_tab_nivel_hierarquico_table.php` | `pei.tab_nivel_hierarquico` | 100 níveis hierárquicos |
-| `2024_06_21_172717_create_pei_tab_futuro_almejado_objetivo_estrategico_table.php` | `pei.tab_futuro_almejado_objetivo_estrategico` | Futuro almejado por objetivo |
+| `2021_11_08_185623_create_pei_tab_perspectiva_table.php` | `tab_perspectiva` | 4 perspectivas BSC |
+| `2021_11_09_094804_create_pei_tab_objetivo_estrategico_table.php` | `tab_objetivo_estrategico` | Objetivos estratégicos |
+| `2021_11_09_095359_create_pei_tab_nivel_hierarquico_table.php` | `tab_nivel_hierarquico` | 100 níveis hierárquicos |
+| `2024_06_21_172717_create_pei_tab_futuro_almejado_objetivo_estrategico_table.php` | `tab_futuro_almejado_objetivo_estrategico` | Futuro almejado por objetivo |
 
 #### 3.3 Planos de Ação e Entregas
 
 | Migration | Tabela | Descrição |
 |-----------|--------|-----------|
-| `2021_11_14_221355_create_pei_tab_tipo_execucao_table.php` | `pei.tab_tipo_execucao` | 3 tipos: Ação, Iniciativa, Projeto |
-| `2021_11_14_221613_create_pei_tab_plano_de_acao_table.php` | `pei.tab_plano_de_acao` | Planos de ação com orçamento, status, PPA/LOA |
-| `2024_11_15_215604_create_pei_tab_entregas_table.php` | `pei.tab_entregas` | Entregas dos planos (com hierarquia) |
+| `2021_11_14_221355_create_pei_tab_tipo_execucao_table.php` | `tab_tipo_execucao` | 3 tipos: Ação, Iniciativa, Projeto |
+| `2021_11_14_221613_create_pei_tab_plano_de_acao_table.php` | `tab_plano_de_acao` | Planos de ação com orçamento, status, PPA/LOA |
+| `2024_11_15_215604_create_pei_tab_entregas_table.php` | `tab_entregas` | Entregas dos planos (com hierarquia) |
 
 #### 3.4 Indicadores (KPIs)
 
 | Migration | Tabela | Descrição |
 |-----------|--------|-----------|
-| `2021_12_28_232711_create_pei_tab_indicador_table.php` | `pei.tab_indicador` | Indicadores de desempenho |
-| `2021_12_28_234715_create_pei_tab_evolucao_indicador_table.php` | `pei.tab_evolucao_indicador` | Evolução mensal (previsto vs. realizado) |
-| `2021_12_28_235603_create_pei_tab_linha_base_indicador_table.php` | `pei.tab_linha_base_indicador` | Linha de base por ano |
-| `2022_01_03_105544_create_pei_tab_meta_por_ano_table.php` | `pei.tab_meta_por_ano` | Metas anuais |
-| `2022_01_26_152500_create_pei_tab_grau_satisfacao_table.php` | `pei.tab_grau_satisfcao` | Farol de desempenho (cores, faixas) |
-| `2022_02_07_100332_create_pei_tab_arquivos_table.php` | `pei.tab_arquivos` | Anexos de evidências |
-| `2024_07_01_150643_create_pei_rel_indicador_objetivo_estrategico_organizacao_table.php` | `pei.rel_indicador_objetivo_estrategico_organizacao` | Indicador ↔ Organização |
+| `2021_12_28_232711_create_pei_tab_indicador_table.php` | `tab_indicador` | Indicadores de desempenho |
+| `2021_12_28_234715_create_pei_tab_evolucao_indicador_table.php` | `tab_evolucao_indicador` | Evolução mensal (previsto vs. realizado) |
+| `2021_12_28_235603_create_pei_tab_linha_base_indicador_table.php` | `tab_linha_base_indicador` | Linha de base por ano |
+| `2022_01_03_105544_create_pei_tab_meta_por_ano_table.php` | `tab_meta_por_ano` | Metas anuais |
+| `2022_01_26_152500_create_pei_tab_grau_satisfacao_table.php` | `tab_grau_satisfcao` | Farol de desempenho (cores, faixas) |
+| `2022_02_07_100332_create_pei_tab_arquivos_table.php` | `tab_arquivos` | Anexos de evidências |
+| `2024_07_01_150643_create_pei_rel_indicador_objetivo_estrategico_organizacao_table.php` | `rel_indicador_objetivo_estrategico_organizacao` | Indicador ↔ Organização |
 
 #### 3.5 Cadeia de Valor
 
 | Migration | Tabela | Descrição |
 |-----------|--------|-----------|
-| `2023_01_10_164526_create_pei_tab_atividade_cadeia_valor_table.php` | `pei.tab_atividade_cadeia_valor` | Atividades da cadeia de valor |
-| `2023_01_11_162049_create_pei_tab_processos_atividade_cadeia_valor_table.php` | `pei.tab_processos_atividade_cadeia_valor` | Processos (Entrada → Transformação → Saída) |
+| `2023_01_10_164526_create_pei_tab_atividade_cadeia_valor_table.php` | `tab_atividade_cadeia_valor` | Atividades da cadeia de valor |
+| `2023_01_11_162049_create_pei_tab_processos_atividade_cadeia_valor_table.php` | `tab_processos_atividade_cadeia_valor` | Processos (Entrada → Transformação → Saída) |
 
 ---
 
@@ -116,10 +116,10 @@ Foram criadas/modificadas **39 migration files** que incluem:
 
 | Migration | Tabela | Descrição |
 |-----------|--------|-----------|
-| `2025_12_24_100000_create_pei_tab_risco_table.php` | `pei.tab_risco` | Riscos estratégicos (Probabilidade × Impacto = Nível 1-25) |
-| `2025_12_24_100001_create_pei_tab_risco_objetivo_table.php` | `pei.tab_risco_objetivo` | Riscos ↔ Objetivos Estratégicos (pivot) |
-| `2025_12_24_100002_create_pei_tab_risco_mitigacao_table.php` | `pei.tab_risco_mitigacao` | Planos de mitigação (Prevenir, Reduzir, Transferir, Aceitar) |
-| `2025_12_24_100003_create_pei_tab_risco_ocorrencia_table.php` | `pei.tab_risco_ocorrencia` | Histórico de ocorrências de riscos |
+| `2025_12_24_100000_create_pei_tab_risco_table.php` | `tab_risco` | Riscos estratégicos (Probabilidade × Impacto = Nível 1-25) |
+| `2025_12_24_100001_create_pei_tab_risco_objetivo_table.php` | `tab_risco_objetivo` | Riscos ↔ Objetivos Estratégicos (pivot) |
+| `2025_12_24_100002_create_pei_tab_risco_mitigacao_table.php` | `tab_risco_mitigacao` | Planos de mitigação (Prevenir, Reduzir, Transferir, Aceitar) |
+| `2025_12_24_100003_create_pei_tab_risco_ocorrencia_table.php` | `tab_risco_ocorrencia` | Histórico de ocorrências de riscos |
 
 **Categorias de Risco:** Operacional, Financeiro, Reputacional, Legal, Tecnológico, Estratégico, Ambiental
 
@@ -300,7 +300,7 @@ Após executar as migrations com sucesso, retornar ao **07-ROADMAP-IMPLEMENTACAO
    - `num_codigo_risco` é auto-incremento gerenciado pela aplicação (não pelo banco)
 
 3. **Schema PEI:**
-   - Todas as tabelas de planejamento estratégico estão no schema `pei.`
+   - Todas as tabelas de planejamento estratégico estão no schema ``
    - Facilita organização e segregação de dados
 
 4. **Auditoria Dupla:**

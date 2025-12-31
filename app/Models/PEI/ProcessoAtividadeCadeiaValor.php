@@ -15,7 +15,7 @@ class ProcessoAtividadeCadeiaValor extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_processos_atividade_cadeia_valor';
+    protected $table = 'tab_processos_atividade_cadeia_valor';
 
     /**
      * Chave primária

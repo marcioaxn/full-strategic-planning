@@ -49,7 +49,7 @@
     @else
         @if($filtroObjetivo)
             @php
-                $objetivoFiltrado = \App\Models\PEI\ObjetivoEstrategico::with(['perspectiva.pei', 'indicadores.evolucoes', 'indicadores.metasPorAno', 'planosAcao'])->find($filtroObjetivo);
+                $objetivoFiltrado = \App\Models\PEI\Objetivo::with(['perspectiva.pei', 'indicadores.evolucoes', 'indicadores.metasPorAno', 'planosAcao'])->find($filtroObjetivo);
             @endphp
 
             {{-- Contexto Completo do Objetivo --}}
@@ -98,43 +98,56 @@
                 @endphp
 
                 <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        const ctx = document.getElementById('chartEvolucaoIndicadores');
-                        if (ctx) {
-                            const cores = ['#0d6efd', '#198754', '#0dcaf0', '#ffc107', '#dc3545'];
-                            new Chart(ctx, {
-                                type: 'line',
-                                data: {
-                                    labels: @json($meses),
-                                    datasets: @json($dadosGrafico).map((item, idx) => ({
-                                        label: item.label,
-                                        data: item.data,
-                                        borderColor: cores[idx % cores.length],
-                                        backgroundColor: cores[idx % cores.length] + '20',
-                                        tension: 0.3,
-                                        fill: false,
-                                        pointRadius: 4,
-                                        pointHoverRadius: 6
-                                    }))
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    plugins: {
-                                        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } },
-                                        tooltip: { mode: 'index', intersect: false }
+                    (function() {
+                        function initChartEvolucao() {
+                            const ctx = document.getElementById('chartEvolucaoIndicadores');
+                            if (ctx && typeof Chart !== 'undefined') {
+                                // Destruir grafico existente se houver
+                                if (ctx.chartInstance) {
+                                    ctx.chartInstance.destroy();
+                                }
+                                const cores = ['#0d6efd', '#198754', '#0dcaf0', '#ffc107', '#dc3545'];
+                                ctx.chartInstance = new Chart(ctx, {
+                                    type: 'line',
+                                    data: {
+                                        labels: @json($meses),
+                                        datasets: @json($dadosGrafico).map((item, idx) => ({
+                                            label: item.label,
+                                            data: item.data,
+                                            borderColor: cores[idx % cores.length],
+                                            backgroundColor: cores[idx % cores.length] + '20',
+                                            tension: 0.3,
+                                            fill: false,
+                                            pointRadius: 4,
+                                            pointHoverRadius: 6
+                                        }))
                                     },
-                                    scales: {
-                                        y: {
-                                            beginAtZero: true,
-                                            max: 150,
-                                            ticks: { callback: v => v + '%' }
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } },
+                                            tooltip: { mode: 'index', intersect: false }
+                                        },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                max: 150,
+                                                ticks: { callback: v => v + '%' }
+                                            }
                                         }
                                     }
-                                }
-                            });
+                                });
+                            }
                         }
-                    });
+                        // Inicializar na carga inicial e na navegacao Livewire
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', initChartEvolucao);
+                        } else {
+                            initChartEvolucao();
+                        }
+                        document.addEventListener('livewire:navigated', initChartEvolucao);
+                    })();
                 </script>
             @endif
         @endif
@@ -162,6 +175,21 @@
             </div>
         </div>
 
+        {{-- Legenda de Desempenho --}}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body py-2 px-4 bg-white rounded-3">
+                <div class="d-flex align-items-center flex-wrap gap-3">
+                    <span class="small fw-bold text-muted text-uppercase me-2"><i class="bi bi-info-circle me-1"></i>Legenda Desempenho (Indicadores):</span>
+                    @foreach($grausSatisfacao as $grau)
+                        <div class="d-flex align-items-center">
+                            <span class="farol-dot me-1" style="background-color: {{ $grau->cor }}; width: 10px; height: 10px;"></span>
+                            <small class="text-muted" style="font-size: 0.75rem;">{{ $grau->dsc_grau_satisfcao }} ({{ number_format($grau->vlr_minimo, 0) }}-{{ number_format($grau->vlr_maximo, 0) }}%)</small>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
         <!-- Tabela -->
         <div class="card border-0 shadow-sm overflow-hidden">
             <div class="table-responsive">
@@ -183,11 +211,11 @@
                                     <small class="text-muted text-truncate d-block" style="max-width: 350px;">{{ $ind->dsc_indicador }}</small>
                                 </td>
                                 <td>
-                                    @if($ind->cod_objetivo_estrategico)
+                                    @if($ind->cod_objetivo)
                                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3">
                                             <i class="bi bi-bullseye me-1"></i> Objetivo
                                         </span>
-                                        <small class="d-block text-muted mt-1 small-vinculo">{{ Str::limit($ind->objetivoEstrategico->nom_objetivo_estrategico, 40) }}</small>
+                                        <small class="d-block text-muted mt-1 small-vinculo">{{ Str::limit($ind->objetivo->nom_objetivo, 40) }}</small>
                                     @else
                                         <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3">
                                             <i class="bi bi-list-task me-1"></i> Plano
@@ -208,7 +236,7 @@
                                     @endphp
                                     <div class="d-flex align-items-center">
                                         <div class="farol-dot me-2" style="background-color: {{ $corFarol ?: '#dee2e6' }}; shadow: 0 0 5px {{ $corFarol }}88;"></div>
-                                        <span class="fw-bold fs-6">{{ number_format($atingimento, 1) }}%</span>
+                                        <span class="fw-bold fs-6">@brazil_percent($atingimento, 1)</span>
                                     </div>
                                 </td>
                                 <td class="text-end pe-4">
@@ -302,13 +330,13 @@
                                         @if($form['dsc_tipo'] === 'Objetivo')
                                             <div class="mb-3 animate-fade-in">
                                                 <label class="form-label text-muted small text-uppercase fw-bold">Selecionar Objetivo</label>
-                                                <select wire:model="form.cod_objetivo_estrategico" class="form-select @error('form.cod_objetivo_estrategico') is-invalid @enderror">
+                                                <select wire:model="form.cod_objetivo" class="form-select @error('form.cod_objetivo') is-invalid @enderror">
                                                     <option value="">Escolha o objetivo...</option>
                                                     @foreach($objetivos as $obj)
-                                                        <option value="{{ $obj->cod_objetivo_estrategico }}">{{ $obj->nom_objetivo_estrategico }}</option>
+                                                        <option value="{{ $obj->cod_objetivo }}">{{ $obj->nom_objetivo }}</option>
                                                     @endforeach
                                                 </select>
-                                                @error('form.cod_objetivo_estrategico') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                                @error('form.cod_objetivo') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                             </div>
                                         @else
                                             <div class="mb-3 animate-fade-in">
@@ -445,7 +473,7 @@
                                 @forelse($indicadorSelecionado?->metasPorAno ?? [] as $meta)
                                     <tr>
                                         <td>{{ $meta->num_ano }}</td>
-                                        <td>{{ number_format($meta->meta, 2, ',', '.') }}</td>
+                                        <td>@brazil_number($meta->meta, 2)</td>
                                         <td class="text-end">
                                             <button wire:click="excluirMeta('{{ $meta->cod_meta_por_ano }}')" class="btn btn-sm text-danger p-0"><i class="bi bi-trash"></i></button>
                                         </td>
@@ -499,7 +527,7 @@
                                 @forelse($indicadorSelecionado?->linhaBase ?? [] as $lb)
                                     <tr>
                                         <td>{{ $lb->num_ano }}</td>
-                                        <td>{{ number_format($lb->num_linha_base, 2, ',', '.') }}</td>
+                                        <td>@brazil_number($lb->num_linha_base, 2)</td>
                                         <td class="text-end">
                                             <button wire:click="excluirLinhaBase('{{ $lb->cod_linha_base }}')" class="btn btn-sm text-danger p-0"><i class="bi bi-trash"></i></button>
                                         </td>

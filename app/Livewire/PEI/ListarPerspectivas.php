@@ -35,6 +35,15 @@ class ListarPerspectivas extends Component
             ->get();
     }
 
+    public function create()
+    {
+        $this->resetForm();
+        $maxNivel = Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
+            ->max('num_nivel_hierarquico_apresentacao') ?? 0;
+        $this->num_nivel_hierarquico_apresentacao = $maxNivel + 1;
+        $this->showModal = true;
+    }
+
     public function edit($id)
     {
         $p = Perspectiva::findOrFail($id);
@@ -61,8 +70,23 @@ class ListarPerspectivas extends Component
         );
 
         $this->showModal = false;
+        $this->resetForm();
         $this->carregarPerspectivas();
         session()->flash('status', 'Perspectiva salva com sucesso!');
+    }
+
+    public function delete($id)
+    {
+        Perspectiva::findOrFail($id)->delete();
+        $this->carregarPerspectivas();
+        session()->flash('status', 'Perspectiva removida com sucesso!');
+    }
+
+    public function resetForm()
+    {
+        $this->perspectivaId = null;
+        $this->dsc_perspectiva = '';
+        $this->num_nivel_hierarquico_apresentacao = 1;
     }
 
     public function render()

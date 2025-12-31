@@ -12,9 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.tab_processos_atividade_cadeia_valor', function (Blueprint $table) {
+        Schema::create('tab_processos_atividade_cadeia_valor', function (Blueprint $table) {
             $table->uuid('cod_processo_atividade_cadeia_valor')->primary()->default(DB::raw('gen_random_uuid()'));
-            $table->foreignUuid('cod_atividade_cadeia_valor')->references('cod_atividade_cadeia_valor')->on('pei.tab_atividade_cadeia_valor')->cascadeOnDelete();
+            $table->foreignUuid('cod_atividade_cadeia_valor')->references('cod_atividade_cadeia_valor')->on('tab_atividade_cadeia_valor')->cascadeOnDelete();
             $table->text('dsc_entrada')->nullable(false);
             $table->text('dsc_transformacao')->nullable(false);
             $table->text('dsc_saida')->nullable(false);
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_processos_atividade_cadeia_valor');
+        Schema::dropIfExists('tab_processos_atividade_cadeia_valor');
     }
 };

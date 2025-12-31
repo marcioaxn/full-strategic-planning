@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-use App\Models\PEI\ObjetivoEstrategico;
+use App\Models\PEI\Objetivo;
 use App\Models\PEI\PEI;
+use App\Models\PEI\RiscoMitigacao;
+use App\Models\PEI\RiscoOcorrencia;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +16,7 @@ class Risco extends Model implements Auditable
 {
     use HasFactory, HasUuids, SoftDeletes, \OwenIt\Auditing\Auditable;
 
-    protected $table = 'pei.tab_risco';
+    protected $table = 'tab_risco';
     protected $primaryKey = 'cod_risco';
     protected $keyType = 'string';
     public $incrementing = false;
@@ -62,13 +64,15 @@ class Risco extends Model implements Auditable
         return $this->belongsTo(User::class, 'cod_responsavel_monitoramento', 'id');
     }
 
-    public function objetivosEstrategicos()
+    public function objetivos()
     {
         return $this->belongsToMany(
-            ObjetivoEstrategico::class,
-            'pei.tab_risco_objetivo',
+            Objetivo::class,
+            'tab_risco_objetivo',
             'cod_risco',
-            'cod_objetivo_estrategico'
+            'cod_objetivo',
+            'cod_risco',
+            'cod_objetivo'
         )->withTimestamps();
     }
 

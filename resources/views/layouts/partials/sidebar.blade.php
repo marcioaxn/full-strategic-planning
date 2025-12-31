@@ -1,15 +1,5 @@
 @props(['items' => []])
 
-@php
-    $navItems = collect($items)->map(function ($item) {
-        return array_merge([
-            'icon' => 'circle',
-            'route' => null,
-            'href' => null,
-        ], $item);
-    });
-@endphp
-
 <!-- Desktop Sidebar -->
 <aside class="app-sidebar app-surface border-end d-none d-lg-flex flex-column"
        :class="{'is-collapsed': sidebarCollapsed}">
@@ -25,27 +15,75 @@
 
     <!-- Navigation -->
     <div class="app-sidebar-scroll flex-grow-1 overflow-auto px-2 pb-4">
-        <nav class="nav nav-pills flex-column gap-1">
-            @foreach ($navItems as $item)
-                @php
-                    $isActive = $item['route']
-                        ? request()->routeIs($item['route'])
-                        : ($item['href'] ? request()->fullUrlIs($item['href']) : false);
-
-                    $url = $item['route']
-                        ? route($item['route'])
-                        : ($item['href'] ?? '#');
-                @endphp
-
-                <a href="{{ $url }}"
-                   @if($item['label'] !== 'Home') wire:navigate @endif
-                   class="nav-link-modern d-flex align-items-center gap-2 py-2 px-3 {{ $isActive ? 'active gradient-theme-nav' : '' }}"
-                   data-bs-toggle="tooltip"
-                   data-bs-placement="right"
-                   title="{{ $item['label'] }}">
-                    <i class="bi bi-{{ $item['icon'] }} fs-5 flex-shrink-0"></i>
-                    <span class="sidebar-text">{{ $item['label'] }}</span>
-                </a>
+        <nav class="nav nav-pills flex-column gap-1" id="sidebarAccordion">
+            @foreach ($items as $item)
+                @if(isset($item['single']) && $item['single'])
+                    {{-- Item Único (Dashboard) --}}
+                    @php
+                        $isActive = request()->routeIs($item['route']);
+                    @endphp
+                    <a href="{{ route($item['route']) }}"
+                       wire:navigate
+                       class="nav-link-modern d-flex align-items-center gap-2 py-2 px-3 {{ $isActive ? 'active gradient-theme-nav' : '' }}"
+                       data-bs-toggle="tooltip"
+                       data-bs-placement="right"
+                       title="{{ $item['label'] }}">
+                        <i class="bi bi-{{ $item['icon'] }} fs-5 flex-shrink-0"></i>
+                        <span class="sidebar-text">{{ $item['label'] }}</span>
+                    </a>
+                @elseif(isset($item['children']))
+                    {{-- Grupo com Filhos (Accordion) --}}
+                    @php
+                        $groupId = $item['id'] ?? 'group-' . Str::slug($item['label']);
+                        // Verifica se algum filho está ativo para abrir o grupo
+                        $hasActiveChild = false;
+                        foreach ($item['children'] as $child) {
+                            if (request()->routeIs($child['route'])) {
+                                $hasActiveChild = true;
+                                break;
+                            }
+                        }
+                    @endphp
+                    
+                    <div class="nav-group mt-2">
+                        <button class="nav-link-modern w-100 d-flex align-items-center justify-content-between gap-2 py-2 px-3 border-0 bg-transparent {{ $hasActiveChild ? 'text-primary' : '' }}"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#{{ $groupId }}"
+                                aria-expanded="{{ $hasActiveChild ? 'true' : 'false' }}"
+                                aria-controls="{{ $groupId }}"
+                                data-tooltip-group="true"
+                                data-bs-placement="right"
+                                title="{{ $item['label'] }}">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-{{ $item['icon'] }} fs-5 flex-shrink-0"></i>
+                                <span class="sidebar-text fw-semibold">{{ $item['label'] }}</span>
+                            </div>
+                            <i class="bi bi-chevron-down transition-transform fs-7 {{ $hasActiveChild ? 'rotate-180' : '' }}"></i>
+                        </button>
+                        
+                        <div id="{{ $groupId }}" 
+                             class="collapse {{ $hasActiveChild ? 'show' : '' }}" 
+                             data-bs-parent="#sidebarAccordion">
+                            <div class="nav flex-column gap-1 ps-3 py-1">
+                                @foreach($item['children'] as $child)
+                                    @php
+                                        $isChildActive = request()->routeIs($child['route']);
+                                    @endphp
+                                    <a href="{{ route($child['route']) }}"
+                                       wire:navigate
+                                       class="nav-link-modern d-flex align-items-center gap-2 py-2 px-3 {{ $isChildActive ? 'active gradient-theme-nav' : '' }}"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="right"
+                                       title="{{ $child['label'] }}">
+                                        <i class="bi bi-{{ $child['icon'] }} fs-6 flex-shrink-0"></i>
+                                        <span class="sidebar-text small">{{ $child['label'] }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
             @endforeach
         </nav>
     </div>
@@ -79,7 +117,10 @@
 
             <a href="{{ route('profile.show') }}"
                wire:navigate
-               class="sidebar-text user-profile-link">
+               class="sidebar-text user-profile-link"
+               data-bs-toggle="tooltip"
+               data-bs-placement="top"
+               title="{{ __('View profile') }}">
                 <i class="bi bi-person-circle me-1"></i>
                 <span>{{ __('View profile') }}</span>
                 <i class="bi bi-arrow-right ms-auto"></i>
@@ -87,6 +128,44 @@
         </div>
     </div>
 </aside>
+
+<!-- Scripts -->
+<script>
+    document.addEventListener('livewire:navigated', () => {
+        initTooltips();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initTooltips();
+    });
+
+    function initTooltips() {
+        // Tooltips padrão (elementos com data-bs-toggle="tooltip")
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        [...tooltipTriggerList].map(tooltipTriggerEl => {
+            const existing = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
+            if (existing) existing.dispose();
+            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                container: 'body',
+                trigger: 'hover',
+                fallbackPlacements: ['right', 'top', 'bottom']
+            });
+        });
+
+        // Tooltips para botões de grupo (usam data-tooltip-group porque data-bs-toggle já é usado para collapse)
+        const groupTooltipList = document.querySelectorAll('[data-tooltip-group="true"]');
+        [...groupTooltipList].map(el => {
+            const existing = bootstrap.Tooltip.getInstance(el);
+            if (existing) existing.dispose();
+            return new bootstrap.Tooltip(el, {
+                container: 'body',
+                trigger: 'hover',
+                placement: el.getAttribute('data-bs-placement') || 'right',
+                fallbackPlacements: ['right', 'top', 'bottom']
+            });
+        });
+    }
+</script>
 
 <!-- Mobile Offcanvas -->
 <div class="offcanvas offcanvas-start offcanvas-modern d-lg-none"
@@ -103,9 +182,9 @@
         </button>
     </div>
 
-    <div class="offcanvas-body-modern">
+    <div class="offcanvas-body-modern flex-grow-1 overflow-auto">
         <!-- User Info -->
-        <div class="offcanvas-user-card">
+        <div class="offcanvas-user-card mb-4">
             <div class="d-flex align-items-center gap-3">
                 <div class="user-avatar-wrapper-mobile">
                     <img src="{{ Auth::user()->profile_photo_url }}"
@@ -114,55 +193,92 @@
                     <div class="user-status-indicator"></div>
                 </div>
                 <div class="flex-grow-1 overflow-hidden">
-                    <p class="user-name-mobile"
-                       data-bs-toggle="tooltip"
-                       title="{{ Auth::user()->name }}">
+                    <p class="user-name-mobile mb-0 fw-bold text-truncate" title="{{ Auth::user()->name }}">
                         {{ Auth::user()->name }}
                     </p>
-                    <p class="user-email-mobile"
-                       data-bs-toggle="tooltip"
-                       title="{{ Auth::user()->email }}">
+                    <p class="user-email-mobile mb-0 small text-muted text-truncate" title="{{ Auth::user()->email }}">
                         {{ Auth::user()->email }}
                     </p>
                 </div>
             </div>
         </div>
 
-        <!-- Navigation -->
-        <nav class="nav nav-pills flex-column gap-2">
-            @foreach ($navItems as $item)
-                @php
-                    $isActive = $item['route']
-                        ? request()->routeIs($item['route'])
-                        : ($item['href'] ? request()->fullUrlIs($item['href']) : false);
-
-                    $url = $item['route']
-                        ? route($item['route'])
-                        : ($item['href'] ?? '#');
-                @endphp
-
-                <a href="{{ $url }}"
-                   @if($item['label'] !== 'Home') wire:navigate @endif
-                   class="nav-link-modern-mobile d-flex align-items-center gap-2 {{ $isActive ? 'active gradient-theme-nav' : '' }}"
-                   data-bs-dismiss="offcanvas">
-                    <i class="bi bi-{{ $item['icon'] }} fs-5 flex-shrink-0"></i>
-                    <span>{{ $item['label'] }}</span>
-                </a>
+        <!-- Navigation Mobile -->
+        <nav class="nav nav-pills flex-column gap-1 mb-4" id="mobileAccordion">
+            @foreach ($items as $item)
+                @if(isset($item['single']) && $item['single'])
+                    @php
+                        $isActive = request()->routeIs($item['route']);
+                    @endphp
+                    <a href="{{ route($item['route']) }}"
+                       wire:navigate
+                       class="nav-link-modern-mobile d-flex align-items-center gap-2 py-2 px-3 {{ $isActive ? 'active gradient-theme-nav' : '' }}"
+                       data-bs-dismiss="offcanvas">
+                        <i class="bi bi-{{ $item['icon'] }} fs-5 flex-shrink-0"></i>
+                        <span class="fw-medium">{{ $item['label'] }}</span>
+                    </a>
+                @elseif(isset($item['children']))
+                    @php
+                        $groupId = ($item['id'] ?? 'mobile-' . Str::slug($item['label'])) . '-mobile';
+                        $hasActiveChild = false;
+                        foreach ($item['children'] as $child) {
+                            if (request()->routeIs($child['route'])) {
+                                $hasActiveChild = true;
+                                break;
+                            }
+                        }
+                    @endphp
+                    
+                    <div class="nav-group-mobile mb-1">
+                        <button class="nav-link-modern-mobile w-100 d-flex align-items-center justify-content-between gap-2 py-2 px-3 border-0 bg-transparent {{ $hasActiveChild ? 'text-primary fw-bold' : '' }}"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#{{ $groupId }}"
+                                aria-expanded="{{ $hasActiveChild ? 'true' : 'false' }}">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-{{ $item['icon'] }} fs-5 flex-shrink-0"></i>
+                                <span class="fw-bold">{{ $item['label'] }}</span>
+                            </div>
+                            <i class="bi bi-chevron-down transition-transform fs-7 {{ $hasActiveChild ? 'rotate-180' : '' }}"></i>
+                        </button>
+                        
+                        <div id="{{ $groupId }}" 
+                             class="collapse {{ $hasActiveChild ? 'show' : '' }}"
+                             data-bs-parent="#mobileAccordion">
+                            <div class="nav flex-column gap-1 ps-4 mt-1 border-start ms-3">
+                                @foreach($item['children'] as $child)
+                                    @php
+                                        $isChildActive = request()->routeIs($child['route']);
+                                    @endphp
+                                    <a href="{{ route($child['route']) }}"
+                                       wire:navigate
+                                       class="nav-link-modern-mobile d-flex align-items-center gap-2 py-2 px-3 {{ $isChildActive ? 'active gradient-theme-nav' : '' }}"
+                                       data-bs-dismiss="offcanvas">
+                                        <i class="bi bi-{{ $child['icon'] }} fs-6 flex-shrink-0"></i>
+                                        <span class="small">{{ $child['label'] }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
             @endforeach
         </nav>
+    </div>
 
-        <!-- Action Buttons -->
-        <div class="offcanvas-actions">
+    <!-- Footer Fixo do Offcanvas -->
+    <div class="offcanvas-footer-modern p-4 border-top">
+        <div class="d-grid gap-2">
             <a href="{{ route('profile.show') }}"
                wire:navigate
-               class="btn btn-profile-modern gradient-theme-btn"
+               class="btn btn-profile-modern gradient-theme-btn py-2"
                data-bs-dismiss="offcanvas">
                 <i class="bi bi-person-circle me-2"></i>{{ __('Manage profile') }}
             </a>
 
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="btn btn-logout-modern w-100">
+                <button type="submit" class="btn btn-logout-modern w-100 py-2">
                     <i class="bi bi-box-arrow-right me-2"></i>{{ __('Log Out') }}
                 </button>
             </form>
@@ -173,6 +289,26 @@
 <style>
 /* ========== Desktop Sidebar Styles ========== */
 
+/* Accordion/Group Styles */
+.transition-transform {
+    transition: transform 0.2s ease;
+}
+
+.rotate-180 {
+    transform: rotate(180deg);
+}
+
+[data-bs-theme="dark"] .nav-group button:not(.active):hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Hide chevron when sidebar collapsed */
+.app-sidebar.is-collapsed .bi-chevron-down {
+    display: none;
+}
+
+/* Section Dividers - REMOVIDO EM FAVOR DO ACCORDION */
+
 /* Navigation Links */
 .nav-link-modern {
     border-radius: 10px;
@@ -181,6 +317,7 @@
     text-decoration: none;
     font-weight: 500;
     position: relative;
+    cursor: pointer;
 }
 
 .nav-link-modern:hover {
@@ -217,11 +354,33 @@
 /* Centralize icons when sidebar is collapsed */
 .app-sidebar.is-collapsed .nav-link-modern {
     justify-content: center;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
 .app-sidebar.is-collapsed .nav-link-modern:hover {
     transform: translateX(0);
 }
+
+.app-sidebar.is-collapsed .sidebar-text {
+    display: none; /* Hide text in collapsed mode */
+}
+
+/* Ensure chevron is visible in collapsed mode if it doesn't have sidebar-text class */
+.app-sidebar.is-collapsed .bi-chevron-down {
+    display: block !important;
+}
+
+/* Submenu indentation in collapsed mode doesn't work well, so we hide submenus or handle differently */
+/* For now, just hiding submenus when collapsed is the safest approach without complex popovers */
+/* .app-sidebar.is-collapsed .collapse {
+    display: none !important;
+} REMOVED TO ALLOW ACCORDION TO OPEN */
+
+/* .app-sidebar.is-collapsed .nav-group > button .bi-chevron-down {
+    display: none;
+} REMOVED TO SHOW CHEVRON IN COLLAPSED MODE */
+
 
 [data-bs-theme="dark"] .nav-link-modern {
     color: rgba(255, 255, 255, 0.85);
@@ -444,10 +603,13 @@
 }
 
 .offcanvas-body-modern {
-    padding: 1.5rem;
+    padding: 1.25rem;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+}
+
+.offcanvas-footer-modern {
+    background: var(--bs-body-bg);
 }
 
 /* User Card Mobile */
@@ -501,6 +663,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    line-height: 1.3;
 }
 
 [data-bs-theme="dark"] .user-email-mobile {

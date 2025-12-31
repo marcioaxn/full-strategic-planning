@@ -430,7 +430,7 @@ class CreateAcoesTable extends Migration
 ---
 
 ## 2021_10_31_171917_create_tab_pei_table.php
-**Tabela:** `pei.tab_pei`
+**Tabela:** `tab_pei`
 **Descrição:** Cria a tabela principal do Planejamento Estratégico Institucional (PEI), definindo o ciclo do planejamento (ano início e fim).
 
 ```php
@@ -445,7 +445,7 @@ class CreateTabPeiTable extends Migration
 
     public function up()
     {
-        Schema::create('pei.tab_pei', function (Blueprint $table) {
+        Schema::create('tab_pei', function (Blueprint $table) {
             $table->uuid('cod_pei')->primary();
             $table->text('dsc_pei')->nullable(false);
             $table->smallInteger('num_ano_inicio_pei')->nullable(false);
@@ -457,7 +457,7 @@ class CreateTabPeiTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('pei.tab_pei');
+        Schema::dropIfExists('tab_pei');
     }
 }
 ```
@@ -465,8 +465,8 @@ class CreateTabPeiTable extends Migration
 ---
 
 ## 2021_11_01_212118_create_tab_missao_table.php
-**Tabela:** `pei.tab_missao_visao_valores`
-**Descrição:** Armazena a Missão, Visão e (originalmente) Valores da organização para um determinado PEI.
+**Tabela:** `tab_missao_visao_valores`
+**Descrição:** Armazena a Missão, Visão e (originalmente) Valores da organização para um determinado 
 
 ```php
 <?php
@@ -479,11 +479,11 @@ class CreateTabMissaoTable extends Migration
 {
     public function up()
     {
-        Schema::create('pei.tab_missao_visao_valores', function (Blueprint $table) {
+        Schema::create('tab_missao_visao_valores', function (Blueprint $table) {
             $table->uuid('cod_missao_visao_valores')->primary();
             $table->text('dsc_missao')->nullable(false);
             $table->text('dsc_visao')->nullable(false);
-            $table->foreignUuid('cod_pei')->references('cod_pei')->on('pei.tab_pei');
+            $table->foreignUuid('cod_pei')->references('cod_pei')->on('tab_pei');
             $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('tab_organizacoes');
             $table->timestamps();
             $table->softDeletes();
@@ -492,7 +492,7 @@ class CreateTabMissaoTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('pei.tab_missao_visao_valores');
+        Schema::dropIfExists('tab_missao_visao_valores');
     }
 }
 ```
@@ -500,8 +500,8 @@ class CreateTabMissaoTable extends Migration
 ---
 
 ## 2021_11_08_185623_create_tab_perspectiva_table.php
-**Tabela:** `pei.tab_perspectiva`
-**Descrição:** Define as perspectivas do Balanced Scorecard (BSC) ou metodologia similar para o PEI.
+**Tabela:** `tab_perspectiva`
+**Descrição:** Define as perspectivas do Balanced Scorecard (BSC) ou metodologia similar para o 
 
 ```php
 <?php
@@ -515,11 +515,11 @@ class CreateTabPerspectivaTable extends Migration
     
     public function up()
     {
-        Schema::create('pei.tab_perspectiva', function (Blueprint $table) {
+        Schema::create('tab_perspectiva', function (Blueprint $table) {
             $table->uuid('cod_perspectiva')->primary();
             $table->text('dsc_perspectiva')->nullable(false);
             $table->smallInteger('num_nivel_hierarquico_apresentacao')->nullable(false);
-            $table->foreignUuid('cod_pei')->references('cod_pei')->on('pei.tab_pei');
+            $table->foreignUuid('cod_pei')->references('cod_pei')->on('tab_pei');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -527,7 +527,7 @@ class CreateTabPerspectivaTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('pei.tab_perspectiva');
+        Schema::dropIfExists('tab_perspectiva');
     }
 }
 ```
@@ -535,8 +535,8 @@ class CreateTabPerspectivaTable extends Migration
 ---
 
 ## 2021_11_09_094804_create_tab_objetivo_estrategico_table.php
-**Tabela:** `pei.tab_objetivo_estrategico`
-**Descrição:** Define os objetivos estratégicos associados a uma perspectiva do PEI.
+**Tabela:** `tab_objetivo_estrategico`
+**Descrição:** Define os objetivos estratégicos associados a uma perspectiva do 
 
 ```php
 <?php
@@ -550,12 +550,12 @@ class CreateTabObjetivoEstrategicoTable extends Migration
 
     public function up()
     {
-        Schema::create('pei.tab_objetivo_estrategico', function (Blueprint $table) {
+        Schema::create('tab_objetivo_estrategico', function (Blueprint $table) {
             $table->uuid('cod_objetivo_estrategico')->primary();
             $table->text('nom_objetivo_estrategico')->nullable(false);
             $table->text('dsc_objetivo_estrategico')->nullable(false);
             $table->smallInteger('num_nivel_hierarquico_apresentacao')->nullable(false);
-            $table->foreignUuid('cod_perspectiva')->references('cod_perspectiva')->on('pei.tab_perspectiva');
+            $table->foreignUuid('cod_perspectiva')->references('cod_perspectiva')->on('tab_perspectiva');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -563,7 +563,7 @@ class CreateTabObjetivoEstrategicoTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('pei.tab_objetivo_estrategico');
+        Schema::dropIfExists('tab_objetivo_estrategico');
     }
 }
 ```
@@ -571,7 +571,7 @@ class CreateTabObjetivoEstrategicoTable extends Migration
 ---
 
 ## 2021_11_09_095359_create_tab_nivel_hierarquico_table.php
-**Tabela:** `pei.tab_nivel_hierarquico`
+**Tabela:** `tab_nivel_hierarquico`
 **Descrição:** Tabela auxiliar para armazenar níveis hierárquicos de apresentação. Popula a tabela com 100 níveis iniciais.
 
 ```php
@@ -586,7 +586,7 @@ class CreateTabNivelHierarquicoTable extends Migration
 {
     public function up()
     {
-        Schema::create('pei.tab_nivel_hierarquico', function (Blueprint $table) {
+        Schema::create('tab_nivel_hierarquico', function (Blueprint $table) {
             $table->smallInteger('num_nivel_hierarquico_apresentacao')->primary();
             $table->timestamps();
             $table->softDeletes();
@@ -594,14 +594,14 @@ class CreateTabNivelHierarquicoTable extends Migration
 
         for($cont=1;$cont<=100;$cont++) {
 
-            DB::select("INSERT INTO pei.tab_nivel_hierarquico (num_nivel_hierarquico_apresentacao, deleted_at, created_at, updated_at) VALUES ($cont, NULL, '2021-11-09 09:59:21', '2021-11-09 09:59:21');");
+            DB::select("INSERT INTO tab_nivel_hierarquico (num_nivel_hierarquico_apresentacao, deleted_at, created_at, updated_at) VALUES ($cont, NULL, '2021-11-09 09:59:21', '2021-11-09 09:59:21');");
 
         }
     }
 
     public function down()
     {
-        Schema::dropIfExists('pei.tab_nivel_hierarquico');
+        Schema::dropIfExists('tab_nivel_hierarquico');
     }
 }
 ```
@@ -609,7 +609,7 @@ class CreateTabNivelHierarquicoTable extends Migration
 ---
 
 ## 2021_11_14_221355_create_tab_tipo_execucao_table.php
-**Tabela:** `pei.tab_tipo_execucao`
+**Tabela:** `tab_tipo_execucao`
 **Descrição:** Classifica os tipos de execução para os planos de ação (ex: Ação, Iniciativa, Projeto).
 
 ```php
@@ -625,24 +625,24 @@ class CreateTabTipoExecucaoTable extends Migration
     
     public function up()
     {
-        Schema::create('pei.tab_tipo_execucao', function (Blueprint $table) {
+        Schema::create('tab_tipo_execucao', function (Blueprint $table) {
             $table->uuid('cod_tipo_execucao')->primary();
             $table->string('dsc_tipo_execucao')->nullable(false);
             $table->timestamps();
             $table->softDeletes();
         });
 
-        DB::select("INSERT INTO pei.tab_tipo_execucao (cod_tipo_execucao, dsc_tipo_execucao, deleted_at, created_at, updated_at) VALUES ('c00b9ebc-7014-4d37-97dc-7875e55fff1b', 'Ação', NULL, '2021-11-14 23:21:21', '2021-11-14 23:21:21');");
+        DB::select("INSERT INTO tab_tipo_execucao (cod_tipo_execucao, dsc_tipo_execucao, deleted_at, created_at, updated_at) VALUES ('c00b9ebc-7014-4d37-97dc-7875e55fff1b', 'Ação', NULL, '2021-11-14 23:21:21', '2021-11-14 23:21:21');");
 
-        DB::select("INSERT INTO pei.tab_tipo_execucao (cod_tipo_execucao, dsc_tipo_execucao, deleted_at, created_at, updated_at) VALUES ('ecef6a50-c010-4cda-afc3-cbda245b55b0', 'Iniciativa', NULL, '2021-11-14 23:21:21', '2021-11-14 23:21:21');");
+        DB::select("INSERT INTO tab_tipo_execucao (cod_tipo_execucao, dsc_tipo_execucao, deleted_at, created_at, updated_at) VALUES ('ecef6a50-c010-4cda-afc3-cbda245b55b0', 'Iniciativa', NULL, '2021-11-14 23:21:21', '2021-11-14 23:21:21');");
 
-        DB::select("INSERT INTO pei.tab_tipo_execucao (cod_tipo_execucao, dsc_tipo_execucao, deleted_at, created_at, updated_at) VALUES ('57518c30-3bc5-4305-a998-8ce8b11550ed', 'Projeto', NULL, '2021-11-14 23:21:21', '2021-11-14 23:21:21');");
+        DB::select("INSERT INTO tab_tipo_execucao (cod_tipo_execucao, dsc_tipo_execucao, deleted_at, created_at, updated_at) VALUES ('57518c30-3bc5-4305-a998-8ce8b11550ed', 'Projeto', NULL, '2021-11-14 23:21:21', '2021-11-14 23:21:21');");
 
     }
 
     public function down()
     {
-        Schema::dropIfExists('pei.tab_tipo_execucao');
+        Schema::dropIfExists('tab_tipo_execucao');
     }
 }
 ```
@@ -650,7 +650,7 @@ class CreateTabTipoExecucaoTable extends Migration
 ---
 
 ## 2021_11_14_221613_create_tab_plano_de_acao_table.php
-**Tabela:** `pei.tab_plano_de_acao`
+**Tabela:** `tab_plano_de_acao`
 **Descrição:** Cria a tabela de planos de ação, vinculando objetivos estratégicos, tipos de execução e organizações. Contém datas, orçamentos e status.
 
 ```php
@@ -665,10 +665,10 @@ class CreateTabPlanoDeAcaoTable extends Migration
     
     public function up()
     {
-        Schema::create('pei.tab_plano_de_acao', function (Blueprint $table) {
+        Schema::create('tab_plano_de_acao', function (Blueprint $table) {
             $table->uuid('cod_plano_de_acao')->primary();
-            $table->foreignUuid('cod_objetivo_estrategico')->references('cod_objetivo_estrategico')->on('pei.tab_objetivo_estrategico');
-            $table->foreignUuid('cod_tipo_execucao')->references('cod_tipo_execucao')->on('pei.tab_tipo_execucao');
+            $table->foreignUuid('cod_objetivo_estrategico')->references('cod_objetivo_estrategico')->on('tab_objetivo_estrategico');
+            $table->foreignUuid('cod_tipo_execucao')->references('cod_tipo_execucao')->on('tab_tipo_execucao');
             $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('tab_organizacoes');
             $table->smallInteger('num_nivel_hierarquico_apresentacao')->nullable(false);
             $table->text('dsc_plano_de_acao')->nullable(false);
@@ -686,7 +686,7 @@ class CreateTabPlanoDeAcaoTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('pei.tab_plano_de_acao');
+        Schema::dropIfExists('tab_plano_de_acao');
     }
 }
 ```
@@ -718,7 +718,7 @@ class CreateRelUsersTabOrganizacoesTabPerfilAcessoTable extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('user_id')->references('id')->on('users');
             $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('tab_organizacoes');
-            $table->foreignUuid('cod_plano_de_acao')->references('cod_plano_de_acao')->on('pei.tab_plano_de_acao');
+            $table->foreignUuid('cod_plano_de_acao')->references('cod_plano_de_acao')->on('tab_plano_de_acao');
             $table->foreignUuid('cod_perfil')->references('cod_perfil')->on('tab_perfil_acesso');
             $table->timestamps();
             $table->softDeletes();
@@ -741,7 +741,7 @@ class CreateRelUsersTabOrganizacoesTabPerfilAcessoTable extends Migration
 ---
 
 ## 2021_12_28_232711_create_tab_indicador_table.php
-**Tabela:** `pei.tab_indicador`
+**Tabela:** `tab_indicador`
 **Descrição:** Cria tabela de indicadores, que podem ser vinculados a planos de ação ou objetivos estratégicos. Define atributos de medição, fórmula, fonte, etc.
 
 ```php
@@ -756,10 +756,10 @@ class CreateTabIndicadorTable extends Migration
 
     public function up()
     {
-        Schema::create('pei.tab_indicador', function (Blueprint $table) {
+        Schema::create('tab_indicador', function (Blueprint $table) {
             $table->uuid('cod_indicador')->primary();
-            $table->foreignUuid('cod_plano_de_acao')->nullable()->references('cod_plano_de_acao')->on('pei.tab_plano_de_acao');
-            $table->foreignUuid('cod_objetivo_estrategico')->nullable()->references('cod_objetivo_estrategico')->on('pei.tab_objetivo_estrategico');
+            $table->foreignUuid('cod_plano_de_acao')->nullable()->references('cod_plano_de_acao')->on('tab_plano_de_acao');
+            $table->foreignUuid('cod_objetivo_estrategico')->nullable()->references('cod_objetivo_estrategico')->on('tab_objetivo_estrategico');
             $table->text('dsc_tipo')->nullable(false);
             $table->text('nom_indicador')->nullable(false);
             $table->text('dsc_indicador')->nullable(false);
@@ -784,7 +784,7 @@ class CreateTabIndicadorTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('pei.tab_indicador');
+        Schema::dropIfExists('tab_indicador');
     }
 }
 ```
@@ -792,7 +792,7 @@ class CreateTabIndicadorTable extends Migration
 ---
 
 ## 2021_12_28_234715_create_tab_evolucao_indicador_table.php
-**Tabela:** `pei.tab_evolucao_indicador`
+**Tabela:** `tab_evolucao_indicador`
 **Descrição:** Registra a evolução dos indicadores ao longo do tempo (mensalmente), comparando valores previstos vs realizados.
 
 ```php
@@ -807,9 +807,9 @@ class CreateTabEvolucaoIndicadorTable extends Migration
     
     public function up()
     {
-        Schema::create('pei.tab_evolucao_indicador', function (Blueprint $table) {
+        Schema::create('tab_evolucao_indicador', function (Blueprint $table) {
             $table->uuid('cod_evolucao_indicador')->primary();
-            $table->foreignUuid('cod_indicador')->references('cod_indicador')->on('pei.tab_indicador');
+            $table->foreignUuid('cod_indicador')->references('cod_indicador')->on('tab_indicador');
             $table->smallInteger('num_ano')->nullable(false);
             $table->smallInteger('num_mes')->nullable(false);
             $table->decimal('vlr_previsto', $precision = 1000, $scale = 2)->nullable(true);
@@ -823,7 +823,7 @@ class CreateTabEvolucaoIndicadorTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('pei.tab_evolucao_indicador');
+        Schema::dropIfExists('tab_evolucao_indicador');
     }
 }
 ```
@@ -831,7 +831,7 @@ class CreateTabEvolucaoIndicadorTable extends Migration
 ---
 
 ## 2021_12_28_235603_create_tab_linha_base_indicador_table.php
-**Tabela:** `pei.tab_linha_base_indicador`
+**Tabela:** `tab_linha_base_indicador`
 **Descrição:** Armazena a linha de base (valor inicial) de um indicador para um determinado ano.
 
 ```php
@@ -846,9 +846,9 @@ class CreateTabLinhaBaseIndicadorTable extends Migration
     
     public function up()
     {
-        Schema::create('pei.tab_linha_base_indicador', function (Blueprint $table) {
+        Schema::create('tab_linha_base_indicador', function (Blueprint $table) {
             $table->uuid('cod_linha_base')->primary();
-            $table->foreignUuid('cod_indicador')->references('cod_indicador')->on('pei.tab_indicador')->constrained()->cascadeOnUpdate()->cascadeOnDelete();
+            $table->foreignUuid('cod_indicador')->references('cod_indicador')->on('tab_indicador')->constrained()->cascadeOnUpdate()->cascadeOnDelete();
             $table->decimal('num_linha_base', $precision = 1000, $scale = 2);
             $table->smallInteger('num_ano')->nullable(false);
             $table->timestamps();
@@ -858,7 +858,7 @@ class CreateTabLinhaBaseIndicadorTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('pei.tab_linha_base_indicador');
+        Schema::dropIfExists('tab_linha_base_indicador');
     }
 }
 ```
@@ -866,7 +866,7 @@ class CreateTabLinhaBaseIndicadorTable extends Migration
 ---
 
 ## 2022_01_03_105544_create_tab_meta_por_ano_table.php
-**Tabela:** `pei.tab_meta_por_ano`
+**Tabela:** `tab_meta_por_ano`
 **Descrição:** Define metas anuais para os indicadores.
 
 ```php
@@ -881,9 +881,9 @@ class CreateTabMetaPorAnoTable extends Migration
 
     public function up()
     {
-        Schema::create('pei.tab_meta_por_ano', function (Blueprint $table) {
+        Schema::create('tab_meta_por_ano', function (Blueprint $table) {
             $table->uuid('cod_meta_por_ano')->primary();
-            $table->foreignUuid('cod_indicador')->references('cod_indicador')->on('pei.tab_indicador');
+            $table->foreignUuid('cod_indicador')->references('cod_indicador')->on('tab_indicador');
             $table->smallInteger('num_ano')->nullable(false);
             $table->decimal('meta', $precision = 1000, $scale = 2)->nullable(true);
             $table->timestamps();
@@ -893,7 +893,7 @@ class CreateTabMetaPorAnoTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('pei.tab_meta_por_ano');
+        Schema::dropIfExists('tab_meta_por_ano');
     }
 }
 ```
@@ -943,7 +943,7 @@ class CreateTabAuditTable extends Migration
 ---
 
 ## 2022_01_26_152500_create_tab_grau_satisfcao_table.php
-**Tabela:** `pei.tab_grau_satisfcao`
+**Tabela:** `tab_grau_satisfcao`
 **Descrição:** Configura faixas de valores (mínimo e máximo) e cores para representar graus de satisfação (Farol de desempenho).
 
 ```php
@@ -958,7 +958,7 @@ class CreateTabGrauSatisfcaoTable extends Migration
     
     public function up()
     {
-        Schema::create('pei.tab_grau_satisfcao', function (Blueprint $table) {
+        Schema::create('tab_grau_satisfcao', function (Blueprint $table) {
             $table->uuid('cod_grau_satisfcao')->primary();
             $table->text('dsc_grau_satisfcao')->nullable(false);
             $table->string('cor')->nullable(false);
@@ -971,7 +971,7 @@ class CreateTabGrauSatisfcaoTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('pei.tab_grau_satisfcao');
+        Schema::dropIfExists('tab_grau_satisfcao');
     }
 }
 ```
@@ -979,7 +979,7 @@ class CreateTabGrauSatisfcaoTable extends Migration
 ---
 
 ## 2022_02_07_100332_create_tab_arquivos_table.php
-**Tabela:** `pei.tab_arquivos`
+**Tabela:** `tab_arquivos`
 **Descrição:** Permite anexar arquivos às evoluções de indicadores (comprovantes, relatórios).
 
 ```php
@@ -994,9 +994,9 @@ class CreateTabArquivosTable extends Migration
     
     public function up()
     {
-        Schema::create('pei.tab_arquivos', function (Blueprint $table) {
+        Schema::create('tab_arquivos', function (Blueprint $table) {
             $table->uuid('cod_arquivo')->primary();
-            $table->foreignUuid('cod_evolucao_indicador')->references('cod_evolucao_indicador')->on('pei.tab_evolucao_indicador');
+            $table->foreignUuid('cod_evolucao_indicador')->references('cod_evolucao_indicador')->on('tab_evolucao_indicador');
             $table->text('txt_assunto')->nullable(false);
             $table->text('data')->nullable(false);
             $table->text('dsc_nome_arquivo')->nullable(false);
@@ -1008,7 +1008,7 @@ class CreateTabArquivosTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('pei.tab_arquivos');
+        Schema::dropIfExists('tab_arquivos');
     }
 }
 ```
@@ -1016,8 +1016,8 @@ class CreateTabArquivosTable extends Migration
 ---
 
 ## 2023_01_10_164526_create_tab_atividade_cadeia_valor_table.php
-**Tabela:** `pei.tab_atividade_cadeia_valor`
-**Descrição:** Mapeamento da Cadeia de Valor, vinculando atividades às perspectivas e ao PEI.
+**Tabela:** `tab_atividade_cadeia_valor`
+**Descrição:** Mapeamento da Cadeia de Valor, vinculando atividades às perspectivas e ao 
 
 ```php
 <?php
@@ -1030,10 +1030,10 @@ class CreateTabAtividadeCadeiaValorTable extends Migration
 {
     public function up()
     {
-        Schema::create('pei.tab_atividade_cadeia_valor', function (Blueprint $table) {
+        Schema::create('tab_atividade_cadeia_valor', function (Blueprint $table) {
             $table->uuid('cod_atividade_cadeia_valor')->primary();
-            $table->foreignUuid('cod_pei')->references('cod_pei')->on('pei.tab_pei');
-            $table->foreignUuid('cod_perspectiva')->references('cod_perspectiva')->on('pei.tab_perspectiva');
+            $table->foreignUuid('cod_pei')->references('cod_pei')->on('tab_pei');
+            $table->foreignUuid('cod_perspectiva')->references('cod_perspectiva')->on('tab_perspectiva');
             $table->text('dsc_atividade')->nullable(false);
             $table->timestamps();
             $table->softDeletes();
@@ -1042,7 +1042,7 @@ class CreateTabAtividadeCadeiaValorTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('pei.tab_atividade_cadeia_valor');
+        Schema::dropIfExists('tab_atividade_cadeia_valor');
     }
 }
 ```
@@ -1050,7 +1050,7 @@ class CreateTabAtividadeCadeiaValorTable extends Migration
 ---
 
 ## 2023_01_11_162049_create_tab_processos_atividade_cadeia_valor_table.php
-**Tabela:** `pei.tab_processos_atividade_cadeia_valor`
+**Tabela:** `tab_processos_atividade_cadeia_valor`
 **Descrição:** Detalha os processos (entradas, transformações, saídas) associados às atividades da cadeia de valor.
 
 ```php
@@ -1064,9 +1064,9 @@ class CreateTabProcessosAtividadeCadeiaValorTable extends Migration
 {
     public function up()
     {
-        Schema::create('pei.tab_processos_atividade_cadeia_valor', function (Blueprint $table) {
+        Schema::create('tab_processos_atividade_cadeia_valor', function (Blueprint $table) {
             $table->uuid('cod_processo_atividade_cadeia_valor')->primary();
-            $table->foreignUuid('cod_atividade_cadeia_valor')->references('cod_atividade_cadeia_valor')->on('pei.tab_atividade_cadeia_valor');
+            $table->foreignUuid('cod_atividade_cadeia_valor')->references('cod_atividade_cadeia_valor')->on('tab_atividade_cadeia_valor');
             $table->text('dsc_entrada')->nullable(false);
             $table->text('dsc_transformacao')->nullable(false);
             $table->text('dsc_saida')->nullable(false);
@@ -1077,7 +1077,7 @@ class CreateTabProcessosAtividadeCadeiaValorTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('pei.tab_processos_atividade_cadeia_valor');
+        Schema::dropIfExists('tab_processos_atividade_cadeia_valor');
     }
 }
 ```
@@ -1085,7 +1085,7 @@ class CreateTabProcessosAtividadeCadeiaValorTable extends Migration
 ---
 
 ## 2024_06_18_114518_create_valores_table.php
-**Tabela:** `pei.tab_valores`
+**Tabela:** `tab_valores`
 **Descrição:** Cria tabela específica para 'Valores' organizacionais, separando-os da tabela original de Missão/Visão.
 
 ```php
@@ -1099,11 +1099,11 @@ class CreateValoresTable extends Migration
 {
     public function up()
     {
-        Schema::create('pei.tab_valores', function (Blueprint $table) {
+        Schema::create('tab_valores', function (Blueprint $table) {
             $table->uuid('cod_valor')->primary();
             $table->text('nom_valor')->nullable(false);
             $table->text('dsc_valor')->nullable(false);
-            $table->foreignUuid('cod_pei')->references('cod_pei')->on('pei.tab_pei');
+            $table->foreignUuid('cod_pei')->references('cod_pei')->on('tab_pei');
             $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('tab_organizacoes');
             $table->timestamps();
             $table->softDeletes();
@@ -1112,7 +1112,7 @@ class CreateValoresTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('pei.tab_valores');
+        Schema::dropIfExists('tab_valores');
     }
 }
 ```
@@ -1120,7 +1120,7 @@ class CreateValoresTable extends Migration
 ---
 
 ## 2024_06_21_172717_create_tab_futuro_almejado_objetivo_estrategico_table.php
-**Tabela:** `pei.tab_futuro_almejado_objetivo_estrategico`
+**Tabela:** `tab_futuro_almejado_objetivo_estrategico`
 **Descrição:** Permite definir 'Futuros Almejados' vinculados aos objetivos estratégicos.
 
 ```php
@@ -1139,10 +1139,10 @@ class CreateTabFuturoAlmejadoObjetivoEstrategicoTable extends Migration
      */
     public function up()
     {
-        Schema::create('pei.tab_futuro_almejado_objetivo_estrategico', function (Blueprint $table) {
+        Schema::create('tab_futuro_almejado_objetivo_estrategico', function (Blueprint $table) {
             $table->uuid('cod_futuro_almejado')->primary();
             $table->text('dsc_futuro_almejado')->nullable(false);
-            $table->foreignUuid('cod_objetivo_estrategico')->references('cod_objetivo_estrategico')->on('pei.tab_objetivo_estrategico');
+            $table->foreignUuid('cod_objetivo_estrategico')->references('cod_objetivo_estrategico')->on('tab_objetivo_estrategico');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -1155,7 +1155,7 @@ class CreateTabFuturoAlmejadoObjetivoEstrategicoTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('pei.tab_futuro_almejado_objetivo_estrategico');
+        Schema::dropIfExists('tab_futuro_almejado_objetivo_estrategico');
     }
 }
 ```
@@ -1163,7 +1163,7 @@ class CreateTabFuturoAlmejadoObjetivoEstrategicoTable extends Migration
 ---
 
 ## 2024_07_01_150643_create_rel_indicador_objetivo_estrategico_organizacao.php
-**Tabela:** `pei.rel_indicador_objetivo_estrategico_organizacao`
+**Tabela:** `rel_indicador_objetivo_estrategico_organizacao`
 **Descrição:** Relacionamento n-para-n entre indicadores e organizações, especificamente no contexto de objetivos estratégicos.
 
 ```php
@@ -1177,8 +1177,8 @@ class CreateRelIndicadorObjetivoEstrategicoOrganizacao extends Migration
 {
     public function up()
     {
-        Schema::create('pei.rel_indicador_objetivo_estrategico_organizacao', function (Blueprint $table) {
-            $table->foreignUuid('cod_indicador')->references('cod_indicador')->on('pei.tab_indicador');
+        Schema::create('rel_indicador_objetivo_estrategico_organizacao', function (Blueprint $table) {
+            $table->foreignUuid('cod_indicador')->references('cod_indicador')->on('tab_indicador');
             $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('tab_organizacoes');
             $table->timestamps();
             $table->softDeletes();
@@ -1187,7 +1187,7 @@ class CreateRelIndicadorObjetivoEstrategicoOrganizacao extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('pei.rel_indicador_objetivo_estrategico_organizacao');
+        Schema::dropIfExists('rel_indicador_objetivo_estrategico_organizacao');
     }
 }
 ```
@@ -1217,7 +1217,7 @@ class CreateTabEntregasTable extends Migration
             $table->foreignUuid('cod_plano_de_acao')
                 ->nullable()
                 ->references('cod_plano_de_acao')
-                ->on('pei.tab_plano_de_acao')
+                ->on('tab_plano_de_acao')
                 ->onDelete('cascade');
 
             // Campos para a entrega
@@ -1495,7 +1495,7 @@ class UpdateUserTypeToVarcharOnAuditsTable extends Migration
 ---
 
 ## 2024_12_02_085712_remove_txt_principais_entregas_from_tab_plano_de_acao_table.php
-**Alteração:** `pei.tab_plano_de_acao`
+**Alteração:** `tab_plano_de_acao`
 **Descrição:** Remove a coluna `txt_principais_entregas`, pois as entregas passaram a ser gerenciadas em uma tabela própria (`tab_entregas`).
 
 ```php
@@ -1509,14 +1509,14 @@ class RemoveTxtPrincipaisEntregasFromTabPlanoDeAcaoTable extends Migration
 {
     public function up()
     {
-        Schema::table('pei.tab_plano_de_acao', function (Blueprint $table) {
+        Schema::table('tab_plano_de_acao', function (Blueprint $table) {
             $table->dropColumn('txt_principais_entregas');
         });
     }
 
     public function down()
     {
-        Schema::table('pei.tab_plano_de_acao', function (Blueprint $table) {
+        Schema::table('tab_plano_de_acao', function (Blueprint $table) {
             $table->text('txt_principais_entregas')->nullable();
         });
     }
@@ -1540,14 +1540,14 @@ class AddNumNivelHierarquicoApresentacaoToTabEntregasTable extends Migration
 {
     public function up()
     {
-        Schema::table('pei.tab_entregas', function (Blueprint $table) {
+        Schema::table('tab_entregas', function (Blueprint $table) {
             $table->smallInteger('num_nivel_hierarquico_apresentacao')->notNullable();
         });
     }
 
     public function down()
     {
-        Schema::table('pei.tab_entregas', function (Blueprint $table) {
+        Schema::table('tab_entregas', function (Blueprint $table) {
             $table->dropColumn('num_nivel_hierarquico_apresentacao');
         });
     }
