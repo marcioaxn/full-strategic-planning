@@ -2,11 +2,13 @@
 
 namespace App\Livewire\PEI;
 
+use App\Models\PEI\PEI;
 use App\Models\PEI\Valor;
 use App\Models\Organization;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Session;
 
 #[Layout('layouts.app')]
 class ListarValores extends Component
@@ -15,27 +17,49 @@ class ListarValores extends Component
 
     public $organizacaoId;
     public $organizacaoNome;
-    
+    public $peiAtivo;
+
     public $valores = [];
-    
+
     public bool $showModal = false;
     public $valorId;
     public $nom_valor;
     public $dsc_valor;
 
     protected $listeners = [
-        'organizacaoSelecionada' => 'atualizarOrganizacao'
+        'organizacaoSelecionada' => 'atualizarOrganizacao',
+        'peiSelecionado' => 'atualizarPEI'
     ];
 
     public function mount()
     {
-        $this->atualizarOrganizacao(session('organizacao_selecionada_id'));
+        $this->carregarPEI();
+        $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+    }
+
+    public function atualizarPEI($id)
+    {
+        $this->peiAtivo = PEI::find($id);
+        $this->carregarValores();
+    }
+
+    private function carregarPEI()
+    {
+        $peiId = Session::get('pei_selecionado_id');
+
+        if ($peiId) {
+            $this->peiAtivo = PEI::find($peiId);
+        }
+
+        if (!$this->peiAtivo) {
+            $this->peiAtivo = PEI::ativos()->first();
+        }
     }
 
     public function atualizarOrganizacao($id)
     {
         $this->organizacaoId = $id;
-        
+
         if ($id) {
             $org = Organization::find($id);
             $this->organizacaoNome = $org->nom_organizacao;
@@ -48,13 +72,23 @@ class ListarValores extends Component
 
     public function carregarValores()
     {
+        if (!$this->peiAtivo || !$this->organizacaoId) {
+            $this->valores = [];
+            return;
+        }
+
         $this->valores = Valor::where('cod_organizacao', $this->organizacaoId)
+            ->where('cod_pei', $this->peiAtivo->cod_pei)
             ->orderBy('nom_valor')
             ->get();
     }
 
     public function create()
     {
+        if (!$this->peiAtivo) {
+            session()->flash('error', 'Não há um Ciclo PEI selecionado.');
+            return;
+        }
         $this->resetForm();
         $this->showModal = true;
     }
@@ -70,6 +104,11 @@ class ListarValores extends Component
 
     public function save()
     {
+        if (!$this->peiAtivo) {
+            session()->flash('error', 'Não é possível salvar sem um Ciclo PEI selecionado.');
+            return;
+        }
+
         $this->validate([
             'nom_valor' => 'required|string|max:255',
             'dsc_valor' => 'nullable|string|max:1000',
@@ -81,7 +120,7 @@ class ListarValores extends Component
                 'nom_valor' => $this->nom_valor,
                 'dsc_valor' => $this->dsc_valor,
                 'cod_organizacao' => $this->organizacaoId,
-                // 'cod_pei' => ...
+                'cod_pei' => $this->peiAtivo->cod_pei,
             ]
         );
 

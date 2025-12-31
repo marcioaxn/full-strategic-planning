@@ -9,6 +9,7 @@ use App\Models\Organization;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Session;
 
 #[Layout('layouts.app')]
 class MissaoVisao extends Component
@@ -20,24 +21,44 @@ class MissaoVisao extends Component
     public $organizacaoId;
     public $organizacaoNome;
     public $peiAtivo;
-    
+
     // Propriedades para Valores
     public $valores = [];
     public $novoValorTitulo = '';
     public $novoValorDescricao = '';
     public $editandoValorId = null;
-    
+
     public bool $isEditing = false;
     public bool $isEditingValores = false;
 
     protected $listeners = [
-        'organizacaoSelecionada' => 'atualizarOrganizacao'
+        'organizacaoSelecionada' => 'atualizarOrganizacao',
+        'peiSelecionado' => 'atualizarPEI'
     ];
 
     public function mount()
     {
-        $this->peiAtivo = PEI::ativos()->first();
-        $this->atualizarOrganizacao(session('organizacao_selecionada_id'));
+        $this->carregarPEI();
+        $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+    }
+
+    public function atualizarPEI($id)
+    {
+        $this->peiAtivo = PEI::find($id);
+        $this->carregarDados();
+    }
+
+    private function carregarPEI()
+    {
+        $peiId = Session::get('pei_selecionado_id');
+
+        if ($peiId) {
+            $this->peiAtivo = PEI::find($peiId);
+        }
+
+        if (!$this->peiAtivo) {
+            $this->peiAtivo = PEI::ativos()->first();
+        }
     }
 
     public function atualizarOrganizacao($id)

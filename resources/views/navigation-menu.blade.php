@@ -38,6 +38,9 @@
             <!-- Seletor de Organização Global -->
             @livewire('shared.seletor-organizacao')
 
+            <!-- Seletor de Ciclo PEI -->
+            @livewire('shared.seletor-pei')
+
             <button type="button"
                     id="appThemeSwitcher"
                     class="btn btn-outline-secondary btn-iconno-border no-border"

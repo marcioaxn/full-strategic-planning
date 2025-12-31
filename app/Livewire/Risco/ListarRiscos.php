@@ -54,13 +54,37 @@ class ListarRiscos extends Component
         'page' => ['except' => 1],
     ];
 
+    public $peiAtivo;
+
     protected $listeners = [
-        'organizacaoSelecionada' => 'atualizarOrganizacao'
+        'organizacaoSelecionada' => 'atualizarOrganizacao',
+        'peiSelecionado' => 'atualizarPEI'
     ];
 
     public function mount()
     {
+        $this->carregarPEI();
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+    }
+
+    public function atualizarPEI($id)
+    {
+        $this->peiAtivo = PEI::find($id);
+        $this->carregarListasAuxiliares();
+        $this->resetPage();
+    }
+
+    private function carregarPEI()
+    {
+        $peiId = Session::get('pei_selecionado_id');
+
+        if ($peiId) {
+            $this->peiAtivo = PEI::find($peiId);
+        }
+
+        if (!$this->peiAtivo) {
+            $this->peiAtivo = PEI::ativos()->first();
+        }
     }
 
     public function atualizarOrganizacao($id)
@@ -72,10 +96,9 @@ class ListarRiscos extends Component
 
     public function carregarListasAuxiliares()
     {
-        $peiAtivo = PEI::ativos()->first();
-        if ($peiAtivo) {
-            $this->objetivos = Objetivo::whereHas('perspectiva', function($query) use ($peiAtivo) {
-                $query->where('cod_pei', $peiAtivo->cod_pei);
+        if ($this->peiAtivo) {
+            $this->objetivos = Objetivo::whereHas('perspectiva', function($query) {
+                $query->where('cod_pei', $this->peiAtivo->cod_pei);
             })->orderBy('nom_objetivo')->get();
         }
 
@@ -131,7 +154,6 @@ class ListarRiscos extends Component
             'form.cod_responsavel_monitoramento' => 'required|exists:users,id',
         ]);
 
-        $peiAtivo = PEI::ativos()->first();
         $data = $this->form;
         unset($data['objetivos_vinculados']);
 
@@ -141,7 +163,7 @@ class ListarRiscos extends Component
             $risco->update($data);
         } else {
             $this->authorize('create', Risco::class);
-            $data['cod_pei'] = $peiAtivo->cod_pei;
+            $data['cod_pei'] = $this->peiAtivo->cod_pei;
             $data['cod_organizacao'] = $this->organizacaoId;
             $risco = Risco::create($data);
         }

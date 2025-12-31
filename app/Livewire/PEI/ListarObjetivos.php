@@ -7,6 +7,7 @@ use App\Models\PEI\Perspectiva;
 use App\Models\PEI\Objetivo;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Illuminate\Support\Facades\Session;
 
 #[Layout('layouts.app')]
 class ListarObjetivos extends Component
@@ -21,12 +22,35 @@ class ListarObjetivos extends Component
     public $num_nivel_hierarquico_apresentacao;
     public $cod_perspectiva;
 
+    protected $listeners = [
+        'peiSelecionado' => 'atualizarPEI'
+    ];
+
     public function mount()
     {
-        $this->peiAtivo = PEI::ativos()->first();
-        
+        $this->carregarPEI();
+
         if ($this->peiAtivo) {
             $this->carregarPerspectivas();
+        }
+    }
+
+    public function atualizarPEI($id)
+    {
+        $this->peiAtivo = PEI::find($id);
+        $this->carregarPerspectivas();
+    }
+
+    private function carregarPEI()
+    {
+        $peiId = Session::get('pei_selecionado_id');
+
+        if ($peiId) {
+            $this->peiAtivo = PEI::find($peiId);
+        }
+
+        if (!$this->peiAtivo) {
+            $this->peiAtivo = PEI::ativos()->first();
         }
     }
 
