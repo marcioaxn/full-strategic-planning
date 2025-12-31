@@ -23,27 +23,54 @@ class ListarRelatorios extends Component
     public $perspectivas = [];
     public $perspectivaSelecionada = '';
 
+    public $peiAtivo;
+
     protected $listeners = [
-        'organizacaoSelecionada' => 'atualizarOrganizacao'
+        'organizacaoSelecionada' => 'atualizarOrganizacao',
+        'peiSelecionado' => 'atualizarPEI'
     ];
 
     public function mount()
     {
         $this->organizacoes = Organization::orderBy('nom_organizacao')->get();
-        
+
         // Carregar Anos (baseado nos ciclos PEI ativos/recentes)
         $this->anos = range(date('Y') - 1, date('Y') + 4);
         $this->anoSelecionado = date('Y');
 
-        // Carregar Perspectivas (do PEI ativo)
-        $peiAtivo = PEI::ativos()->first();
-        if ($peiAtivo) {
-            $this->perspectivas = Perspectiva::where('cod_pei', $peiAtivo->cod_pei)
+        // Carregar PEI
+        $this->carregarPEI();
+        $this->carregarPerspectivas();
+
+        $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+    }
+
+    public function atualizarPEI($id)
+    {
+        $this->peiAtivo = PEI::find($id);
+        $this->carregarPerspectivas();
+    }
+
+    private function carregarPEI()
+    {
+        $peiId = Session::get('pei_selecionado_id');
+
+        if ($peiId) {
+            $this->peiAtivo = PEI::find($peiId);
+        }
+
+        if (!$this->peiAtivo) {
+            $this->peiAtivo = PEI::ativos()->first();
+        }
+    }
+
+    private function carregarPerspectivas()
+    {
+        if ($this->peiAtivo) {
+            $this->perspectivas = Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
                 ->ordenadoPorNivel()
                 ->get();
         }
-
-        $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
     }
 
     public function atualizarOrganizacao($id)
