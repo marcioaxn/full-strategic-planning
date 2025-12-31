@@ -2,11 +2,11 @@
 
 namespace App\Models\PEI;
 
+use App\Models\Organization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable;
 
@@ -18,7 +18,7 @@ class ObjetivoEstrategico extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_objetivo_estrategico';
+    protected $table = 'tab_objetivo_estrategico';
 
     /**
      * Chave primária
@@ -40,67 +40,23 @@ class ObjetivoEstrategico extends Model implements Auditable
      */
     protected $fillable = [
         'nom_objetivo_estrategico',
-        'dsc_objetivo_estrategico',
-        'num_nivel_hierarquico_apresentacao',
-        'cod_perspectiva',
+        'cod_pei',
+        'cod_organizacao',
     ];
 
     /**
-     * Casts
+     * Relacionamento: Ciclo PEI
      */
-    protected $casts = [
-        'num_nivel_hierarquico_apresentacao' => 'integer',
-    ];
-
-    /**
-     * Relacionamento: Perspectiva BSC
-     */
-    public function perspectiva(): BelongsTo
+    public function pei(): BelongsTo
     {
-        return $this->belongsTo(Perspectiva::class, 'cod_perspectiva', 'cod_perspectiva');
+        return $this->belongsTo(PEI::class, 'cod_pei', 'cod_pei');
     }
 
     /**
-     * Relacionamento: Planos de Ação
+     * Relacionamento: Organização
      */
-    public function planosAcao(): HasMany
+    public function organizacao(): BelongsTo
     {
-        return $this->hasMany(PlanoDeAcao::class, 'cod_objetivo_estrategico', 'cod_objetivo_estrategico');
-    }
-
-    /**
-     * Relacionamento: Indicadores
-     */
-    public function indicadores(): HasMany
-    {
-        return $this->hasMany(Indicador::class, 'cod_objetivo_estrategico', 'cod_objetivo_estrategico');
-    }
-
-    /**
-     * Relacionamento: Futuro Almejado
-     */
-    public function futuroAlmejado(): HasMany
-    {
-        return $this->hasMany(FuturoAlmejadoObjetivoEstrategico::class, 'cod_objetivo_estrategico', 'cod_objetivo_estrategico');
-    }
-
-    /**
-     * Scopes
-     */
-
-    /**
-     * Scope: Ordenar por nível hierárquico
-     */
-    public function scopeOrdenadoPorNivel($query)
-    {
-        return $query->orderBy('num_nivel_hierarquico_apresentacao');
-    }
-
-    /**
-     * Scope: Por perspectiva
-     */
-    public function scopePorPerspectiva($query, string $codPerspectiva)
-    {
-        return $query->where('cod_perspectiva', $codPerspectiva);
+        return $this->belongsTo(Organization::class, 'cod_organizacao', 'cod_organizacao');
     }
 }

@@ -16,7 +16,7 @@ class Perspectiva extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_perspectiva';
+    protected $table = 'tab_perspectiva';
 
     /**
      * Chave primária
@@ -58,11 +58,11 @@ class Perspectiva extends Model
     }
 
     /**
-     * Relacionamento: Objetivos Estratégicos
+     * Relacionamento: Objetivos
      */
     public function objetivos(): HasMany
     {
-        return $this->hasMany(ObjetivoEstrategico::class, 'cod_perspectiva', 'cod_perspectiva');
+        return $this->hasMany(Objetivo::class, 'cod_perspectiva', 'cod_perspectiva');
     }
 
     /**

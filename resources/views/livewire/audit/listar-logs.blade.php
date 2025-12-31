@@ -41,7 +41,7 @@
                     <select wire:model.live="filtroModel" class="form-select">
                         <option value="">Todos os módulos</option>
                         @foreach($models as $m)
-                            <option value="{{ $m }}">{{ str_replace('App\Models\', '', $m) }}</option>
+                            <option value="{{ $m }}">{{ str_replace('App\\Models\\', '', $m) }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -87,7 +87,7 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="badge bg-light text-dark border">{{ str_replace('App\Models\', '', $log->auditable_type) }}</span>
+                                <span class="badge bg-light text-dark border">{{ str_replace('App\\Models\\', '', $log->auditable_type) }}</span>
                                 <small class="d-block text-muted" style="font-size: 0.65rem;">ID: ...{{ substr($log->auditable_id, -8) }}</small>
                             </td>
                             <td>

@@ -18,7 +18,7 @@ class Valor extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_valores';
+    protected $table = 'tab_valores';
 
     /**
      * Chave primária

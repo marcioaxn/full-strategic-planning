@@ -37,7 +37,7 @@
     @else
         @if($filtroObjetivo)
             @php
-                $objetivoFiltrado = \App\Models\PEI\ObjetivoEstrategico::with(['perspectiva.pei', 'indicadores.evolucoes', 'indicadores.metasPorAno', 'planosAcao.entregas'])->find($filtroObjetivo);
+                $objetivoFiltrado = \App\Models\PEI\Objetivo::with(['perspectiva.pei', 'indicadores.evolucoes', 'indicadores.metasPorAno', 'planosAcao.entregas'])->find($filtroObjetivo);
             @endphp
 
             {{-- Contexto Completo do Objetivo --}}
@@ -154,30 +154,43 @@
                 </div>
 
                 <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        const ctx = document.getElementById('chartStatusPlanos');
-                        if (ctx) {
-                            new Chart(ctx, {
-                                type: 'doughnut',
-                                data: {
-                                    labels: ['Concluidos', 'Em Andamento', 'Nao Iniciados', 'Atrasados'],
-                                    datasets: [{
-                                        data: [{{ $planosConcluidos }}, {{ $planosEmAndamento }}, {{ $planosNaoIniciados }}, {{ $planosAtrasados }}],
-                                        backgroundColor: ['#198754', '#0d6efd', '#6c757d', '#dc3545'],
-                                        borderWidth: 0
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    plugins: {
-                                        legend: { display: false }
-                                    },
-                                    cutout: '65%'
+                    (function() {
+                        function initChartStatusPlanos() {
+                            const ctx = document.getElementById('chartStatusPlanos');
+                            if (ctx && typeof Chart !== 'undefined') {
+                                // Destruir grafico existente se houver
+                                if (ctx.chartInstance) {
+                                    ctx.chartInstance.destroy();
                                 }
-                            });
+                                ctx.chartInstance = new Chart(ctx, {
+                                    type: 'doughnut',
+                                    data: {
+                                        labels: ['Concluidos', 'Em Andamento', 'Nao Iniciados', 'Atrasados'],
+                                        datasets: [{
+                                            data: [{{ $planosConcluidos }}, {{ $planosEmAndamento }}, {{ $planosNaoIniciados }}, {{ $planosAtrasados }}],
+                                            backgroundColor: ['#198754', '#0d6efd', '#6c757d', '#dc3545'],
+                                            borderWidth: 0
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: { display: false }
+                                        },
+                                        cutout: '65%'
+                                    }
+                                });
+                            }
                         }
-                    });
+                        // Inicializar na carga inicial e na navegacao Livewire
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', initChartStatusPlanos);
+                        } else {
+                            initChartStatusPlanos();
+                        }
+                        document.addEventListener('livewire:navigated', initChartStatusPlanos);
+                    })();
                 </script>
             @endif
         @endif
@@ -224,6 +237,9 @@
             </div>
         </div>
 
+        {{-- Legenda de Status (Dinâmica via Model/Partial) --}}
+        @include('livewire.partials.legenda-status-planos')
+
         <!-- Lista de Planos -->
         <div class="card border-0 shadow-sm overflow-hidden">
             <div class="table-responsive">
@@ -245,7 +261,7 @@
                                     <div class="fw-bold text-dark mb-1">{{ Str::limit($plano->dsc_plano_de_acao, 60) }}</div>
                                     <small class="text-muted d-block">
                                         <i class="bi bi-bullseye me-1"></i>
-                                        {{ Str::limit($plano->objetivoEstrategico->nom_objetivo_estrategico ?? 'Sem Objetivo', 50) }}
+                                        {{ Str::limit($plano->objetivo->nom_objetivo ?? 'Sem Objetivo', 50) }}
                                     </small>
                                 </td>
                                 <td>
@@ -255,23 +271,11 @@
                                 </td>
                                 <td>
                                     @php
-                                        $statusClass = match($plano->bln_status) {
-                                            'Concluído' => 'success',
-                                            'Em Andamento' => 'primary',
-                                            'Atrasado' => 'danger',
-                                            'Cancelado' => 'secondary',
-                                            'Suspenso' => 'warning',
-                                            default => 'secondary'
-                                        };
-                                        // Verificar atraso via método do model
-                                        if ($plano->isAtrasado()) {
-                                            $statusLabel = 'Atrasado';
-                                            $statusClass = 'danger';
-                                        } else {
-                                            $statusLabel = $plano->bln_status;
-                                        }
+                                        $corStatus = $plano->getSatisfacaoColor();
+                                        $textClass = $plano->getSatisfacaoTextClass();
+                                        $statusLabel = $plano->isAtrasado() ? 'Atrasado' : $plano->bln_status;
                                     @endphp
-                                    <span class="badge bg-{{ $statusClass }}-subtle text-{{ $statusClass }} border border-{{ $statusClass }}-subtle rounded-pill">
+                                    <span class="badge {{ $textClass }} rounded-pill border shadow-sm px-3 py-1" style="background-color: {{ $corStatus }};">
                                         {{ $statusLabel }}
                                     </span>
                                 </td>
@@ -369,16 +373,16 @@
                         <!-- Linha 2: Objetivo e Tipo -->
                         <div class="row g-3 mb-3">
                             <div class="col-md-8">
-                                <label class="form-label text-muted small text-uppercase fw-bold">Objetivo Estratégico</label>
-                                <select wire:model="cod_objetivo_estrategico" class="form-select @error('cod_objetivo_estrategico') is-invalid @enderror">
+                                <label class="form-label text-muted small text-uppercase fw-bold">Objetivo</label>
+                                <select wire:model="cod_objetivo" class="form-select @error('cod_objetivo') is-invalid @enderror">
                                     <option value="">Selecione...</option>
                                     @foreach($objetivos as $obj)
-                                        <option value="{{ $obj->cod_objetivo_estrategico }}">
-                                            {{ $obj->perspectiva->dsc_perspectiva }} > {{ Str::limit($obj->nom_objetivo_estrategico, 80) }}
+                                        <option value="{{ $obj->cod_objetivo }}">
+                                            {{ $obj->perspectiva->dsc_perspectiva }} > {{ Str::limit($obj->nom_objetivo, 80) }}
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('cod_objetivo_estrategico') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @error('cod_objetivo') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-muted small text-uppercase fw-bold">Tipo de Execução</label>

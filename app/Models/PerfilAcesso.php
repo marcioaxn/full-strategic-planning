@@ -15,7 +15,7 @@ class PerfilAcesso extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'public.tab_perfil_acesso';
+    protected $table = 'tab_perfil_acesso';
 
     /**
      * Chave primária

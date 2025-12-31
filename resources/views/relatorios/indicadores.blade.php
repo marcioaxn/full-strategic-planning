@@ -16,7 +16,15 @@
 <body>
     <div class="header">
         <h2 style="margin: 0; color: #1B408E;">Relatório de Indicadores de Desempenho</h2>
-        <div style="margin-top: 5px;">Unidade: {{ $organizacao->nom_organizacao }} | Referência: {{ now()->format('d/m/Y') }}</div>
+        
+        <!-- Bloco de Filtros Aplicados -->
+        @if(isset($filtros))
+            <div style="margin-top: 10px; padding: 8px; background: #f8f9fa; border: 1px solid #dee2e6; display: inline-block; border-radius: 5px; font-size: 10px;">
+                <span style="margin-right: 15px;"><strong>Ano:</strong> {{ $filtros['ano'] }}</span>
+                <span style="margin-right: 15px;"><strong>Período:</strong> {{ $filtros['periodo'] }}</span>
+                <span><strong>Unidade:</strong> {{ $filtros['organizacao'] }}</span>
+            </div>
+        @endif
     </div>
 
     <table>
@@ -36,10 +44,10 @@
                     <td style="font-weight: bold;">{{ $ind->nom_indicador }}</td>
                     <td>{{ $ind->dsc_unidade_medida }}</td>
                     <td style="font-size: 9px;">
-                        {{ $ind->cod_objetivo_estrategico ? 'OBJ: '.$ind->objetivoEstrategico->nom_objetivo_estrategico : 'PLAN: '.$ind->planoDeAcao->dsc_plano_de_acao }}
+                        {{ $ind->cod_objetivo ? 'OBJ: '.$ind->objetivo->nom_objetivo : 'PLAN: '.$ind->planoDeAcao->dsc_plano_de_acao }}
                     </td>
                     <td style="text-align: center;">{{ $ind->dsc_meta }}</td>
-                    <td style="text-align: center; font-weight: bold;">{{ number_format($ind->calcularAtingimento(), 1) }}%</td>
+                    <td style="text-align: center; font-weight: bold;">@brazil_percent($ind->calcularAtingimento(), 1)</td>
                     <td style="text-align: center;">
                         <div class="farol" style="background-color: {{ $ind->getCorFarol() ?: '#eee' }}"></div>
                     </td>

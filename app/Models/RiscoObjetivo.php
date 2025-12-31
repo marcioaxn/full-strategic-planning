@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\PEI\ObjetivoEstrategico;
+use App\Models\PEI\Objetivo;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
@@ -10,14 +10,14 @@ class RiscoObjetivo extends Model
 {
     use HasUuids;
 
-    protected $table = 'pei.tab_risco_objetivo';
+    protected $table = 'tab_risco_objetivo';
     protected $primaryKey = 'cod_risco_objetivo';
     protected $keyType = 'string';
     public $incrementing = false;
 
     protected $fillable = [
         'cod_risco',
-        'cod_objetivo_estrategico',
+        'cod_objetivo',
     ];
 
     protected $casts = [
@@ -31,8 +31,8 @@ class RiscoObjetivo extends Model
         return $this->belongsTo(Risco::class, 'cod_risco', 'cod_risco');
     }
 
-    public function objetivoEstrategico()
+    public function objetivo()
     {
-        return $this->belongsTo(ObjetivoEstrategico::class, 'cod_objetivo_estrategico', 'cod_objetivo_estrategico');
+        return $this->belongsTo(Objetivo::class, 'cod_objetivo', 'cod_objetivo');
     }
 }

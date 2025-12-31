@@ -148,66 +148,151 @@
 
         @php
             $appNavigation = [
+                // Principal
                 [
                     'label' => __('Dashboard'),
                     'route' => 'dashboard',
-                    'icon' => 'speedometer2'
+                    'icon' => 'speedometer2',
+                    'single' => true
                 ],
+
+                // Grupo: Planejamento (conforme especificação do usuário)
                 [
-                    'label' => __('Organizações'),
-                    'route' => 'organizacoes.index',
-                    'icon' => 'building'
+                    'label' => __('Planejamento'),
+                    'icon' => 'compass',
+                    'id' => 'nav-planejamento',
+                    'children' => [
+                        [
+                            'label' => __('Ciclos PEI'),
+                            'route' => 'ciclos',
+                            'icon' => 'calendar-range'
+                        ],
+                        [
+                            'label' => __('Identidade Estratégica'),
+                            'route' => 'index',
+                            'icon' => 'clipboard-data'
+                        ],
+                        [
+                            'label' => __('Análise SWOT'),
+                            'route' => 'swot',
+                            'icon' => 'grid-3x3-gap'
+                        ],
+                        [
+                            'label' => __('Análise PESTEL'),
+                            'route' => 'pestel',
+                            'icon' => 'globe2'
+                        ],
+                        [
+                            'label' => __('Perspectivas'),
+                            'route' => 'perspectivas',
+                            'icon' => 'layers'
+                        ],
+                        [
+                            'label' => __('Objetivos'),
+                            'route' => 'objetivos.index',
+                            'icon' => 'bullseye'
+                        ],
+                        [
+                            'label' => __('Objetivos Estratégicos'),
+                            'route' => 'objetivos-estrategicos.index',
+                            'icon' => 'shield-check'
+                        ],
+                        [
+                            'label' => __('Planos de Ação'),
+                            'route' => 'planos.index',
+                            'icon' => 'list-task'
+                        ],
+                        [
+                            'label' => __('Gerenciar Entregas'),
+                            'route' => 'entregas.index',
+                            'icon' => 'check2-all'
+                        ],
+                        [
+                            'label' => __('Indicadores'),
+                            'route' => 'indicadores.index',
+                            'icon' => 'graph-up'
+                        ],
+                        [
+                            'label' => __('Riscos'),
+                            'route' => 'riscos.index',
+                            'icon' => 'exclamation-triangle'
+                        ],
+                        [
+                            'label' => __('Mapa Estratégico'),
+                            'route' => 'mapa',
+                            'icon' => 'map'
+                        ],
+                    ]
                 ],
+
+                // Grupo: Gestão (apenas Auditoria e Relatórios)
                 [
-                    'label' => __('Usuários'),
-                    'route' => 'usuarios.index',
-                    'icon' => 'people'
+                    'label' => __('Gestão'),
+                    'icon' => 'gear',
+                    'id' => 'nav-gestao',
+                    'children' => [
+                        [
+                            'label' => __('Auditoria'),
+                            'route' => 'audit.index',
+                            'icon' => 'shield-lock',
+                            'can' => 'isSuperAdmin'
+                        ],
+                        [
+                            'label' => __('Relatórios'),
+                            'route' => 'relatorios.index',
+                            'icon' => 'file-earmark-bar-graph'
+                        ],
+                    ]
                 ],
+
+                // Grupo: Administração
                 [
-                    'label' => __('Identidade Estratégica'),
-                    'route' => 'pei.index',
-                    'icon' => 'clipboard-data'
-                ],
-                [
-                    'label' => __('Mapa Estratégico'),
-                    'route' => 'pei.mapa',
-                    'icon' => 'map'
-                ],
-                [
-                    'label' => __('Objetivos Estratégicos'),
-                    'route' => 'objetivos.index',
-                    'icon' => 'bullseye'
-                ],
-                [
-                    'label' => __('Planos de Ação'),
-                    'route' => 'planos.index',
-                    'icon' => 'list-task'
-                ],
-                [
-                    'label' => __('Indicadores'),
-                    'route' => 'indicadores.index',
-                    'icon' => 'graph-up'
-                ],
-                [
-                    'label' => __('Riscos'),
-                    'route' => 'riscos.index',
-                    'icon' => 'exclamation-triangle'
-                ],
-                [
-                    'label' => __('Auditoria'),
-                    'route' => 'audit.index',
-                    'icon' => 'shield-lock',
-                    'can' => 'isSuperAdmin' // Vou adicionar suporte a 'can' no partial da sidebar se necessário, ou filtrar aqui.
+                    'label' => __('Administração'),
+                    'icon' => 'sliders',
+                    'id' => 'nav-admin',
+                    'can' => 'isSuperAdmin',
+                    'children' => [
+                        [
+                            'label' => __('Organizações'),
+                            'route' => 'organizacoes.index',
+                            'icon' => 'building'
+                        ],
+                        [
+                            'label' => __('Usuários'),
+                            'route' => 'usuarios.index',
+                            'icon' => 'people'
+                        ],
+                        [
+                            'label' => __('Graus de Satisfação'),
+                            'route' => 'graus-satisfacao.index',
+                            'icon' => 'palette'
+                        ],
+                    ]
                 ],
             ];
 
-            // Filtro de navegação por permissão
-            $appNavigation = array_filter($appNavigation, function($item) {
-                if (isset($item['can'])) {
-                    return auth()->user()->isSuperAdmin();
-                }
-                return true;
-            });
+            // Filtro de navegação por permissão (recursivo)
+            $filterNavigation = function($items) use (&$filterNavigation) {
+                return array_filter(array_map(function($item) use ($filterNavigation) {
+                    // Verifica permissão do item pai
+                    if (isset($item['can']) && !auth()->user()->{$item['can']}()) {
+                        return null;
+                    }
+                    
+                    // Filtra filhos recursivamente
+                    if (isset($item['children'])) {
+                        $item['children'] = $filterNavigation($item['children']);
+                        // Se ficou sem filhos após filtro, remove o pai (opcional, mas bom pra admin vazio)
+                        if (empty($item['children'])) {
+                            return null;
+                        }
+                    }
+                    
+                    return $item;
+                }, $items));
+            };
+
+            $appNavigation = $filterNavigation($appNavigation);
         @endphp
 
         <div class="app-shell d-flex min-vh-100">
@@ -233,6 +318,9 @@
         </div>
 
         @stack('modals')
+
+        <!-- Chart.js for data visualization -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
         @livewireScripts
 

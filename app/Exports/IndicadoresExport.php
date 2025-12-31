@@ -18,11 +18,11 @@ class IndicadoresExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        $query = Indicador::query()->with(['objetivoEstrategico', 'planoDeAcao']);
+        $query = Indicador::query()->with(['objetivo', 'planoDeAcao']);
 
         if ($this->organizacaoId) {
             $query->whereHas('organizacoes', function($q) {
-                $q->where('public.tab_organizacoes.cod_organizacao', $this->organizacaoId);
+                $q->where('tab_organizacoes.cod_organizacao', $this->organizacaoId);
             })->orWhereHas('planoDeAcao', function($q) {
                 $q->where('cod_organizacao', $this->organizacaoId);
             });
@@ -45,8 +45,8 @@ class IndicadoresExport implements FromCollection, WithHeadings, WithMapping
 
     public function map($indicador): array
     {
-        $vinculo = $indicador->cod_objetivo_estrategico 
-            ? 'Objetivo: ' . $indicador->objetivoEstrategico->nom_objetivo_estrategico 
+        $vinculo = $indicador->cod_objetivo 
+            ? 'Objetivo: ' . $indicador->objetivo->nom_objetivo 
             : 'Plano: ' . $indicador->planoDeAcao->dsc_plano_de_acao;
 
         return [

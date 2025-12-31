@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.tab_risco_objetivo', function (Blueprint $table) {
-            $table->foreignUuid('cod_risco')->references('cod_risco')->on('pei.tab_risco')->cascadeOnDelete();
-            $table->foreignUuid('cod_objetivo_estrategico')->references('cod_objetivo_estrategico')->on('pei.tab_objetivo_estrategico')->cascadeOnDelete();
+        Schema::create('tab_risco_objetivo', function (Blueprint $table) {
+            $table->foreignUuid('cod_risco')->references('cod_risco')->on('tab_risco')->cascadeOnDelete();
+            $table->foreignUuid('cod_objetivo')->references('cod_objetivo')->on('tab_objetivo_estrategico')->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();
 
             // Chave primária composta
-            $table->primary(['cod_risco', 'cod_objetivo_estrategico'], 'pk_risco_objetivo');
+            $table->primary(['cod_risco', 'cod_objetivo'], 'pk_risco_objetivo');
         });
     }
 
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_risco_objetivo');
+        Schema::dropIfExists('tab_risco_objetivo');
     }
 };

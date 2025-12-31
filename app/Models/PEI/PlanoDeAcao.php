@@ -19,7 +19,7 @@ class PlanoDeAcao extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_plano_de_acao';
+    protected $table = 'tab_plano_de_acao';
 
     /**
      * Chave primária
@@ -40,7 +40,7 @@ class PlanoDeAcao extends Model implements Auditable
      * Atributos mass assignable
      */
     protected $fillable = [
-        'cod_objetivo_estrategico',
+        'cod_objetivo',
         'cod_tipo_execucao',
         'cod_organizacao',
         'num_nivel_hierarquico_apresentacao',
@@ -64,11 +64,11 @@ class PlanoDeAcao extends Model implements Auditable
     ];
 
     /**
-     * Relacionamento: Objetivo Estratégico
+     * Relacionamento: Objetivo
      */
-    public function objetivoEstrategico(): BelongsTo
+    public function objetivo(): BelongsTo
     {
-        return $this->belongsTo(ObjetivoEstrategico::class, 'cod_objetivo_estrategico', 'cod_objetivo_estrategico');
+        return $this->belongsTo(Objetivo::class, 'cod_objetivo', 'cod_objetivo');
     }
 
     /**
@@ -104,8 +104,57 @@ class PlanoDeAcao extends Model implements Auditable
     }
 
     /**
-     * Métodos auxiliares
+     * Retorna a definição da legenda de status para os Planos de Ação (Fonte Única da Verdade)
      */
+    public static function getStatusLegend(): array
+    {
+        return [
+            'nao_iniciado' => [
+                'label' => 'Não Iniciado / Sem Aferição',
+                'color' => '#475569',
+                'class' => 'secondary'
+            ],
+            'em_andamento' => [
+                'label' => 'Em Andamento / Atrasado',
+                'color' => '#F3C72B',
+                'class' => 'warning'
+            ],
+            'concluido' => [
+                'label' => 'Todos os Planos Concluídos',
+                'color' => '#429B22',
+                'class' => 'success'
+            ],
+        ];
+    }
+
+    /**
+     * Retorna a cor do Grau de Satisfação do Plano (Padrão do Projeto)
+     * Cinza (secondary): Não Iniciado / Suspenso
+     * Laranja (warning): Em Andamento / Atrasado
+     * Verde (success): Concluído
+     */
+    public function getSatisfacaoColor(): string
+    {
+        return match($this->bln_status) {
+            'Concluído'    => '#429B22', // success
+            'Em Andamento' => '#F3C72B', // warning
+            'Atrasado'     => '#F3C72B', // warning
+            default        => '#475569', // secondary
+        };
+    }
+
+    /**
+     * Retorna a classe CSS para o texto (contraste)
+     */
+    public function getSatisfacaoTextClass(): string
+    {
+        return match($this->bln_status) {
+            'Em Andamento' => 'text-dark',
+            'Atrasado'     => 'text-dark',
+            'Concluído'    => 'text-white',
+            default        => 'text-white',
+        };
+    }
 
     /**
      * Verifica se plano está atrasado
