@@ -9,6 +9,7 @@ use App\Models\PEI\PlanoDeAcao;
 use App\Models\PEI\Entrega;
 use App\Models\PEI\EntregaComentario;
 use App\Models\PEI\Perspectiva;
+use App\Models\PEI\GrauSatisfacao;
 use App\Models\Organization;
 use App\Models\Risco;
 use Livewire\Component;
@@ -24,13 +25,14 @@ class Index extends Component
     public $peiAtivo;
 
     protected $listeners = [
-        'organizacaoSelecionada' => 'atualizarOrganizacao'
+        'organizacaoSelecionada' => 'atualizarOrganizacao',
+        'peiSelecionado' => 'atualizarPEI'
     ];
 
     public function mount()
     {
         $this->organizacaoId = Session::get('organizacao_selecionada_id');
-        $this->peiAtivo = PEI::ativos()->first();
+        $this->carregarPEI();
         $this->carregarNomeOrganizacao();
     }
 
@@ -38,6 +40,36 @@ class Index extends Component
     {
         $this->organizacaoId = $id;
         $this->carregarNomeOrganizacao();
+        $this->dispararAtualizacaoGraficos();
+    }
+
+    public function atualizarPEI($id)
+    {
+        $this->peiAtivo = PEI::find($id);
+        $this->dispararAtualizacaoGraficos();
+    }
+
+    private function dispararAtualizacaoGraficos()
+    {
+        $this->dispatch('charts-updated', [
+            'bsc' => $this->getChartBSC(),
+            'riscos' => $this->getChartRiscosNivel(),
+            'planos' => $this->getChartPlanos(),
+        ]);
+    }
+
+    private function carregarPEI()
+    {
+        $peiId = Session::get('pei_selecionado_id');
+
+        if ($peiId) {
+            $this->peiAtivo = PEI::find($peiId);
+        }
+
+        // Fallback: se não há PEI na sessão, pega o primeiro ativo
+        if (!$this->peiAtivo) {
+            $this->peiAtivo = PEI::ativos()->first();
+        }
     }
 
     private function carregarNomeOrganizacao()
@@ -57,6 +89,7 @@ class Index extends Component
         return view('livewire.dashboard.index', [
             'stats' => $stats,
             'minhasEntregas' => $this->getMinhasEntregas(),
+            'entregasAgrupadas' => $this->getMinhasEntregasAgrupadas(),
             'comentariosRecentes' => $this->getComentariosRecentes(),
             'chartBSC' => $this->getChartBSC(),
             'chartRiscosNivel' => $this->getChartRiscosNivel(),
@@ -68,55 +101,134 @@ class Index extends Component
     {
         $codPei = $this->peiAtivo?->cod_pei;
 
-        // Cálculo de Progresso dos Planos
+        // Dados dos Planos - FILTRA POR PEI via Objetivo → Perspectiva
         $planosQuery = PlanoDeAcao::query();
+        if ($codPei) {
+            $planosQuery->whereHas('objetivo.perspectiva', function($q) use ($codPei) {
+                $q->where('cod_pei', $codPei);
+            });
+        }
         if ($this->organizacaoId) {
             $planosQuery->where('cod_organizacao', $this->organizacaoId);
         }
         $planos = $planosQuery->get();
-        
+        $totalPlanos = $planos->count();
+        $planosConcluidos = $planos->where('bln_status', 'Concluído')->count();
+
         $totalProgresso = 0;
         foreach ($planos as $plano) {
             $totalProgresso += $plano->calcularProgressoEntregas();
         }
-        $mediaProgresso = $planos->count() > 0 ? $totalProgresso / $planos->count() : 0;
+        $mediaProgresso = $totalPlanos > 0 ? $totalProgresso / $totalPlanos : 0;
+
+        // Dados dos Objetivos
+        $totalObjetivos = $this->peiAtivo ? Objetivo::whereHas('perspectiva', function($q) use ($codPei) {
+            $q->where('cod_pei', $codPei);
+        })->count() : 0;
+
+        // Dados dos Indicadores
+        $indicadoresQuery = Indicador::whereHas('objetivo.perspectiva', function($q) use ($codPei) {
+            $q->where('cod_pei', $codPei);
+        });
+        $totalIndicadores = $indicadoresQuery->count();
+
+        // Dados dos Riscos
+        $riscosQuery = Risco::query();
+        if ($this->organizacaoId) {
+            $riscosQuery->where('cod_organizacao', $this->organizacaoId);
+        }
+        if ($codPei) {
+            $riscosQuery->where('cod_pei', $codPei);
+        }
+        $totalRiscos = $riscosQuery->count();
+        $riscosCriticos = (clone $riscosQuery)->criticos()->count();
+
+        // Dados das Perspectivas
+        $totalPerspectivas = $this->peiAtivo ? Perspectiva::where('cod_pei', $codPei)->count() : 0;
 
         return [
-            'totalObjetivos' => $this->peiAtivo ? Objetivo::whereHas('perspectiva', function($q) use ($codPei) {
-                $q->where('cod_pei', $codPei);
-            })->count() : 0,
+            // Objetivos
+            'totalObjetivos' => $totalObjetivos,
+            'totalPerspectivas' => $totalPerspectivas,
+            'totalIndicadores' => $totalIndicadores,
 
+            // Planos
             'progressoPlanos' => $mediaProgresso,
+            'totalPlanos' => $totalPlanos,
+            'planosConcluidos' => $planosConcluidos,
 
-            'riscosCriticos' => $this->organizacaoId ? Risco::where('cod_organizacao', $this->organizacaoId)
-                ->where('cod_pei', $codPei)
-                ->criticos()
-                ->count() : 0,
+            // Riscos
+            'riscosCriticos' => $riscosCriticos,
+            'totalRiscos' => $totalRiscos,
         ];
     }
 
     private function getMinhasEntregas()
     {
-        return Entrega::whereHas('responsaveis', function($q) {
+        $codPei = $this->peiAtivo?->cod_pei;
+
+        $query = Entrega::whereHas('responsaveis', function($q) {
             $q->where('users.id', Auth::id());
         })
         ->where('bln_status', '!=', 'Concluído')
-        ->with('planoDeAcao')
-        ->orderBy('dte_prazo')
-        ->get();
+        ->raiz()
+        ->ativas()
+        ->with(['planoDeAcao.objetivo']);
+
+        // Filtra por PEI via PlanoDeAcao → Objetivo → Perspectiva
+        if ($codPei) {
+            $query->whereHas('planoDeAcao.objetivo.perspectiva', function($q) use ($codPei) {
+                $q->where('cod_pei', $codPei);
+            });
+        }
+
+        if ($this->organizacaoId) {
+            $query->whereHas('planoDeAcao', function($q) {
+                $q->where('cod_organizacao', $this->organizacaoId);
+            });
+        }
+
+        return $query->orderBy('dte_prazo')->get();
+    }
+
+    private function getMinhasEntregasAgrupadas()
+    {
+        $entregas = $this->getMinhasEntregas();
+
+        // Agrupa por Plano de Ação
+        return $entregas->groupBy(function($entrega) {
+            return $entrega->planoDeAcao->cod_plano_de_acao;
+        })->map(function($grupo) {
+            $plano = $grupo->first()->planoDeAcao;
+            return [
+                'plano' => $plano,
+                'objetivo' => $plano->objetivo,
+                'entregas' => $grupo,
+                'total' => $grupo->count(),
+            ];
+        });
     }
 
     private function getComentariosRecentes()
     {
-        return EntregaComentario::with(['usuario', 'entrega'])
-            ->whereHas('entrega.planoDeAcao', function($q) {
-                if ($this->organizacaoId) {
-                    $q->where('cod_organizacao', $this->organizacaoId);
-                }
-            })
-            ->latest()
-            ->take(5)
-            ->get();
+        $codPei = $this->peiAtivo?->cod_pei;
+
+        $query = EntregaComentario::with(['usuario', 'entrega']);
+
+        // Filtra por PEI via Entrega → PlanoDeAcao → Objetivo → Perspectiva
+        if ($codPei) {
+            $query->whereHas('entrega.planoDeAcao.objetivo.perspectiva', function($q) use ($codPei) {
+                $q->where('cod_pei', $codPei);
+            });
+        }
+
+        if ($this->organizacaoId) {
+            $query->whereHas('entrega.planoDeAcao', function($q) {
+                $q->where('cod_organizacao', $this->organizacaoId);
+            });
+        }
+
+        return $query->latest()->take(5)->get();
     }
 
     private function getChartBSC()
@@ -171,13 +283,23 @@ class Index extends Component
 
     private function getChartPlanos()
     {
+        $codPei = $this->peiAtivo?->cod_pei;
+
         $planosQuery = PlanoDeAcao::query();
+
+        // Filtra por PEI via Objetivo → Perspectiva
+        if ($codPei) {
+            $planosQuery->whereHas('objetivo.perspectiva', function($q) use ($codPei) {
+                $q->where('cod_pei', $codPei);
+            });
+        }
+
         if ($this->organizacaoId) {
             $planosQuery->where('cod_organizacao', $this->organizacaoId);
         }
-        
+
         $planos = $planosQuery->get();
-        
+
         $status = [
             'Concluído' => ['count' => 0, 'color' => '#198754'],
             'Em Andamento' => ['count' => 0, 'color' => '#0d6efd'],
@@ -201,10 +323,10 @@ class Index extends Component
 
     private function getCorAtingimento($percentual)
     {
-        if ($percentual >= 100) return '#198754';
-        if ($percentual >= 80) return '#0d6efd';
-        if ($percentual >= 60) return '#0dcaf0';
-        if ($percentual >= 40) return '#ffc107';
-        return '#dc3545';
+        $grau = GrauSatisfacao::where('vlr_minimo', '<=', $percentual)
+            ->where('vlr_maximo', '>=', $percentual)
+            ->first();
+
+        return $grau?->cor ?? '#6c757d';
     }
 }
