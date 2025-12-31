@@ -15,38 +15,49 @@ class SeletorPEI extends Component
     {
         $this->carregarPEIs();
 
-        // Inicializar com a sessão ou com o primeiro PEI ativo
+        // Inicializar com a sessão
         $this->selecionadoId = Session::get('pei_selecionado_id');
 
+        // Se não houver PEI na sessão após o login, define o padrão mas não redireciona (evita loop e erro de retorno)
         if (!$this->selecionadoId && $this->peis->isNotEmpty()) {
-            // Tenta pegar o primeiro PEI ativo, senão pega o primeiro da lista
             $peiAtivo = $this->peis->first(fn($p) => $p->isAtivo()) ?? $this->peis->first();
-            $this->selecionar($peiAtivo->cod_pei);
+            $this->definirSessao($peiAtivo);
         }
     }
 
     public function carregarPEIs()
     {
-        // Carrega todos os PEIs ordenados por ano de início (mais recente primeiro)
         $this->peis = PEI::orderBy('num_ano_inicio_pei', 'desc')->get();
     }
 
+    /**
+     * Apenas define os dados na sessão
+     */
+    private function definirSessao(PEI $pei)
+    {
+        $this->selecionadoId = $pei->cod_pei;
+        Session::put('pei_selecionado_id', $pei->cod_pei);
+        Session::put('pei_selecionado_dsc', $pei->dsc_pei);
+        Session::put('pei_selecionado_periodo', $pei->num_ano_inicio_pei . '-' . $pei->num_ano_fim_pei);
+    }
+
+    /**
+     * Ação disparada pelo clique do usuário no dropdown
+     */
     public function selecionar($id)
     {
         $pei = PEI::find($id);
 
         if ($pei) {
-            $this->selecionadoId = $id;
-            Session::put('pei_selecionado_id', $id);
-            Session::put('pei_selecionado_dsc', $pei->dsc_pei);
-            Session::put('pei_selecionado_periodo', $pei->num_ano_inicio_pei . '-' . $pei->num_ano_fim_pei);
+            $this->definirSessao($pei);
 
-            // Dispara evento global para outros componentes que podem estar ouvindo
+            // Dispara evento global para componentes na mesma página
             $this->dispatch('peiSelecionado', id: $id);
 
-            // Refresh da página de forma compatível com wire:navigate
-            // Se estivermos em uma URL que depende do PEI, o redirect garante a atualização dos dados
-            return $this->redirect(request()->header('Referer'), navigate: true);
+            // Recarrega a página atual para garantir consistência total dos dados
+            // Usamos o header Referer para voltar à mesma URL, respeitando wire:navigate
+            $url = request()->header('Referer') ?? route('dashboard');
+            return $this->redirect($url, navigate: true);
         }
     }
 
