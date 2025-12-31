@@ -305,8 +305,16 @@
         document.addEventListener('livewire:navigated', () => { initChartsFromDOM(); });
         document.addEventListener('DOMContentLoaded', () => { initChartsFromDOM(); });
 
-        // Escuta evento do Livewire com dados atualizados
+        // Garante a reinicialização após atualização do poll (Livewire update)
         document.addEventListener('livewire:initialized', () => {
+            // Hook para rodar após qualquer atualização de DOM do Livewire
+            Livewire.hook('morph.updated', ({ el, component }) => {
+                // Se o elemento atualizado for o wrapper do dashboard, reinicializa
+                if (el.classList && el.classList.contains('dashboard-wrapper')) {
+                    initChartsFromDOM();
+                }
+            });
+
             Livewire.on('charts-updated', (data) => {
                 console.log('Charts updated:', data);
                 updateCharts(data[0]);
