@@ -14,11 +14,8 @@ class SeletorPEI extends Component
     public function mount()
     {
         $this->carregarPEIs();
-
-        // Inicializar com a sessão
         $this->selecionadoId = Session::get('pei_selecionado_id');
 
-        // Se não houver PEI na sessão após o login, define o padrão mas não redireciona (evita loop e erro de retorno)
         if (!$this->selecionadoId && $this->peis->isNotEmpty()) {
             $peiAtivo = $this->peis->first(fn($p) => $p->isAtivo()) ?? $this->peis->first();
             $this->definirSessao($peiAtivo);
@@ -30,9 +27,6 @@ class SeletorPEI extends Component
         $this->peis = PEI::orderBy('num_ano_inicio_pei', 'desc')->get();
     }
 
-    /**
-     * Apenas define os dados na sessão
-     */
     private function definirSessao(PEI $pei)
     {
         $this->selecionadoId = $pei->cod_pei;
@@ -41,9 +35,6 @@ class SeletorPEI extends Component
         Session::put('pei_selecionado_periodo', $pei->num_ano_inicio_pei . '-' . $pei->num_ano_fim_pei);
     }
 
-    /**
-     * Ação disparada pelo clique do usuário no dropdown
-     */
     public function selecionar($id)
     {
         $pei = PEI::find($id);
@@ -51,11 +42,21 @@ class SeletorPEI extends Component
         if ($pei) {
             $this->definirSessao($pei);
 
-            // Dispara evento global para componentes na mesma página
-            $this->dispatch('peiSelecionado', id: $id);
+            // --- INTELIGÊNCIA: Sincronizar com o Ano ---
+            $anoAtualSessao = (int) Session::get('ano_selecionado', date('Y'));
+            
+            // Se o ano atual da sessão não está no range do novo PEI
+            if ($anoAtualSessao < $pei->num_ano_inicio_pei || $anoAtualSessao > $pei->num_ano_fim_pei) {
+                // Tenta colocar no ano vigente se ele estiver no PEI, senão vai para o ano de início do PEI
+                $anoVigente = (int) date('Y');
+                if ($anoVigente >= $pei->num_ano_inicio_pei && $anoVigente <= $pei->num_ano_fim_pei) {
+                    Session::put('ano_selecionado', $anoVigente);
+                } else {
+                    Session::put('ano_selecionado', $pei->num_ano_inicio_pei);
+                }
+            }
 
-            // Recarrega a página atual para garantir consistência total dos dados
-            // Usamos o header Referer para voltar à mesma URL, respeitando wire:navigate
+            $this->dispatch('peiSelecionado', id: $id);
             $url = request()->header('Referer') ?? route('dashboard');
             return $this->redirect($url, navigate: true);
         }
