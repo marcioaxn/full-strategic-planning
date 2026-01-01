@@ -26,7 +26,8 @@ class Index extends Component
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
-        'peiSelecionado' => 'atualizarPEI'
+        'peiSelecionado' => 'atualizarPEI',
+        'anoSelecionado' => 'atualizarAno'
     ];
 
     public function mount()
@@ -34,6 +35,12 @@ class Index extends Component
         $this->organizacaoId = Session::get('organizacao_selecionada_id');
         $this->carregarPEI();
         $this->carregarNomeOrganizacao();
+    }
+
+    public function atualizarAno($ano)
+    {
+        // O ano já está na sessão, basta recarregar os dados do componente
+        $this->dispararAtualizacaoGraficos();
     }
 
     public function atualizarOrganizacao($id)
