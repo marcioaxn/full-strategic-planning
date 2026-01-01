@@ -150,8 +150,23 @@ class Indicador extends Model implements Auditable
      */
     public function calcularAtingimento(int $ano = null, int $mes = null): float
     {
-        $ano = $ano ?? now()->year;
-        $mes = $mes ?? ($ano == now()->year ? now()->month : 12);
+        // Pega o ano da sessão se não for passado
+        $ano = $ano ?? session('ano_selecionado', now()->year);
+        
+        // Determina o mês limite de forma inteligente
+        if ($mes === null) {
+            $anoAtual = now()->year;
+            if ($ano < $anoAtual) {
+                // Para anos que já passaram, considera o ano cheio (até Dezembro)
+                $mes = 12;
+            } elseif ($ano == $anoAtual) {
+                // Para o ano atual, considera o acumulado até o mês vigente (YTD)
+                $mes = now()->month;
+            } else {
+                // Para anos futuros, pode considerar 0 ou o primeiro mês se houver dados
+                $mes = 1;
+            }
+        }
 
         // Buscar evoluções do ano até o mês especificado
         $evolucoes = $this->evolucoes()

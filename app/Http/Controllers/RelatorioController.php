@@ -30,7 +30,7 @@ class RelatorioController extends Controller
         $organizacaoId = $organizacaoId ?? $request->query('organizacaoId') ?? session('organizacao_selecionada_id');
         if (!$organizacaoId) return back();
 
-        $ano = $request->query('ano') ?? date('Y');
+        $ano = $request->query('ano') ?? session('ano_selecionado') ?? date('Y');
         $periodo = $request->query('periodo') ?? 'anual';
         $perspectivaId = $request->query('perspectiva');
 

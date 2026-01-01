@@ -100,7 +100,19 @@ class Objetivo extends Model implements Auditable
      */
     public function calcularAtingimentoConsolidado(int $ano = null, int $mes = null): float
     {
-        $ano = $ano ?? now()->year;
+        $ano = $ano ?? session('ano_selecionado', now()->year);
+
+        // Determina o mês limite automaticamente se não for passado
+        if ($mes === null) {
+            $anoAtual = now()->year;
+            if ($ano < $anoAtual) {
+                $mes = 12;
+            } elseif ($ano == $anoAtual) {
+                $mes = now()->month;
+            } else {
+                $mes = 1;
+            }
+        }
 
         // Buscar indicadores diretos do objetivo
         $indicadoresDiretos = $this->indicadores()->with(['evolucoes', 'metasPorAno'])->get();
@@ -162,7 +174,7 @@ class Objetivo extends Model implements Auditable
      */
     public function getResumoDesempenho(int $ano = null): array
     {
-        $ano = $ano ?? now()->year;
+        $ano = $ano ?? session('ano_selecionado', now()->year);
 
         // Indicadores diretos
         $indicadoresDiretos = $this->indicadores()->with(['evolucoes', 'metasPorAno'])->get();
