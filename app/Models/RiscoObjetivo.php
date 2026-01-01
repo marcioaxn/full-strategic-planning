@@ -10,7 +10,7 @@ class RiscoObjetivo extends Model
 {
     use HasUuids;
 
-    protected $table = 'tab_risco_objetivo';
+    protected $table = 'pei.tab_risco_objetivo';
     protected $primaryKey = 'cod_risco_objetivo';
     protected $keyType = 'string';
     public $incrementing = false;

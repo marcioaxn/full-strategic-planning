@@ -405,7 +405,7 @@ Não esquecemos de nada:
    ```
 3. **Verificar se há PEI ativo:**
    ```sql
-   SELECT * FROM tab_pei
+   SELECT * FROM pei.tab_pei
    WHERE num_ano_inicio_pei <= EXTRACT(YEAR FROM CURRENT_DATE)
      AND num_ano_fim_pei >= EXTRACT(YEAR FROM CURRENT_DATE);
    ```

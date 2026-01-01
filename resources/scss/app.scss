@@ -1,9 +1,5 @@
 @use "bootstrap/scss/bootstrap";
-// Corrigido: Usa a sintaxe moderna do Sass (@use...with) para configurar o caminho da fonte
-// do Bootstrap Icons, resolvendo os caminhos dos arquivos de fonte no build do Vite.
-@use "bootstrap-icons/font/bootstrap-icons.scss" with (
-  $bootstrap-icons-font-dir: "bootstrap-icons/font/fonts"
-);
+@import "bootstrap-icons/font/bootstrap-icons.css";
 
 // ============================================================================
 // Livewire NProgress - Progress Bar Styles

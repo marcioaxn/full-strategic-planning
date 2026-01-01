@@ -253,7 +253,7 @@ O Dashboard atual possui poucos gráficos e informações. Para um CEO ou gestor
 ### 1. Remoção de Prefixos de Schema nas Tabelas
 
 **Problema Identificado:**
-Queries utilizando `DB::table()` e validações `exists:` estavam falhando porque incluíam prefixos de schema (`public.` ou ``) que não são necessários quando o `search_path` do PostgreSQL já está configurado corretamente no `config/database.php`.
+Queries utilizando `DB::table()` e validações `exists:` estavam falhando porque incluíam prefixos de schema (`public.` ou `pei.`) que não são necessários quando o `search_path` do PostgreSQL já está configurado corretamente no `config/database.php`.
 
 **Arquivos Afetados:**
 - `app/Livewire/Risco/GerenciarMitigacoes.php`
@@ -268,14 +268,14 @@ Queries utilizando `DB::table()` e validações `exists:` estavam falhando porqu
 - E outros ~10 arquivos
 
 **Solução Implementada:**
-Remoção de todos os prefixos `public.` e `` das referências a tabelas em queries `DB::table()`, validações `exists:`, e relacionamentos `whereHas()`.
+Remoção de todos os prefixos `public.` e `pei.` das referências a tabelas em queries `DB::table()`, validações `exists:`, e relacionamentos `whereHas()`.
 
 **Exemplo de Correção:**
 ```php
 // Antes (incorreto):
 ->whereExists(function($q) {
     $q->select(DB::raw(1))
-      ->from('tab_objetivo_estrategico')
+      ->from('pei.tab_objetivo_estrategico')
       ->whereColumn('tab_indicadores.cod_indicador', 'cod_indicador');
 })
 

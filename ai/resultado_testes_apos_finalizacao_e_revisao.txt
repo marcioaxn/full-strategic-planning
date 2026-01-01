@@ -1,6 +1,6 @@
 Claude, fiz vários testes onde era possível efetuar teste e a lista de partes que faltaram fazer, partes que não funcionam e melhorias é grande. Dessa forma, eu sugiro a criação de um novo roadmap, eu não sei o que diz as melhores práticas em relação a isso - se faz um novo roadmap ou mantém o antigo e agrega a lista que irei passar. Veja o que diz as boas práticas e siga dessa forma. Segue a lista abaixo, tentarei ser claro mais caso haja alguma dúvida é só questionar:
 
-1.  no projeto está declarado em Models, componentes Livewire ou Controllers [public.nome_tabela] e seguindo as boas práticas, não é necessário declarar a tabela public, apenas o nome da tabela, uma vez que os schemas estão declarados no arquivo database.php. Dessa forma é necessário efetuar uma varredura e retirar [public.] onde estiver declarado. Aliás, o mesmo deve ser feito se houver a declaração [nome_tabela];
+1.  no projeto está declarado em Models, componentes Livewire ou Controllers [public.nome_tabela] e seguindo as boas práticas, não é necessário declarar a tabela public, apenas o nome da tabela, uma vez que os schemas estão declarados no arquivo database.php. Dessa forma é necessário efetuar uma varredura e retirar [public.] onde estiver declarado. Aliás, o mesmo deve ser feito se houver a declaração [pei.nome_tabela];
 
 2.  a parte de [Organizações] não é possível inserir ou editar devido ao problema descrito no item [1.] quanto ao [public.];
 

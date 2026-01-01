@@ -12,9 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tab_risco', function (Blueprint $table) {
+        Schema::create('pei.tab_risco', function (Blueprint $table) {
             $table->uuid('cod_risco')->primary()->default(DB::raw('gen_random_uuid()'));
-            $table->foreignUuid('cod_pei')->references('cod_pei')->on('tab_pei')->cascadeOnDelete();
+            $table->foreignUuid('cod_pei')->references('cod_pei')->on('pei.tab_pei')->cascadeOnDelete();
             $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('tab_organizacoes')->cascadeOnDelete();
             $table->integer('num_codigo_risco')->nullable(false); // Auto-incremento por PEI (gerenciado pela aplicação)
             $table->string('dsc_titulo', 255)->nullable(false);
@@ -40,9 +40,9 @@ return new class extends Migration
         });
 
         // Validações CHECK via SQL raw (PostgreSQL)
-        DB::statement('ALTER TABLE tab_risco ADD CONSTRAINT chk_probabilidade CHECK (num_probabilidade >= 1 AND num_probabilidade <= 5)');
-        DB::statement('ALTER TABLE tab_risco ADD CONSTRAINT chk_impacto CHECK (num_impacto >= 1 AND num_impacto <= 5)');
-        DB::statement('ALTER TABLE tab_risco ADD CONSTRAINT chk_nivel_risco CHECK (num_nivel_risco >= 1 AND num_nivel_risco <= 25)');
+        DB::statement('ALTER TABLE pei.tab_risco ADD CONSTRAINT chk_probabilidade CHECK (num_probabilidade >= 1 AND num_probabilidade <= 5)');
+        DB::statement('ALTER TABLE pei.tab_risco ADD CONSTRAINT chk_impacto CHECK (num_impacto >= 1 AND num_impacto <= 5)');
+        DB::statement('ALTER TABLE pei.tab_risco ADD CONSTRAINT chk_nivel_risco CHECK (num_nivel_risco >= 1 AND num_nivel_risco <= 25)');
     }
 
     /**
@@ -50,6 +50,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tab_risco');
+        Schema::dropIfExists('pei.tab_risco');
     }
 };

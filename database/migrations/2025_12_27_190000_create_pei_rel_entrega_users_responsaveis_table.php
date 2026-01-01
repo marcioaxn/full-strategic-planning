@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         // Criar tabela pivô para múltiplos responsáveis
-        Schema::create('rel_entrega_users_responsaveis', function (Blueprint $table) {
+        Schema::create('pei.rel_entrega_users_responsaveis', function (Blueprint $table) {
             $table->uuid('cod_entrega');
             $table->uuid('cod_usuario');
             
@@ -21,7 +21,7 @@ return new class extends Migration
             
             $table->foreign('cod_entrega')
                   ->references('cod_entrega')
-                  ->on('tab_entregas')
+                  ->on('pei.tab_entregas')
                   ->cascadeOnDelete();
                   
             $table->foreign('cod_usuario')
@@ -33,7 +33,7 @@ return new class extends Migration
         });
 
         // Migrar dados existentes da coluna cod_responsavel para a nova tabela pivô
-        $entregasComResponsavel = DB::table('tab_entregas')
+        $entregasComResponsavel = DB::table('pei.tab_entregas')
             ->whereNotNull('cod_responsavel')
             ->select('cod_entrega', 'cod_responsavel')
             ->get();
@@ -42,7 +42,7 @@ return new class extends Migration
             // Verifica se o usuário ainda existe (para evitar erro de FK)
             $userExists = DB::table('users')->where('id', $entrega->cod_responsavel)->exists();
             if ($userExists) {
-                DB::table('rel_entrega_users_responsaveis')->insert([
+                DB::table('pei.rel_entrega_users_responsaveis')->insert([
                     'cod_entrega' => $entrega->cod_entrega,
                     'cod_usuario' => $entrega->cod_responsavel,
                     'created_at' => now(),
@@ -52,7 +52,7 @@ return new class extends Migration
         }
 
         // Comentário na tabela
-        DB::statement("COMMENT ON TABLE rel_entrega_users_responsaveis IS 'Tabela pivô para permitir múltiplos responsáveis por entrega (estilo Notion).'");
+        DB::statement("COMMENT ON TABLE pei.rel_entrega_users_responsaveis IS 'Tabela pivô para permitir múltiplos responsáveis por entrega (estilo Notion).'");
     }
 
     /**
@@ -60,6 +60,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rel_entrega_users_responsaveis');
+        Schema::dropIfExists('pei.rel_entrega_users_responsaveis');
     }
 };

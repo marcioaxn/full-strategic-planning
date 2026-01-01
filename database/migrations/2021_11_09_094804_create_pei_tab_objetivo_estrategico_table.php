@@ -12,12 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tab_objetivo_estrategico', function (Blueprint $table) {
+        Schema::create('pei.tab_objetivo_estrategico', function (Blueprint $table) {
             $table->uuid('cod_objetivo')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->text('nom_objetivo')->nullable(false);
             $table->text('dsc_objetivo')->nullable(false);
             $table->smallInteger('num_nivel_hierarquico_apresentacao')->nullable(false);
-            $table->foreignUuid('cod_perspectiva')->references('cod_perspectiva')->on('tab_perspectiva')->cascadeOnDelete();
+            $table->foreignUuid('cod_perspectiva')->references('cod_perspectiva')->on('pei.tab_perspectiva')->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tab_objetivo_estrategico');
+        Schema::dropIfExists('pei.tab_objetivo_estrategico');
     }
 };

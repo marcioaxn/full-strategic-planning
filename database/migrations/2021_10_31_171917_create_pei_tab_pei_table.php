@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tab_pei', function (Blueprint $table) {
+        Schema::create('pei.tab_pei', function (Blueprint $table) {
             $table->uuid('cod_pei')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->text('dsc_pei')->nullable(false);
             $table->smallInteger('num_ano_inicio_pei')->nullable(false);
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tab_pei');
+        Schema::dropIfExists('pei.tab_pei');
     }
 };

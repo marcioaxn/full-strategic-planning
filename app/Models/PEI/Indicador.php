@@ -20,7 +20,7 @@ class Indicador extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_indicador';
+    protected $table = 'pei.tab_indicador';
 
     /**
      * Chave primária
@@ -112,7 +112,7 @@ class Indicador extends Model implements Auditable
     {
         return $this->belongsToMany(
             Organization::class,
-            'rel_indicador_objetivo_organizacao',
+            'pei.rel_indicador_objetivo_organizacao',
             'cod_indicador',
             'cod_organizacao',
             'cod_indicador',

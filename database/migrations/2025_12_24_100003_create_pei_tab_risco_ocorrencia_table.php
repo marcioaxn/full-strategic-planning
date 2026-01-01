@@ -12,9 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tab_risco_ocorrencia', function (Blueprint $table) {
+        Schema::create('pei.tab_risco_ocorrencia', function (Blueprint $table) {
             $table->uuid('cod_ocorrencia')->primary()->default(DB::raw('gen_random_uuid()'));
-            $table->foreignUuid('cod_risco')->references('cod_risco')->on('tab_risco')->cascadeOnDelete();
+            $table->foreignUuid('cod_risco')->references('cod_risco')->on('pei.tab_risco')->cascadeOnDelete();
             $table->date('dte_ocorrencia')->nullable(false);
             $table->text('txt_descricao_ocorrencia')->nullable(false);
             $table->decimal('vlr_impacto_financeiro', 15, 2)->nullable(true);
@@ -34,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tab_risco_ocorrencia');
+        Schema::dropIfExists('pei.tab_risco_ocorrencia');
     }
 };

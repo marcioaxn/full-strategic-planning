@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tab_nivel_hierarquico', function (Blueprint $table) {
+        Schema::create('pei.tab_nivel_hierarquico', function (Blueprint $table) {
             $table->smallInteger('num_nivel_hierarquico_apresentacao')->primary();
             $table->timestamps();
             $table->softDeletes();
@@ -20,7 +20,7 @@ return new class extends Migration
 
         // Inserir 100 níveis hierárquicos
         for ($cont = 1; $cont <= 100; $cont++) {
-            DB::table('tab_nivel_hierarquico')->insert([
+            DB::table('pei.tab_nivel_hierarquico')->insert([
                 'num_nivel_hierarquico_apresentacao' => $cont,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -33,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tab_nivel_hierarquico');
+        Schema::dropIfExists('pei.tab_nivel_hierarquico');
     }
 };

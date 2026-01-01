@@ -164,27 +164,27 @@
                     'children' => [
                         [
                             'label' => __('Ciclos PEI'),
-                            'route' => 'ciclos',
+                            'route' => 'pei.ciclos',
                             'icon' => 'calendar-range'
                         ],
                         [
                             'label' => __('Identidade Estratégica'),
-                            'route' => 'index',
+                            'route' => 'pei.index',
                             'icon' => 'clipboard-data'
                         ],
                         [
                             'label' => __('Análise SWOT'),
-                            'route' => 'swot',
+                            'route' => 'pei.swot',
                             'icon' => 'grid-3x3-gap'
                         ],
                         [
                             'label' => __('Análise PESTEL'),
-                            'route' => 'pestel',
+                            'route' => 'pei.pestel',
                             'icon' => 'globe2'
                         ],
                         [
                             'label' => __('Perspectivas'),
-                            'route' => 'perspectivas',
+                            'route' => 'pei.perspectivas',
                             'icon' => 'layers'
                         ],
                         [
@@ -219,7 +219,7 @@
                         ],
                         [
                             'label' => __('Mapa Estratégico'),
-                            'route' => 'mapa',
+                            'route' => 'pei.mapa',
                             'icon' => 'map'
                         ],
                     ]

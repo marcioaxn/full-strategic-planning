@@ -44,8 +44,8 @@ app/
         │   ├── FormUsuario.php
         │   └── PerfilUsuario.php
         ├── PEI/
-        │   ├── Listarphp
-        │   └── Formphp
+        │   ├── ListarPEI.php
+        │   └── FormPEI.php
         ├── Identidade/
         │   ├── MissaoVisao.php
         │   ├── ListarValores.php

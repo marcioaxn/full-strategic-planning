@@ -16,7 +16,7 @@ class Risco extends Model implements Auditable
 {
     use HasFactory, HasUuids, SoftDeletes, \OwenIt\Auditing\Auditable;
 
-    protected $table = 'tab_risco';
+    protected $table = 'pei.tab_risco';
     protected $primaryKey = 'cod_risco';
     protected $keyType = 'string';
     public $incrementing = false;
@@ -68,7 +68,7 @@ class Risco extends Model implements Auditable
     {
         return $this->belongsToMany(
             Objetivo::class,
-            'tab_risco_objetivo',
+            'pei.tab_risco_objetivo',
             'cod_risco',
             'cod_objetivo',
             'cod_risco',

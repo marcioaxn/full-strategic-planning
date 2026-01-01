@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tab_grau_satisfcao', function (Blueprint $table) {
+        Schema::create('pei.tab_grau_satisfcao', function (Blueprint $table) {
             $table->uuid('cod_grau_satisfcao')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->text('dsc_grau_satisfcao')->nullable(false);
             $table->string('cor')->nullable(false);
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tab_grau_satisfcao');
+        Schema::dropIfExists('pei.tab_grau_satisfcao');
     }
 };

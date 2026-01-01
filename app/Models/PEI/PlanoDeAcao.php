@@ -19,7 +19,7 @@ class PlanoDeAcao extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_plano_de_acao';
+    protected $table = 'pei.tab_plano_de_acao';
 
     /**
      * Chave primária

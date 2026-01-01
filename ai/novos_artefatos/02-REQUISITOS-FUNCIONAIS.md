@@ -301,7 +301,7 @@
 - Busca por descrição ou ano
 - Filtro por status (Ativo/Encerrado)
 
-**Tabela:** `tab_pei`
+**Tabela:** `pei.tab_pei`
 
 **Campos exibidos:**
 - `dsc_pei`
@@ -323,7 +323,7 @@
 - Criar automaticamente 4 perspectivas BSC padrão
 - Registrar em auditoria
 
-**Tabela:** `tab_pei`
+**Tabela:** `pei.tab_pei`
 
 **Permissão:** Apenas Super Administrador
 
@@ -338,7 +338,7 @@
 - Alertar se alterar datas de ciclo com dados já cadastrados
 - Registrar em auditoria
 
-**Tabela:** `tab_pei`
+**Tabela:** `pei.tab_pei`
 
 **Permissão:** Apenas Super Administrador
 
@@ -353,7 +353,7 @@
 - Setar `deleted_at`
 - Registrar em auditoria
 
-**Tabela:** `tab_pei`
+**Tabela:** `pei.tab_pei`
 
 **Permissão:** Apenas Super Administrador
 
@@ -374,7 +374,7 @@
 - Filtro por organização (dropdown)
 - Filtro por ciclo PEI
 
-**Tabelas:** `tab_missao_visao_valores`, `tab_valores`
+**Tabelas:** `pei.tab_missao_visao_valores`, `pei.tab_valores`
 
 **Campos exibidos:**
 - Missão: `dsc_missao`
@@ -396,7 +396,7 @@
 - Versionamento via auditoria
 - Registrar em auditoria
 
-**Tabela:** `tab_missao_visao_valores`
+**Tabela:** `pei.tab_missao_visao_valores`
 
 **Permissão:** Super Admin (todas), Admin Unidade (sua unidade)
 
@@ -413,7 +413,7 @@
 - Ao salvar, gerar UUID
 - Registrar em auditoria
 
-**Tabela:** `tab_valores`
+**Tabela:** `pei.tab_valores`
 
 **Permissão:** Super Admin (todas), Admin Unidade (sua unidade)
 
@@ -427,7 +427,7 @@
 - Validação de campos
 - Registrar em auditoria
 
-**Tabela:** `tab_valores`
+**Tabela:** `pei.tab_valores`
 
 **Permissão:** Super Admin (todas), Admin Unidade (sua unidade)
 
@@ -440,7 +440,7 @@
 - Soft delete
 - Registrar em auditoria
 
-**Tabela:** `tab_valores`
+**Tabela:** `pei.tab_valores`
 
 **Permissão:** Super Admin (todas), Admin Unidade (sua unidade)
 
@@ -458,7 +458,7 @@
 - Filtro por ciclo PEI
 - As 4 perspectivas padrão: Financeira, Clientes, Processos Internos, Aprendizado e Crescimento
 
-**Tabela:** `tab_perspectiva`
+**Tabela:** `pei.tab_perspectiva`
 
 **Campos exibidos:**
 - `dsc_perspectiva`
@@ -477,7 +477,7 @@
 - Validação: não permitir nível duplicado no mesmo PEI
 - Registrar em auditoria
 
-**Tabela:** `tab_perspectiva`
+**Tabela:** `pei.tab_perspectiva`
 
 **Permissão:** Apenas Super Administrador
 
@@ -491,7 +491,7 @@
 - Validação de campos
 - Registrar em auditoria
 
-**Tabela:** `tab_perspectiva`
+**Tabela:** `pei.tab_perspectiva`
 
 **Permissão:** Apenas Super Administrador
 
@@ -505,7 +505,7 @@
 - Salvar ao soltar
 - Registrar em auditoria
 
-**Tabela:** `tab_perspectiva`
+**Tabela:** `pei.tab_perspectiva`
 
 **Permissão:** Apenas Super Administrador
 
@@ -527,7 +527,7 @@
 - Card de cada objetivo exibe KPIs vinculados (quantidade)
 - Indicador visual de performance (verde/amarelo/vermelho)
 
-**Tabela:** `tab_objetivo_estrategico`
+**Tabela:** `pei.tab_objetivo_estrategico`
 
 **Campos exibidos:**
 - `nom_objetivo_estrategico`
@@ -548,7 +548,7 @@
 - Gráfico de evolução dos KPIs
 - Timeline de alterações (auditoria)
 
-**Tabelas:** `tab_objetivo_estrategico`, `tab_futuro_almejado_objetivo_estrategico`, `tab_plano_de_acao`, `tab_indicador`
+**Tabelas:** `pei.tab_objetivo_estrategico`, `pei.tab_futuro_almejado_objetivo_estrategico`, `pei.tab_plano_de_acao`, `pei.tab_indicador`
 
 ### RF-07.3: Criar Objetivo
 
@@ -563,7 +563,7 @@
 - Ao salvar, gerar UUID
 - Registrar em auditoria
 
-**Tabela:** `tab_objetivo_estrategico`
+**Tabela:** `pei.tab_objetivo_estrategico`
 
 **Permissão:** Super Admin, Admin Unidade
 
@@ -577,7 +577,7 @@
 - Validação de campos
 - Registrar em auditoria
 
-**Tabela:** `tab_objetivo_estrategico`
+**Tabela:** `pei.tab_objetivo_estrategico`
 
 **Permissão:** Super Admin, Admin Unidade
 
@@ -591,7 +591,7 @@
 - Soft delete
 - Registrar em auditoria
 
-**Tabela:** `tab_objetivo_estrategico`
+**Tabela:** `pei.tab_objetivo_estrategico`
 
 **Permissão:** Super Admin, Admin Unidade
 
@@ -606,7 +606,7 @@
 - Permitir editar ou excluir
 - Registrar em auditoria
 
-**Tabela:** `tab_futuro_almejado_objetivo_estrategico`
+**Tabela:** `pei.tab_futuro_almejado_objetivo_estrategico`
 
 **Permissão:** Super Admin, Admin Unidade
 
@@ -630,7 +630,7 @@
 - Badge colorido por status
 - Indicador de atraso (se data fim < hoje e status != concluído)
 
-**Tabela:** `tab_plano_de_acao`
+**Tabela:** `pei.tab_plano_de_acao`
 
 **Campos exibidos:**
 - `cod_tipo_execucao` (Ação/Iniciativa/Projeto)
@@ -654,7 +654,7 @@
 - Exibir códigos PPA e LOA (se houver)
 - Timeline de alterações (auditoria)
 
-**Tabelas:** `tab_plano_de_acao`, `tab_entregas`, `tab_indicador`, `rel_users_tab_organizacoes_tab_perfil_acesso`
+**Tabelas:** `pei.tab_plano_de_acao`, `pei.tab_entregas`, `pei.tab_indicador`, `rel_users_tab_organizacoes_tab_perfil_acesso`
 
 ### RF-08.3: Criar Plano de Ação
 
@@ -676,7 +676,7 @@
 - Permitir adicionar responsáveis (multi-select de usuários)
 - Registrar em auditoria
 
-**Tabela:** `tab_plano_de_acao`
+**Tabela:** `pei.tab_plano_de_acao`
 
 **Permissão:** Super Admin, Admin Unidade
 
@@ -690,7 +690,7 @@
 - Validação de campos
 - Registrar em auditoria
 
-**Tabela:** `tab_plano_de_acao`
+**Tabela:** `pei.tab_plano_de_acao`
 
 **Permissão:** Super Admin, Admin Unidade, Gestor Responsável, Gestor Substituto
 
@@ -704,7 +704,7 @@
 - Soft delete
 - Registrar em auditoria
 
-**Tabela:** `tab_plano_de_acao`
+**Tabela:** `pei.tab_plano_de_acao`
 
 **Permissão:** Super Admin, Admin Unidade
 
@@ -724,7 +724,7 @@
 - Drag-and-drop para reordenar
 - Registrar em auditoria
 
-**Tabela:** `tab_entregas`
+**Tabela:** `pei.tab_entregas`
 
 **Permissão:** Super Admin, Admin Unidade, Gestor Responsável, Gestor Substituto
 
@@ -764,7 +764,7 @@
 - Indicador de farol (verde/amarelo/vermelho baseado na última medição)
 - Paginação
 
-**Tabela:** `tab_indicador`
+**Tabela:** `pei.tab_indicador`
 
 **Campos exibidos:**
 - `nom_indicador`
@@ -791,7 +791,7 @@
 - Lista de arquivos anexados
 - Timeline de alterações
 
-**Tabelas:** `tab_indicador`, `tab_linha_base_indicador`, `tab_meta_por_ano`, `tab_evolucao_indicador`, `tab_arquivos`
+**Tabelas:** `pei.tab_indicador`, `pei.tab_linha_base_indicador`, `pei.tab_meta_por_ano`, `pei.tab_evolucao_indicador`, `pei.tab_arquivos`
 
 ### RF-09.3: Criar Indicador
 
@@ -817,7 +817,7 @@
 - Ao salvar, gerar UUID
 - Registrar em auditoria
 
-**Tabela:** `tab_indicador`
+**Tabela:** `pei.tab_indicador`
 
 **Permissão:** Super Admin, Admin Unidade, Gestor Responsável, Gestor Substituto
 
@@ -832,7 +832,7 @@
 - Alertar se alterar tipo de vinculação (pode afetar relatórios)
 - Registrar em auditoria
 
-**Tabela:** `tab_indicador`
+**Tabela:** `pei.tab_indicador`
 
 **Permissão:** Super Admin, Admin Unidade, Gestor Responsável, Gestor Substituto
 
@@ -846,7 +846,7 @@
 - Soft delete em cascata (evolução, linha base, metas)
 - Registrar em auditoria
 
-**Tabela:** `tab_indicador`
+**Tabela:** `pei.tab_indicador`
 
 **Permissão:** Super Admin, Admin Unidade
 
@@ -861,7 +861,7 @@
 - Permitir editar se já existir
 - Registrar em auditoria
 
-**Tabela:** `tab_linha_base_indicador`
+**Tabela:** `pei.tab_linha_base_indicador`
 
 **Permissão:** Super Admin, Admin Unidade, Gestor Responsável, Gestor Substituto
 
@@ -877,7 +877,7 @@
 - Validação: não permitir ano duplicado
 - Registrar em auditoria
 
-**Tabela:** `tab_meta_por_ano`
+**Tabela:** `pei.tab_meta_por_ano`
 
 **Permissão:** Super Admin, Admin Unidade, Gestor Responsável, Gestor Substituto
 
@@ -898,7 +898,7 @@
 - Calcular percentual de atingimento vs. meta
 - Registrar em auditoria
 
-**Tabela:** `tab_evolucao_indicador`
+**Tabela:** `pei.tab_evolucao_indicador`
 
 **Permissão:** Super Admin, Admin Unidade, Gestor Responsável, Gestor Substituto
 
@@ -919,7 +919,7 @@
 - Permitir excluir arquivo
 - Registrar em auditoria
 
-**Tabela:** `tab_arquivos`
+**Tabela:** `pei.tab_arquivos`
 
 **Permissão:** Super Admin, Admin Unidade, Gestor Responsável, Gestor Substituto
 
@@ -929,12 +929,12 @@
 
 **Critérios de Aceitação:**
 - Calcular percentual de atingimento: (Realizado / Meta) * 100
-- Buscar faixa correspondente em `tab_grau_satisfacao`
+- Buscar faixa correspondente em `pei.tab_grau_satisfacao`
 - Exibir cor correspondente (verde/amarelo/vermelho)
 - Exibir descrição do grau de satisfação
 - Mostrar em cards, dashboards e relatórios
 
-**Tabela:** `tab_grau_satisfacao`
+**Tabela:** `pei.tab_grau_satisfacao`
 
 **Regra:**
 - Se percentual entre `vlr_minimo` e `vlr_maximo`: exibir `cor` e `dsc_grau_satisfacao`
@@ -955,7 +955,7 @@
 - Filtro por ciclo PEI
 - Filtro por perspectiva
 
-**Tabelas:** `tab_atividade_cadeia_valor`, `tab_processos_atividade_cadeia_valor`
+**Tabelas:** `pei.tab_atividade_cadeia_valor`, `pei.tab_processos_atividade_cadeia_valor`
 
 ### RF-10.2: Criar Atividade da Cadeia de Valor
 
@@ -969,7 +969,7 @@
 - Ao salvar, gerar UUID
 - Registrar em auditoria
 
-**Tabela:** `tab_atividade_cadeia_valor`
+**Tabela:** `pei.tab_atividade_cadeia_valor`
 
 **Permissão:** Super Admin, Admin Unidade
 
@@ -983,7 +983,7 @@
 - Validação de campos
 - Registrar em auditoria
 
-**Tabela:** `tab_atividade_cadeia_valor`
+**Tabela:** `pei.tab_atividade_cadeia_valor`
 
 **Permissão:** Super Admin, Admin Unidade
 
@@ -997,7 +997,7 @@
 - Soft delete em cascata (processos)
 - Registrar em auditoria
 
-**Tabela:** `tab_atividade_cadeia_valor`
+**Tabela:** `pei.tab_atividade_cadeia_valor`
 
 **Permissão:** Super Admin, Admin Unidade
 
@@ -1014,7 +1014,7 @@
 - Ao salvar, gerar UUID
 - Registrar em auditoria
 
-**Tabela:** `tab_processos_atividade_cadeia_valor`
+**Tabela:** `pei.tab_processos_atividade_cadeia_valor`
 
 **Permissão:** Super Admin, Admin Unidade
 
@@ -1028,7 +1028,7 @@
 - Validação de campos
 - Registrar em auditoria
 
-**Tabela:** `tab_processos_atividade_cadeia_valor`
+**Tabela:** `pei.tab_processos_atividade_cadeia_valor`
 
 **Permissão:** Super Admin, Admin Unidade
 
@@ -1041,7 +1041,7 @@
 - Soft delete
 - Registrar em auditoria
 
-**Tabela:** `tab_processos_atividade_cadeia_valor`
+**Tabela:** `pei.tab_processos_atividade_cadeia_valor`
 
 **Permissão:** Super Admin, Admin Unidade
 
@@ -1084,7 +1084,7 @@
 - Gráfico de % atingimento por objetivo (bar chart horizontal)
 - Opção de drill-down (clicar em objetivo para ver detalhes)
 
-**Tabelas:** `tab_objetivo_estrategico`, `tab_indicador`, `tab_plano_de_acao`
+**Tabelas:** `pei.tab_objetivo_estrategico`, `pei.tab_indicador`, `pei.tab_plano_de_acao`
 
 ### RF-11.3: Dashboard de Indicadores
 
@@ -1105,7 +1105,7 @@
   - Distribuição de faróis (quantos verdes/amarelos/vermelhos)
 - Alertas de indicadores sem lançamento (últimos 2 meses)
 
-**Tabelas:** `tab_indicador`, `tab_evolucao_indicador`, `tab_meta_por_ano`
+**Tabelas:** `pei.tab_indicador`, `pei.tab_evolucao_indicador`, `pei.tab_meta_por_ano`
 
 ### RF-11.4: Dashboard de Planos de Ação
 
@@ -1121,7 +1121,7 @@
 - Alertas de planos próximos ao vencimento
 - Gráfico de orçamento (previsto vs. realizado)
 
-**Tabelas:** `tab_plano_de_acao`
+**Tabelas:** `pei.tab_plano_de_acao`
 
 ### RF-11.5: Mapa Estratégico Interativo
 
@@ -1137,7 +1137,7 @@
 - Filtro por organização e PEI
 - Opção de exportar como imagem
 
-**Tabelas:** `tab_perspectiva`, `tab_objetivo_estrategico`
+**Tabelas:** `pei.tab_perspectiva`, `pei.tab_objetivo_estrategico`
 
 ---
 
@@ -1158,7 +1158,7 @@
   - Rodapé com data de geração
 - Botão "Exportar PDF"
 
-**Tabelas:** `tab_missao_visao_valores`, `tab_valores`
+**Tabelas:** `pei.tab_missao_visao_valores`, `pei.tab_valores`
 
 ### RF-12.2: Relatório de Objetivos Estratégicos
 
@@ -1173,7 +1173,7 @@
   - Totalizadores
 - Botões "Exportar PDF" e "Exportar Excel"
 
-**Tabelas:** `tab_objetivo_estrategico`, `tab_indicador`
+**Tabelas:** `pei.tab_objetivo_estrategico`, `pei.tab_indicador`
 
 ### RF-12.3: Relatório de Planos de Ação
 
@@ -1189,7 +1189,7 @@
   - Indicadores de atraso
 - Botões "Exportar PDF" e "Exportar Excel"
 
-**Tabelas:** `tab_plano_de_acao`, `rel_users_tab_organizacoes_tab_perfil_acesso`
+**Tabelas:** `pei.tab_plano_de_acao`, `rel_users_tab_organizacoes_tab_perfil_acesso`
 
 ### RF-12.4: Relatório de Indicadores
 
@@ -1205,7 +1205,7 @@
   - Análise de desvios
 - Botões "Exportar PDF" e "Exportar Excel"
 
-**Tabelas:** `tab_indicador`, `tab_evolucao_indicador`, `tab_meta_por_ano`
+**Tabelas:** `pei.tab_indicador`, `pei.tab_evolucao_indicador`, `pei.tab_meta_por_ano`
 
 ### RF-12.5: Relatório Executivo Consolidado
 
@@ -1245,7 +1245,7 @@
   - Arquivos anexados (links)
 - Botão "Exportar PDF"
 
-**Tabelas:** `tab_indicador`, `tab_evolucao_indicador`, `tab_arquivos`
+**Tabelas:** `pei.tab_indicador`, `pei.tab_evolucao_indicador`, `pei.tab_arquivos`
 
 ---
 
@@ -1342,7 +1342,7 @@
   - Alto: 10-15
   - Crítico: 16-25
 
-**Tabelas:** `tab_risco`
+**Tabelas:** `pei.tab_risco`
 
 ---
 
@@ -1360,7 +1360,7 @@
 - Responsáveis pelo risco
 - Botões de ação: Editar, Registrar Ocorrência, Nova Mitigação
 
-**Tabelas:** `tab_risco`, `tab_risco_objetivo`, `tab_risco_ocorrencia`, `tab_risco_mitigacao`
+**Tabelas:** `pei.tab_risco`, `pei.tab_risco_objetivo`, `pei.tab_risco_ocorrencia`, `pei.tab_risco_mitigacao`
 
 ---
 
@@ -1394,7 +1394,7 @@
 - Nível de Risco atualiza automaticamente ao mudar Probabilidade ou Impacto
 - Se Nível ≥ 16 (Crítico), notificar Super Admin e Admin Unidade
 
-**Tabelas:** `tab_risco`, `tab_risco_objetivo`
+**Tabelas:** `pei.tab_risco`, `pei.tab_risco_objetivo`
 
 ---
 
@@ -1413,7 +1413,7 @@
 - Mudança para status "Materializado" requer registro de ocorrência
 - Auditoria completa de todas as alterações
 
-**Tabelas:** `tab_risco`, `tab_risco_objetivo`
+**Tabelas:** `pei.tab_risco`, `pei.tab_risco_objetivo`
 
 ---
 
@@ -1431,7 +1431,7 @@
 - Não permitir exclusão se houver ocorrências registradas
 - Apenas Super Admin e Admin Unidade podem excluir
 
-**Tabelas:** `tab_risco`
+**Tabelas:** `pei.tab_risco`
 
 ---
 
@@ -1454,7 +1454,7 @@
 - Riscos críticos (nível ≥ 16) devem ter ao menos 1 plano de mitigação
 - Plano concluído não pode ser editado (apenas visualizado)
 
-**Tabelas:** `tab_risco_mitigacao`
+**Tabelas:** `pei.tab_risco_mitigacao`
 
 ---
 
@@ -1478,7 +1478,7 @@
 - Ocorrência deve ser vinculada a um risco existente
 - Histórico completo de ocorrências
 
-**Tabelas:** `tab_risco_ocorrencia`, `tab_arquivos`
+**Tabelas:** `pei.tab_risco_ocorrencia`, `pei.tab_arquivos`
 
 ---
 
@@ -1498,7 +1498,7 @@
 - Matriz atualiza em tempo real (Livewire)
 - Apenas riscos com status ativo (não "Encerrado")
 
-**Tabelas:** `tab_risco`
+**Tabelas:** `pei.tab_risco`
 
 ---
 
@@ -1523,7 +1523,7 @@
   - Riscos materializados recentes (últimos 30 dias)
 - Filtros: Período, PEI, Organização
 
-**Tabelas:** `tab_risco`, `tab_risco_mitigacao`, `tab_risco_ocorrencia`
+**Tabelas:** `pei.tab_risco`, `pei.tab_risco_mitigacao`, `pei.tab_risco_ocorrencia`
 
 ---
 
@@ -1548,17 +1548,17 @@
 - Incluir filtros aplicados no cabeçalho
 - Logo da organização
 
-**Tabelas:** `tab_risco`, `tab_risco_mitigacao`, `tab_risco_ocorrencia`
+**Tabelas:** `pei.tab_risco`, `pei.tab_risco_mitigacao`, `pei.tab_risco_ocorrencia`
 
 ---
 
 ## ESTRUTURA DE TABELAS PARA GESTÃO DE RISCOS
 
-### Tabela: `tab_risco`
+### Tabela: `pei.tab_risco`
 
 ```sql
 cod_risco UUID PRIMARY KEY
-cod_pei UUID FK → tab_pei
+cod_pei UUID FK → pei.tab_pei
 cod_organizacao UUID FK → tab_organizacoes
 num_codigo_risco INT (auto-incremento por PEI)
 dsc_titulo VARCHAR(255)
@@ -1576,20 +1576,20 @@ updated_at TIMESTAMP
 deleted_at TIMESTAMP
 ```
 
-### Tabela: `tab_risco_objetivo`
+### Tabela: `pei.tab_risco_objetivo`
 
 ```sql
 cod_risco_objetivo UUID PRIMARY KEY
-cod_risco UUID FK → tab_risco
-cod_objetivo_estrategico UUID FK → tab_objetivo_estrategico
+cod_risco UUID FK → pei.tab_risco
+cod_objetivo_estrategico UUID FK → pei.tab_objetivo_estrategico
 created_at TIMESTAMP
 ```
 
-### Tabela: `tab_risco_mitigacao`
+### Tabela: `pei.tab_risco_mitigacao`
 
 ```sql
 cod_mitigacao UUID PRIMARY KEY
-cod_risco UUID FK → tab_risco
+cod_risco UUID FK → pei.tab_risco
 dsc_tipo VARCHAR(50) -- Prevenir, Reduzir, Transferir, Aceitar
 txt_descricao TEXT
 cod_responsavel UUID FK → users
@@ -1600,11 +1600,11 @@ created_at TIMESTAMP
 updated_at TIMESTAMP
 ```
 
-### Tabela: `tab_risco_ocorrencia`
+### Tabela: `pei.tab_risco_ocorrencia`
 
 ```sql
 cod_ocorrencia UUID PRIMARY KEY
-cod_risco UUID FK → tab_risco
+cod_risco UUID FK → pei.tab_risco
 dte_ocorrencia DATE
 txt_descricao TEXT
 num_impacto_real INT (1-5)
