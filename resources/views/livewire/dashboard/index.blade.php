@@ -301,22 +301,25 @@
 
     {{-- Scripts de Gráficos --}}
     <script>
+        // Cache para evitar re-renderização desnecessária
+        let lastChartData = { bsc: null, riscos: null, planos: null };
+
         // Inicializa gráficos no carregamento
-        document.addEventListener('livewire:navigated', () => { initChartsFromDOM(); });
+        document.addEventListener('livewire:navigated', () => { 
+            lastChartData = { bsc: null, riscos: null, planos: null }; // Limpa cache na navegação
+            initChartsFromDOM(); 
+        });
         document.addEventListener('DOMContentLoaded', () => { initChartsFromDOM(); });
 
-        // Garante a reinicialização após atualização do poll (Livewire update)
+        // Garante a reinicialização inteligente após atualização do poll (Livewire update)
         document.addEventListener('livewire:initialized', () => {
-            // Hook para rodar após qualquer atualização de DOM do Livewire
             Livewire.hook('morph.updated', ({ el, component }) => {
-                // Se o elemento atualizado for o wrapper do dashboard, reinicializa
                 if (el.classList && el.classList.contains('dashboard-wrapper')) {
                     initChartsFromDOM();
                 }
             });
 
             Livewire.on('charts-updated', (data) => {
-                console.log('Charts updated:', data);
                 updateCharts(data[0]);
             });
         });
@@ -326,13 +329,25 @@
             const riscosContainer = document.getElementById('riscosChartContainer');
             const planosContainer = document.getElementById('planosChartContainer');
 
-            const data = {
-                bsc: bscContainer ? JSON.parse(bscContainer.dataset.chart || '[]') : [],
-                riscos: riscosContainer ? JSON.parse(riscosContainer.dataset.chart || '{"labels":[],"data":[],"colors":[]}') : {labels:[],data:[],colors:[]},
-                planos: planosContainer ? JSON.parse(planosContainer.dataset.chart || '[]') : []
+            const newData = {
+                bsc: bscContainer ? bscContainer.dataset.chart : '[]',
+                riscos: riscosContainer ? riscosContainer.dataset.chart : '{"labels":[],"data":[],"colors":[]}',
+                planos: planosContainer ? planosContainer.dataset.chart : '[]'
             };
 
-            updateCharts(data);
+            // Só processa se houver mudança real em algum dado
+            if (newData.bsc !== lastChartData.bsc || 
+                newData.riscos !== lastChartData.riscos || 
+                newData.planos !== lastChartData.planos) {
+                
+                lastChartData = newData; // Atualiza cache
+                
+                updateCharts({
+                    bsc: JSON.parse(newData.bsc),
+                    riscos: JSON.parse(newData.riscos),
+                    planos: JSON.parse(newData.planos)
+                });
+            }
         }
 
         function updateCharts(data) {

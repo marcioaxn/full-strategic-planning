@@ -40,7 +40,8 @@ class MapaEstrategico extends Component
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
-        'peiSelecionado' => 'atualizarPEI'
+        'peiSelecionado' => 'atualizarPEI',
+        'anoSelecionado' => 'atualizarAno'
     ];
 
     public function mount()
@@ -53,6 +54,11 @@ class MapaEstrategico extends Component
         }
 
         $this->carregarPEI();
+    }
+
+    public function atualizarAno($ano)
+    {
+        // Recarrega os dados do mapa para o novo ano
     }
 
     public function atualizarOrganizacao($id)
