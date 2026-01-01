@@ -8,55 +8,79 @@ use Livewire\Component;
 
 class SeletorAno extends Component
 {
-    public $anos = [];
+    public $anosAgrupados = [];
     public $anoSelecionado;
+    public $peiSelecionadoId;
+
+    protected $listeners = [
+        'peiSelecionado' => 'atualizarPeiId'
+    ];
 
     public function mount()
     {
+        $this->peiSelecionadoId = Session::get('pei_selecionado_id');
+        $this->anoSelecionado = Session::get('ano_selecionado', date('Y'));
         $this->carregarAnos();
+    }
 
-        // Tenta pegar o ano da sessão, senão usa o ano atual
-        $this->anoSelecionado = Session::get('ano_selecionado');
-
-        if (!$this->anoSelecionado) {
-            $this->anoSelecionado = date('Y');
-            // Se o ano atual não estiver no range dos PEIs, pega o maior ano disponível
-            if (!in_array($this->anoSelecionado, $this->anos) && !empty($this->anos)) {
-                $this->anoSelecionado = $this->anos[0];
-            }
-            $this->definirSessao($this->anoSelecionado);
-        }
+    public function atualizarPeiId($id)
+    {
+        $this->peiSelecionadoId = $id;
     }
 
     public function carregarAnos()
     {
-        // Busca o range de todos os PEIs
-        $range = PEI::selectRaw('MIN(num_ano_inicio_pei) as min_ano, MAX(num_ano_fim_pei) as max_ano')->first();
+        // Busca todos os PEIs para agrupar os anos
+        $peis = PEI::orderBy('num_ano_inicio_pei', 'desc')->get();
+        $this->anosAgrupados = [];
 
-        if ($range && $range->min_ano && $range->max_ano) {
-            $this->anos = range($range->max_ano, $range->min_ano); // Ordem decrescente
-        } else {
-            // Fallback caso não existam PEIs
-            $atual = date('Y');
-            $this->anos = [$atual, $atual - 1, $atual - 2];
+        foreach ($peis as $pei) {
+            $this->anosAgrupados[] = [
+                'pei_id' => $pei->cod_pei,
+                'label' => $pei->dsc_pei . " ({$pei->num_ano_inicio_pei}-{$pei->num_ano_fim_pei})",
+                'anos' => range($pei->num_ano_fim_pei, $pei->num_ano_inicio_pei)
+            ];
         }
-    }
 
-    private function definirSessao($ano)
-    {
-        Session::put('ano_selecionado', $ano);
+        if (empty($this->anosAgrupados)) {
+            $atual = date('Y');
+            $this->anosAgrupados[] = [
+                'label' => 'Anos Disponíveis',
+                'anos' => [$atual, $atual - 1, $atual - 2]
+            ];
+        }
     }
 
     public function selecionar($ano)
     {
         $this->anoSelecionado = $ano;
-        $this->definirSessao($ano);
+        Session::put('ano_selecionado', $ano);
 
-        // Dispara evento global para que outros componentes se atualizem
+        // --- INTELIGÊNCIA: Sincronizar com o PEI ---
+        // Verifica se o ano selecionado pertence ao PEI atual
+        $currentPei = PEI::find($this->peiSelecionadoId);
+        
+        if (!$currentPei || $ano < $currentPei->num_ano_inicio_pei || $ano > $currentPei->num_ano_fim_pei) {
+            // Se não pertence, busca o PEI que abrange este ano
+            $novoPei = PEI::where('num_ano_inicio_pei', '<=', $ano)
+                          ->where('num_ano_fim_pei', '>=', $ano)
+                          ->first();
+            
+            if ($novoPei) {
+                $this->trocarPeiSilencioso($novoPei);
+            }
+        }
+
         $this->dispatch('anoSelecionado', ano: $ano);
-
-        // Refresh da página para aplicar em todo o sistema
         return $this->redirect(request()->header('Referer'), navigate: true);
+    }
+
+    private function trocarPeiSilencioso(PEI $pei)
+    {
+        Session::put('pei_selecionado_id', $pei->cod_pei);
+        Session::put('pei_selecionado_dsc', $pei->dsc_pei);
+        Session::put('pei_selecionado_periodo', $pei->num_ano_inicio_pei . '-' . $pei->num_ano_fim_pei);
+        $this->dispatch('peiSelecionado', id: $pei->cod_pei);
     }
 
     public function render()
