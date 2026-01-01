@@ -159,7 +159,7 @@ class Entrega extends Model
     {
         return $this->belongsToMany(
             User::class,
-            'rel_entrega_users_responsaveis',
+            'pei.rel_entrega_users_responsaveis',
             'cod_entrega',
             'cod_usuario',
             'cod_entrega',
@@ -184,7 +184,7 @@ class Entrega extends Model
     {
         return $this->belongsToMany(
             EntregaLabel::class,
-            'rel_entrega_labels',
+            'pei.rel_entrega_labels',
             'cod_entrega',
             'cod_label'
         );

@@ -64,7 +64,7 @@ Realizei uma análise criteriosa e abrangente de todo o código implementado pel
 - ✅ `Perspectiva.php` - Ordenação hierárquica
 - ✅ `ObjetivoEstrategico.php` - Relacionamentos BSC
 - ✅ `Entrega.php` - Gestão de entregas
-- ✅ `php` - Scope de PEIs ativos
+- ✅ `PEI.php` - Scope de PEIs ativos
 - ✅ `EvolucaoIndicador.php` - Arquivo e evidências
 - ✅ `PerfilAcesso.php` - Constantes de perfis
 
@@ -144,7 +144,7 @@ Realizei uma análise criteriosa e abrangente de todo o código implementado pel
 - ✅ Todos componentes usam o pattern `#[Layout('layouts.app')]`
 - ✅ Validações consistentes com mensagens apropriadas
 - ✅ Uso de `ilike` para buscas case-insensitive no PostgreSQL
-- ✅ Schema explícito `PUBLIC.` e `` onde necessário
+- ✅ Schema explícito `PUBLIC.` e `pei.` onde necessário
 
 ---
 

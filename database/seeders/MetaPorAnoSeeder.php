@@ -11,7 +11,7 @@ class MetaPorAnoSeeder extends Seeder
 {
     public function run(): void
     {
-        $peiAtivo = PEI::first();
+        $peiAtivo = PEI::where('bln_ativo', true)->first();
         if (!$peiAtivo) return;
 
         $indicadores = Indicador::with('linhaBase')->whereHas('objetivo.perspectiva', function($q) use ($peiAtivo) {

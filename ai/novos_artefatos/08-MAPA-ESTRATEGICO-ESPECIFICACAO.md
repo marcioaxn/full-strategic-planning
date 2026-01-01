@@ -14,7 +14,7 @@ O **Mapa Estratégico** é o componente central do sistema, apresentando uma vis
 ### Características Principais
 
 ✅ **100% Dinâmico** - Montado em tempo real a partir dos dados preenchidos pelo usuário
-✅ **Coloração por Desempenho** - Cores extraídas de `tab_grau_satisfacao`
+✅ **Coloração por Desempenho** - Cores extraídas de `pei.tab_grau_satisfacao`
 ✅ **Visualização Chart.js** - Gráficos de rosca (doughnut) e barras horizontais
 ✅ **UI Moderna** - Baseada 100% no starter kit atual (Bootstrap 5)
 ✅ **Responsivo** - Adaptável para desktop, tablet e mobile
@@ -40,7 +40,7 @@ O componente utiliza **exclusivamente** os padrões visuais do starter kit:
 ### Paleta de Cores (Grau de Satisfação)
 
 ```php
-// Baseado em tab_grau_satisfacao
+// Baseado em pei.tab_grau_satisfacao
 // Cores alinhadas com o starter kit Bootstrap 5
 
 private function determinarCor($percentual)
@@ -117,7 +117,7 @@ class ShowDashboard extends Component
     // === REGRAS DE VALIDAÇÃO ===
 
     protected $rules = [
-        'pei_cod' => 'required|uuid|exists:tab_pei,cod_pei',
+        'pei_cod' => 'required|uuid|exists:pei.tab_pei,cod_pei',
         'cod_organizacao' => 'required|uuid|exists:tab_organizacoes,cod_organizacao',
         'ano_base' => 'required|integer|min:2000|max:2100',
         'mes_referencia' => 'required|integer|min:1|max:12',
@@ -409,7 +409,7 @@ class ShowDashboard extends Component
 
     public function atualizarPei()
     {
-        $this->validate(['pei_cod' => 'required|uuid|exists:tab_pei,cod_pei']);
+        $this->validate(['pei_cod' => 'required|uuid|exists:pei.tab_pei,cod_pei']);
         $this->pei = Pei::find($this->pei_cod);
         $this->carregarDados();
     }
@@ -709,7 +709,7 @@ class ShowDashboard extends Component
                     O Mapa Estratégico é construído dinamicamente.<br>
                     Comece preenchendo: PEI, Missão/Visão, Perspectivas e Objetivos Estratégicos.
                 </p>
-                <a href="{{ route('create') }}" class="btn btn-primary mt-3">
+                <a href="{{ route('pei.create') }}" class="btn btn-primary mt-3">
                     <i class="bi bi-plus-circle me-2"></i>
                     Cadastrar PEI
                 </a>
@@ -819,17 +819,17 @@ Livewire.on('refreshMapa', () => {
 
 | Tabela | Uso | Campos Principais |
 |--------|-----|-------------------|
-| `tab_pei` | Ciclo de planejamento | `cod_pei`, `dsc_pei`, `num_ano_inicio_pei`, `num_ano_fim_pei` |
+| `pei.tab_pei` | Ciclo de planejamento | `cod_pei`, `dsc_pei`, `num_ano_inicio_pei`, `num_ano_fim_pei` |
 | `tab_organizacoes` | Unidades organizacionais | `cod_organizacao`, `sgl_organizacao`, `nom_organizacao` |
-| `tab_missao_visao_valores` | Identidade organizacional | `txt_missao`, `txt_visao` |
-| `tab_valores` | Valores da organização | `dsc_valor` |
-| `tab_perspectiva` | Perspectivas BSC | `dsc_perspectiva`, `num_nivel_hierarquico_apresentacao` |
-| `tab_objetivo_estrategico` | Objetivos estratégicos | `num_objetivo_estrategico`, `dsc_objetivo_estrategico` |
-| `tab_indicador` | Indicadores de desempenho | `vlr_meta_ano`, `bln_maior_melhor` |
-| `tab_evolucao_indicador` | Evolução mensal | `vlr_previsto`, `vlr_realizado`, `ano_evolucao_indicador`, `mes_evolucao_indicador` |
-| `tab_plano_de_acao` | Planos de ação | `dsc_plano_acao` |
-| `tab_entregas` | Entregas dos planos | `vlr_percentual_execucao`, `dte_entrega` |
-| `tab_grau_satisfacao` | Cores do semáforo | `dsc_cor_semaforo`, `vlr_minimo`, `vlr_maximo` |
+| `pei.tab_missao_visao_valores` | Identidade organizacional | `txt_missao`, `txt_visao` |
+| `pei.tab_valores` | Valores da organização | `dsc_valor` |
+| `pei.tab_perspectiva` | Perspectivas BSC | `dsc_perspectiva`, `num_nivel_hierarquico_apresentacao` |
+| `pei.tab_objetivo_estrategico` | Objetivos estratégicos | `num_objetivo_estrategico`, `dsc_objetivo_estrategico` |
+| `pei.tab_indicador` | Indicadores de desempenho | `vlr_meta_ano`, `bln_maior_melhor` |
+| `pei.tab_evolucao_indicador` | Evolução mensal | `vlr_previsto`, `vlr_realizado`, `ano_evolucao_indicador`, `mes_evolucao_indicador` |
+| `pei.tab_plano_de_acao` | Planos de ação | `dsc_plano_acao` |
+| `pei.tab_entregas` | Entregas dos planos | `vlr_percentual_execucao`, `dte_entrega` |
+| `pei.tab_grau_satisfacao` | Cores do semáforo | `dsc_cor_semaforo`, `vlr_minimo`, `vlr_maximo` |
 
 ---
 

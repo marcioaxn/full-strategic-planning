@@ -46,7 +46,7 @@
   - TabStatus.php (lookup de status)
 
 - ✅ **PEI Schema (18 models)**
-  - php, MissaoVisaoValores.php, Valor.php
+  - PEI.php, MissaoVisaoValores.php, Valor.php
   - Perspectiva.php, ObjetivoEstrategico.php, FuturoAlmejadoObjetivoEstrategico.php
   - TipoExecucao.php, PlanoDeAcao.php, Entrega.php
   - Indicador.php, EvolucaoIndicador.php, LinhaBaseIndicador.php, MetaPorAno.php
@@ -230,27 +230,27 @@ PUBLIC.tab_audit
 PUBLIC.rel_users_tab_organizacoes_tab_perfil_acesso (many-to-many)
 
 -- Schema PEI (planejamento estratégico institucional)
-tab_pei
-tab_missao_visao_valores
-tab_valores
-tab_perspectiva
-tab_objetivo_estrategico
-tab_futuro_almejado_objetivo_estrategico
-tab_tipo_execucao
-tab_plano_de_acao
-tab_entregas
-tab_indicador
-tab_evolucao_indicador
-tab_linha_base_indicador
-tab_meta_por_ano
-tab_grau_satisfacao
-tab_arquivos
-tab_atividade_cadeia_valor
-tab_processo_atividade_cadeia_valor
-tab_risco                              (NOVO - criado por Claude)
-tab_risco_objetivo                     (NOVO - criado por Claude)
-tab_risco_mitigacao                    (NOVO - criado por Claude)
-tab_risco_ocorrencia                   (NOVO - criado por Claude)
+pei.tab_pei
+pei.tab_missao_visao_valores
+pei.tab_valores
+pei.tab_perspectiva
+pei.tab_objetivo_estrategico
+pei.tab_futuro_almejado_objetivo_estrategico
+pei.tab_tipo_execucao
+pei.tab_plano_de_acao
+pei.tab_entregas
+pei.tab_indicador
+pei.tab_evolucao_indicador
+pei.tab_linha_base_indicador
+pei.tab_meta_por_ano
+pei.tab_grau_satisfacao
+pei.tab_arquivos
+pei.tab_atividade_cadeia_valor
+pei.tab_processo_atividade_cadeia_valor
+pei.tab_risco                              (NOVO - criado por Claude)
+pei.tab_risco_objetivo                     (NOVO - criado por Claude)
+pei.tab_risco_mitigacao                    (NOVO - criado por Claude)
+pei.tab_risco_ocorrencia                   (NOVO - criado por Claude)
 ```
 
 **Características Especiais do Banco:**
@@ -258,8 +258,8 @@ tab_risco_ocorrencia                   (NOVO - criado por Claude)
 - ✅ Convenção de nomenclatura:
   - PK sempre: `cod_<nome_tabela>`
   - FK sempre: `cod_<tabela_relacionada>`
-  - Exemplo: `tab_plano_de_acao.cod_plano` (PK)
-  - Exemplo: `tab_plano_de_acao.cod_objetivo_estrategico` (FK)
+  - Exemplo: `pei.tab_plano_de_acao.cod_plano` (PK)
+  - Exemplo: `pei.tab_plano_de_acao.cod_objetivo_estrategico` (FK)
 - ✅ Soft Deletes implementado em tabelas principais (`deleted_at`)
 - ✅ Timestamps: `created_at`, `updated_at` em todas as tabelas
 - ✅ Auditoria via `owen-it/laravel-auditing` nas tabelas principais
@@ -465,7 +465,7 @@ class PlanoDeAcao extends Model implements Auditable
 {
     use HasFactory, HasUuids, SoftDeletes, \OwenIt\Auditing\Auditable;
 
-    protected $table = 'tab_plano_de_acao';
+    protected $table = 'pei.tab_plano_de_acao';
     protected $primaryKey = 'cod_plano';
     protected $keyType = 'string';
     public $incrementing = false;
@@ -1061,7 +1061,7 @@ class PlanoDeAcaoTest extends TestCase
             ])
             ->assertRedirect();
 
-        $this->assertDatabaseHas('tab_plano_de_acao', [
+        $this->assertDatabaseHas('pei.tab_plano_de_acao', [
             'dsc_plano' => 'Novo Plano',
         ]);
     }
@@ -1087,12 +1087,12 @@ class PlanoDeAcaoTest extends TestCase
 2. **NUNCA usar `id` como primary key em tabelas do schema PEI:**
    ```php
    // ❌ ERRADO
-   Schema::create('tab_nova_tabela', function (Blueprint $table) {
+   Schema::create('pei.tab_nova_tabela', function (Blueprint $table) {
        $table->id(); // NUNCA!
    });
 
    // ✅ CORRETO
-   Schema::create('tab_nova_tabela', function (Blueprint $table) {
+   Schema::create('pei.tab_nova_tabela', function (Blueprint $table) {
        $table->uuid('cod_nova_tabela')->primary()->default(DB::raw('gen_random_uuid()'));
    });
    ```
@@ -1648,7 +1648,7 @@ npm install bootstrap @popperjs/core
 - [x] Salvar alterações com auditoria
 - [x] Testar versionamento
 
-**Tabela:** `tab_missao_visao_valores`
+**Tabela:** `pei.tab_missao_visao_valores`
 
 ---
 
@@ -1659,7 +1659,7 @@ npm install bootstrap @popperjs/core
 - [x] Ordenação drag-and-drop
 - [x] Teste de criação/edição/exclusão
 
-**Tabela:** `tab_valores`
+**Tabela:** `pei.tab_valores`
 
 ---
 
@@ -1672,7 +1672,7 @@ npm install bootstrap @popperjs/core
 - [x] Permitir edição de nomes (Super Admin)
 - [x] Testar com dados do banco
 
-**Tabela:** `tab_perspectiva`
+**Tabela:** `pei.tab_perspectiva`
 
 ---
 
@@ -1686,7 +1686,7 @@ npm install bootstrap @popperjs/core
 - [x] Calcular % de atingimento (baseado em indicadores)
 - [x] Testar cálculos
 
-**Tabelas:** `tab_objetivo_estrategico`, `tab_indicador`
+**Tabelas:** `pei.tab_objetivo_estrategico`, `pei.tab_indicador`
 
 ---
 
@@ -1696,7 +1696,7 @@ npm install bootstrap @popperjs/core
 - [x] CRUD simples (textarea)
 - [x] Testar vinculação
 
-**Tabela:** `tab_futuro_almejado_objetivo_estrategico`
+**Tabela:** `pei.tab_futuro_almejado_objetivo_estrategico`
 
 ---
 
@@ -1760,7 +1760,7 @@ npm install bootstrap @popperjs/core
 - [x] Calcular % de progresso do plano (baseado em entregas)
 - [x] Testar vínculo
 
-**Tabela:** `tab_entregas`
+**Tabela:** `pei.tab_entregas`
 
 ---
 
@@ -1825,7 +1825,7 @@ npm install bootstrap @popperjs/core
 - [x] Criar Policy
 - [x] Testar criação e edição
 
-**Tabela:** `tab_indicador`
+**Tabela:** `pei.tab_indicador`
 
 ---
 
@@ -1836,7 +1836,7 @@ npm install bootstrap @popperjs/core
 - [x] Validar ano único
 - [x] Testar cadastro
 
-**Tabela:** `tab_linha_base_indicador`
+**Tabela:** `pei.tab_linha_base_indicador`
 
 ---
 
@@ -1849,7 +1849,7 @@ npm install bootstrap @popperjs/core
 - [x] Editar/Excluir metas
 - [x] Testar com diferentes períodos
 
-**Tabela:** `tab_meta_por_ano`
+**Tabela:** `pei.tab_meta_por_ano`
 
 ---
 
@@ -1863,7 +1863,7 @@ npm install bootstrap @popperjs/core
 - [x] Salvar com auditoria
 - [x] Testar lançamentos mensais
 
-**Tabela:** `tab_evolucao_indicador`
+**Tabela:** `pei.tab_evolucao_indicador`
 
 ---
 
@@ -1878,18 +1878,18 @@ npm install bootstrap @popperjs/core
 - [x] Permitir exclusão
 - [x] Testar upload e download
 
-**Tabela:** `tab_arquivos`
+**Tabela:** `pei.tab_arquivos`
 
 ---
 
 #### 4.7 Farol de Desempenho
 - [x] Implementar cálculo de % atingimento
-- [x] Buscar faixa correspondente em `tab_grau_satisfacao`
+- [x] Buscar faixa correspondente em `pei.tab_grau_satisfacao`
 - [x] Exibir cor e descrição
 - [x] Mostrar em cards e listagens
 - [x] Testar com diferentes percentuais
 
-**Tabela:** `tab_grau_satisfacao`
+**Tabela:** `pei.tab_grau_satisfacao`
 
 ---
 

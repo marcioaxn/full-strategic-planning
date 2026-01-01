@@ -12,9 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tab_arquivos', function (Blueprint $table) {
+        Schema::create('pei.tab_arquivos', function (Blueprint $table) {
             $table->uuid('cod_arquivo')->primary()->default(DB::raw('gen_random_uuid()'));
-            $table->foreignUuid('cod_evolucao_indicador')->references('cod_evolucao_indicador')->on('tab_evolucao_indicador')->cascadeOnDelete();
+            $table->foreignUuid('cod_evolucao_indicador')->references('cod_evolucao_indicador')->on('pei.tab_evolucao_indicador')->cascadeOnDelete();
             $table->text('txt_assunto')->nullable(false);
             $table->text('data')->nullable(false);
             $table->text('dsc_nome_arquivo')->nullable(false);
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tab_arquivos');
+        Schema::dropIfExists('pei.tab_arquivos');
     }
 };

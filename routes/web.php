@@ -29,13 +29,13 @@ Route::middleware([
     Route::get('/graus-satisfacao', \App\Livewire\PEI\ListarGrausSatisfacao::class)->name('graus-satisfacao.index');
     
     // Strategic Planning (PEI)
-    Route::get('/pei', \App\Livewire\PEI\MissaoVisao::class)->name('index');
-    Route::get('/pei/ciclos', \App\Livewire\PEI\ListarPeis::class)->name('ciclos');
-    Route::get('/pei/valores', \App\Livewire\PEI\ListarValores::class)->name('valores');
-    Route::get('/pei/perspectivas', \App\Livewire\PEI\ListarPerspectivas::class)->name('perspectivas');
-    Route::get('/pei/swot', \App\Livewire\PEI\AnaliseSWOT::class)->name('swot');
-    Route::get('/pei/pestel', \App\Livewire\PEI\AnalisePESTEL::class)->name('pestel');
-    Route::get('/pei/mapa', \App\Livewire\PEI\MapaEstrategico::class)->name('mapa');
+    Route::get('/pei', \App\Livewire\PEI\MissaoVisao::class)->name('pei.index');
+    Route::get('/pei/ciclos', \App\Livewire\PEI\ListarPeis::class)->name('pei.ciclos');
+    Route::get('/pei/valores', \App\Livewire\PEI\ListarValores::class)->name('pei.valores');
+    Route::get('/pei/perspectivas', \App\Livewire\PEI\ListarPerspectivas::class)->name('pei.perspectivas');
+    Route::get('/pei/swot', \App\Livewire\PEI\AnaliseSWOT::class)->name('pei.swot');
+    Route::get('/pei/pestel', \App\Livewire\PEI\AnalisePESTEL::class)->name('pei.pestel');
+    Route::get('/pei/mapa', \App\Livewire\PEI\MapaEstrategico::class)->name('pei.mapa');
     Route::get('/objetivos', \App\Livewire\PEI\ListarObjetivos::class)->name('objetivos.index');
     Route::get('/objetivos-estrategicos', \App\Livewire\PEI\GerenciarObjetivosEstrategicos::class)->name('objetivos-estrategicos.index');
     Route::get('/objetivos/{objetivoId}/futuro', \App\Livewire\PEI\GerenciarFuturoAlmejado::class)->name('objetivos.futuro');

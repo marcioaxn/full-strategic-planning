@@ -18,7 +18,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tab_entrega_historico', function (Blueprint $table) {
+        Schema::create('pei.tab_entrega_historico', function (Blueprint $table) {
             // Chave primária UUID
             $table->uuid('cod_historico')
                   ->primary()
@@ -27,7 +27,7 @@ return new class extends Migration
             // FK para entrega
             $table->foreignUuid('cod_entrega')
                   ->references('cod_entrega')
-                  ->on('tab_entregas')
+                  ->on('pei.tab_entregas')
                   ->cascadeOnDelete();
             
             // FK para usuário que fez a alteração
@@ -64,7 +64,7 @@ return new class extends Migration
         
         // Comentário na tabela
         DB::statement("
-            COMMENT ON TABLE tab_entrega_historico IS 
+            COMMENT ON TABLE pei.tab_entrega_historico IS 
             'Tabela de histórico de atividades em entregas. Registra todas as alterações para auditoria e versões.';
         ");
     }
@@ -74,6 +74,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tab_entrega_historico');
+        Schema::dropIfExists('pei.tab_entrega_historico');
     }
 };

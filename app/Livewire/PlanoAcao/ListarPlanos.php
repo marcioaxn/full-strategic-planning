@@ -150,8 +150,8 @@ class ListarPlanos extends Component
     {
         $this->validate([
             'dsc_plano_de_acao' => 'required|string|max:255',
-            'cod_objetivo' => 'required|exists:tab_objetivo,cod_objetivo',
-            'cod_tipo_execucao' => 'required|exists:tab_tipo_execucao,cod_tipo_execucao',
+            'cod_objetivo' => 'required|exists:pei.tab_objetivo,cod_objetivo',
+            'cod_tipo_execucao' => 'required|exists:pei.tab_tipo_execucao,cod_tipo_execucao',
             'dte_inicio' => 'required|date',
             'dte_fim' => 'required|date|after_or_equal:dte_inicio',
             'vlr_orcamento_previsto' => 'nullable|numeric|min:0',

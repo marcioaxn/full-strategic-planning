@@ -13,7 +13,7 @@ class PlanoAcaoSeeder extends Seeder
 {
     public function run(): void
     {
-        $peiAtivo = PEI::first();
+        $peiAtivo = PEI::where('bln_ativo', true)->first();
         if (!$peiAtivo) return;
 
         $tipos = TipoExecucao::all();
