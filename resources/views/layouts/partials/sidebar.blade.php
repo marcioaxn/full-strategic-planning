@@ -203,6 +203,19 @@
             </div>
         </div>
 
+        <!-- Global Selectors Mobile -->
+        <div class="offcanvas-selectors mb-4 d-flex flex-column gap-2">
+            <div class="selector-wrapper-mobile">
+                @livewire('shared.seletor-organizacao', key('mobile-org-selector'))
+            </div>
+            <div class="selector-wrapper-mobile">
+                @livewire('shared.seletor-pei', key('mobile-pei-selector'))
+            </div>
+            <div class="selector-wrapper-mobile">
+                @livewire('shared.seletor-ano', key('mobile-ano-selector'))
+            </div>
+        </div>
+
         <!-- Navigation Mobile -->
         <nav class="nav nav-pills flex-column gap-1 mb-4" id="mobileAccordion">
             @foreach ($items as $item)
@@ -546,6 +559,25 @@
 }
 
 /* ========== Mobile Offcanvas Styles ========== */
+
+.offcanvas-selectors .nav-item.dropdown {
+    width: 100%;
+}
+
+.offcanvas-selectors .nav-link.dropdown-toggle {
+    width: 100%;
+    justify-content: flex-start;
+}
+
+.offcanvas-selectors .dropdown-menu {
+    position: static !important;
+    float: none !important;
+    width: 100%;
+    margin-top: 0.5rem !important;
+    box-shadow: none !important;
+    border: 1px solid var(--bs-border-color) !important;
+    transform: none !important;
+}
 
 .offcanvas-modern {
     border-right: 1px solid var(--bs-border-color);
