@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\PEI\PEI;
-use App\Models\PEI\Indicador;
-use App\Models\PEI\EvolucaoIndicador;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\PerformanceIndicators\Indicador;
+use App\Models\PerformanceIndicators\EvolucaoIndicador;
 use Illuminate\Database\Seeder;
 
 class EvolucaoIndicadorSeeder extends Seeder

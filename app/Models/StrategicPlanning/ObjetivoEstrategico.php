@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\PEI;
+namespace App\Models\StrategicPlanning;
 
 use App\Models\Organization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -18,7 +18,7 @@ class ObjetivoEstrategico extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_objetivo_estrategico';
+    protected $table = 'tab_objetivo_estrategico';
 
     /**
      * Chave primária

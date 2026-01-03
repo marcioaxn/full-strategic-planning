@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\PEI\PEI;
-use App\Models\PEI\Objetivo;
-use App\Models\Risco;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\StrategicPlanning\Objetivo;
+use App\Models\RiskManagement\Risco;
 use Illuminate\Database\Seeder;
 
 class RiscoObjetivoSeeder extends Seeder

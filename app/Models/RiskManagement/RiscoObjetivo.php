@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\RiskManagement;
 
-use App\Models\PEI\Objetivo;
+use App\Models\StrategicPlanning\Objetivo;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
@@ -10,7 +10,7 @@ class RiscoObjetivo extends Model
 {
     use HasUuids;
 
-    protected $table = 'pei.tab_risco_objetivo';
+    protected $table = 'tab_risco_objetivo';
     protected $primaryKey = 'cod_risco_objetivo';
     protected $keyType = 'string';
     public $incrementing = false;

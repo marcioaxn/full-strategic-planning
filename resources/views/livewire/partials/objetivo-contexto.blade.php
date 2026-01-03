@@ -29,7 +29,7 @@
 
         // Buscar detalhes dos indicadores para transparencia no calculo
         $indicadoresDiretos = $objetivo->indicadores()->with(['evolucoes', 'metasPorAno'])->get();
-        $indicadoresPlanos = \App\Models\PEI\Indicador::whereHas('planoDeAcao', function ($q) use ($objetivo) {
+        $indicadoresPlanos = \App\Models\PerformanceIndicators\Indicador::whereHas('planoDeAcao', function ($q) use ($objetivo) {
             $q->where('cod_objetivo', $objetivo->cod_objetivo);
         })->with(['evolucoes', 'metasPorAno', 'planoDeAcao'])->get();
         $todosIndicadores = $indicadoresDiretos->merge($indicadoresPlanos)->unique('cod_indicador');
@@ -84,7 +84,7 @@
         };
 
         // Buscar graus de satisfacao para legenda
-        $grausSatisfacao = \App\Models\PEI\GrauSatisfacao::orderBy('vlr_minimo')->get();
+        $grausSatisfacao = \App\Models\StrategicPlanning\GrauSatisfacao::orderBy('vlr_minimo')->get();
     @endphp
 
     <!-- Card de Contexto Hierarquico -->

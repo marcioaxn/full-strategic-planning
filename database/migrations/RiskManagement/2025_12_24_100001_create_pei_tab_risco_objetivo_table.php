@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.tab_risco_objetivo', function (Blueprint $table) {
+        Schema::create('risk_management.tab_risco_objetivo', function (Blueprint $table) {
             $table->foreignUuid('cod_risco')->references('cod_risco')->on('pei.tab_risco')->cascadeOnDelete();
             $table->foreignUuid('cod_objetivo')->references('cod_objetivo')->on('pei.tab_objetivo_estrategico')->cascadeOnDelete();
             $table->timestamps();

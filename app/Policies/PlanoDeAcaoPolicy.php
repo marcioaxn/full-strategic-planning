@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\PEI\PlanoDeAcao;
+use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\User;
 use App\Models\PerfilAcesso;
 use Illuminate\Auth\Access\Response;

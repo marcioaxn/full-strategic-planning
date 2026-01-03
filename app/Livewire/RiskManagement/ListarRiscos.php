@@ -2,9 +2,9 @@
 
 namespace App\Livewire\RiskManagement;
 
-use App\Models\Risco;
-use App\Models\PEI\PEI;
-use App\Models\PEI\Objetivo;
+use App\Models\RiskManagement\Risco;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\StrategicPlanning\Objetivo;
 use App\Models\Organization;
 use App\Models\User;
 use Livewire\Attributes\Layout;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\PEI;
+namespace App\Models\StrategicPlanning;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,7 +16,7 @@ class Perspectiva extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_perspectiva';
+    protected $table = 'tab_perspectiva';
 
     /**
      * Chave primária

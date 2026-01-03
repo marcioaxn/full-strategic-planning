@@ -2,8 +2,8 @@
 
 namespace App\Livewire\StrategicPlanning;
 
-use App\Models\PEI\Objetivo;
-use App\Models\PEI\FuturoAlmejado;
+use App\Models\StrategicPlanning\Objetivo;
+use App\Models\StrategicPlanning\FuturoAlmejado;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 

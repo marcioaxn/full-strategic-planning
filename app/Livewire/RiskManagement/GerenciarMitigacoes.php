@@ -2,8 +2,8 @@
 
 namespace App\Livewire\RiskManagement;
 
-use App\Models\Risco;
-use App\Models\RiscoMitigacao;
+use App\Models\RiskManagement\Risco;
+use App\Models\RiskManagement\RiscoMitigacao;
 use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Component;

@@ -3,8 +3,8 @@
 namespace App\Livewire\Reports;
 
 use App\Models\Organization;
-use App\Models\PEI\PEI;
-use App\Models\PEI\Perspectiva;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\StrategicPlanning\Perspectiva;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Facades\Session;

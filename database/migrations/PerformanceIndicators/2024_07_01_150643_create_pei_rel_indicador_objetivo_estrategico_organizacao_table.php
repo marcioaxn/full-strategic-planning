@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.rel_indicador_objetivo_estrategico_organizacao', function (Blueprint $table) {
+        Schema::create('performance_indicators.rel_indicador_objetivo_estrategico_organizacao', function (Blueprint $table) {
             $table->foreignUuid('cod_indicador')->references('cod_indicador')->on('pei.tab_indicador')->cascadeOnDelete();
             $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('tab_organizacoes')->cascadeOnDelete();
             $table->timestamps();

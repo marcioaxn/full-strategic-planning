@@ -2,9 +2,9 @@
 
 namespace App\Livewire\PerformanceIndicators;
 
-use App\Models\PEI\Indicador;
-use App\Models\PEI\EvolucaoIndicador;
-use App\Models\PEI\Arquivo;
+use App\Models\PerformanceIndicators\Indicador;
+use App\Models\PerformanceIndicators\EvolucaoIndicador;
+use App\Models\StrategicPlanning\Arquivo;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;

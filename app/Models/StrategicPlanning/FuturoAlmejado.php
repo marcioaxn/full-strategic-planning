@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\PEI;
+namespace App\Models\StrategicPlanning;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +15,7 @@ class FuturoAlmejado extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_futuro_almejado_objetivo';
+    protected $table = 'tab_futuro_almejado_objetivo';
 
     /**
      * Chave primária

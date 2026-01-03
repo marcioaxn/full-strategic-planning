@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\PEI;
+namespace App\Models\StrategicPlanning;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +15,7 @@ class PEI extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_pei';
+    protected $table = 'tab_pei';
 
     /**
      * Chave primária

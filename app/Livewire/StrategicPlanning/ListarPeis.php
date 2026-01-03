@@ -2,7 +2,7 @@
 
 namespace App\Livewire\StrategicPlanning;
 
-use App\Models\PEI\PEI;
+use App\Models\StrategicPlanning\PEI;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;

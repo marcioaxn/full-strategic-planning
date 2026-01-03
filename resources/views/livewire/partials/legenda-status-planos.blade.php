@@ -1,5 +1,5 @@
 @php
-    $legendaPlanos = \App\Models\PEI\PlanoDeAcao::getStatusLegend();
+    $legendaPlanos = \App\Models\ActionPlan\PlanoDeAcao::getStatusLegend();
 @endphp
 
 <div class="card border-0 shadow-sm mb-4">

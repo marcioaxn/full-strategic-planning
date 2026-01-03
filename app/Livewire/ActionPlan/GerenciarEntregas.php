@@ -2,8 +2,8 @@
 
 namespace App\Livewire\ActionPlan;
 
-use App\Models\PEI\PlanoDeAcao;
-use App\Models\PEI\Entrega;
+use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\ActionPlan\Entrega;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;

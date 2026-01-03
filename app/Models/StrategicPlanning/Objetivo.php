@@ -20,7 +20,7 @@ class Objetivo extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_objetivo';
+    protected $table = 'tab_objetivo';
 
     /**
      * Chave primária

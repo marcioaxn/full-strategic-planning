@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\PEI;
+namespace App\Models\ActionPlan;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -89,7 +89,7 @@ class EntregaLabel extends Model
     {
         return $this->belongsToMany(
             Entrega::class,
-            'pei.rel_entrega_labels',
+            'rel_entrega_labels',
             'cod_label',
             'cod_entrega'
         );

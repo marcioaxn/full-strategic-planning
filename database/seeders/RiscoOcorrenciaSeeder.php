@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\RiscoOcorrencia;
-use App\Models\Risco;
-use App\Models\PEI\PEI;
+use App\Models\RiskManagement\RiscoOcorrencia;
+use App\Models\RiskManagement\Risco;
+use App\Models\StrategicPlanning\PEI;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
