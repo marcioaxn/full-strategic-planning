@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\PEI\Objetivo;
+use App\Models\StrategicPlanning\Objetivo;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;

@@ -2,10 +2,10 @@
 
 namespace App\Livewire\ActionPlan;
 
-use App\Models\PEI\PlanoDeAcao;
-use App\Models\PEI\PEI;
-use App\Models\PEI\Objetivo;
-use App\Models\PEI\TipoExecucao;
+use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\StrategicPlanning\Objetivo;
+use App\Models\ActionPlan\TipoExecucao;
 use App\Models\Organization;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -100,7 +100,7 @@ class ListarPlanos extends Component
 
     public function carregarObjetivos()
     {
-        $this->grausSatisfacao = \App\Models\PEI\GrauSatisfacao::orderBy('vlr_minimo')->get();
+        $this->grausSatisfacao = \App\Models\StrategicPlanning\GrauSatisfacao::orderBy('vlr_minimo')->get();
 
         if ($this->peiAtivo) {
             $this->objetivos = Objetivo::whereHas('perspectiva', function($query) {

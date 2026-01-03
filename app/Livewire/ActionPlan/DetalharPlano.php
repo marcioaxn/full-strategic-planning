@@ -2,7 +2,7 @@
 
 namespace App\Livewire\ActionPlan;
 
-use App\Models\PEI\PlanoDeAcao;
+use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Component;

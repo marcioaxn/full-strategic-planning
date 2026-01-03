@@ -2,8 +2,8 @@
 
 namespace App\Livewire\StrategicPlanning;
 
-use App\Models\PEI\PEI;
-use App\Models\PEI\Valor;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\StrategicPlanning\Valor;
 use App\Models\Organization;
 use Livewire\Attributes\Layout;
 use Livewire\Component;

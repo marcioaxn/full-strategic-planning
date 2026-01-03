@@ -2,16 +2,16 @@
 
 namespace App\Livewire\Dashboard;
 
-use App\Models\PEI\PEI;
-use App\Models\PEI\Objetivo;
-use App\Models\PEI\Indicador;
-use App\Models\PEI\PlanoDeAcao;
-use App\Models\PEI\Entrega;
-use App\Models\PEI\EntregaComentario;
-use App\Models\PEI\Perspectiva;
-use App\Models\PEI\GrauSatisfacao;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\StrategicPlanning\Objetivo;
+use App\Models\PerformanceIndicators\Indicador;
+use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\ActionPlan\Entrega;
+use App\Models\ActionPlan\EntregaComentario;
+use App\Models\StrategicPlanning\Perspectiva;
+use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\Organization;
-use App\Models\Risco;
+use App\Models\RiskManagement\Risco;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Session;

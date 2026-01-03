@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\PEI\PEI;
-use App\Models\PEI\Objetivo;
-use App\Models\PEI\PlanoDeAcao;
-use App\Models\PEI\TipoExecucao;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\StrategicPlanning\Objetivo;
+use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\ActionPlan\TipoExecucao;
 use App\Models\Organization;
 use Illuminate\Database\Seeder;
 

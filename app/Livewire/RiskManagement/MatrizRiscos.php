@@ -2,7 +2,7 @@
 
 namespace App\Livewire\RiskManagement;
 
-use App\Models\Risco;
+use App\Models\RiskManagement\Risco;
 use App\Models\Organization;
 use Livewire\Attributes\Layout;
 use Livewire\Component;

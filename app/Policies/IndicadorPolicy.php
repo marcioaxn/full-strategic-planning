@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\PEI\Indicador;
+use App\Models\PerformanceIndicators\Indicador;
 use App\Models\User;
 use App\Models\PerfilAcesso;
 use Illuminate\Auth\Access\Response;

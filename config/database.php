@@ -94,7 +94,7 @@ return [
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
-            'search_path' => ['public', 'pei'],
+            'search_path' => ['public', 'strategic_planning', 'action_plan', 'performance_indicators', 'risk_management', 'organization'],
             'sslmode' => 'prefer',
         ],
 

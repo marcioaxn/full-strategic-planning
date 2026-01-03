@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\PEI\PEI;
-use App\Models\PEI\Indicador;
-use App\Models\PEI\LinhaBaseIndicador;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\PerformanceIndicators\Indicador;
+use App\Models\PerformanceIndicators\LinhaBaseIndicador;
 use Illuminate\Database\Seeder;
 
 class LinhaBaseIndicadorSeeder extends Seeder

@@ -76,7 +76,7 @@
                     <form wire:submit.prevent="criarRapido">
                         <div class="modal-body p-4">
                             <div class="d-flex align-items-center gap-3 mb-3">
-                                <span class="notion-status-dot" style="background-color: {{ \App\Models\PEI\Entrega::STATUS_COLORS[$quickAddStatus] ?? '#e3e2e0' }}"></span>
+                                <span class="notion-status-dot" style="background-color: {{ \App\Models\ActionPlan\Entrega::STATUS_COLORS[$quickAddStatus] ?? '#e3e2e0' }}"></span>
                                 <span class="text-muted small">{{ $quickAddStatus }}</span>
                             </div>
                             <input 
@@ -132,7 +132,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label text-muted small text-uppercase fw-bold">Status</label>
                                     <select wire:model="editStatus" class="form-select @error('editStatus') is-invalid @enderror">
-                                        @foreach(\App\Models\PEI\Entrega::STATUS_OPTIONS as $status)
+                                        @foreach(\App\Models\ActionPlan\Entrega::STATUS_OPTIONS as $status)
                                             <option value="{{ $status }}">{{ $status }}</option>
                                         @endforeach
                                     </select>
@@ -143,7 +143,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label text-muted small text-uppercase fw-bold">Prioridade</label>
                                     <select wire:model="editPrioridade" class="form-select @error('editPrioridade') is-invalid @enderror">
-                                        @foreach(\App\Models\PEI\Entrega::PRIORIDADE_OPTIONS as $key => $info)
+                                        @foreach(\App\Models\ActionPlan\Entrega::PRIORIDADE_OPTIONS as $key => $info)
                                             <option value="{{ $key }}">{{ $info['label'] }}</option>
                                         @endforeach
                                     </select>
@@ -193,7 +193,7 @@
                                 <div class="col-12">
                                     <label class="form-label text-muted small text-uppercase fw-bold">Tipo de Bloco</label>
                                     <div class="d-flex flex-wrap gap-2">
-                                        @foreach(\App\Models\PEI\Entrega::TIPO_OPTIONS as $key => $info)
+                                        @foreach(\App\Models\ActionPlan\Entrega::TIPO_OPTIONS as $key => $info)
                                             <label class="notion-type-option {{ $editTipo === $key ? 'active' : '' }}">
                                                 <input type="radio" wire:model="editTipo" value="{{ $key }}" class="d-none">
                                                 <i class="bi bi-{{ $info['icon'] }} me-1"></i>

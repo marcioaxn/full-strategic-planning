@@ -2,8 +2,8 @@
 
 namespace App\Livewire\StrategicPlanning;
 
-use App\Models\PEI\PEI;
-use App\Models\PEI\ObjetivoEstrategico;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\StrategicPlanning\ObjetivoEstrategico;
 use App\Models\Organization;
 use Livewire\Component;
 use Livewire\WithPagination;

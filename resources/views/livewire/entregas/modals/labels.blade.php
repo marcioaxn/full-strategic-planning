@@ -12,7 +12,7 @@
                     {{-- Lista de Labels Existentes --}}
                     <div class="d-flex flex-column gap-1 mb-3">
                         @php 
-                            $entregaAtual = \App\Models\PEI\Entrega::with('labels')->find($labelsEntregaId);
+                            $entregaAtual = \App\Models\ActionPlan\Entrega::with('labels')->find($labelsEntregaId);
                             $idsSelecionados = $entregaAtual ? $entregaAtual->labels->pluck('cod_label')->toArray() : [];
                         @endphp
 

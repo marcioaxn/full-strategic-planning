@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\PEI\Indicador;
+use App\Models\PerformanceIndicators\Indicador;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;

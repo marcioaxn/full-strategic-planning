@@ -2,12 +2,12 @@
 
 namespace App\Livewire\PerformanceIndicators;
 
-use App\Models\PEI\Indicador;
-use App\Models\PEI\PEI;
-use App\Models\PEI\Objetivo;
-use App\Models\PEI\PlanoDeAcao;
-use App\Models\PEI\LinhaBaseIndicador;
-use App\Models\PEI\MetaPorAno;
+use App\Models\PerformanceIndicators\Indicador;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\StrategicPlanning\Objetivo;
+use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\PerformanceIndicators\LinhaBaseIndicador;
+use App\Models\PerformanceIndicators\MetaPorAno;
 use App\Models\Organization;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -115,7 +115,7 @@ class ListarIndicadores extends Component
 
     public function carregarListasAuxiliares()
     {
-        $this->grausSatisfacao = \App\Models\PEI\GrauSatisfacao::orderBy('vlr_minimo')->get();
+        $this->grausSatisfacao = \App\Models\StrategicPlanning\GrauSatisfacao::orderBy('vlr_minimo')->get();
 
         if ($this->peiAtivo) {
             $this->objetivos = Objetivo::whereHas('perspectiva', function($query) {
