@@ -24,7 +24,8 @@ class DetalharIndicador extends Component
             'organizacoes'
         ])->findOrFail($id);
 
-        $this->anoFiltro = now()->year;
+        // Usa o ano selecionado no navbar (Ano de referência) ou ano atual como fallback
+        $this->anoFiltro = session('ano_selecionado', now()->year);
         $this->prepareChartData();
     }
 
