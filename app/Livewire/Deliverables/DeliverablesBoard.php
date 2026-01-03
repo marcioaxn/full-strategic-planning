@@ -1,27 +1,12 @@
 <?php
 
-namespace App\Livewire\Entregas;
+namespace App\Livewire\Deliverables;
 
-use App\Models\PEI\Entrega;
-use App\Models\PEI\EntregaLabel;
-use App\Models\PEI\PlanoDeAcao;
-use App\Models\User;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Auth;
-use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
-use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithFileUploads;
+use App\Models\ActionPlan\Entrega;
+use App\Models\ActionPlan\PlanoDeAcao;
 
-/**
- * Componente principal do sistema de entregas estilo Notion.
- * 
- * Gerencia todas as funcionalidades: múltiplas views, CRUD, drag-and-drop,
- * filtros, ordenação e integração com sub-componentes.
- */
-#[Layout('layouts.app')]
-class NotionBoard extends Component
+class DeliverablesBoard extends Component
 {
     use AuthorizesRequests, WithFileUploads;
 

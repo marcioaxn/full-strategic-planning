@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Organizacao;
+namespace App\Livewire\Organization;
 
 use App\Models\Organization;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
