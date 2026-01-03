@@ -1,5 +1,5 @@
 # 🤖 PROMPT PARA OUTRAS FERRAMENTAS DE IA
-## Continuação do Projeto SEAE - Sistema de Planejamento Estratégico
+## Continuação do Projeto Strategic Planning System
 
 **Versão:** 1.0
 **Data de Criação:** 25/12/2025
@@ -177,7 +177,7 @@ Após completar cada tarefa, **SEMPRE** atualizar o arquivo `ai/novos_artefatos/
 ### Diretórios Importantes
 
 ```
-D:\Apache24\htdocs\seae\
+D:\Apache24\htdocs\strategic-planning\
 ├── app/
 │   ├── Http/
 │   │   ├── Livewire/          # AQUI você criará componentes

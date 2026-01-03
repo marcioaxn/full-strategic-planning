@@ -229,7 +229,7 @@ class MapaEstrategico extends Component
         
         if ($this->organizacaoId) {
             $org = Organization::find($this->organizacaoId);
-            $this->organizacaoNome = $org ? $org->nom_organizacao : 'Sistema SEAE';
+            $this->organizacaoNome = $org ? $org->nom_organizacao : 'Strategic Planning System';
         }
 
         if ($this->peiAtivo) {

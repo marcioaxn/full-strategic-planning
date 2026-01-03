@@ -45,7 +45,7 @@ if ($this->peiAtivo) {
 **Arquivo:** `resources/views/layouts/public.blade.php`
 
 **Características:**
-- Navbar minimalista com logo SEAE
+- Navbar minimalista com logo SPS
 - Botão "Entrar no Sistema" para visitantes
 - Botão "Dashboard" para usuários autenticados
 - Footer com copyright e timestamp
@@ -303,8 +303,8 @@ public function mount()
 6. **Para adicionar meta tags:**
 ```blade
 <!-- No layout public.blade.php, dentro do <head> -->
-<meta name="description" content="Mapa Estratégico do Sistema SEAE">
-<meta property="og:title" content="SEAE - Mapa Estratégico">
+<meta name="description" content="Mapa Estratégico do Strategic Planning System">
+<meta property="og:title" content="SPS - Mapa Estratégico">
 <meta property="og:description" content="Visualize nosso planejamento estratégico">
 ```
 

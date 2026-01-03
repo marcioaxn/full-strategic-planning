@@ -95,7 +95,7 @@
     </div>
 
     <div class="footer">
-        Gerado em {{ now()->format('d/m/Y H:i') }} | SEAE
+        Gerado em {{ now()->format('d/m/Y H:i') }} | SPS
     </div>
 </body>
 </html>

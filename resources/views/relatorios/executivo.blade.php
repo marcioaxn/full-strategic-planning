@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Relatório Executivo Consolidado - SEAE</title>
+    <title>Relatório Executivo Consolidado - SPS</title>
     <style>
         @page { margin: 1cm; }
         body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 10px; color: #333; line-height: 1.4; }
@@ -401,7 +401,7 @@
     </div>
 
     <div class="footer">
-        Relatório Gerencial SEAE - Sistema de Apoio à Estratégia | Gerado em {{ now()->format('d/m/Y H:i') }} | Página {{ isset($pdf) ? $pdf->get_canvas()->get_page_number() : '3' }}
+        Relatório Gerencial Strategic Planning System | Gerado em {{ now()->format('d/m/Y H:i') }} | Página {{ isset($pdf) ? $pdf->get_canvas()->get_page_number() : '3' }}
     </div>
 </body>
 </html>

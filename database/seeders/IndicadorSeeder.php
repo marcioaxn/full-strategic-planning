@@ -41,7 +41,7 @@ class IndicadorSeeder extends Seeder
                 'num_peso' => 1,
                 'bln_acumulado' => 'Não',
                 'dsc_formula' => '(Entregas Concluídas / Total de Entregas) * 100',
-                'dsc_fonte' => 'Sistema SEAE - Módulo de Entregas',
+                'dsc_fonte' => 'Strategic Planning System - Módulo de Entregas',
                 'dsc_periodo_medicao' => 'Mensal',
             ]);
         }
