@@ -266,7 +266,7 @@ This project evolved from a legacy structure (available at [marcioaxn/planejamen
 graph LR
     A[Legacy System<br/>2021-2024] --> B[Schema Migration<br/>Jan 2026]
     B --> C[Deliverables Refactor<br/>Dec 2025]
-    C --> D[Current SEAE<br/>Jan 2026]
+    C --> D[Current System<br/>Jan 2026]
 
     style A fill:#f9f,stroke:#333
     style D fill:#9f9,stroke:#333
@@ -274,7 +274,7 @@ graph LR
 
 ### Legacy vs. Current Architecture
 
-| Feature | Legacy System | Current System (SEAE) |
+| Feature | Legacy System | Current System |
 | :--- | :--- | :--- |
 | **Schema** | Monolithic (`pei` or `public`) | **Domain-Segregated** (`strategic_planning`, `action_plan`, etc.) |
 | **Models** | All in `App\Models` or `App\Models\PEI` | **Domain Folders** (`App\Models\ActionPlan`, etc.) |
