@@ -24,8 +24,8 @@ Route::middleware([
     Route::get('/leads', LeadsTable::class)->name('leads.index');
 
     // Strategic Planning Module
-    Route::get('/organizacoes', \App\Livewire\Organizacao\ListarOrganizacoes::class)->name('organizacoes.index');
-    Route::get('/usuarios', \App\Livewire\Usuario\ListarUsuarios::class)->name('usuarios.index');
+    Route::get('/organizacoes', \App\Livewire\Organization\ListarOrganizacoes::class)->name('organizacoes.index');
+    Route::get('/usuarios', \App\Livewire\UserManagement\ListarUsuarios::class)->name('usuarios.index');
     Route::get('/graus-satisfacao', \App\Livewire\StrategicPlanning\ListarGrausSatisfacao::class)->name('graus-satisfacao.index');
     
     // Strategic Planning (PEI)
@@ -40,13 +40,13 @@ Route::middleware([
     Route::get('/objetivos-estrategicos', \App\Livewire\StrategicPlanning\GerenciarObjetivosEstrategicos::class)->name('objetivos-estrategicos.index');
     Route::get('/objetivos/{objetivoId}/futuro', \App\Livewire\StrategicPlanning\GerenciarFuturoAlmejado::class)->name('objetivos.futuro');
     
-    // Entregas (Estilo Notion)
-    Route::get('/entregas', \App\Livewire\Entregas\NotionBoard::class)->name('entregas.index');
+    // Entregas (Board Style)
+    Route::get('/entregas', \App\Livewire\Deliverables\DeliverablesBoard::class)->name('entregas.index');
     
         // Action Plans
         Route::get('/planos', \App\Livewire\ActionPlan\ListarPlanos::class)->name('planos.index');
         Route::get('/planos/{id}/detalhes', \App\Livewire\ActionPlan\DetalharPlano::class)->name('planos.detalhes');
-        Route::get('/planos/{planoId}/entregas', \App\Livewire\Entregas\NotionBoard::class)->name('planos.entregas');
+        Route::get('/planos/{planoId}/entregas', \App\Livewire\Deliverables\DeliverablesBoard::class)->name('planos.entregas');
         Route::get('/planos/{planoId}/responsaveis', \App\Livewire\ActionPlan\AtribuirResponsaveis::class)->name('planos.responsaveis');
     
                     // Indicators (KPIs)
