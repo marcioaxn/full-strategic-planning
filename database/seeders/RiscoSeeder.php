@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Risco;
-use App\Models\PEI\PEI;
+use App\Models\RiskManagement\Risco;
+use App\Models\StrategicPlanning\PEI;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Database\Seeder;

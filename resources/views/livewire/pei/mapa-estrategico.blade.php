@@ -249,7 +249,7 @@
                     </div>
                     <div class="d-flex align-items-center justify-content-center flex-wrap gap-4 border-top pt-3">
                         <span class="small fw-bold text-muted text-uppercase letter-spacing-1">Status (Planos de Ação):</span>
-                        @foreach(\App\Models\PEI\PlanoDeAcao::getStatusLegend() as $item)
+                        @foreach(\App\Models\ActionPlan\PlanoDeAcao::getStatusLegend() as $item)
                             <div class="d-flex align-items-center">
                                 <span class="legenda-color-dot me-2 shadow-sm" style="background-color: {{ $item['color'] }};"></span>
                                 <small class="text-body fw-medium">{{ $item['label'] }}</small>

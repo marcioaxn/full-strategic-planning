@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\PEI;
+namespace App\Models\StrategicPlanning;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,12 +14,12 @@ class GrauSatisfacao extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_grau_satisfcao';
+    protected $table = 'tab_grau_satisfacao';
 
     /**
      * Chave primária
      */
-    protected $primaryKey = 'cod_grau_satisfcao';
+    protected $primaryKey = 'cod_grau_satisfacao';
 
     /**
      * Tipo da chave primária
@@ -35,7 +35,7 @@ class GrauSatisfacao extends Model
      * Atributos mass assignable
      */
     protected $fillable = [
-        'dsc_grau_satisfcao',
+        'dsc_grau_satisfacao',
         'cor',
         'vlr_minimo',
         'vlr_maximo',

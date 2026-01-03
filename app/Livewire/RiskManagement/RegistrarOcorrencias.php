@@ -2,8 +2,8 @@
 
 namespace App\Livewire\RiskManagement;
 
-use App\Models\Risco;
-use App\Models\RiscoOcorrencia;
+use App\Models\RiskManagement\Risco;
+use App\Models\RiskManagement\RiscoOcorrencia;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;

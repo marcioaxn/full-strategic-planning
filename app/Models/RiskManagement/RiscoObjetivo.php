@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\RiskManagement;
 
-use App\Models\PEI\Objetivo;
+use App\Models\StrategicPlanning\Objetivo;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 

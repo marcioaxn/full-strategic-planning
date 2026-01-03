@@ -22,91 +22,101 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Handle Authentication Exception (Session Expired / Unauthenticated)
+        // Handle Authentication Exception (Sessão Expirada / Não Autenticado)
         $exceptions->render(function (AuthenticationException $e, Request $request) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Unauthenticated.'], 401);
+                return response()->json(['message' => 'Não autenticado.'], 401);
             }
 
-            // Check if user had a previous session (session expired)
+            // Sessão expirada
             if ($request->hasSession() && $request->session()->has('_previous')) {
                 return redirect()
                     ->route('login')
-                    ->with('status', 'Your session has expired. Please sign in again.');
+                    ->with('status', 'Sua sessão expirou. Por favor, faça login novamente.');
             }
 
-            // Unauthenticated user trying to access protected route
+            // Usuário não autenticado tentando acessar rota protegida
             return redirect()
                 ->route('welcome')
-                ->with('error', 'You need to be authenticated to access this page.');
+                ->with('error', 'Você precisa estar autenticado para acessar esta página.');
         });
 
-        // Handle CSRF Token Mismatch (419 Page Expired)
+        // Handle CSRF Token Mismatch (419 Página Expirada)
         $exceptions->render(function (TokenMismatchException $e, Request $request) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'CSRF token mismatch.'], 419);
+                return response()->json(['message' => 'Token CSRF inválido.'], 419);
             }
 
-            // Redirect to login for both authenticated and non-authenticated users
             return redirect()
-                ->route('login')
-                ->with('status', 'Your session has expired. Please sign in again.');
+                ->to(url('/'))
+                ->with('status', 'Sua sessão expirou por inatividade. Você foi redirecionado para a página inicial.');
         });
 
-        // Handle 403 Forbidden
+        // Handle 403 Forbidden (Acesso Negado)
         $exceptions->render(function (AccessDeniedHttpException $e, Request $request) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Access denied.'], 403);
+                return response()->json(['message' => 'Acesso negado.'], 403);
             }
 
-            // Only redirect to welcome if user is not authenticated
             if (!auth()->check()) {
                 return redirect()
                     ->route('welcome')
-                    ->with('error', 'You do not have permission to access this resource.');
+                    ->with('error', 'Você não tem permissão para acessar este recurso.');
             }
 
-            // For authenticated users, show error page or redirect to dashboard
             return redirect()
                 ->route('dashboard')
-                ->with('error', 'You do not have permission to access this resource.');
+                ->with('error', 'Você não tem permissão para realizar esta ação.');
         });
 
-        // Handle 404 Not Found
+        // Handle 404 Not Found (Não Encontrado)
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Resource not found.'], 404);
+                return response()->json(['message' => 'Recurso não encontrado.'], 404);
             }
 
-            // Only redirect to welcome if user is not authenticated
             if (!auth()->check()) {
                 return redirect()
                     ->route('welcome')
-                    ->with('error', 'The page you are looking for could not be found.');
+                    ->with('error', 'A página que você está procurando não foi encontrada.');
             }
 
-            // For authenticated users, keep them in authenticated area
-            // Let Laravel handle it normally (will show 404 page)
-            return null;
+            return null; // Deixa o Laravel renderizar a view errors::404 padrão
         });
 
-        // Handle 500 Server Errors (only for non-authenticated users)
-        $exceptions->render(function (\Throwable $e, Request $request) {
-            if ($request->expectsJson()) {
-                return null; // Let Laravel handle JSON errors
+        // Handle Database Query Exceptions (Integridade Referencial)
+        $exceptions->render(function (\Illuminate\Database\QueryException $e, Request $request) {
+            $errorCode = $e->errorInfo[1] ?? 0;
+
+            // Postgres Foreign Key Violation (23503)
+            if ($errorCode == 23503) {
+                $message = 'Não é possível excluir ou alterar este registro pois ele está vinculado a outros dados do sistema.';
+                
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => $message], 422);
+                }
+
+                return back()->with('error', $message);
             }
 
-            // Only handle for non-authenticated users
+            return null; // Deixa outros erros de banco explodirem (em dev) ou 500 (em prod)
+        });
+
+        // Handle 500 Server Errors (Produção / Não Autenticado)
+        $exceptions->render(function (\Throwable $e, Request $request) {
+            if ($request->expectsJson()) {
+                return null;
+            }
+
             if (!auth()->check() && app()->environment('production')) {
-                // Check if it's a server error (500)
+                // Se for erro de servidor 500+, redireciona para welcome amigável
                 if (method_exists($e, 'getStatusCode') && $e->getStatusCode() >= 500) {
                     return redirect()
                         ->route('welcome')
-                        ->with('error', 'An unexpected error occurred. Please try again later.');
+                        ->with('error', 'Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.');
                 }
             }
 
-            // Let Laravel handle the exception normally for authenticated users or in development
             return null;
         });
     })->create();

@@ -60,7 +60,7 @@
                                 </span>
                             </button>
                             <ul class="dropdown-menu border-0 shadow-lg p-1" wire:ignore>
-                                @foreach(\App\Models\PEI\Entrega::STATUS_OPTIONS as $status)
+                                @foreach(\App\Models\ActionPlan\Entrega::STATUS_OPTIONS as $status)
                                     <li wire:key="opt-status-{{ $status }}">
                                         <button class="dropdown-item rounded-2 small" wire:click="atualizarStatus('{{ $entrega->cod_entrega }}', '{{ $status }}')">
                                             {{ $status }}
@@ -96,7 +96,7 @@
                                 </span>
                             </button>
                             <ul class="dropdown-menu border-0 shadow-lg p-1" wire:ignore>
-                                @foreach(\App\Models\PEI\Entrega::PRIORIDADE_OPTIONS as $key => $info)
+                                @foreach(\App\Models\ActionPlan\Entrega::PRIORIDADE_OPTIONS as $key => $info)
                                     <li wire:key="opt-prio-{{ $key }}">
                                         <button class="dropdown-item rounded-2 small" wire:click="atualizarPrioridade('{{ $entrega->cod_entrega }}', '{{ $key }}')">
                                             <i class="bi bi-{{ $info['icon'] }} me-2"></i>{{ $info['label'] }}

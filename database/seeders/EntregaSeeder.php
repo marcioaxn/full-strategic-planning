@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\PEI\PlanoDeAcao;
-use App\Models\PEI\Entrega;
+use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\ActionPlan\Entrega;
 use Illuminate\Database\Seeder;
 
 class EntregaSeeder extends Seeder

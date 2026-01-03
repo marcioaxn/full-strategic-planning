@@ -2,12 +2,12 @@
 
 namespace App\Livewire\StrategicPlanning;
 
-use App\Models\PEI\PEI;
-use App\Models\PEI\Perspectiva;
-use App\Models\PEI\MissaoVisaoValores;
-use App\Models\PEI\Valor;
-use App\Models\PEI\ObjetivoEstrategico;
-use App\Models\PEI\GrauSatisfacao;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\StrategicPlanning\Perspectiva;
+use App\Models\StrategicPlanning\MissaoVisaoValores;
+use App\Models\StrategicPlanning\Valor;
+use App\Models\StrategicPlanning\ObjetivoEstrategico;
+use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\Organization;
 use Livewire\Attributes\Layout;
 use Livewire\Component;

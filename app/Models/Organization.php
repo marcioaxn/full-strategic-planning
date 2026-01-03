@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use App\Models\PEI\MissaoVisaoValores;
-use App\Models\PEI\PlanoDeAcao;
-use App\Models\PEI\Valor;
+use App\Models\StrategicPlanning\MissaoVisaoValores;
+use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\StrategicPlanning\Valor;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

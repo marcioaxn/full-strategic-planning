@@ -5,16 +5,16 @@ namespace App\Http\Controllers\Reports;
 use App\Http\Controllers\Controller;
 
 use App\Models\Organization;
-use App\Models\PEI\PEI;
-use App\Models\PEI\Perspectiva;
-use App\Models\PEI\MissaoVisaoValores;
-use App\Models\PEI\Valor;
-use App\Models\PEI\Objetivo;
-use App\Models\PEI\ObjetivoEstrategico;
-use App\Models\PEI\Indicador;
-use App\Models\PEI\PlanoDeAcao;
-use App\Models\PEI\GrauSatisfacao;
-use App\Models\Risco;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\StrategicPlanning\Perspectiva;
+use App\Models\StrategicPlanning\MissaoVisaoValores;
+use App\Models\StrategicPlanning\Valor;
+use App\Models\StrategicPlanning\Objetivo;
+use App\Models\StrategicPlanning\ObjetivoEstrategico;
+use App\Models\PerformanceIndicators\Indicador;
+use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\StrategicPlanning\GrauSatisfacao;
+use App\Models\RiskManagement\Risco;
 use App\Exports\ObjetivosExport;
 use App\Exports\IndicadoresExport;
 use App\Exports\PlanosExport;
@@ -86,7 +86,7 @@ class RelatorioController extends Controller
             ]);
 
         // 4. Análise SWOT
-        $swot = \App\Models\PEI\AnaliseAmbiental::swot() 
+        $swot = \App\Models\StrategicPlanning\AnaliseAmbiental::swot() 
             ->where('cod_pei', $pei?->cod_pei)
             ->where('cod_organizacao', $organizacaoId)
             ->get()

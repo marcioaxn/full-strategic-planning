@@ -277,7 +277,7 @@
         {{-- Legenda de Planos (Dinâmica) --}}
         <div class="legend-box" style="margin-bottom: 10px;">
             <strong style="font-size: 8px; color: #1B408E; text-transform: uppercase;">Legenda de Status (Planos de Ação):</strong><br>
-            @foreach(\App\Models\PEI\PlanoDeAcao::getStatusLegend() as $item)
+            @foreach(\App\Models\ActionPlan\PlanoDeAcao::getStatusLegend() as $item)
                 <div class="legend-item"><span class="legend-dot" style="background-color: {{ $item['color'] }};"></span> {{ $item['label'] }}</div>
             @endforeach
         </div>

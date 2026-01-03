@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\PEI;
+namespace App\Models\StrategicPlanning;
 
 use App\Models\Organization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;

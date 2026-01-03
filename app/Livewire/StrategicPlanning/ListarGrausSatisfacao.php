@@ -2,7 +2,7 @@
 
 namespace App\Livewire\StrategicPlanning;
 
-use App\Models\PEI\GrauSatisfacao;
+use App\Models\StrategicPlanning\GrauSatisfacao;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;

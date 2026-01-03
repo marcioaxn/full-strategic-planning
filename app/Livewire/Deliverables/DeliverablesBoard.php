@@ -5,6 +5,8 @@ namespace App\Livewire\Deliverables;
 use Livewire\Component;
 use App\Models\ActionPlan\Entrega;
 use App\Models\ActionPlan\PlanoDeAcao;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\WithFileUploads;
 
 class DeliverablesBoard extends Component
 {
@@ -661,7 +663,7 @@ class DeliverablesBoard extends Component
     {
         $this->authorize('update', $this->plano);
 
-        \App\Models\PEI\EntregaComentario::where('cod_comentario', $comentarioId)
+        \App\Models\ActionPlan\EntregaComentario::where('cod_comentario', $comentarioId)
             ->where('cod_usuario', Auth::id())
             ->delete();
     }
@@ -682,7 +684,7 @@ class DeliverablesBoard extends Component
             $nomeOriginal = $file->getClientOriginalName();
             $path = $file->store('entregas/anexos', 'public');
 
-            \App\Models\PEI\EntregaAnexo::create([
+            \App\Models\ActionPlan\EntregaAnexo::create([
                 'cod_entrega' => $this->entregaDetalheId,
                 'cod_usuario' => Auth::id(),
                 'dsc_nome_arquivo' => $nomeOriginal,
@@ -704,7 +706,7 @@ class DeliverablesBoard extends Component
     {
         $this->authorize('update', $this->plano);
 
-        $anexo = \App\Models\PEI\EntregaAnexo::findOrFail($anexoId);
+        $anexo = \App\Models\ActionPlan\EntregaAnexo::findOrFail($anexoId);
         
         // Remove arquivo físico se desejar (opcional dependendo da política de backup)
         // Storage::disk('public')->delete($anexo->dsc_caminho);
