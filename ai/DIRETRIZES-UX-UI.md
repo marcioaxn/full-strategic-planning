@@ -1,4 +1,4 @@
-# Diretrizes de UX/UI - Sistema SEAE
+# Diretrizes de UX/UI - Strategic Planning System
 
 ## Filosofia Central
 
@@ -141,4 +141,4 @@
 
 ---
 
-*Documento criado como parte das diretrizes do projeto SEAE - Sistema de Planejamento Estratégico*
+*Documento criado como parte das diretrizes do projeto Strategic Planning System*

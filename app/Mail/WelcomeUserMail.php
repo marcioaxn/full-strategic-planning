@@ -28,7 +28,7 @@ class WelcomeUserMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Bem-vindo ao Sistema de Planejamento Estratégico (SEAE)',
+            subject: 'Bem-vindo ao Strategic Planning System',
         );
     }
 

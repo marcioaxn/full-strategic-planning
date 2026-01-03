@@ -1,4 +1,4 @@
-# Estado Atual do Projeto: SEAE (Sistema de Apoio à Estratégia)
+# Estado Atual do Projeto: SPS (Sistema de Apoio à Estratégia)
 
 ## 📌 Contexto Geral
 O projeto é um sistema de Planejamento Estratégico Institucional (PEI) utilizando **Laravel 11, Livewire 3, AlpineJS e PostgreSQL**. O sistema opera com múltiplos schemas, mas as diretrizes de desenvolvimento proíbem a declaração manual de schemas (`public.` ou `pei.`) no código, confiando no `search_path` definido no `config/database.php`.

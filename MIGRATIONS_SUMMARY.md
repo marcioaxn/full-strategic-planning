@@ -1,4 +1,4 @@
-# MIGRATIONS SUMMARY - SEAE Project
+# MIGRATIONS SUMMARY - SPS Project
 
 **Date:** 24 de Dezembro de 2025
 **Status:** ✅ COMPLETO - Todas as migrations criadas e verificadas
@@ -191,7 +191,7 @@ DB_PASSWORD=nbsdjp1352464
 ### Passo 3: Executar migrations
 
 ```bash
-cd D:\Apache24\htdocs\seae
+cd D:\Apache24\htdocs\strategic-planning
 
 # Executar todas as migrations
 php artisan migrate

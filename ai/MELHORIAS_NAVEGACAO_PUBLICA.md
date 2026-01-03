@@ -31,8 +31,8 @@
 **Elementos:**
 
 #### **Logo/Brand:**
-- Ícone SEAE em círculo azul
-- Texto "SEAE | Planejamento Estratégico"
+- Ícone SPS em círculo azul
+- Texto "SPS | Planejamento Estratégico"
 - Link para home (`/`)
 
 #### **Menu (Visitante NÃO autenticado):**
@@ -72,7 +72,7 @@ Card gradiente azul com:
 
 ### 3. 📄 FOOTER INFORMATIVO COMPLETO
 
-**Seção 1: Sobre o SEAE**
+**Seção 1: Sobre o SPS**
 - Logo + nome
 - Descrição do sistema
 - Propósito claro
@@ -147,7 +147,7 @@ Card gradiente azul com:
 ```
 ┌────────────────────────────────┐
 │  NAVBAR                        │
-│  [Logo SEAE] [Início] [Entrar] [Criar Conta]  <- SEMPRE VISÍVEL
+│  [Logo SPS] [Início] [Entrar] [Criar Conta]  <- SEMPRE VISÍVEL
 │                                │
 ├────────────────────────────────┤
 │                                │
@@ -189,7 +189,7 @@ Agora o visitante pode fazer login de **3 lugares**:
 ## 🔄 FLUXO DO VISITANTE AGORA
 
 ```
-1. Acessa: http://192.168.1.8/seae/public/
+1. Acessa: http://192.168.1.8/strategic-planning/public/
    └─> Vê NAVBAR com botão "Entrar" DESTAQUE
 
 2. Pode clicar em:
@@ -249,10 +249,10 @@ Todos elementos adaptam automaticamente:
 ### Teste 1: Visitante Não Autenticado
 
 ```bash
-1. Acessar: http://192.168.1.8/seae/public/
+1. Acessar: http://192.168.1.8/strategic-planning/public/
 
 2. Verificar NAVBAR:
-   - [ ] Logo SEAE aparece
+   - [ ] Logo SPS aparece
    - [ ] Botão "Entrar" azul visível
    - [ ] Botão "Criar Conta" visível
    - [ ] Theme switcher funciona

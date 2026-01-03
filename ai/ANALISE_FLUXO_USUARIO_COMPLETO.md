@@ -19,7 +19,7 @@
 ### 1. 🔐 COMO O USUÁRIO FAZ LOGIN?
 
 #### **Página Inicial (Não Autenticado)**
-**URL:** `http://192.168.1.8/seae/public/`
+**URL:** `http://192.168.1.8/strategic-planning/public/`
 
 **O que o visitante vê:**
 - ✅ Mapa Estratégico completo (públicico)
@@ -125,7 +125,7 @@ User::updateOrCreate(
 │ FASE 1: VISITANTE (NÃO AUTENTICADO)                        │
 └─────────────────────────────────────────────────────────────┘
 
-1. Acessa: http://192.168.1.8/seae/public/
+1. Acessa: http://192.168.1.8/strategic-planning/public/
    └─> Vê: Mapa Estratégico Público
        ├─ Perspectivas BSC
        ├─ Objetivos Estratégicos
@@ -286,7 +286,7 @@ Quando autenticado, o usuário pode acessar:
 ### 8. ✅ RESUMO DO FLUXO (PASSO A PASSO SIMPLIFICADO)
 
 ```
-1. Visitante acessa: http://192.168.1.8/seae/public/
+1. Visitante acessa: http://192.168.1.8/strategic-planning/public/
    └─> Vê: Mapa Estratégico
 
 2. Clica: "Fazer Login"
@@ -317,7 +317,7 @@ Quando autenticado, o usuário pode acessar:
 
 ```bash
 # 1. Acessar página inicial
-http://192.168.1.8/seae/public/
+http://192.168.1.8/strategic-planning/public/
 
 # 2. Verificar:
 - [ ] Mapa Estratégico aparece

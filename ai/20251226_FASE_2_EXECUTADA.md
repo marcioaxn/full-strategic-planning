@@ -1,5 +1,5 @@
 # RELATÓRIO FINAL DE EXECUÇÃO - FASE 2 (REVISADO)
-## Sistema de Planejamento Estratégico - SEAE
+## Sistema de Planejamento Estratégico - SPS
 
 **Data:** 26/12/2025
 **Executor:** Gemini (via Google AI)

@@ -1,5 +1,5 @@
 # ROADMAP DE CORREÇÕES E MELHORIAS
-## Sistema de Planejamento Estratégico - SEAE
+## Sistema de Planejamento Estratégico - SPS
 
 **Versão:** 1.1
 **Data de Criação:** 26/12/2025
@@ -11,7 +11,7 @@
 
 ## 📊 RESUMO EXECUTIVO
 
-Este roadmap documenta correções e melhorias do sistema SEAE. A Fase 1 (13 itens) foi concluída em 26/12/2025. A Fase 2 (9 itens) foi identificada em testes subsequentes e está pendente.
+Este roadmap documenta correções e melhorias do Strategic Planning System. A Fase 1 (13 itens) foi concluída em 26/12/2025. A Fase 2 (9 itens) foi identificada em testes subsequentes e está pendente.
 
 ### FASE 1 - Correções Iniciais (100% Concluído)
 
