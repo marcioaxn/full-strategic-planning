@@ -256,9 +256,21 @@ app/
 
 ---
 
-## 🔄 Legacy Transition
+## 🔄 Legacy Transition & Migration Strategy
 
-This project evolved from a legacy structure (available at [marcioaxn/planejamento-estrategico](https://github.com/marcioaxn/planejamento-estrategico)). Below is the detail of the architectural shift performed via migrations.
+This project evolved from a legacy structure (available at [marcioaxn/planejamento-estrategico](https://github.com/marcioaxn/planejamento-estrategico)) through a carefully planned migration strategy that preserves **100% data integrity** while modernizing the architecture.
+
+### Evolution Timeline
+
+```mermaid
+graph LR
+    A[Legacy System<br/>2021-2024] --> B[Schema Migration<br/>Jan 2026]
+    B --> C[Deliverables Refactor<br/>Dec 2025]
+    C --> D[Current SEAE<br/>Jan 2026]
+
+    style A fill:#f9f,stroke:#333
+    style D fill:#9f9,stroke:#333
+```
 
 ### Legacy vs. Current Architecture
 
@@ -268,27 +280,294 @@ This project evolved from a legacy structure (available at [marcioaxn/planejamen
 | **Models** | All in `App\Models` or `App\Models\PEI` | **Domain Folders** (`App\Models\ActionPlan`, etc.) |
 | **Organization** | Mixed responsibilities | **Separation of Concerns** (DDD) |
 | **Naming** | `pei.tab_tabela` (Hardcoded) | `tab_tabela` (Schema agnostic via `search_path`) |
+| **Deliverables** | Simple hierarchical list | **Notion-like Board** (Kanban, Timeline, Calendar, List) |
+| **Data Structure** | Fixed columns | **Flexible JSON properties** + Rich metadata |
 
-### Migration Strategy
+---
 
-We developed a safe migration path that preserves data integrity while refactoring the structure.
+## 📦 Migration Strategy Overview
 
-**Key Migration Files:**
+The migration strategy was designed as a **zero-downtime, backward-compatible** transition path with multiple layers:
 
-1.  **Original Migrations (Refactored):**
-    All original migrations were preserved but moved to their respective domain folders (`database/migrations/ActionPlan`, etc.). They now define tables using the schema-agnostic approach.
+### Layer 1: Domain Schema Segregation
 
-2.  **`2026_01_02_000001_migrate_legacy_tables_to_domain_schemas.php`:**
-    *   **Purpose:** The "Big Bang" migration.
-    *   **Action:** Creates the new schemas (`strategic_planning`, `action_plan`, etc.) and safely moves existing tables from the legacy `pei`/`public` schemas to their new homes using `ALTER TABLE ... SET SCHEMA`.
-    *   **Safety:** Uses `IF EXISTS` checks to ensure it runs smoothly on both fresh installs and existing legacy databases.
+**Migration:** `2026_01_02_000001_migrate_legacy_tables_to_domain_schemas.php`
 
-3.  **`2026_01_02_000002_fix_grau_satisfacao_table.php`:**
-    *   **Purpose:** Data correction.
-    *   **Action:** Fixes historical typos (e.g., `satisfcao` -> `satisfacao`) ensuring consistency across the entire system.
+**Purpose:** Restructure the database from a monolithic schema into domain-specific schemas following DDD principles.
 
-**Note on Upgrading:**
-If you are upgrading from the legacy version, simply run `php artisan migrate`. The system will automatically detect the old tables and move them to the new structure **without data loss**.
+**What it does:**
+1. Creates 5 new PostgreSQL schemas:
+   - `strategic_planning` - PEI, objectives, perspectives, BSC components
+   - `action_plan` - Action plans, deliverables, execution types
+   - `performance_indicators` - KPIs, goals, baselines, evolutions
+   - `risk_management` - Risks, mitigations, occurrences
+   - `organization` - Organizations, profiles, user relationships
+
+2. Safely moves existing tables from `pei` and `public` schemas to their new domains using:
+   ```sql
+   ALTER TABLE old_schema.table_name SET SCHEMA new_schema;
+   ```
+
+3. **Safety Features:**
+   - Uses `IF EXISTS` checks before moving tables
+   - Preserves all data, indexes, and constraints
+   - Works on both fresh installs and legacy upgrades
+   - No data loss, no downtime
+
+**Tables Migrated:**
+
+<details>
+<summary><b>Strategic Planning Schema (14 tables)</b></summary>
+
+- `tab_pei` - Strategic planning cycles
+- `tab_missao_visao_valores` - Mission & Vision
+- `tab_valores` - Organizational values
+- `tab_perspectiva` - BSC perspectives
+- `tab_objetivo` - Strategic objectives
+- `tab_objetivo_estrategico` - Legacy objectives (renamed)
+- `tab_futuro_almejado_objetivo` - Future state per objective
+- `tab_nivel_hierarquico` - Hierarchical levels
+- `tab_grau_satisfacao` - Performance satisfaction degrees
+- `tab_arquivos` - Evidence attachments
+- `tab_atividade_cadeia_valor` - Value chain activities
+- `tab_processos_atividade_cadeia_valor` - Value chain processes
+- `tab_analise_ambiental` - Environmental analysis (SWOT)
+</details>
+
+<details>
+<summary><b>Action Plan Schema (9 tables)</b></summary>
+
+- `tab_plano_de_acao` - Action plans
+- `tab_entregas` - Deliverables (main table)
+- `tab_entrega_comentarios` - Comments on deliverables
+- `tab_entrega_labels` - Tags/labels for categorization
+- `rel_entrega_labels` - Many-to-many pivot
+- `tab_entrega_anexos` - File attachments
+- `tab_entrega_historico` - Activity history/audit trail
+- `rel_entrega_users_responsaveis` - Assigned users
+- `tab_tipo_execucao` - Execution types (Action, Initiative, Project)
+- `acoes` - Legacy actions log
+</details>
+
+<details>
+<summary><b>Performance Indicators Schema (5 tables)</b></summary>
+
+- `tab_indicador` - Performance indicators (KPIs)
+- `tab_evolucao_indicador` - Monthly evolution tracking
+- `tab_linha_base_indicador` - Baseline per year
+- `tab_meta_por_ano` - Annual goals
+- `rel_indicador_objetivo_organizacao` - Indicator ↔ Organization
+</details>
+
+<details>
+<summary><b>Risk Management Schema (4 tables)</b></summary>
+
+- `tab_risco` - Strategic risks (5×5 matrix)
+- `tab_risco_objetivo` - Risks ↔ Objectives pivot
+- `tab_risco_mitigacao` - Mitigation plans
+- `tab_risco_ocorrencia` - Risk occurrence log
+</details>
+
+<details>
+<summary><b>Organization Schema (5 tables)</b></summary>
+
+- `tab_organizacoes` - Organizational units
+- `tab_perfil_acesso` - Access profiles (roles)
+- `rel_users_tab_organizacoes` - Users ↔ Organizations
+- `rel_organizacao` - Organizational hierarchy
+- `rel_users_tab_organizacoes_tab_perfil_acesso` - Full access control
+</details>
+
+---
+
+### Layer 2: Deliverables Modernization (Notion-like Interface)
+
+**Migration Set:** `2025_12_27_180000` through `2025_12_27_193000` (7 migrations)
+
+**Purpose:** Transform the simple deliverables system into a powerful, Notion-like project management interface with multiple views and rich metadata.
+
+#### 2.1 Core Table Enhancement
+
+**Migration:** `2025_12_27_180000_alter_pei_tab_entregas_add_notion_fields.php`
+
+**New Fields Added:**
+- `cod_entrega_pai` (UUID) - Parent deliverable for hierarchical subtasks
+- `dsc_tipo` (VARCHAR) - Block type: task, heading, text, divider, checklist
+- `json_propriedades` (JSONB) - Custom properties (colors, icons, metadata)
+- `dte_prazo` (DATE) - Due date
+- `cod_responsavel` (UUID) - Assigned user
+- `cod_prioridade` (VARCHAR) - Priority: low, medium, high, urgent
+- `num_ordem` (INTEGER) - Sort order for drag-and-drop
+- `bln_arquivado` (BOOLEAN) - Archived flag (soft archive, not deleted)
+
+**Data Migration:**
+```sql
+-- Migrates existing data from num_nivel_hierarquico_apresentacao to num_ordem
+UPDATE pei.tab_entregas
+SET
+    num_ordem = COALESCE(num_nivel_hierarquico_apresentacao, 0),
+    dsc_tipo = 'task',
+    cod_prioridade = 'media',
+    bln_arquivado = false,
+    json_propriedades = '{}'::jsonb
+WHERE num_ordem = 0 OR num_ordem IS NULL;
+```
+
+#### 2.2 Supporting Tables
+
+**`tab_entrega_comentarios`** - Discussion threads on deliverables
+- Rich text comments with markdown support
+- @mentions via JSON (`json_mencoes`)
+- Threaded replies (via parent_id added in migration `2025_12_27_193000`)
+
+**`tab_entrega_labels`** - Color-coded tags per action plan
+- Customizable colors (HEX format)
+- Optional icons (Bootstrap Icons)
+- Sortable for organization
+
+**`rel_entrega_labels`** - Many-to-many pivot for tagging deliverables
+
+**`tab_entrega_anexos`** - File attachments
+- Supports images, documents, any MIME type
+- Stores thumbnails for preview
+- Tracks file size and metadata
+
+**`tab_entrega_historico`** - Complete audit trail
+- Tracks all changes (created, updated, deleted, restored, status_changed)
+- Stores before/after values in JSONB
+- Human-readable descriptions
+
+**`rel_entrega_users_responsaveis`** - Multiple assignees per deliverable
+
+**Features Enabled:**
+- ✅ **4 Views:** Kanban, List, Timeline/Gantt, Calendar
+- ✅ **Drag-and-drop** reordering within and across columns
+- ✅ **Inline editing** of titles and properties
+- ✅ **Hierarchical subtasks** with unlimited nesting
+- ✅ **Rich comments** with @mentions
+- ✅ **File attachments** with preview
+- ✅ **Color-coded labels** for visual categorization
+- ✅ **Complete history** of all changes
+- ✅ **Multiple assignees** per task
+- ✅ **Priority levels** with visual indicators
+
+---
+
+### Layer 3: Strategic Objectives Restructuring
+
+**Migrations:**
+- `2025_12_28_185851_rename_objetivo_estrategico_to_objetivo.php`
+- `2025_12_28_203425_create_new_tab_objetivo_estrategico.php`
+
+**Purpose:** Simplify and standardize objective naming while maintaining backward compatibility.
+
+**Changes:**
+1. Renamed tables:
+   - `tab_objetivo_estrategico` → `tab_objetivo` (main working table)
+   - `tab_futuro_almejado_objetivo_estrategico` → `tab_futuro_almejado_objetivo`
+   - `rel_indicador_objetivo_estrategico_organizacao` → `rel_indicador_objetivo_organizacao`
+
+2. Created new `tab_objetivo_estrategico` in `strategic_planning` schema for new architecture
+
+**Why:** The term "objetivo_estrategico" was redundant - all objectives in PEI are strategic by definition. The renaming simplifies code and database queries.
+
+---
+
+### Layer 4: Data Quality Fixes
+
+**Migration:** `2026_01_02_000002_fix_grau_satisfacao_table.php`
+
+**Purpose:** Fix historical typos and ensure data consistency.
+
+**Corrections:**
+- `tab_grau_satisfcao` (typo) → `tab_grau_satisfacao` (correct Portuguese)
+- Handles multiple scenarios:
+  1. Table stuck in `pei` schema with wrong name
+  2. Table stuck in `pei` schema with correct name
+  3. Table already moved to `strategic_planning` but with wrong name
+
+**Safety:** Uses existence checks to handle all possible states gracefully.
+
+---
+
+## 🚀 Upgrading from Legacy System
+
+### For Existing Installations
+
+If you have an existing database from the legacy system:
+
+```bash
+# 1. Backup your database first (CRITICAL!)
+pg_dump -U postgres strategic_db > backup_$(date +%Y%m%d).sql
+
+# 2. Pull the latest code
+git pull origin main
+
+# 3. Run migrations
+php artisan migrate
+
+# Expected output:
+# ✓ Creating schemas (strategic_planning, action_plan...)
+# ✓ Moving tables to new schemas
+# ✓ Adding Notion-like fields to deliverables
+# ✓ Creating supporting tables
+# ✓ Fixing table names
+```
+
+**The migrations are:**
+- ✅ **Idempotent** - Safe to run multiple times
+- ✅ **Non-destructive** - Zero data loss
+- ✅ **Backward compatible** - Old code continues working during transition
+
+### For Fresh Installations
+
+Simply run:
+```bash
+php artisan migrate --seed
+```
+
+All tables will be created directly in their final domain schemas.
+
+---
+
+## 🔙 Rollback Considerations
+
+**⚠️ Important:** Rolling back schema migrations in production is **not recommended** due to:
+1. Complexity of moving tables back to original schemas
+2. Potential foreign key conflicts
+3. Risk to data integrity
+
+**Best Practice:**
+- Always test migrations in **development** first
+- Keep database backups before migrating
+- Use Laravel's migration status: `php artisan migrate:status`
+
+**Emergency Rollback:**
+```bash
+# Only in development/staging!
+php artisan migrate:rollback --step=1
+```
+
+---
+
+## 📊 Migration Impact Summary
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| **Schemas** | 2 (`public`, `pei`) | 6 (including `strategic_planning`, `action_plan`, etc.) |
+| **Total Tables** | 37 | 47 (+10 for Notion-like features) |
+| **Deliverables Fields** | 12 basic | 20+ with rich metadata |
+| **Audit Capability** | Limited | Full history + comments + attachments |
+| **User Experience** | Basic list | 4 interactive views (Kanban/List/Timeline/Calendar) |
+
+---
+
+## 📝 Related Documentation
+
+For detailed information about the migration system:
+- **Migration Summary:** See `MIGRATIONS_SUMMARY.md`
+- **Deliverables Roadmap:** See `ai/20251227_roadmap_sistema_entregas_notion.md`
+- **Architecture Details:** See `ai/PROJECT_STATE.md`
 
 ---
 
