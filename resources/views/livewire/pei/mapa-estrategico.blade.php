@@ -7,7 +7,7 @@
                     <div class="icon-shape gradient-theme-icon rounded-circle p-2 me-2 shadow-sm">
                         <i class="bi bi-diagram-3 fs-5 text-white"></i>
                     </div>
-                    <span class="brand-text-primary text-body">SEAE</span>
+                    <span class="brand-text-primary text-body">SPS</span>
                     <span class="brand-text-secondary ms-2 small d-none d-md-inline text-muted">| Planejamento Estratégico</span>
                 </a>
 

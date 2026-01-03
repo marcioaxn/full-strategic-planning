@@ -20,7 +20,7 @@
 </head>
 <body>
     <div class="header">
-        <div class="logo">SEAE - Sistema de Planejamento Estratégico</div>
+        <div class="logo">Strategic Planning System</div>
         <div class="title">Identidade Estratégica Institucional</div>
         <div style="font-size: 14px; color: #333; font-weight: bold; margin-top: 10px;">{{ $organizacao->nom_organizacao }} ({{ $organizacao->sgl_organizacao }})</div>
     </div>
@@ -54,7 +54,7 @@
     </div>
 
     <div class="footer">
-        Gerado em {{ now()->format('d/m/Y H:i') }} | SEAE - Planejamento e Estratégia
+        Gerado em {{ now()->format('d/m/Y H:i') }} | SPS - Planejamento e Estratégia
     </div>
 </body>
 </html>

@@ -173,7 +173,7 @@ routes/web.php
 Durante a finalização da Fase 8 e 9, foram identificadas e corrigidas falhas críticas que impediam o funcionamento do sistema:
 
 ### 1. Incompatibilidade de Tipos no Banco de Dados (Grave)
-- **Problema:** As migrações (`180000`, `180001`, `180004`, `180005`) tentavam criar chaves estrangeiras para a tabela `users` usando o tipo `bigint` (via `foreignId`), mas o sistema SEAE utiliza `UUID` para usuários. Isso causava falha total na execução do `php artisan migrate`.
+- **Problema:** As migrações (`180000`, `180001`, `180004`, `180005`) tentavam criar chaves estrangeiras para a tabela `users` usando o tipo `bigint` (via `foreignId`), mas o Strategic Planning System utiliza `UUID` para usuários. Isso causava falha total na execução do `php artisan migrate`.
 - **Solução:** Todas as migrações foram corrigidas para utilizar `$table->uuid()` nos campos de referência ao usuário (`cod_responsavel`, `cod_usuario`).
 
 ### 2. Ausência de Rota de Acesso

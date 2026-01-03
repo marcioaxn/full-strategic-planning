@@ -136,7 +136,7 @@ php artisan view:clear
 php artisan route:clear
 
 # 3. Acessar
-http://192.168.1.8/seae/public/
+http://192.168.1.8/strategic-planning/public/
 ```
 
 **Deve funcionar sem erros!**
