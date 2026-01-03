@@ -115,7 +115,7 @@ class Indicador extends Model implements Auditable
     {
         return $this->belongsToMany(
             Organization::class,
-            'rel_indicador_objetivo_estrategico_organizacao',
+            'rel_indicador_objetivo_organizacao',
             'cod_indicador',
             'cod_organizacao',
             'cod_indicador',
