@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.tab_linha_base_indicador', function (Blueprint $table) {
+        Schema::create('performance_indicators.tab_linha_base_indicador', function (Blueprint $table) {
             $table->uuid('cod_linha_base')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->foreignUuid('cod_indicador')
                   ->references('cod_indicador')

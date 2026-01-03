@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.tab_indicador', function (Blueprint $table) {
+        Schema::create('performance_indicators.tab_indicador', function (Blueprint $table) {
             $table->uuid('cod_indicador')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->foreignUuid('cod_plano_de_acao')->nullable()->references('cod_plano_de_acao')->on('pei.tab_plano_de_acao')->cascadeOnDelete();
             $table->foreignUuid('cod_objetivo')->nullable()->references('cod_objetivo')->on('pei.tab_objetivo_estrategico')->cascadeOnDelete();

@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.tab_objetivo_estrategico', function (Blueprint $table) {
+        Schema::create('strategic_planning.tab_objetivo_estrategico', function (Blueprint $table) {
             $table->uuid('cod_objetivo')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->text('nom_objetivo')->nullable(false);
             $table->text('dsc_objetivo')->nullable(false);

@@ -23,7 +23,7 @@ class Indicador extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'pei.tab_indicador';
+    protected $table = 'tab_indicador';
 
     /**
      * Chave primária

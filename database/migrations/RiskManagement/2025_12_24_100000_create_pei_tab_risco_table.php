@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.tab_risco', function (Blueprint $table) {
+        Schema::create('risk_management.tab_risco', function (Blueprint $table) {
             $table->uuid('cod_risco')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->foreignUuid('cod_pei')->references('cod_pei')->on('pei.tab_pei')->cascadeOnDelete();
             $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('tab_organizacoes')->cascadeOnDelete();
