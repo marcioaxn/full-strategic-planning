@@ -101,8 +101,8 @@ If you are new to Laravel or command-line tools, follow these steps carefully:
 **1. Clone the Project**
 Open your terminal (Command Prompt, PowerShell, or Terminal) and run:
 ```bash
-git clone <repository_url> seae
-cd seae
+git clone <repository_url> strategic-planning
+cd strategic-planning
 ```
 
 **2. Install Backend Dependencies**
@@ -132,14 +132,14 @@ php artisan key:generate
 
 **6. Setup Database**
 1.  Open your PostgreSQL tool (pgAdmin or DBeaver).
-2.  Create a new database named `seae_db` (or any name you prefer).
+2.  Create a new database named `strategic_db` (or any name you prefer).
 3.  Open the `.env` file in a text editor (like VS Code or Notepad).
 4.  Find the `DB_CONNECTION` section and update it:
     ```env
     DB_CONNECTION=pgsql
     DB_HOST=127.0.0.1
     DB_PORT=5432
-    DB_DATABASE=seae_db
+    DB_DATABASE=strategic_db
     DB_USERNAME=postgres
     DB_PASSWORD=your_password
     ```
@@ -169,7 +169,7 @@ Access http://localhost:8000 in your browser.
 
 ```bash
 # Clone
-git clone <repository_url> seae && cd seae
+git clone <repository_url> strategic-planning && cd strategic-planning
 
 # Install Deps
 composer install && npm install
