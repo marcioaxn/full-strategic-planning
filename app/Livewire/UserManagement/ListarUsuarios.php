@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Usuario;
+namespace App\Livewire\UserManagement;
 
 use App\Models\User;
 use App\Models\Organization;
