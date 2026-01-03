@@ -16,6 +16,7 @@ This project was built upon the [Laravel Jetstream + Livewire + Bootstrap Starte
   - [Beginners](#-beginners-step-by-step)
   - [Experienced Developers](#-experienced-developers-tldr)
 - [Database & Architecture](#-database--architecture)
+- [Legacy Transition](#-legacy-transition)
 - [Credits](#-credits)
 - [License](#-license)
 
@@ -197,17 +198,97 @@ php artisan serve
 
 ## 🏛️ Database & Architecture
 
-### Multi-Schema Approach
-This project utilizes PostgreSQL schemas to organize data, although code references are schema-agnostic to maintain clean Eloquent usage.
-- **Authentication/Global:** `public` schema (Users, Organizations).
-- **Strategic Data:** `pei` schema (Objectives, Indicators, Plans).
+This project implements a **Domain-Driven Design (DDD)** approach in both its file structure and database schema architecture. This ensures modularity, scalability, and better organization compared to monolithic legacy systems.
 
-*Note: The `search_path` configuration in `config/database.php` handles the resolution automatically.*
+### Domain Schemas (PostgreSQL)
 
-### Global Selectors
-The application features a global session state for **Organization** and **Year**.
-- Changing the Year in the navbar filters **all** dashboards and lists immediately.
-- The `App\Livewire\Shared\SeletorOrganizacao` component handles this logic.
+Instead of a single `public` or `pei` schema, data is segregated into logical domains. This is transparent to the application code thanks to the `search_path` configuration in `config/database.php`.
+
+```mermaid
+graph TD
+    DB[Database: strategic_db] --> SP[Schema: strategic_planning]
+    DB --> AP[Schema: action_plan]
+    DB --> PI[Schema: performance_indicators]
+    DB --> RM[Schema: risk_management]
+    DB --> ORG[Schema: organization]
+    DB --> PUB[Schema: public]
+
+    SP --> T1[tab_pei]
+    SP --> T2[tab_objetivo]
+    SP --> T3[tab_perspectiva]
+
+    AP --> T4[tab_plano_de_acao]
+    AP --> T5[tab_entregas]
+
+    PI --> T6[tab_indicador]
+    PI --> T7[tab_evolucao_indicador]
+
+    RM --> T8[tab_risco]
+    RM --> T9[tab_risco_mitigacao]
+
+    ORG --> T10[tab_organizacoes]
+    ORG --> T11[tab_perfil_acesso]
+
+    PUB --> T12[users]
+    PUB --> T13[failed_jobs]
+```
+
+### File Structure Map
+
+The application code mirrors the database structure:
+
+```text
+app/
+├── Models/
+│   ├── ActionPlan/          (PlanoDeAcao, Entrega...)
+│   ├── StrategicPlanning/   (PEI, Objetivo, Perspectiva...)
+│   ├── PerformanceIndicators/ (Indicador, Meta...)
+│   ├── RiskManagement/      (Risco, Mitigacao...)
+│   ├── Organization/        (Organization, Perfil...)
+│   └── User.php             (Auth - Public Domain)
+├── Livewire/
+│   ├── ActionPlan/
+│   ├── StrategicPlanning/
+│   ├── PerformanceIndicators/
+│   ├── RiskManagement/
+│   └── ...
+```
+
+---
+
+## 🔄 Legacy Transition
+
+This project evolved from a legacy structure (available at [marcioaxn/planejamento-estrategico](https://github.com/marcioaxn/planejamento-estrategico)). Below is the detail of the architectural shift performed via migrations.
+
+### Legacy vs. Current Architecture
+
+| Feature | Legacy System | Current System (SEAE) |
+| :--- | :--- | :--- |
+| **Schema** | Monolithic (`pei` or `public`) | **Domain-Segregated** (`strategic_planning`, `action_plan`, etc.) |
+| **Models** | All in `App\Models` or `App\Models\PEI` | **Domain Folders** (`App\Models\ActionPlan`, etc.) |
+| **Organization** | Mixed responsibilities | **Separation of Concerns** (DDD) |
+| **Naming** | `pei.tab_tabela` (Hardcoded) | `tab_tabela` (Schema agnostic via `search_path`) |
+
+### Migration Strategy
+
+We developed a safe migration path that preserves data integrity while refactoring the structure.
+
+**Key Migration Files:**
+
+1.  **Original Migrations (Refactored):**
+    All original migrations were preserved but moved to their respective domain folders (`database/migrations/ActionPlan`, etc.). They now define tables using the schema-agnostic approach.
+
+2.  **`2026_01_02_000001_migrate_legacy_tables_to_domain_schemas.php`:**
+    *   **Purpose:** The "Big Bang" migration.
+    *   **Action:** Creates the new schemas (`strategic_planning`, `action_plan`, etc.) and safely moves existing tables from the legacy `pei`/`public` schemas to their new homes using `ALTER TABLE ... SET SCHEMA`.
+    *   **Safety:** Uses `IF EXISTS` checks to ensure it runs smoothly on both fresh installs and existing legacy databases.
+
+3.  **`2026_01_02_000002_fix_grau_satisfacao_table.php`:**
+    *   **Purpose:** Data correction.
+    *   **Action:** Fixes historical typos (e.g., `satisfcao` -> `satisfacao`) ensuring consistency across the entire system.
+
+**Note on Upgrading:**
+If you are upgrading from the legacy version, simply run `php artisan migrate`. The system will automatically detect the old tables and move them to the new structure **without data loss**.
 
 ---
 
