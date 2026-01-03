@@ -401,8 +401,8 @@ LOG_LEVEL=info
 DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
 DB_PORT=5432
-DB_DATABASE=seae_db
-DB_USERNAME=seae_user
+DB_DATABASE=strategic_db
+DB_USERNAME=strategic_user
 DB_PASSWORD=senha_segura
 
 CACHE_DRIVER=redis

@@ -201,6 +201,6 @@ Após executar os seeders:
 
 ---
 
-**Desenvolvido para:** Sistema SEAE - Planejamento Estratégico
+**Desenvolvido para:** Strategic Planning System - Planejamento Estratégico
 **Versão:** 1.0
 **Data:** Dezembro 2024

@@ -1,9 +1,9 @@
 <x-mail::message>
-# Bem-vindo ao SEAE!
+# Bem-vindo ao SPS!
 
 Olá **{{ $user->name }}**,
 
-Sua conta foi criada no Sistema de Planejamento Estratégico (SEAE).
+Sua conta foi criada no Strategic Planning System.
 
 Abaixo estão suas credenciais de acesso:
 

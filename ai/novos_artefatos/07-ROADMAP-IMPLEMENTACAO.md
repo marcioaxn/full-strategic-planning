@@ -2182,7 +2182,7 @@ class MapaEstrategicoPublico extends Component
 {
     public $peiAtivo;
     public $perspectivas = [];
-    public $organizacaoNome = 'Sistema SEAE';
+    public $organizacaoNome = 'Strategic Planning System';
 
     public function mount()
     {
@@ -2231,7 +2231,7 @@ class MapaEstrategicoPublico extends Component
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'SEAE') }} - Mapa Estratégico</title>
+    <title>{{ config('app.name', 'SPS') }} - Mapa Estratégico</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -2252,7 +2252,7 @@ class MapaEstrategicoPublico extends Component
         <div class="container-fluid px-4">
             <a class="navbar-brand fw-bold" href="/">
                 <i class="bi bi-diagram-3 me-2"></i>
-                SEAE - Planejamento Estratégico
+                SPS - Planejamento Estratégico
             </a>
 
             <div class="d-flex align-items-center">
@@ -2282,7 +2282,7 @@ class MapaEstrategicoPublico extends Component
             <div class="row">
                 <div class="col-md-6">
                     <p class="text-muted mb-0">
-                        <small>&copy; {{ date('Y') }} Sistema SEAE. Todos os direitos reservados.</small>
+                        <small>&copy; {{ date('Y') }} Strategic Planning System. Todos os direitos reservados.</small>
                     </p>
                 </div>
                 <div class="col-md-6 text-md-end">
@@ -2521,8 +2521,8 @@ public function mount()
 2. **Meta Tags para SEO:**
 ```blade
 <!-- No layout public.blade.php -->
-<meta name="description" content="Mapa Estratégico do Sistema SEAE - Planejamento Estratégico Institucional">
-<meta property="og:title" content="SEAE - Mapa Estratégico">
+<meta name="description" content="Mapa Estratégico do Strategic Planning System - Planejamento Estratégico Institucional">
+<meta property="og:title" content="SPS - Mapa Estratégico">
 <meta property="og:description" content="Visualize nosso planejamento estratégico institucional">
 ```
 
