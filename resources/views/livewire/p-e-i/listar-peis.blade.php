@@ -45,6 +45,102 @@
         </div>
     @endif
 
+    {{-- PEI Help Section (Educational) --}}
+    <div class="card card-modern mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="card-body p-4 text-white">
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="d-flex align-items-start gap-3 mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle bg-white bg-opacity-25 p-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="bi bi-lightbulb-fill fs-3 text-white"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="fw-bold mb-2 text-white">O que é o PEI?</h5>
+                            <p class="mb-0 opacity-90" style="line-height: 1.6;">
+                                O <strong>Planejamento Estratégico Institucional (PEI)</strong> é um instrumento de gestão estratégica de médio e longo prazo
+                                que define a direção da organização. Ele estabelece onde queremos chegar (Visão), como vamos chegar (Objetivos Estratégicos)
+                                e como saberemos que chegamos (Indicadores de Desempenho).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <div class="bg-white bg-opacity-10 rounded-3 p-3">
+                        <h6 class="fw-bold mb-3 text-white d-flex align-items-center gap-2">
+                            <i class="bi bi-puzzle-fill"></i>
+                            Componentes Principais
+                        </h6>
+                        <ul class="list-unstyled mb-0 small">
+                            <li class="mb-2 d-flex align-items-start gap-2">
+                                <i class="bi bi-check-circle-fill mt-1 opacity-75"></i>
+                                <span><strong>Identidade:</strong> Missão, Visão e Valores da organização</span>
+                            </li>
+                            <li class="mb-2 d-flex align-items-start gap-2">
+                                <i class="bi bi-check-circle-fill mt-1 opacity-75"></i>
+                                <span><strong>Perspectivas BSC:</strong> Financeira, Clientes, Processos Internos, Aprendizado</span>
+                            </li>
+                            <li class="mb-2 d-flex align-items-start gap-2">
+                                <i class="bi bi-check-circle-fill mt-1 opacity-75"></i>
+                                <span><strong>Objetivos Estratégicos:</strong> Metas de longo prazo organizadas por perspectiva</span>
+                            </li>
+                            <li class="mb-2 d-flex align-items-start gap-2">
+                                <i class="bi bi-check-circle-fill mt-1 opacity-75"></i>
+                                <span><strong>Indicadores (KPIs):</strong> Métricas para acompanhar o progresso</span>
+                            </li>
+                            <li class="mb-0 d-flex align-items-start gap-2">
+                                <i class="bi bi-check-circle-fill mt-1 opacity-75"></i>
+                                <span><strong>Planos de Ação:</strong> Projetos e iniciativas para alcançar os objetivos</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <div class="bg-white bg-opacity-10 rounded-3 p-3">
+                        <h6 class="fw-bold mb-3 text-white d-flex align-items-center gap-2">
+                            <i class="bi bi-calendar-range-fill"></i>
+                            Ciclo de Planejamento
+                        </h6>
+                        <ul class="list-unstyled mb-0 small">
+                            <li class="mb-2 d-flex align-items-start gap-2">
+                                <i class="bi bi-clock-fill mt-1 opacity-75"></i>
+                                <span><strong>Duração típica:</strong> 4 a 5 anos (alinhado com mandatos governamentais)</span>
+                            </li>
+                            <li class="mb-2 d-flex align-items-start gap-2">
+                                <i class="bi bi-arrow-repeat mt-1 opacity-75"></i>
+                                <span><strong>Revisão:</strong> Anual ou semestral para ajustes e monitoramento</span>
+                            </li>
+                            <li class="mb-2 d-flex align-items-start gap-2">
+                                <i class="bi bi-graph-up-arrow mt-1 opacity-75"></i>
+                                <span><strong>Metodologia:</strong> Balanced Scorecard (BSC) para visão equilibrada</span>
+                            </li>
+                            <li class="mb-0 d-flex align-items-start gap-2">
+                                <i class="bi bi-people-fill mt-1 opacity-75"></i>
+                                <span><strong>Envolvimento:</strong> Toda a organização participa da execução</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="bg-white bg-opacity-15 rounded-3 p-3">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <strong class="small">Por que ter um PEI?</strong>
+                        </div>
+                        <p class="mb-0 small opacity-90">
+                            O PEI garante que todos na organização trabalhem alinhados aos mesmos objetivos, permite mensurar resultados de forma objetiva,
+                            facilita a tomada de decisões estratégicas e demonstra transparência na gestão dos recursos públicos ou privados.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Filters Card --}}
     <div class="card card-modern filters-card mb-4">
         <div class="card-body p-4">
