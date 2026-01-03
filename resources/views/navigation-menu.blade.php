@@ -25,7 +25,7 @@
             </span>
         </div>
 
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-none d-lg-flex align-items-center gap-2">
             <!-- Session Timer -->
             <div class="session-timer-wrapper d-none d-md-flex align-items-center gap-2"
                  data-bs-toggle="tooltip"
@@ -38,11 +38,14 @@
             <!-- Seletor de Organização Global -->
             @livewire('shared.seletor-organizacao')
 
-                                <!-- Seletor de Ano Global -->
-                                @livewire('shared.seletor-ano')
-            
-                                <!-- Seletor de Ciclo PEI -->
-                                @livewire('shared.seletor-pei')
+            <!-- Seletor de Ciclo PEI -->
+            @livewire('shared.seletor-pei')
+
+            <!-- Seletor de Ano Global -->
+            @livewire('shared.seletor-ano')
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
             <button type="button"
                     id="appThemeSwitcher"
                     class="btn btn-outline-secondary btn-iconno-border no-border"
