@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\PEI\PEI;
-use App\Models\PEI\Objetivo;
-use App\Models\PEI\Indicador;
-use App\Models\PEI\PlanoDeAcao;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\StrategicPlanning\Objetivo;
+use App\Models\PerformanceIndicators\Indicador;
+use App\Models\ActionPlan\PlanoDeAcao;
 use Illuminate\Database\Seeder;
 
 class IndicadorSeeder extends Seeder

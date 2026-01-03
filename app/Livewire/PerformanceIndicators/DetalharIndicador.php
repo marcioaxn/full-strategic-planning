@@ -2,7 +2,7 @@
 
 namespace App\Livewire\PerformanceIndicators;
 
-use App\Models\PEI\Indicador;
+use App\Models\PerformanceIndicators\Indicador;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 

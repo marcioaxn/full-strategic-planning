@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\Risco;
+use App\Models\RiskManagement\Risco;
 use App\Models\User;
 use App\Models\PerfilAcesso;
 use Illuminate\Auth\Access\Response;

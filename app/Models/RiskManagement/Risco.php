@@ -68,7 +68,7 @@ class Risco extends Model implements Auditable
     {
         return $this->belongsToMany(
             Objetivo::class,
-            'pei.tab_risco_objetivo',
+            'tab_risco_objetivo',
             'cod_risco',
             'cod_objetivo',
             'cod_risco',

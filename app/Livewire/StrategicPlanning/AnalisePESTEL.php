@@ -2,8 +2,8 @@
 
 namespace App\Livewire\StrategicPlanning;
 
-use App\Models\PEI\AnaliseAmbiental;
-use App\Models\PEI\PEI;
+use App\Models\StrategicPlanning\AnaliseAmbiental;
+use App\Models\StrategicPlanning\PEI;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;

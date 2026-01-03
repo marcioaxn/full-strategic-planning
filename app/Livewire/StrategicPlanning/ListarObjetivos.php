@@ -2,9 +2,9 @@
 
 namespace App\Livewire\StrategicPlanning;
 
-use App\Models\PEI\PEI;
-use App\Models\PEI\Perspectiva;
-use App\Models\PEI\Objetivo;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\StrategicPlanning\Perspectiva;
+use App\Models\StrategicPlanning\Objetivo;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Facades\Session;

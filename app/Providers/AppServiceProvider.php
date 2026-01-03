@@ -26,9 +26,9 @@ class AppServiceProvider extends ServiceProvider
         // Register Policies
         Gate::policy(\App\Models\Organization::class, \App\Policies\OrganizationPolicy::class);
         Gate::policy(\App\Models\User::class, \App\Policies\UserPolicy::class);
-        Gate::policy(\App\Models\PEI\PlanoDeAcao::class, \App\Policies\PlanoDeAcaoPolicy::class);
-        Gate::policy(\App\Models\PEI\Indicador::class, \App\Policies\IndicadorPolicy::class);
-        Gate::policy(\App\Models\Risco::class, \App\Policies\RiscoPolicy::class);
+        Gate::policy(\App\Models\ActionPlan\PlanoDeAcao::class, \App\Policies\PlanoDeAcaoPolicy::class);
+        Gate::policy(\App\Models\PerformanceIndicators\Indicador::class, \App\Policies\IndicadorPolicy::class);
+        Gate::policy(\App\Models\RiskManagement\Risco::class, \App\Policies\RiscoPolicy::class);
 
         // Fix URL generation for subfolder deployment
         $appUrl = config('app.url');

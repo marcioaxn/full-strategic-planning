@@ -105,9 +105,9 @@
             <div class="notion-timeline-legend-line today"></div>
             <span>Hoje</span>
         </div>
-        @foreach(\App\Models\PEI\Entrega::STATUS_OPTIONS as $status)
+        @foreach(\App\Models\ActionPlan\Entrega::STATUS_OPTIONS as $status)
             <div class="d-flex align-items-center gap-2">
-                <div class="notion-timeline-legend-dot" style="background-color: {{ \App\Models\PEI\Entrega::STATUS_COLORS[$status] }}"></div>
+                <div class="notion-timeline-legend-dot" style="background-color: {{ \App\Models\ActionPlan\Entrega::STATUS_COLORS[$status] }}"></div>
                 <span>{{ $status }}</span>
             </div>
         @endforeach

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\PEI;
+namespace App\Models\StrategicPlanning;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

@@ -24,10 +24,10 @@
         }
     }"
 >
-    @foreach(\App\Models\PEI\Entrega::STATUS_OPTIONS as $status)
+    @foreach(\App\Models\ActionPlan\Entrega::STATUS_OPTIONS as $status)
         @php
             $entregasDoStatus = $entregasPorStatus[$status] ?? collect();
-            $statusColor = \App\Models\PEI\Entrega::STATUS_COLORS[$status] ?? '#e3e2e0';
+            $statusColor = \App\Models\ActionPlan\Entrega::STATUS_COLORS[$status] ?? '#e3e2e0';
         @endphp
         
         <div class="notion-kanban-column">

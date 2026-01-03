@@ -56,7 +56,7 @@
                 {{-- Filtro de Status --}}
                 <select wire:model.live="filtroStatus" class="form-select form-select-sm" style="width: auto;">
                     <option value="">Todos os Status</option>
-                    @foreach(\App\Models\PEI\Entrega::STATUS_OPTIONS as $status)
+                    @foreach(\App\Models\ActionPlan\Entrega::STATUS_OPTIONS as $status)
                         <option value="{{ $status }}">{{ $status }}</option>
                     @endforeach
                 </select>
@@ -64,7 +64,7 @@
                 {{-- Filtro de Prioridade --}}
                 <select wire:model.live="filtroPrioridade" class="form-select form-select-sm" style="width: auto;">
                     <option value="">Todas Prioridades</option>
-                    @foreach(\App\Models\PEI\Entrega::PRIORIDADE_OPTIONS as $key => $info)
+                    @foreach(\App\Models\ActionPlan\Entrega::PRIORIDADE_OPTIONS as $key => $info)
                         <option value="{{ $key }}">{{ $info['label'] }}</option>
                     @endforeach
                 </select>

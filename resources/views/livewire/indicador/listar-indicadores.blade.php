@@ -49,7 +49,7 @@
     @else
         @if($filtroObjetivo)
             @php
-                $objetivoFiltrado = \App\Models\PEI\Objetivo::with(['perspectiva.pei', 'indicadores.evolucoes', 'indicadores.metasPorAno', 'planosAcao'])->find($filtroObjetivo);
+                $objetivoFiltrado = \App\Models\StrategicPlanning\Objetivo::with(['perspectiva.pei', 'indicadores.evolucoes', 'indicadores.metasPorAno', 'planosAcao'])->find($filtroObjetivo);
             @endphp
 
             {{-- Contexto Completo do Objetivo --}}

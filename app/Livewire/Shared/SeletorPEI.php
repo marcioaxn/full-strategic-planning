@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Shared;
 
-use App\Models\PEI\PEI;
+use App\Models\StrategicPlanning\PEI;
 use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 

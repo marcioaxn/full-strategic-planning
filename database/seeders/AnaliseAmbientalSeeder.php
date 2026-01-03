@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\PEI\AnaliseAmbiental;
-use App\Models\PEI\PEI;
+use App\Models\StrategicPlanning\AnaliseAmbiental;
+use App\Models\StrategicPlanning\PEI;
 use App\Models\Organization;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;

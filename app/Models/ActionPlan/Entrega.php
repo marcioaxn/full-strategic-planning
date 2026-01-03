@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\PEI;
+namespace App\Models\ActionPlan;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -159,7 +159,7 @@ class Entrega extends Model
     {
         return $this->belongsToMany(
             User::class,
-            'pei.rel_entrega_users_responsaveis',
+            'rel_entrega_users_responsaveis',
             'cod_entrega',
             'cod_usuario',
             'cod_entrega',
@@ -184,7 +184,7 @@ class Entrega extends Model
     {
         return $this->belongsToMany(
             EntregaLabel::class,
-            'pei.rel_entrega_labels',
+            'rel_entrega_labels',
             'cod_entrega',
             'cod_label'
         );
