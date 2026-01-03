@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('acoes', function (Blueprint $table) {
+        Schema::create('action_plan.acoes', function (Blueprint $table) {
             $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->string('table_id')->nullable(false);
             $table->foreignUuid('user_id')->references('id')->on('users')->cascadeOnDelete();
