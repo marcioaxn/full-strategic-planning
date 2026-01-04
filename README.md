@@ -9,6 +9,7 @@ This project was built upon the [Laravel Jetstream + Livewire + Bootstrap Starte
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
+- [Strategic Mentor & AI Intelligence](#-strategic-mentor--ai-intelligence)
 - [Key Features](#-key-features)
 - [Tech Stack](#-tech-stack)
 - [Requirements](#-requirements)
@@ -24,9 +25,30 @@ This project was built upon the [Laravel Jetstream + Livewire + Bootstrap Starte
 
 ## 🎯 Overview
 
-The system provides a robust platform for public and private organizations to execute their strategy. It moves beyond simple spreadsheets by integrating strategic objectives with real-time performance indicators and risk mitigation plans.
+The system provides a robust platform for organizations to execute their strategy. It moves beyond simple spreadsheets by integrating strategic objectives with real-time performance indicators, risk mitigation plans, and **Artificial Intelligence**.
 
-The system is designed with a "Single Page Application" (SPA) feel using **Livewire 3** and **wire:navigate**, ensuring a smooth and responsive user experience without full page reloads.
+The system is designed with a "Single Page Application" (SPA) feel using **Livewire 3** and **wire:navigate**, ensuring a smooth and responsive user experience. It now features a **Strategic Mentor** that guides users through every step of the methodology.
+
+---
+
+## 🤖 Strategic Mentor & AI Intelligence
+
+The system features a cutting-edge **Strategic Intelligence** module, designed to transform the planning process from a technical task into an inspired, guided experience.
+
+### 🧭 Strategic Mentor (Real-time Guidance)
+- **Interactive Checklist**: A professional dashboard widget that guides users through the 6 essential phases of the PEI (Cycle, Identity, Perspectives, Objectives, KPIs, Action Plans).
+- **Progress Tracking**: Real-time completeness score with visual indicators and smart "Next Step" suggestions.
+- **UX Guardians**: Smart logic that ensures methodological integrity, preventing users from skipping crucial strategic steps.
+
+### 🪄 AI-Powered Assistance
+- **Inspired Identity**: Generate tailored Mission, Vision, and Values based on your organization's context.
+- **Strategic Brainstorming**: AI-suggested objectives for each BSC perspective and relevant KPIs for every goal.
+- **Instant Action UX**: One-click application of AI suggestions directly into your plan—no copying or pasting required.
+
+### ⚙️ Centralized AI Configuration
+- **Universal Provider Support**: Seamlessly switch between **Google Gemini** and **OpenAI (GPT-4)**.
+- **Enterprise Security**: API keys are managed through a dedicated administrative interface and stored using high-level encryption in the database.
+- **Real-time Testing**: Built-in diagnostic tools to verify AI provider connectivity instantly.
 
 ---
 
@@ -34,8 +56,9 @@ The system is designed with a "Single Page Application" (SPA) feel using **Livew
 
 ### 🧩 Strategic Planning (BSC)
 - **Strategic Map**: Visual representation of the strategy (Perspectives, Objectives).
-- **Identity**: Management of Mission, Vision, and Values.
-- **Objectives**: Full CRUD for Strategic Objectives.
+- **Strategic Mentor**: Smart guide for the entire planning lifecycle.
+- **AI-Assisted Identity**: Mission, Vision, and Values generation.
+- **Objectives**: CRUD for Strategic Objectives with AI-powered suggestions.
 - **Perspectives**: Financial, Customer, Internal Processes, Learning & Growth.
 
 ### 📈 Performance Indicators (KPIs)
@@ -73,8 +96,9 @@ The system is designed with a "Single Page Application" (SPA) feel using **Livew
 
 - **Framework**: Laravel 11 (PHP 8.2+)
 - **Frontend**: Livewire 3 + AlpineJS + Bootstrap 5
-- **Database**: PostgreSQL 13+
-- **Styling**: SCSS (Custom Bootstrap theme)
+- **Intelligence**: Google Gemini & OpenAI API
+- **Database**: PostgreSQL 13+ (with encrypted settings)
+- **Styling**: SCSS (Premium Custom Theme)
 - **PDF Generation**: `barryvdh/laravel-dompdf`
 - **Excel**: `maatwebsite/excel`
 - **Auditing**: `owen-it/laravel-auditing`
