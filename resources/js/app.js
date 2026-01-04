@@ -1,5 +1,6 @@
 import './bootstrap';
 import './session-timer';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 import mask from '@alpinejs/mask';
 import focus from '@alpinejs/focus';
