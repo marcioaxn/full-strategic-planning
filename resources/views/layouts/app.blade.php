@@ -34,39 +34,52 @@
 
             /* Gradient for active navigation items */
             .gradient-theme-nav {
-                background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-light));
-                color: white;
-                box-shadow: 0 2px 8px rgba(var(--theme-primary-rgb), 0.3);
+                background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-light)) !important;
+                color: white !important;
+                box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.25);
+                border: none !important;
             }
 
             .gradient-theme-nav:hover {
-                box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.4);
-                color: white;
+                box-shadow: 0 6px 16px rgba(var(--theme-primary-rgb), 0.35);
+                color: white !important;
             }
 
             .gradient-theme-nav:hover i {
                 color: white !important;
             }
 
-            /* Gradient for buttons */
+            /* Premium Button Standard */
             .gradient-theme-btn {
-                background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-light));
-                border: none;
-                color: white;
-                box-shadow: 0 2px 8px rgba(var(--theme-primary-rgb), 0.25);
-                transition: all 0.2s ease;
+                background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-light) 100%) !important;
+                border: none !important;
+                color: white !important;
+                font-weight: 600 !important;
+                padding: 0.5rem 1.25rem;
+                border-radius: 50px !important;
+                box-shadow: 0 4px 15px rgba(var(--theme-primary-rgb), 0.3);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
             }
 
             .gradient-theme-btn:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.35);
-                color: white;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(var(--theme-primary-rgb), 0.4);
+                filter: brightness(1.1);
+                color: white !important;
+            }
+
+            .gradient-theme-btn:active {
+                transform: translateY(0);
             }
 
             /* Gradient for icons and badges */
             .gradient-theme-icon {
-                background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-light));
-                color: white;
+                background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-light)) !important;
+                color: white !important;
+                box-shadow: 0 2px 10px rgba(var(--theme-primary-rgb), 0.2);
             }
 
             /* Gradient for large header sections */
@@ -267,6 +280,11 @@
                             'route' => 'graus-satisfacao.index',
                             'icon' => 'palette'
                         ],
+                        [
+                            'label' => __('Configurações'),
+                            'route' => 'admin.configuracoes',
+                            'icon' => 'gear-wide-connected'
+                        ],
                     ]
                 ],
             ];
@@ -335,36 +353,43 @@
                 const themeColors = {
                     primary: {
                         base: '#1B408E', // Deep Blue
-                        dark: '#143372',
-                        light: '#5375C2', // Lightened +8%
-                        lighter: '#7D99D6',
+                        dark: '#102A70',
+                        light: '#4361EE', // More vibrant blue
+                        lighter: '#A0B1F9',
                         rgb: '27, 64, 142'
                     },
                     secondary: {
                         base: '#475569', // Slate 700
-                        dark: '#334155',
-                        light: '#A7B3C4', // Lightened +8%
-                        lighter: '#CBD5E1', // Slate 300
+                        dark: '#1E293B',
+                        light: '#94A3B8', 
+                        lighter: '#E2E8F0',
                         rgb: '71, 85, 105'
                     },
                     success: {
                         base: '#059669', // Emerald 600
-                        dark: '#047857',
-                        light: '#6EE7B7', // Emerald 300 (Lighter)
+                        dark: '#064E3B',
+                        light: '#10B981', // Vibrant Emerald
                         lighter: '#A7F3D0',
                         rgb: '5, 150, 105'
                     },
                     warning: {
-                        base: '#d97706', // Amber 600
-                        dark: '#b45309',
-                        light: '#FCD34D', // Amber 300 (Lighter)
+                        base: '#D97706', // Amber 600
+                        dark: '#78350F',
+                        light: '#F59E0B', // Bright Amber
                         lighter: '#FDE68A',
                         rgb: '217, 119, 6'
                     },
+                    danger: {
+                        base: '#DC2626', // Red 600
+                        dark: '#7F1D1D',
+                        light: '#EF4444', 
+                        lighter: '#FECACA',
+                        rgb: '220, 38, 38'
+                    },
                     info: {
-                        base: '#0891b2', // Cyan 600
-                        dark: '#0e7490',
-                        light: '#67E8F9', // Cyan 300 (Lighter)
+                        base: '#0891B2', // Cyan 600
+                        dark: '#164E63',
+                        light: '#06B6D4', 
                         lighter: '#A5F3FC',
                         rgb: '8, 145, 178'
                     }

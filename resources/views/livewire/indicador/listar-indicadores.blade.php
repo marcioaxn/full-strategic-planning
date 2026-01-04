@@ -23,7 +23,7 @@
                     </div>
                 @endif
                 @if($organizacaoId)
-                    <button wire:click="create" class="btn btn-primary gradient-theme-btn">
+                    <button wire:click="create" class="btn btn-primary gradient-theme-btn px-4">
                         <i class="bi bi-plus-lg me-2"></i>Novo Indicador
                     </button>
                 @endif
@@ -35,6 +35,65 @@
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i> {{ session('status') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    {{-- Mentor de IA --}}
+    @if($organizacaoId && $aiEnabled)
+        <div class="ai-mentor-wrapper animate-fade-in">
+            <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="ai-magic-button shadow-sm">
+                <span wire:loading.remove wire:target="pedirAjudaIA">
+                    <i class="bi bi-robot"></i> {{ __('Sugerir Indicadores (KPIs) com IA') }}
+                </span>
+                <span wire:loading wire:target="pedirAjudaIA">
+                    <span class="spinner-border spinner-border-sm me-2"></span>{{ __('Definindo métricas ideais...') }}
+                </span>
+            </button>
+
+            @if($aiSuggestion)
+                <div class="ai-insight-card animate-fade-in">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-robot text-primary"></i>
+                            <h6 class="fw-bold mb-0">{{ __('KPIs Recomendados pelo Mentor IA') }}</h6>
+                        </div>
+                        <button type="button" class="btn-close small" style="font-size: 0.7rem;" wire:click="$set('aiSuggestion', '')"></button>
+                    </div>
+                    <div class="card-body">
+                        @if(is_array($aiSuggestion))
+                            <div class="list-group list-group-flush border rounded-3 overflow-hidden">
+                                @foreach($aiSuggestion as $kpi)
+                                    <div class="list-group-item d-flex align-items-start justify-content-between p-3 bg-light bg-opacity-25 hover-bg-white transition-all gap-3">
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold text-dark">{{ $kpi['nome'] }}</div>
+                                            <p class="small text-muted mb-2 mt-1">{{ $kpi['descricao'] }}</p>
+                                            <div class="d-flex gap-2">
+                                                <span class="badge bg-info-subtle text-info small border-0">{{ __('Unidade: ') }}{{ $kpi['unidade'] }}</span>
+                                                <span class="badge bg-secondary-subtle text-secondary small border-0">{{ __('Fórmula: ') }}{{ $kpi['formula'] }}</span>
+                                            </div>
+                                        </div>
+                                        <button wire:click="aplicarSugestao('{{ $kpi['nome'] }}', '{{ $kpi['descricao'] }}', '{{ $kpi['unidade'] }}', '{{ $kpi['formula'] }}')" 
+                                                class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
+                                            <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="markdown-content">
+                                {!! Str::markdown($aiSuggestion) !!}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
         </div>
     @endif
 

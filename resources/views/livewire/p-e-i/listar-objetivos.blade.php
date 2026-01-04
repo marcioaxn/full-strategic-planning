@@ -23,13 +23,86 @@
                     variant="primary"
                     icon="plus-lg"
                     wire:click="create"
-                    class="btn-action-primary gradient-theme-btn"
+                    class="btn-action-primary gradient-theme-btn px-4"
                 >
                     {{ __('Novo Objetivo') }}
                 </x-action-button>
             @endif
         </div>
     </div>
+
+    {{-- Mentor de IA --}}
+    @if($peiAtivo && $perspectivas->isNotEmpty() && $aiEnabled)
+        <div class="card card-modern border-0 shadow-sm pei-help-card-gradient mb-4">
+            <div class="card-body p-4 text-white">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-white bg-opacity-25 p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="bi bi-robot fs-4 text-white"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-white">{{ __('Mentor de IA') }}</h5>
+                            <p class="mb-0 text-white-50 small">
+                                {{ __('Posso sugerir objetivos estratégicos baseados na missão e visão da sua unidade.') }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <div class="col-auto">
+                            <select wire:model.live="cod_perspectiva" class="form-select form-select-sm border-0 shadow-sm" style="min-width: 200px;">
+                                <option value="">{{ __('Sugestão para qual perspectiva?') }}</option>
+                                @foreach($perspectivas as $p)
+                                    <option value="{{ $p->cod_perspectiva }}">{{ $p->dsc_perspectiva }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="btn btn-light text-primary fw-bold shadow-sm px-4 py-1 rounded-pill btn-sm">
+                            <span wire:loading.remove wire:target="pedirAjudaIA">
+                                <i class="bi bi-magic me-2"></i>{{ __('Gerar Objetivos') }}
+                            </span>
+                            <span wire:loading wire:target="pedirAjudaIA">
+                                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+            @if($aiSuggestion)
+                <div class="ai-insight-card animate-fade-in">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-robot text-primary"></i>
+                            <h6 class="fw-bold mb-0">{{ __('Objetivos Recomendados pelo Mentor IA') }}</h6>
+                        </div>
+                        <button type="button" class="btn-close small" style="font-size: 0.7rem;" wire:click="$set('aiSuggestion', '')"></button>
+                    </div>
+                    <div class="card-body">
+                        @if(is_array($aiSuggestion))
+                            <div class="list-group list-group-flush border rounded-3 overflow-hidden">
+                                @foreach($aiSuggestion as $obj)
+                                    <div class="list-group-item d-flex align-items-start justify-content-between p-3 bg-light bg-opacity-25 hover-bg-white transition-all gap-3">
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold text-dark">{{ $obj['nome'] }}</div>
+                                            <p class="small text-muted mb-0 mt-1 lh-sm">{{ $obj['descricao'] }}</p>
+                                        </div>
+                                        <button wire:click="aplicarSugestao('{{ $obj['nome'] }}', '{{ $obj['descricao'] }}', {{ $obj['ordem'] ?? 1 }})" 
+                                                class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
+                                            <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="markdown-content">
+                                {!! Str::markdown($aiSuggestion) !!}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+            </div>
+        </div>
+    @endif
 
     @if (session()->has('status'))
         <div class="alert alert-modern alert-success alert-dismissible fade show d-flex align-items-center gap-3 mb-4" role="alert">

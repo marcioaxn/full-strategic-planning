@@ -49,6 +49,9 @@
         </div>
     </div>
 
+    {{-- Mentor Estratégico (Checklist/Guia) --}}
+    @livewire('dashboard.pei-checklist')
+
     {{-- LINHA SUPERIOR: Cards de KPIs --}}
     <div class="row g-4 mb-4 align-items-stretch">
         <div class="col-xl-4 col-md-4">

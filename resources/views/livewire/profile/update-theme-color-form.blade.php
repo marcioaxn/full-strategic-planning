@@ -21,14 +21,16 @@
                     @foreach($availableColors as $colorKey => $colorData)
                         <div class="theme-color-option {{ $themeColor === $colorKey ? 'selected' : '' }}"
                              wire:click="$set('themeColor', '{{ $colorKey }}')">
-                            <div class="theme-color-preview" style="background: {{ $colorData['preview'] }};">
-                                @if($themeColor === $colorKey)
-                                    <i class="bi bi-check-circle-fill"></i>
-                                @endif
-                            </div>
-                            <div class="theme-color-info">
-                                <h6 class="theme-color-name">{{ $colorData['name'] }}</h6>
-                                <p class="theme-color-description">{{ $colorData['description'] }}</p>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="theme-color-preview-circle shadow-sm" style="background: {{ $colorData['preview'] }};">
+                                    @if($themeColor === $colorKey)
+                                        <i class="bi bi-check-lg"></i>
+                                    @endif
+                                </div>
+                                <div class="theme-color-info text-start">
+                                    <h6 class="theme-color-name mb-0">{{ $colorData['name'] }}</h6>
+                                    <p class="theme-color-description">{{ $colorData['description'] }}</p>
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -40,13 +42,13 @@
 
         <x-slot name="actions">
             <div class="d-flex align-items-center gap-3">
-                <span wire:loading wire:target="updateThemeColor" class="text-muted small">
-                    <span class="spinner-border spinner-border-sm me-2"></span>{{ __('Saving...') }}
+                <span wire:loading wire:target="themeColor" class="text-muted small">
+                    <span class="spinner-border spinner-border-sm me-2 text-primary"></span>{{ __('Applying Theme...') }}
                 </span>
 
                 <x-action-message class="mb-0" on="saved">
                     <i class="bi bi-check-circle-fill me-1 text-success"></i>
-                    <span class="text-success fw-semibold">{{ __('Theme updated automatically!') }}</span>
+                    <span class="text-success fw-semibold">{{ __('Theme updated!') }}</span>
                 </x-action-message>
             </div>
         </x-slot>
@@ -55,95 +57,81 @@
     <style>
         .theme-color-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.25rem;
         }
 
         .theme-color-option {
-            background: rgba(var(--bs-secondary-rgb), 0.03);
-            border: 2px solid var(--bs-border-color);
-            border-radius: 14px;
-            padding: 1rem;
+            background: var(--bs-body-bg);
+            border: 1px solid var(--bs-border-color);
+            border-radius: 16px;
+            padding: 1.25rem;
             cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
 
         .theme-color-option:hover {
             border-color: var(--bs-primary);
-            box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.15);
-            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            transform: translateY(-3px);
         }
 
         .theme-color-option.selected {
-            border-color: var(--bs-success);
-            background: rgba(var(--bs-success-rgb), 0.05);
-            box-shadow: 0 4px 12px rgba(var(--bs-success-rgb), 0.2);
+            border-color: var(--bs-primary);
+            border-width: 2px;
+            background: rgba(var(--bs-primary-rgb), 0.03);
+            box-shadow: 0 10px 30px rgba(var(--bs-primary-rgb), 0.1);
         }
 
         [data-bs-theme="dark"] .theme-color-option {
-            background: rgba(255, 255, 255, 0.02);
+            background: #1e2227;
             border-color: rgba(255, 255, 255, 0.1);
         }
 
-        [data-bs-theme="dark"] .theme-color-option:hover {
-            border-color: var(--bs-primary);
-            box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.25);
-        }
-
         [data-bs-theme="dark"] .theme-color-option.selected {
-            border-color: #75b798;
-            background: rgba(25, 135, 84, 0.1);
-            box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+            background: rgba(var(--bs-primary-rgb), 0.1);
+            border-color: var(--bs-primary);
         }
 
-        .theme-color-preview {
-            width: 100%;
-            height: 80px;
-            border-radius: 10px;
+        .theme-color-preview-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-            transition: all 0.2s ease;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+            border: 2px solid white;
         }
 
-        .theme-color-preview i {
-            font-size: 2rem;
+        [data-bs-theme="dark"] .theme-color-preview-circle {
+            border-color: #2d3238;
+        }
+
+        .theme-color-preview-circle i {
+            font-size: 1.25rem;
             color: white;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
         }
 
-        .theme-color-option:hover .theme-color-preview {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-        }
-
-        .theme-color-info {
-            text-align: center;
+        .theme-color-option:hover .theme-color-preview-circle {
+            transform: scale(1.1) rotate(5deg);
         }
 
         .theme-color-name {
-            font-size: 0.9375rem;
-            font-weight: 600;
+            font-size: 1rem;
+            font-weight: 700;
             color: var(--bs-body-color);
-            margin-bottom: 0.25rem;
-        }
-
-        [data-bs-theme="dark"] .theme-color-name {
-            color: rgba(255, 255, 255, 0.95);
         }
 
         .theme-color-description {
             font-size: 0.75rem;
-            color: var(--bs-secondary);
+            color: var(--bs-secondary-color);
             margin-bottom: 0;
-        }
-
-        [data-bs-theme="dark"] .theme-color-description {
-            color: rgba(255, 255, 255, 0.6);
+            opacity: 0.8;
         }
 
         @media (max-width: 576px) {
