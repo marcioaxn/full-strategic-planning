@@ -353,9 +353,20 @@
                                     <div class="card-body p-4">
                                         <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Identificação Principal</h6>
                                         <div class="mb-3">
-                                            <label class="form-label text-muted small text-uppercase fw-bold">Nome do Indicador</label>
-                                            <input type="text" wire:model="form.nom_indicador" class="form-control @error('form.nom_indicador') is-invalid @enderror" placeholder="Ex: Índice de Satisfação do Cidadão">
+                                            <div class="d-flex justify-content-between align-items-end mb-1">
+                                                <label class="form-label text-muted small text-uppercase fw-bold mb-0">Nome do Indicador</label>
+                                                <div wire:loading wire:target="form.nom_indicador" class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                            </div>
+                                            <input type="text" wire:model.live.debounce.2000ms="form.nom_indicador" class="form-control @error('form.nom_indicador') is-invalid @enderror" placeholder="Ex: Índice de Satisfação do Cidadão">
                                             @error('form.nom_indicador') <div class="invalid-feedback">{{ $message }}</div> @enderror
+
+                                            @if($smartFeedback)
+                                                <div class="mt-2 p-2 rounded bg-primary bg-opacity-10 border-start border-3 border-primary animate-fade-in position-relative">
+                                                    <button type="button" class="btn-close small position-absolute top-0 end-0 m-1" style="font-size: 0.5rem;" wire:click="$set('smartFeedback', '')"></button>
+                                                    <small class="text-primary fw-bold d-block mb-1"><i class="bi bi-info-circle me-1"></i>Feedback do Mentor SMART:</small>
+                                                    <small class="text-dark d-block pe-3">{{ $smartFeedback }}</small>
+                                                </div>
+                                            @endif
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label text-muted small text-uppercase fw-bold">Descrição / Conceito</label>
@@ -473,26 +484,48 @@
         </div>
     </div>
 
-    <!-- Modal Exclusão -->
-    <div class="modal fade @if($showDeleteModal) show @endif" tabindex="-1" style="@if($showDeleteModal) display: block; background: rgba(0,0,0,0.5); @else display: none; @endif">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-danger text-white border-0">
-                    <h5 class="modal-title fw-bold">Confirmar Exclusão</h5>
-                    <button type="button" class="btn-close btn-close-white" wire:click="$set('showDeleteModal', false)"></button>
+    {{-- Modal de Exclusão --}}
+    <x-confirmation-modal wire:model.live="showDeleteModal">
+        <x-slot name="title">
+            <div class="modal-header-modern">
+                <div class="modal-icon modal-icon-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
                 </div>
-                <div class="modal-body p-4 text-center">
-                    <div class="mb-3 text-danger"><i class="bi bi-exclamation-triangle fs-1"></i></div>
-                    <p class="fs-5 mb-0">Deseja realmente excluir este indicador?</p>
-                    <p class="text-muted small">Todos os lançamentos de evolução e metas associadas serão perdidos.</p>
-                </div>
-                <div class="modal-footer border-0 p-4 justify-content-center">
-                    <button type="button" class="btn btn-light px-4" wire:click="$set('showDeleteModal', false)">Cancelar</button>
-                    <button type="button" class="btn btn-danger px-4" wire:click="delete">Sim, Excluir</button>
+                <div>
+                    <h5 class="mb-1 fw-bold text-dark">{{ __('Excluir Indicador (KPI)') }}</h5>
+                    <p class="text-muted small mb-0">{{ __('Esta ação é irreversível') }}</p>
                 </div>
             </div>
-        </div>
-    </div>
+        </x-slot>
+
+        <x-slot name="content">
+            <div class="delete-confirmation text-start">
+                <p class="mb-2 text-dark">
+                    {{ __('Tem certeza que deseja excluir este indicador de desempenho?') }}
+                </p>
+                <div class="alert alert-warning bg-warning-subtle border-0">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Atenção:</strong> Todos os lançamentos de evolução e metas associadas serão perdidos permanentemente.
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-secondary-button wire:click="$set('showDeleteModal', false)" wire:loading.attr="disabled" class="btn-modern">
+                {{ __('Cancelar') }}
+            </x-secondary-button>
+
+            <x-danger-button wire:click="delete" wire:loading.attr="disabled" class="btn-delete-modern ms-2">
+                <span wire:loading.remove wire:target="delete">
+                    <i class="bi bi-trash me-1"></i>{{ __('Excluir Agora') }}
+                </span>
+                <span wire:loading wire:target="delete">
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    {{ __('Excluindo...') }}
+                </span>
+            </x-danger-button>
+        </x-slot>
+    </x-confirmation-modal>
 
     <!-- Modal Metas -->
     <div class="modal fade @if($showMetasModal) show @endif" tabindex="-1" style="@if($showMetasModal) display: block; background: rgba(0,0,0,0.5); @else display: none; @endif">

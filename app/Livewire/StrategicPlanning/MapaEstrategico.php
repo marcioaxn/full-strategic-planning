@@ -46,11 +46,18 @@ class MapaEstrategico extends Component
 
     public function mount()
     {
-        // Define a organização inicial
-        if (Auth::check()) {
-            $this->organizacaoId = Session::get('organizacao_selecionada_id');
-        } else {
-            $this->organizacaoId = '3834910f-66f7-46d8-9104-2904d59e1241';
+        // Tenta obter da sessão primeiro (funciona para logados e visitantes)
+        $this->organizacaoId = Session::get('organizacao_selecionada_id');
+
+        // Se não houver na sessão, busca a primeira organização do banco como padrão
+        if (!$this->organizacaoId) {
+            $primeiraOrg = Organization::orderBy('sgl_organizacao')->first();
+            $this->organizacaoId = $primeiraOrg?->cod_organizacao;
+            
+            if ($this->organizacaoId) {
+                Session::put('organizacao_selecionada_id', $this->organizacaoId);
+                Session::put('organizacao_selecionada_sgl', $primeiraOrg->sgl_organizacao);
+            }
         }
 
         $this->carregarPEI();
@@ -237,7 +244,7 @@ class MapaEstrategico extends Component
             $this->carregarIdentidadeEstrategica();
         }
 
-        $layout = Auth::check() ? 'layouts.app' : 'layouts.guest';
+        $layout = Auth::check() ? 'layouts.app' : 'layouts.public';
 
         return view('livewire.pei.mapa-estrategico')
             ->layout($layout);

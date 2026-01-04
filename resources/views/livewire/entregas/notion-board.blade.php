@@ -224,6 +224,48 @@
     {{-- Modal de Labels --}}
     @include('livewire.entregas.modals.labels')
 
+    {{-- Modal de Exclusão --}}
+    <x-confirmation-modal wire:model.live="showDeleteModal">
+        <x-slot name="title">
+            <div class="modal-header-modern">
+                <div class="modal-icon modal-icon-danger">
+                    <i class="bi bi-trash3"></i>
+                </div>
+                <div>
+                    <h5 class="mb-1 fw-bold text-dark">{{ $isPermanentDelete ? __('Excluir Permanentemente') : __('Excluir Entrega') }}</h5>
+                    <p class="text-muted small mb-0">{{ $isPermanentDelete ? __('Esta ação é irreversível') : __('Mover para a lixeira') }}</p>
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="content">
+            <div class="delete-confirmation text-start">
+                <p class="mb-2 text-dark">
+                    {{ __('Tem certeza que deseja excluir esta entrega?') }}
+                </p>
+                <div class="alert alert-warning bg-warning-subtle border-0">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    {{ $isPermanentDelete ? __('Atenção: Os dados serão apagados definitivamente do banco de dados.') : __('Ela poderá ser restaurada da lixeira em até 24 horas.') }}
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-secondary-button wire:click="$set('showDeleteModal', false)" wire:loading.attr="disabled" class="btn-modern">
+                {{ __('Cancelar') }}
+            </x-secondary-button>
+
+            <x-danger-button wire:click="excluir" wire:loading.attr="disabled" class="btn-delete-modern ms-2">
+                <span wire:loading.remove wire:target="excluir">
+                    <i class="bi bi-trash3 me-1"></i>{{ __('Excluir') }}
+                </span>
+                <span wire:loading wire:target="excluir">
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                </span>
+            </x-danger-button>
+        </x-slot>
+    </x-confirmation-modal>
+
     {{-- Estilos inline temporários (serão movidos para SCSS) --}}
     <style>
         .notion-board {

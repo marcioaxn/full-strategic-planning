@@ -292,7 +292,7 @@
                                                                 </button>
                                                             </li>
                                                             <li>
-                                                                <button class="dropdown-item small text-danger" wire:click="removerValor('{{ $valor->cod_valor }}')" wire:confirm="Tem certeza que deseja remover este valor?">
+                                                                <button class="dropdown-item small text-danger" wire:click="confirmDeleteValor('{{ $valor->cod_valor }}')">
                                                                     <i class="bi bi-trash me-2"></i>Remover
                                                                 </button>
                                                             </li>
@@ -348,4 +348,42 @@
             </div>
         </div>
     @endif
+
+    {{-- Modal de Exclusão de Valor --}}
+    <x-confirmation-modal wire:model.live="showDeleteModal">
+        <x-slot name="title">
+            <div class="modal-header-modern">
+                <div class="modal-icon modal-icon-danger">
+                    <i class="bi bi-trash"></i>
+                </div>
+                <div>
+                    <h5 class="mb-1 fw-bold text-dark">{{ __('Remover Valor') }}</h5>
+                    <p class="text-muted small mb-0">{{ __('Ação irreversível') }}</p>
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="content">
+            <div class="delete-confirmation">
+                <p class="text-dark">
+                    {{ __('Tem certeza que deseja remover este princípio da identidade estratégica da organização?') }}
+                </p>
+            </div>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-secondary-button wire:click="$set('showDeleteModal', false)" wire:loading.attr="disabled" class="btn-modern">
+                {{ __('Cancelar') }}
+            </x-secondary-button>
+
+            <x-danger-button wire:click="removerValor" wire:loading.attr="disabled" class="btn-delete-modern ms-2">
+                <span wire:loading.remove wire:target="removerValor">
+                    <i class="bi bi-trash me-1"></i>{{ __('Remover Agora') }}
+                </span>
+                <span wire:loading wire:target="removerValor">
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                </span>
+            </x-danger-button>
+        </x-slot>
+    </x-confirmation-modal>
 </div>

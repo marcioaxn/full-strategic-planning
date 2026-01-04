@@ -23,6 +23,7 @@ class Index extends Component
     public $organizacaoId;
     public $organizacaoNome;
     public $peiAtivo;
+    public $aiSummary = '';
     
     // Dados para os gráficos observados pelo AlpineJS
     public $chartData = [
@@ -63,7 +64,7 @@ class Index extends Component
         $this->atualizarDadosGraficos();
     }
 
-    private function carregarPEI()
+    public function carregarPEI()
     {
         $peiId = Session::get('pei_selecionado_id');
         if ($peiId) {
@@ -72,6 +73,17 @@ class Index extends Component
         if (!$this->peiAtivo) {
             $this->peiAtivo = PEI::ativos()->first();
         }
+    }
+
+    public function generateAiSummary()
+    {
+        $aiService = \App\Services\AI\AiServiceFactory::make();
+        if (!$aiService) return;
+
+        $this->aiSummary = 'Analisando dados estratégicos...';
+        
+        $stats = $this->getStats();
+        $this->aiSummary = $aiService->summarizeStrategy($stats, $this->organizacaoNome);
     }
 
     private function carregarNomeOrganizacao()

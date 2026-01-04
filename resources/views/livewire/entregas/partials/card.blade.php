@@ -119,9 +119,8 @@
                 <i class="bi bi-arrow-counterclockwise me-1"></i> Restaurar
             </button>
             <button 
-                wire:click.stop="excluirPermanente('{{ $entrega->cod_entrega }}')" 
+                wire:click.stop="confirmDeleteEntrega('{{ $entrega->cod_entrega }}', true)" 
                 class="btn btn-sm btn-outline-danger"
-                onclick="return confirm('Excluir permanentemente?')"
             >
                 <i class="bi bi-trash me-1"></i> Excluir
             </button>

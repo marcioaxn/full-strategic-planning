@@ -16,6 +16,7 @@ class ListarObjetivos extends Component
     public $peiAtivo;
 
     public bool $showModal = false;
+    public bool $showDeleteModal = false;
     public $objetivoId;
     public $nom_objetivo;
     public $dsc_objetivo;
@@ -23,10 +24,36 @@ class ListarObjetivos extends Component
     public $cod_perspectiva;
     public bool $aiEnabled = false;
     public $aiSuggestion = '';
+    public $smartFeedback = '';
 
     protected $listeners = [
         'peiSelecionado' => 'atualizarPEI'
     ];
+
+    /**
+     * Hook do Livewire que dispara quando nom_objetivo é alterado.
+     * Postura Preventiva: Analisa a qualidade SMART automaticamente.
+     */
+    public function updatedNomObjetivo($value)
+    {
+        if (strlen($value) > 10 && $this->aiEnabled) {
+            $this->auditSmart();
+        }
+    }
+
+    public function auditSmart()
+    {
+        if (empty($this->nom_objetivo)) {
+            $this->addError('nom_objetivo', 'Digite um título para auditar.');
+            return;
+        }
+
+        $aiService = \App\Services\AI\AiServiceFactory::make();
+        if (!$aiService) return;
+
+        $this->smartFeedback = 'Analisando qualidade...';
+        $this->smartFeedback = $aiService->analyzeSmart('Objetivo', $this->nom_objetivo, $this->dsc_objetivo ?? '');
+    }
 
     public function pedirAjudaIA()
     {
@@ -184,22 +211,38 @@ class ListarObjetivos extends Component
 
         $after = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
 
-        $this->dispatch('mentor-notification', 
-            title: $this->objetivoId ? 'Objetivo Atualizado!' : 'Objetivo Criado!',
-            message: $after['message'],
-            icon: 'bi-bullseye'
+        $alert = \App\Services\NotificationService::sendMentorAlert(
+            $this->objetivoId ? 'Objetivo Atualizado!' : 'Objetivo Criado!',
+            $after['message'],
+            'bi-bullseye'
         );
+
+        $this->dispatch('mentor-notification', ...$alert);
 
         $this->showModal = false;
         $this->carregarPerspectivas();
         session()->flash('status', 'Objetivo salvo com sucesso!');
     }
 
-    public function delete($id)
+    public function confirmDelete($id)
     {
-        Objetivo::findOrFail($id)->delete();
+        $this->objetivoId = $id;
+        $this->showDeleteModal = true;
+    }
+
+    public function delete()
+    {
+        Objetivo::findOrFail($this->objetivoId)->delete();
+        $this->showDeleteModal = false;
+        $this->objetivoId = null;
         $this->carregarPerspectivas();
-        session()->flash('status', 'Objetivo excluído com sucesso!');
+        
+        $this->dispatch('mentor-notification', 
+            title: 'Objetivo Removido',
+            message: 'O objetivo foi excluído do seu planejamento estratégico.',
+            icon: 'bi-trash',
+            type: 'warning'
+        );
     }
 
     public function resetForm()

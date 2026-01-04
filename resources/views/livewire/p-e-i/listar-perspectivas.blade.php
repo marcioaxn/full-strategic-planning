@@ -154,7 +154,7 @@
                                                 <button type="button" class="btn btn-outline-primary" wire:click="edit('{{ $perspectiva->cod_perspectiva }}')" title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-outline-danger" wire:click="delete('{{ $perspectiva->cod_perspectiva }}')" wire:confirm="Tem certeza que deseja excluir esta perspectiva? Esta ação não pode ser desfeita." title="Excluir">
+                                                <button type="button" class="btn btn-outline-danger" wire:click="confirmDelete('{{ $perspectiva->cod_perspectiva }}')" title="Excluir">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </div>
@@ -339,4 +339,47 @@
         </div>
         @endif
     @endif
+
+    {{-- Modal de Exclusão --}}
+    <x-confirmation-modal wire:model.live="showDeleteModal">
+        <x-slot name="title">
+            <div class="modal-header-modern">
+                <div class="modal-icon modal-icon-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <div>
+                    <h5 class="mb-1 fw-bold text-dark">{{ __('Excluir Perspectiva') }}</h5>
+                    <p class="text-muted small mb-0">{{ __('Esta ação é irreversível') }}</p>
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="content">
+            <div class="delete-confirmation">
+                <p class="mb-2 text-dark">
+                    {{ __('Tem certeza que deseja excluir esta perspectiva estratégica?') }}
+                </p>
+                <div class="alert alert-warning bg-warning-subtle border-0">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Atenção:</strong> Todos os objetivos, indicadores e planos associados a esta perspectiva também serão removidos.
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-secondary-button wire:click="$set('showDeleteModal', false)" wire:loading.attr="disabled" class="btn-modern">
+                {{ __('Cancelar') }}
+            </x-secondary-button>
+
+            <x-danger-button wire:click="delete" wire:loading.attr="disabled" class="btn-delete-modern ms-2">
+                <span wire:loading.remove wire:target="delete">
+                    <i class="bi bi-trash me-1"></i>{{ __('Excluir Agora') }}
+                </span>
+                <span wire:loading wire:target="delete">
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    {{ __('Excluindo...') }}
+                </span>
+            </x-danger-button>
+        </x-slot>
+    </x-confirmation-modal>
 </div>

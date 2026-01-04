@@ -27,34 +27,8 @@ class ListarRiscos extends Component
     public bool $showModal = false;
     public bool $showDeleteModal = false;
     public $riscoId;
-
-    // Campos do Formulário
-    public $form = [
-        'dsc_titulo' => '',
-        'txt_descricao' => '',
-        'dsc_categoria' => 'Operacional',
-        'num_probabilidade' => 3,
-        'num_impacto' => 3,
-        'txt_causas' => '',
-        'txt_consequencias' => '',
-        'cod_responsavel_monitoramento' => '',
-        'dsc_status' => 'Identificado',
-        'objetivos_vinculados' => [], // IDs dos objetivos
-    ];
-
-    // Listas auxiliares
-    public $categoriasOptions = ['Estratégico', 'Operacional', 'Financeiro', 'Reputacional', 'Legal/Conformidade'];
-    public $statusOptions = ['Identificado', 'Em Monitoramento', 'Mitigado', 'Encerrado'];
-    public $objetivos = [];
-    public $usuarios = [];
-
-    protected $queryString = [
-        'search' => ['except' => ''],
-        'filtroNivel' => ['except' => ''],
-        'page' => ['except' => 1],
-    ];
-
-    public $peiAtivo;
+    public bool $aiEnabled = false;
+    public $aiSuggestion = '';
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
@@ -63,8 +37,47 @@ class ListarRiscos extends Component
 
     public function mount()
     {
+        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+    }
+
+    public function pedirAjudaIA()
+    {
+        if (!$this->aiEnabled) return;
+
+        $aiService = \App\Services\AI\AiServiceFactory::make();
+        if (!$aiService) return;
+
+        $objetivosList = $this->objetivos->pluck('nom_objetivo')->take(5)->implode(', ');
+
+        $this->aiSuggestion = 'Pensando...';
+        
+        $prompt = "Com base nos seguintes Objetivos Estratégicos da organização: '{$objetivosList}', sugira 3 riscos potenciais que podem impedir o alcance dessas metas. 
+        Para cada risco informe: Título, Categoria (Estratégico, Operacional, Financeiro, Reputacional), Descrição curta e uma sugestão de Medida de Mitigação.
+        Responda OBRIGATORIAMENTE em formato JSON puro, contendo um array de objetos com os campos 'titulo', 'categoria', 'descricao' e 'mitigacao'.";
+        
+        $response = $aiService->suggest($prompt);
+        $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
+
+        if (is_array($decoded)) {
+            $this->aiSuggestion = $decoded;
+        } else {
+            $this->aiSuggestion = null;
+            session()->flash('error', 'Falha ao processar sugestões de risco. Tente novamente.');
+        }
+    }
+
+    public function aplicarSugestao($titulo, $categoria, $descricao)
+    {
+        $this->resetForm();
+        $this->form['dsc_titulo'] = $titulo;
+        $this->form['dsc_categoria'] = $categoria;
+        $this->form['txt_descricao'] = $descricao;
+        $this->form['cod_responsavel_monitoramento'] = \Illuminate\Support\Facades\Auth::id();
+        
+        $this->showModal = true;
+        $this->aiSuggestion = '';
     }
 
     public function atualizarPEI($id)
@@ -171,8 +184,15 @@ class ListarRiscos extends Component
         // Sincronizar objetivos
         $risco->objetivos()->sync($this->form['objetivos_vinculados']);
 
+        $alert = \App\Services\NotificationService::sendMentorAlert(
+            $this->riscoId ? 'Risco Atualizado!' : 'Risco Identificado!',
+            'A matriz de riscos foi atualizada com sucesso.',
+            'bi-shield-plus'
+        );
+
+        $this->dispatch('mentor-notification', ...$alert);
+
         $this->showModal = false;
-        session()->flash('status', 'Risco salvo com sucesso!');
     }
 
     public function confirmDelete($id)
@@ -187,7 +207,15 @@ class ListarRiscos extends Component
         $this->authorize('delete', $risco);
         $risco->delete();
         $this->showDeleteModal = false;
-        session()->flash('status', 'Risco excluído!');
+        
+        $alert = \App\Services\NotificationService::sendMentorAlert(
+            'Risco Removido',
+            'O item foi excluído do mapeamento de riscos.',
+            'bi-trash',
+            'warning'
+        );
+
+        $this->dispatch('mentor-notification', ...$alert);
     }
 
     public function resetForm()

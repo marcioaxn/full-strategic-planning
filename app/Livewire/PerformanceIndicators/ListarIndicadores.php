@@ -76,11 +76,36 @@ class ListarIndicadores extends Component
     public $peiAtivo;
     public bool $aiEnabled = false;
     public $aiSuggestion = '';
+    public $smartFeedback = '';
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
         'peiSelecionado' => 'atualizarPEI'
     ];
+
+    /**
+     * Hook do Livewire que dispara quando campos do form são alterados.
+     */
+    public function updatedForm($value, $key)
+    {
+        if ($key === 'nom_indicador' && strlen($value) > 10 && $this->aiEnabled) {
+            $this->auditSmart();
+        }
+    }
+
+    public function auditSmart()
+    {
+        if (empty($this->form['nom_indicador'])) {
+            $this->addError('form.nom_indicador', 'Digite um nome para auditar.');
+            return;
+        }
+
+        $aiService = \App\Services\AI\AiServiceFactory::make();
+        if (!$aiService) return;
+
+        $this->smartFeedback = 'Analisando métrica...';
+        $this->smartFeedback = $aiService->analyzeSmart('Indicador', $this->form['nom_indicador'], $this->form['dsc_indicador'] ?? '');
+    }
 
     public function pedirAjudaIA()
     {
@@ -256,11 +281,13 @@ class ListarIndicadores extends Component
 
         $after = $service->analyzeCompleteness($this->peiAtivo?->cod_pei);
 
-        $this->dispatch('mentor-notification', 
-            title: $this->indicadorId ? 'KPI Atualizado!' : 'KPI Registrado!',
-            message: $after['message'],
-            icon: 'bi-graph-up-arrow'
+        $alert = \App\Services\NotificationService::sendMentorAlert(
+            $this->indicadorId ? 'KPI Atualizado!' : 'KPI Registrado!',
+            $after['message'],
+            'bi-graph-up-arrow'
         );
+
+        $this->dispatch('mentor-notification', ...$alert);
 
         $this->showModal = false;
         session()->flash('status', 'Sucesso!');
@@ -340,6 +367,13 @@ class ListarIndicadores extends Component
     {
         Indicador::findOrFail($this->indicadorId)->delete();
         $this->showDeleteModal = false;
+        
+        $this->dispatch('mentor-notification', 
+            title: 'Indicador Removido',
+            message: 'O KPI foi excluído com sucesso.',
+            icon: 'bi-trash',
+            type: 'warning'
+        );
     }
 
     public function resetForm()

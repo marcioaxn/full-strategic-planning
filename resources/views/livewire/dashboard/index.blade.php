@@ -43,11 +43,37 @@
             <p class="text-muted mb-0">Gestão estratégica da unidade <strong>{{ $organizacaoNome }}</strong>.</p>
         </div>
         <div class="d-flex gap-2">
-            <div class="badge bg-white shadow-sm text-primary p-2 px-3 border-0 rounded-3">
+            <button wire:click="generateAiSummary" wire:loading.attr="disabled" class="btn btn-white shadow-sm rounded-pill px-3 border-0 fw-bold text-primary d-flex align-items-center gap-2">
+                <span wire:loading.remove wire:target="generateAiSummary">
+                    <i class="bi bi-lightning-charge-fill text-warning"></i> {{ __('AI Minute') }}
+                </span>
+                <span wire:loading wire:target="generateAiSummary">
+                    <span class="spinner-border spinner-border-sm text-primary"></span>
+                </span>
+            </button>
+            <div class="badge bg-white shadow-sm text-primary p-2 px-3 border-0 rounded-3 d-flex align-items-center">
                 <i class="bi bi-calendar3 me-2"></i> Ciclo: {{ $peiAtivo->dsc_pei ?? now()->format('Y') }}
             </div>
         </div>
     </div>
+
+    {{-- Resumo Executivo da IA --}}
+    @if($aiSummary)
+        <div class="ai-insight-card animate-fade-in mb-4" style="border-left-color: #ffc107;">
+            <div class="card-header bg-white">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-journal-check text-warning"></i>
+                    <h6 class="fw-bold mb-0">{{ __('Resumo Executivo da Unidade (Gerado por IA)') }}</h6>
+                </div>
+                <button type="button" class="btn-close small" style="font-size: 0.7rem;" wire:click="$set('aiSummary', '')"></button>
+            </div>
+            <div class="card-body">
+                <p class="mb-0 text-dark italic" style="font-size: 1rem; line-height: 1.6;">
+                    {!! nl2br(e($aiSummary)) !!}
+                </p>
+            </div>
+        </div>
+    @endif
 
     {{-- Mentor Estratégico (Checklist/Guia) --}}
     @livewire('dashboard.pei-checklist')
