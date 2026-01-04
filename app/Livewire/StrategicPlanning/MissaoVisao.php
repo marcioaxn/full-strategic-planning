@@ -30,6 +30,8 @@ class MissaoVisao extends Component
 
     public bool $isEditing = false;
     public bool $isEditingValores = false;
+    public bool $aiEnabled = false;
+    public $aiSuggestion = '';
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
@@ -38,8 +40,65 @@ class MissaoVisao extends Component
 
     public function mount()
     {
+        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+    }
+
+    public function pedirAjudaIA()
+    {
+        if (!$this->aiEnabled) return;
+
+        if (!$this->organizacaoNome) {
+             session()->flash('error', 'Selecione uma organização primeiro.');
+             return;
+        }
+
+        $aiService = \App\Services\AI\AiServiceFactory::make();
+        if (!$aiService) return;
+
+        $this->aiSuggestion = 'Pensando...';
+        
+        $prompt = "Sugira Missão, Visão e 5 Valores para a organização: {$this->organizacaoNome}. 
+        Responda OBRIGATORIAMENTE em formato JSON puro com os campos: 
+        'missao' (string), 'visao' (string) e 'valores' (array de objetos com 'nome' e 'descricao').";
+        
+        $response = $aiService->suggest($prompt);
+        $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
+
+        if (is_array($decoded)) {
+            $this->aiSuggestion = $decoded;
+        } else {
+            $this->aiSuggestion = null;
+            session()->flash('error', 'Falha ao processar sugestões. Tente novamente.');
+        }
+    }
+
+    public function aplicarIdentidade()
+    {
+        if (!isset($this->aiSuggestion['missao'])) return;
+
+        $this->missao = $this->aiSuggestion['missao'];
+        $this->visao = $this->aiSuggestion['visao'];
+        
+        $this->salvar();
+        
+        // Mantém apenas os valores na sugestão para não repetir a missão/visão já aplicada
+        $this->aiSuggestion['missao_aplicada'] = true;
+    }
+
+    public function adicionarValorSugerido($nome, $descricao)
+    {
+        $this->novoValorTitulo = $nome;
+        $this->novoValorDescricao = $descricao;
+        $this->adicionarValor();
+
+        // Remove o valor da lista de sugestões
+        if (isset($this->aiSuggestion['valores'])) {
+            $this->aiSuggestion['valores'] = array_filter($this->aiSuggestion['valores'], function($v) use ($nome) {
+                return $v['nome'] !== $nome;
+            });
+        }
     }
 
     public function atualizarPEI($id)

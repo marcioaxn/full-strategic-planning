@@ -74,14 +74,70 @@ class ListarIndicadores extends Component
     ];
 
     public $peiAtivo;
+    public bool $aiEnabled = false;
+    public $aiSuggestion = '';
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
         'peiSelecionado' => 'atualizarPEI'
     ];
 
+    public function pedirAjudaIA()
+    {
+        if (!$this->aiEnabled) return;
+
+        if (!$this->filtroObjetivo) {
+             session()->flash('error', 'Selecione um Objetivo no filtro primeiro para eu saber o que medir.');
+             return;
+        }
+
+        $aiService = \App\Services\AI\AiServiceFactory::make();
+        if (!$aiService) return;
+
+        $objetivo = Objetivo::find($this->filtroObjetivo);
+        
+        $this->aiSuggestion = 'Pensando...';
+
+        $prompt = "Sugira 3 indicadores (KPIs) para o objetivo: '{$objetivo->nom_objetivo}'. 
+        Descrição do objetivo: '{$objetivo->dsc_objetivo}'.
+        Responda OBRIGATORIAMENTE em formato JSON puro, contendo um array de objetos com os campos 'nome', 'descricao', 'unidade' e 'formula'.";
+        
+        $response = $aiService->suggest($prompt);
+        $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
+
+        if (is_array($decoded)) {
+            $this->aiSuggestion = $decoded;
+        } else {
+            $this->aiSuggestion = null;
+            session()->flash('error', 'Falha ao processar sugestões. Tente novamente.');
+        }
+    }
+
+    public function aplicarSugestao($nome, $descricao, $unidade, $formula)
+    {
+        $this->resetForm();
+        $this->form['nom_indicador'] = $nome;
+        $this->form['dsc_indicador'] = $descricao;
+        $this->form['dsc_unidade_medida'] = $unidade;
+        $this->form['dsc_formula'] = $formula;
+        $this->form['cod_objetivo'] = $this->filtroObjetivo;
+        $this->form['dsc_tipo'] = 'Objetivo';
+        
+        $this->save();
+        
+        // Remove o item da lista de sugestões
+        if (is_array($this->aiSuggestion)) {
+            $this->aiSuggestion = array_filter($this->aiSuggestion, function($item) use ($nome) {
+                return $item['nome'] !== $nome;
+            });
+            
+            if (empty($this->aiSuggestion)) $this->aiSuggestion = '';
+        }
+    }
+
     public function mount()
     {
+        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
     }
@@ -128,8 +184,17 @@ class ListarIndicadores extends Component
         }
     }
 
-    public function create()
+    public function create(\App\Services\PeiGuidanceService $service)
     {
+        $guidance = $service->analyzeCompleteness($this->peiAtivo?->cod_pei);
+        
+        // If we are in any phase BEFORE indicators, redirect and alert
+        $phasesBefore = ['ciclo', 'identidade', 'perspectivas', 'objetivos'];
+        if ($guidance['status'] === 'warning' && in_array($guidance['current_phase'], $phasesBefore)) {
+             session()->flash('error', $guidance['message']);
+             return redirect()->route($guidance['action_route']);
+        }
+
         $this->authorize('create', Indicador::class);
         $this->resetForm();
         if (!$this->organizacaoId) {

@@ -13,28 +13,28 @@ class UpdateThemeColorForm extends Component
     public $availableColors = [
         'primary' => [
             'name' => 'Ocean Blue',
-            'description' => 'Classic professional blue theme',
-            'preview' => 'linear-gradient(135deg, #1B408E, #5375C2)', // Deep Blue -> Lightened Blue
+            'description' => 'Deep professional corporate blue',
+            'preview' => 'linear-gradient(135deg, #1B408E, #4361EE)',
         ],
         'info' => [
-            'name' => 'Sky Cyan',
-            'description' => 'Light and airy cyan',
-            'preview' => 'linear-gradient(135deg, #0891b2, #67E8F9)', // Cyan 600 -> Cyan 300
+            'name' => 'Electric Cyan',
+            'description' => 'Vibrant and modern tech cyan',
+            'preview' => 'linear-gradient(135deg, #0891B2, #06B6D4)',
         ],
         'success' => [
-            'name' => 'Forest Green',
-            'description' => 'Fresh and natural green',
-            'preview' => 'linear-gradient(135deg, #059669, #6EE7B7)', // Emerald 600 -> Emerald 300
+            'name' => 'Emerald Green',
+            'description' => 'Fresh and high-contrast green',
+            'preview' => 'linear-gradient(135deg, #059669, #10B981)',
         ],
         'warning' => [
-            'name' => 'Sunset Orange',
-            'description' => 'Warm and energetic orange',
-            'preview' => 'linear-gradient(135deg, #d97706, #FCD34D)', // Amber 600 -> Amber 300
+            'name' => 'Golden Amber',
+            'description' => 'Warm and energetic amber glow',
+            'preview' => 'linear-gradient(135deg, #D97706, #F59E0B)',
         ],
         'secondary' => [
-            'name' => 'Slate Gray',
-            'description' => 'Sophisticated neutral gray',
-            'preview' => 'linear-gradient(135deg, #475569, #A7B3C4)', // Slate 700 -> Lightened Slate
+            'name' => 'Steel Slate',
+            'description' => 'Sophisticated and neutral gray',
+            'preview' => 'linear-gradient(135deg, #475569, #94A3B8)',
         ],
     ];
 

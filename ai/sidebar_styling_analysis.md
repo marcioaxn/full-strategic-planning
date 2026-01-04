@@ -103,3 +103,32 @@
     - Created `app/Livewire/Usuario/ListarUsuarios.php` + view (CRUD Users with Pivot Management).
     - Updated `routes/web.php` to register new routes.
 - **Reason**: Implementation of the Core Basic phase tasks as per roadmap, adhering strictly to the UI/UX patterns defined in `LeadsTable`.
+
+- **Date**: 2026-01-03
+- **Action**: Improved UI/UX of PEI Help Section (`/pei/ciclos`).
+- **Change**:
+    - Modified `resources/views/livewire/p-e-i/listar-peis.blade.php`:
+        - Replaced transparent white cards with adaptive `bg-body` cards to ensure text contrast in both light and dark modes.
+        - Implemented a theme-adaptive background for the main help card: purple gradient in light mode, dark gray gradient in dark mode.
+        - Updated inner text colors from `text-white` to `text-body` (adaptive).
+        - Updated badges to `bg-primary text-white` for visibility on white cards.
+        - Fixed positioning of step-connector arrows to sit outside the cards on the purple gradient, ensuring visibility.
+- **Reason**: User request to fix low contrast (white text on white background) and ensure dark mode compatibility while preserving the overall aesthetic.
+
+- **Date**: 2026-01-03
+- **Action**: Advanced 'Strategic Mentor' (Locks and AI).
+- **Change**:
+    - Implemented logic-based redirects in `create()` methods of `ListarPerspectivas`, `ListarObjetivos`, and `ListarIndicadores` to enforce sequential PEI data entry.
+    - Created `app/Services/GeminiAiService.php` to integrate Google Gemini AI API.
+    - Added "Mentor de IA" functionality to `MissaoVisao` (Strategic Identity) with a new UI component and AI-powered suggestions.
+- **Reason**: Ensuring data integrity through sequential filling and providing intelligent assistance for strategic planning.
+
+- **Date**: 2026-01-03
+- **Action**: Global AI Configuration & System Settings.
+- **Change**:
+    - Created `system_settings` table and `SystemSetting` model with encryption for API keys.
+    - Created `ConfiguracaoSistema` component for dynamic management of IA (Enable/Disable, Provider, API Key).
+    - Integrated `ai_enabled` check across all AI-related views (Dashboard, Identity, Objectives, Indicators).
+    - Added "Configurações" link to the Administration sidebar.
+    - Dashboard checklist adapts its branding based on AI status ("Mentor Estratégico" vs "Monitor Estratégico").
+- **Reason**: Providing flexibility for different client profiles (90/5/5 scenario) and securing sensitive API credentials.
