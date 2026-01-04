@@ -26,6 +26,7 @@ Route::middleware([
     // Strategic Planning Module
     Route::get('/organizacoes', \App\Livewire\Organization\ListarOrganizacoes::class)->name('organizacoes.index');
     Route::get('/usuarios', \App\Livewire\UserManagement\ListarUsuarios::class)->name('usuarios.index');
+    Route::get('/configuracoes', \App\Livewire\Admin\ConfiguracaoSistema::class)->name('admin.configuracoes');
     Route::get('/graus-satisfacao', \App\Livewire\StrategicPlanning\ListarGrausSatisfacao::class)->name('graus-satisfacao.index');
     
     // Strategic Planning (PEI)

@@ -35,13 +35,90 @@
                     icon="pencil"
                     tooltip="{{ __('Editar identidade estratégica') }}"
                     wire:click="habilitarEdicao"
-                    class="btn-action-primary gradient-theme-btn"
+                    class="btn-action-primary gradient-theme-btn px-4"
                 >
                     {{ __('Editar Missão/Visão') }}
                 </x-action-button>
             @endif
         </div>
     </div>
+
+    {{-- Mentor de IA --}}
+    @if($organizacaoId && $peiAtivo && $aiEnabled)
+        <div class="ai-mentor-wrapper animate-fade-in">
+            <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="ai-magic-button shadow-sm">
+                <span wire:loading.remove wire:target="pedirAjudaIA">
+                    <i class="bi bi-robot"></i> {{ __('Sugerir Missão, Visão e Valores com IA') }}
+                </span>
+                <span wire:loading wire:target="pedirAjudaIA">
+                    <span class="spinner-border spinner-border-sm me-2"></span>{{ __('Inspirando novas ideias...') }}
+                </span>
+            </button>
+
+            @if($aiSuggestion)
+                <div class="ai-insight-card animate-fade-in">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-robot text-primary"></i>
+                            <h6 class="fw-bold mb-0">{{ __('Identidade Sugerida pelo Mentor IA') }}</h6>
+                        </div>
+                        <button type="button" class="btn-close small" style="font-size: 0.7rem;" wire:click="$set('aiSuggestion', '')"></button>
+                    </div>
+                    <div class="card-body">
+                        @if(is_array($aiSuggestion))
+                            {{-- Missão e Visão --}}
+                            @if(!isset($aiSuggestion['missao_aplicada']))
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <div class="p-3 rounded-3 border bg-light h-100">
+                                            <h6 class="fw-bold text-primary small mb-2 text-uppercase">{{ __('Sugestão de Missão') }}</h6>
+                                            <p class="small mb-0 italic">"{{ $aiSuggestion['missao'] }}"</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="p-3 rounded-3 border bg-light h-100">
+                                            <h6 class="fw-bold text-success small mb-2 text-uppercase">{{ __('Sugestão de Visão') }}</h6>
+                                            <p class="small mb-0 italic">"{{ $aiSuggestion['visao'] }}"</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 text-end">
+                                        <button wire:click="aplicarIdentidade" class="btn btn-sm btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                                            <i class="bi bi-check-all me-1"></i> {{ __('Aplicar Missão e Visão') }}
+                                        </button>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="alert alert-success py-2 small mb-4 d-flex align-items-center gap-2">
+                                    <i class="bi bi-check-circle-fill"></i> {{ __('Missão e Visão aplicadas com sucesso!') }}
+                                </div>
+                            @endif
+
+                            {{-- Valores --}}
+                            <h6 class="fw-bold text-dark small mb-3 text-uppercase border-bottom pb-2">{{ __('Valores Sugeridos') }}</h6>
+                            <div class="list-group list-group-flush border rounded-3 overflow-hidden">
+                                @foreach($aiSuggestion['valores'] as $valor)
+                                    <div class="list-group-item d-flex align-items-start justify-content-between p-3 bg-light bg-opacity-25 hover-bg-white transition-all gap-3">
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold text-dark">{{ $valor['nome'] }}</div>
+                                            <p class="small text-muted mb-0 mt-1">{{ $valor['descricao'] }}</p>
+                                        </div>
+                                        <button wire:click="adicionarValorSugerido('{{ $valor['nome'] }}', '{{ $valor['descricao'] }}')" 
+                                                class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
+                                            <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="markdown-content">
+                                {!! Str::markdown($aiSuggestion) !!}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+        </div>
+    @endif
 
     @if (session()->has('status'))
         <div class="alert alert-modern alert-success alert-dismissible fade show d-flex align-items-center gap-3 mb-4" role="alert">

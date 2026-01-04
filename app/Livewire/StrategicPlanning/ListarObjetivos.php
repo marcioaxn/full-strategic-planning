@@ -21,13 +21,66 @@ class ListarObjetivos extends Component
     public $dsc_objetivo;
     public $num_nivel_hierarquico_apresentacao;
     public $cod_perspectiva;
+    public bool $aiEnabled = false;
+    public $aiSuggestion = '';
 
     protected $listeners = [
         'peiSelecionado' => 'atualizarPEI'
     ];
 
+    public function pedirAjudaIA()
+    {
+        if (!$this->aiEnabled) return;
+        
+        if (!$this->cod_perspectiva) {
+             session()->flash('error', 'Selecione uma perspectiva primeiro.');
+             return;
+        }
+
+        $aiService = \App\Services\AI\AiServiceFactory::make();
+        if (!$aiService) return;
+
+        $perspectiva = Perspectiva::find($this->cod_perspectiva);
+        $identidade = \App\Models\StrategicPlanning\MissaoVisaoValores::where('cod_pei', $this->peiAtivo->cod_pei)->first();
+
+        $this->aiSuggestion = 'Pensando...';
+        
+        $prompt = "Sugira 3 objetivos estratégicos para a perspectiva '{$perspectiva->dsc_perspectiva}'. 
+        Missão: '" . ($identidade->dsc_missao ?? '') . "'. Visão: '" . ($identidade->dsc_visao ?? '') . "'.
+        Responda OBRIGATORIAMENTE em formato JSON puro, contendo um array de objetos com os campos 'nome', 'descricao' e 'ordem' (inteiro).";
+        
+        $response = $aiService->suggest($prompt);
+        $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
+
+        if (is_array($decoded)) {
+            $this->aiSuggestion = $decoded;
+        } else {
+            $this->aiSuggestion = null;
+            session()->flash('error', 'Falha ao processar sugestões. Tente novamente.');
+        }
+    }
+
+    public function aplicarSugestao($nome, $descricao, $ordem)
+    {
+        $this->nom_objetivo = $nome;
+        $this->dsc_objetivo = $descricao;
+        $this->num_nivel_hierarquico_apresentacao = $ordem;
+        
+        $this->save();
+        
+        // Remove o item da lista de sugestões
+        if (is_array($this->aiSuggestion)) {
+            $this->aiSuggestion = array_filter($this->aiSuggestion, function($item) use ($nome) {
+                return $item['nome'] !== $nome;
+            });
+            
+            if (empty($this->aiSuggestion)) $this->aiSuggestion = '';
+        }
+    }
+
     public function mount()
     {
+        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
 
         if ($this->peiAtivo) {
@@ -64,8 +117,19 @@ class ListarObjetivos extends Component
             ->get();
     }
 
-    public function create($perspectivaId = null)
+    public function create($perspectivaId = null, \App\Services\PeiGuidanceService $service = null)
     {
+        // Resolve service if not passed (Livewire handles dependency injection in methods if requested)
+        $service = $service ?? app(\App\Services\PeiGuidanceService::class);
+        $guidance = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
+        
+        // If we are in any phase BEFORE objectives, redirect and alert
+        $phasesBefore = ['ciclo', 'identidade', 'perspectivas'];
+        if ($guidance['status'] === 'warning' && in_array($guidance['current_phase'], $phasesBefore)) {
+             session()->flash('error', $guidance['message']);
+             return redirect()->route($guidance['action_route']);
+        }
+
         $this->resetForm();
         $this->cod_perspectiva = $perspectivaId;
         $this->showModal = true;

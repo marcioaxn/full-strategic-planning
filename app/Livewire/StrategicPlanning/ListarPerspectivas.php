@@ -18,6 +18,8 @@ class ListarPerspectivas extends Component
     public $perspectivaId;
     public $dsc_perspectiva;
     public $num_nivel_hierarquico_apresentacao;
+    public bool $aiEnabled = false;
+    public $aiSuggestion = '';
 
     protected $listeners = [
         'peiSelecionado' => 'atualizarPEI'
@@ -25,10 +27,64 @@ class ListarPerspectivas extends Component
 
     public function mount()
     {
+        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
 
         if ($this->peiAtivo) {
             $this->carregarPerspectivas();
+        }
+    }
+
+    public function pedirAjudaIA()
+    {
+        if (!$this->aiEnabled) return;
+
+        $aiService = \App\Services\AI\AiServiceFactory::make();
+        if (!$aiService) return;
+
+        $identidade = \App\Models\StrategicPlanning\MissaoVisaoValores::where('cod_pei', $this->peiAtivo->cod_pei)->first();
+
+        $this->aiSuggestion = 'Pensando...';
+        
+        $prompt = "Com base na Missão: '" . ($identidade->dsc_missao ?? 'Não definida') . "' e Visão: '" . ($identidade->dsc_visao ?? 'Não definida') . "', sugira as 4 perspectivas do BSC para esta organização. 
+        IMPORTANTE: Utilize a lógica DOWN-TOP para a ordem (hierarquia):
+        - Ordem 1: A base (ex: Aprendizado e Crescimento)
+        - Ordem 2: Processos Internos
+        - Ordem 3: Clientes / Usuários
+        - Ordem 4: O topo/resultado (ex: Financeira ou Valor Social)
+        
+        Responda OBRIGATORIAMENTE em formato JSON puro, contendo um array de objetos com os campos 'nome', 'ordem' e 'descricao' (uma frase curta explicando o foco). 
+        Exemplo: [{\"nome\": \"Aprendizado e Crescimento\", \"ordem\": 1, \"descricao\": \"Desenvolvimento de pessoas e sistemas.\"}, ...]";
+        
+        $response = $aiService->suggest($prompt);
+        
+        // Tenta decodificar o JSON. Se falhar, limpa para não quebrar a UI
+        $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
+        
+        if (is_array($decoded)) {
+            $this->aiSuggestion = $decoded;
+        } else {
+            $this->aiSuggestion = null;
+            session()->flash('error', 'A IA gerou um formato inválido. Por favor, tente novamente.');
+        }
+    }
+
+    public function aplicarSugestao($nome, $ordem)
+    {
+        $this->dsc_perspectiva = $nome;
+        $this->num_nivel_hierarquico_apresentacao = $ordem;
+        
+        $this->save();
+        
+        // Remove o item da lista de sugestões após aplicar para não duplicar
+        if (is_array($this->aiSuggestion)) {
+            $this->aiSuggestion = array_filter($this->aiSuggestion, function($item) use ($nome) {
+                return $item['nome'] !== $nome;
+            });
+            
+            if (empty($this->aiSuggestion)) {
+                $this->aiSuggestion = '';
+            }
         }
     }
 
@@ -59,8 +115,15 @@ class ListarPerspectivas extends Component
             ->get();
     }
 
-    public function create()
+    public function create(\App\Services\PeiGuidanceService $service)
     {
+        $guidance = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
+        
+        if ($guidance['status'] === 'warning' && $guidance['current_phase'] === 'identidade') {
+             session()->flash('error', $guidance['message']);
+             return redirect()->route($guidance['action_route']);
+        }
+
         $this->resetForm();
         $maxNivel = Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
             ->max('num_nivel_hierarquico_apresentacao') ?? 0;
