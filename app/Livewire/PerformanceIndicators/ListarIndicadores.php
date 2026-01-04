@@ -118,7 +118,7 @@ class ListarIndicadores extends Component
         $this->resetForm();
         $this->form['nom_indicador'] = $nome;
         $this->form['dsc_indicador'] = $descricao;
-        $this->form['dsc_unidade_medida'] = $unidade;
+        $this->form['dsc_unidade_medida'] = $unidade; 
         $this->form['dsc_formula'] = $formula;
         $this->form['cod_objetivo'] = $this->filtroObjetivo;
         $this->form['dsc_tipo'] = 'Objetivo';
@@ -231,6 +231,9 @@ class ListarIndicadores extends Component
 
     public function save()
     {
+        $service = app(\App\Services\PeiGuidanceService::class);
+        $before = $service->analyzeCompleteness($this->peiAtivo?->cod_pei);
+
         $this->validate([
             'form.nom_indicador' => 'required|string|max:255',
             'form.dsc_tipo' => 'required',
@@ -250,6 +253,14 @@ class ListarIndicadores extends Component
             $indicador = Indicador::create($data);
             if ($this->organizacaoId) { $indicador->organizacoes()->attach($this->organizacaoId); }
         }
+
+        $after = $service->analyzeCompleteness($this->peiAtivo?->cod_pei);
+
+        $this->dispatch('mentor-notification', 
+            title: $this->indicadorId ? 'KPI Atualizado!' : 'KPI Registrado!',
+            message: $after['message'],
+            icon: 'bi-graph-up-arrow'
+        );
 
         $this->showModal = false;
         session()->flash('status', 'Sucesso!');

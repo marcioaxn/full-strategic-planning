@@ -316,6 +316,76 @@
         <div class="app-shell d-flex min-vh-100">
             @include('layouts.partials.sidebar', ['items' => $appNavigation])
 
+            {{-- Mentor Toast Container --}}
+            <div id="mentor-toast-container" class="mentor-toast-container" x-data="{ 
+                notifications: [],
+                addNotification(data) {
+                    const id = Date.now();
+                    const duration = 7000; // ~7 segundos (6s + 15%)
+                    
+                    const notification = { 
+                        id, 
+                        title: data.title || 'Aviso do Mentor',
+                        message: data.message || '',
+                        icon: data.icon || 'bi-info-circle',
+                        type: data.type || 'success',
+                        remaining: duration,
+                        duration: duration,
+                        paused: false,
+                        startTime: Date.now()
+                    };
+                    
+                    this.notifications.push(notification);
+                    
+                    // Iniciar cronômetro para esta notificação
+                    this.startTimer(id);
+                },
+                startTimer(id) {
+                    const timer = setInterval(() => {
+                        const n = this.notifications.find(n => n.id === id);
+                        if (!n) {
+                            clearInterval(timer);
+                            return;
+                        }
+                        
+                        if (!n.paused) {
+                            n.remaining -= 100;
+                            if (n.remaining <= 0) {
+                                this.removeNotification(id);
+                                clearInterval(timer);
+                            }
+                        }
+                    }, 100);
+                },
+                removeNotification(id) {
+                    this.notifications = this.notifications.filter(n => n.id !== id);
+                }
+            }" @mentor-notification.window="addNotification($event.detail)">
+                <template x-for="n in notifications" :key="n.id">
+                    <div class="mentor-toast" 
+                         :class="n.type || 'success'" 
+                         x-show="true" 
+                         x-transition:leave="toast-fade-out"
+                         @mouseenter="n.paused = true"
+                         @mouseleave="n.paused = false">
+                        
+                        <div class="mentor-toast-icon educational-card-gradient">
+                            <i class="bi fs-4 text-white" :class="n.icon || 'bi-patch-check-fill'"></i>
+                        </div>
+                        <div class="mentor-toast-content">
+                            <div class="mentor-toast-title" x-text="n.title"></div>
+                            <div class="mentor-toast-message" x-html="n.message"></div>
+                        </div>
+                        <button type="button" class="btn-close small ms-2" @click="removeNotification(n.id)"></button>
+                        
+                        {{-- Progress Bar --}}
+                        <div class="mentor-toast-progress">
+                            <div class="mentor-toast-progress-bar" :style="'transform: scaleX(' + (n.remaining / n.duration) + ')'"></div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
             <div class="app-main flex-grow-1 d-flex flex-column" :class="{'is-sidebar-collapsed': sidebarCollapsed}">
                 @livewire('navigation-menu')
 

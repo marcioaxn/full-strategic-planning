@@ -67,69 +67,66 @@ class PeiGuidanceService
         $perspectivasCount = $pei->perspectivas()->count();
         $phases['perspectivas']['count'] = $perspectivasCount;
 
-        if ($perspectivasCount >= 4) { // BSC usually has 4
-            $phases['perspectivas']['status'] = 'completed';
-        } elseif ($perspectivasCount > 0) {
-            $phases['perspectivas']['status'] = 'in_progress'; // Partial
-            return $this->buildResponse($phases, 'perspectivas', 35, $pei, 
-                'O BSC padrão sugere 4 perspectivas. Você tem ' . $perspectivasCount . '.', 
-                'pei.perspectivas', 'Completar Perspectivas');
-        } else {
-            return $this->buildResponse($phases, 'perspectivas', 30, $pei, 
-                'Crie as Perspectivas do BSC (Financeira, Clientes, Processos, Aprendizado).', 
+        if ($perspectivasCount == 0) {
+            $phases['perspectivas']['status'] = 'active';
+            return $this->buildResponse($phases, 'perspectivas', 20, $pei, 
+                'Crie as Perspectivas do BSC (ex: Financeira, Clientes, Processos e Aprendizado).', 
                 'pei.perspectivas', 'Criar Perspectivas');
         }
 
+        // Se tem pelo menos 1, marcamos como completa mas com mensagem de orientação se < 4
+        $phases['perspectivas']['status'] = 'completed';
+        $perspectivaWarning = $perspectivasCount < 4 ? " (Recomendamos 4 pilares, você tem {$perspectivasCount})" : "";
+
         // --- PHASE 4: Objetivos Estratégicos ---
-        // Objectives are linked to Perspectives.
         $perspectivaIds = $pei->perspectivas()->pluck('cod_perspectiva');
         $objetivosCount = Objetivo::whereIn('cod_perspectiva', $perspectivaIds)->count();
         $phases['objetivos']['count'] = $objetivosCount;
 
-        if ($objetivosCount > 0) {
-            // Check if ALL perspectives have at least one objective (Ideal scenario)
-            $perspectivasWithObj = Objetivo::whereIn('cod_perspectiva', $perspectivaIds)
-                ->distinct('cod_perspectiva')
-                ->count('cod_perspectiva');
-            
-            if ($perspectivasWithObj == $perspectivasCount) {
-                 $phases['objetivos']['status'] = 'completed';
-            } else {
-                $phases['objetivos']['status'] = 'in_progress';
-                return $this->buildResponse($phases, 'objetivos', 50, $pei, 
-                    'Algumas perspectivas ainda não possuem objetivos definidos.', 
-                    'pei.objetivos', 'Revisar Objetivos');
-            }
-        } else {
+        if ($objetivosCount == 0) {
+            $phases['objetivos']['status'] = 'active';
             return $this->buildResponse($phases, 'objetivos', 40, $pei, 
-                'Defina os Objetivos Estratégicos para cada perspectiva.', 
-                'pei.objetivos', 'Criar Objetivos');
+                "Perspectiva registrada!{$perspectivaWarning} Agora, defina os Objetivos Estratégicos.", 
+                'objetivos.index', 'Criar Objetivos');
         }
 
+        // Verifica se TODAS as perspectivas têm pelo menos um objetivo (Ideal)
+        $perspectivasComObjetivo = Objetivo::whereIn('cod_perspectiva', $perspectivaIds)
+            ->distinct('cod_perspectiva')
+            ->count('cod_perspectiva');
+
+        $phases['objetivos']['status'] = 'completed';
+        $objetivoWarning = $perspectivasComObjetivo < $perspectivasCount ? " (Algumas perspectivas ainda estão sem objetivos)" : "";
+
         // --- PHASE 5: Indicadores (KPIs) ---
-        // Indicators are linked to Objectives.
-        // We need to check if objectives have indicators.
         $objetivoIds = Objetivo::whereIn('cod_perspectiva', $perspectivaIds)->pluck('cod_objetivo');
         $indicadoresCount = Indicador::whereIn('cod_objetivo', $objetivoIds)->count();
         $phases['indicadores']['count'] = $indicadoresCount;
 
-        if ($indicadoresCount > 0) {
-             // Ideally every objective should have an indicator
-             $objetivosWithInd = Indicador::whereIn('cod_objetivo', $objetivoIds)
-                ->distinct('cod_objetivo')
-                ->count('cod_objetivo');
-            
-             if ($objetivosWithInd >= $objetivosCount) {
-                $phases['indicadores']['status'] = 'completed';
-             } else {
-                 // Not blocking, but warning
-                 $phases['indicadores']['status'] = 'in_progress';
-                 // We let it pass to Planos de Ação but keep status as in_progress
-             }
-        } else {
+        if ($indicadoresCount == 0) {
+            $phases['indicadores']['status'] = 'active';
             return $this->buildResponse($phases, 'indicadores', 60, $pei, 
-                'Defina Indicadores (KPIs) para mensurar seus objetivos.', 
+                "Objetivos salvos!{$objetivoWarning} O próximo passo é criar Indicadores para medi-los.", 
                 'indicadores.index', 'Criar Indicadores');
+        }
+
+        // Critério: Pelo menos um indicador para cada objetivo (Ideal)
+        $objetivosComIndicador = Indicador::whereIn('cod_objetivo', $objetivoIds)
+            ->distinct('cod_objetivo')
+            ->count('cod_objetivo');
+
+        $phases['indicadores']['status'] = 'completed';
+        $indicadorWarning = $objetivosComIndicador < $objetivosCount ? " (Faltam indicadores para alguns objetivos)" : "";
+
+        // --- PHASE 6: Planos de Ação ---
+        $planosCount = PlanoDeAcao::whereIn('cod_objetivo', $objetivoIds)->count();
+        $phases['planos']['count'] = $planosCount;
+
+        if ($planosCount == 0) {
+            $phases['planos']['status'] = 'active';
+            return $this->buildResponse($phases, 'planos', 80, $pei, 
+                "Indicadores registrados!{$indicadorWarning} Agora, crie Planos de Ação para tirar a estratégia do papel.", 
+                'planos.index', 'Criar Planos');
         }
 
         // --- PHASE 6: Planos de Ação ---
@@ -151,6 +148,7 @@ class PeiGuidanceService
             'current_phase' => 'monitoramento',
             'progress' => 100,
             'phases' => $phases,
+            'pei_id' => $pei->cod_pei,
             'message' => 'Parabéns! Seu Planejamento Estratégico está estruturado. Agora é hora de monitorar.',
             'action_route' => 'dashboard',
             'action_label' => 'Ir para Dashboard'
@@ -169,11 +167,34 @@ class PeiGuidanceService
             'current_phase' => $currentPhaseKey,
             'progress' => $progress,
             'phases' => $phases,
+            'pei_id' => $pei->cod_pei,
             'pei_cycle' => $pei->num_ano_inicio_pei . '-' . $pei->num_ano_fim_pei,
             'message' => $msg,
             'action_route' => $route,
-            'action_label' => $label
+            'action_label' => $label,
+            'next_step' => $this->getNextStepInfo($currentPhaseKey)
         ];
+    }
+
+    private function getNextStepInfo(string $currentPhase): ?array
+    {
+        $order = ['ciclo', 'identidade', 'perspectivas', 'objetivos', 'indicadores', 'planos', 'monitoramento'];
+        $index = array_search($currentPhase, $order);
+        
+        if ($index !== false && isset($order[$index + 1])) {
+            $nextKey = $order[$index + 1];
+            $phases = $this->getEmptyPhasesStructure();
+            
+            // Fallback for monitoramento which isn't in empty structure
+            $name = $phases[$nextKey]['name'] ?? 'Monitoramento';
+            
+            return [
+                'key' => $nextKey,
+                'name' => $name
+            ];
+        }
+        
+        return null;
     }
 
     private function getEmptyPhasesStructure(): array
