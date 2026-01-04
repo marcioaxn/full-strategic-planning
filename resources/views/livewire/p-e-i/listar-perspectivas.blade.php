@@ -208,34 +208,18 @@
                             </h5>
 
                             <div class="row g-3">
-                                {{-- Financeira --}}
+                                {{-- Aprendizado --}}
                                 <div class="col-12 col-md-6 col-lg-3">
                                     <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
                                         <div class="d-flex align-items-center gap-2 mb-2">
                                             <span class="badge bg-primary text-white fw-bold px-2 py-1">1</span>
-                                            <h6 class="fw-bold mb-0 small">{{ __('Financeira / Sociedade') }}</h6>
+                                            <h6 class="fw-bold mb-0 small">{{ __('Aprendizado e Crescimento') }}</h6>
                                         </div>
-                                        <p class="small mb-2 opacity-90">Foco nos resultados financeiros e no valor entregue ao cidadão/sociedade.</p>
+                                        <p class="small mb-2 opacity-90">Foco no capital humano, sistemas, cultura e infraestrutura.</p>
                                         <div class="bg-body-secondary rounded p-2 small">
-                                            <i class="bi bi-cash-stack me-1"></i>
+                                            <i class="bi bi-mortarboard-fill me-1"></i>
                                             <strong>Pergunta-chave:</strong><br>
-                                            "Como devemos ser vistos pelos nossos stakeholders?"
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Clientes --}}
-                                <div class="col-12 col-md-6 col-lg-3">
-                                    <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
-                                        <div class="d-flex align-items-center gap-2 mb-2">
-                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">2</span>
-                                            <h6 class="fw-bold mb-0 small">{{ __('Clientes / Usuários') }}</h6>
-                                        </div>
-                                        <p class="small mb-2 opacity-90">Foco na satisfação, retenção e na proposta de valor para o público-alvo.</p>
-                                        <div class="bg-body-secondary rounded p-2 small">
-                                            <i class="bi bi-people-fill me-1"></i>
-                                            <strong>Pergunta-chave:</strong><br>
-                                            "Como o cliente nos enxerga e o que ele espera de nós?"
+                                            "Como sustentamos nossa capacidade de mudar e melhorar?"
                                         </div>
                                     </div>
                                 </div>
@@ -244,7 +228,7 @@
                                 <div class="col-12 col-md-6 col-lg-3">
                                     <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
                                         <div class="d-flex align-items-center gap-2 mb-2">
-                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">3</span>
+                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">2</span>
                                             <h6 class="fw-bold mb-0 small">{{ __('Processos Internos') }}</h6>
                                         </div>
                                         <p class="small mb-2 opacity-90">Foco na excelência operacional e nos processos críticos de negócio.</p>
@@ -256,18 +240,34 @@
                                     </div>
                                 </div>
 
-                                {{-- Aprendizado --}}
+                                {{-- Clientes --}}
+                                <div class="col-12 col-md-6 col-lg-3">
+                                    <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">3</span>
+                                            <h6 class="fw-bold mb-0 small">{{ __('Clientes / Usuários') }}</h6>
+                                        </div>
+                                        <p class="small mb-2 opacity-90">Foco na satisfação, retenção e na proposta de valor para o público-alvo.</p>
+                                        <div class="bg-body-secondary rounded p-2 small">
+                                            <i class="bi bi-people-fill me-1"></i>
+                                            <strong>Pergunta-chave:</strong><br>
+                                            "Como o cliente nos enxerga e o que ele espera de nós?"
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Financeira --}}
                                 <div class="col-12 col-md-6 col-lg-3">
                                     <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
                                         <div class="d-flex align-items-center gap-2 mb-2">
                                             <span class="badge bg-primary text-white fw-bold px-2 py-1">4</span>
-                                            <h6 class="fw-bold mb-0 small">{{ __('Aprendizado e Crescimento') }}</h6>
+                                            <h6 class="fw-bold mb-0 small">{{ __('Financeira / Sociedade') }}</h6>
                                         </div>
-                                        <p class="small mb-2 opacity-90">Foco no capital humano, sistemas, cultura e infraestrutura.</p>
+                                        <p class="small mb-2 opacity-90">Foco nos resultados financeiros e no valor entregue ao cidadão/sociedade.</p>
                                         <div class="bg-body-secondary rounded p-2 small">
-                                            <i class="bi bi-mortarboard-fill me-1"></i>
+                                            <i class="bi bi-cash-stack me-1"></i>
                                             <strong>Pergunta-chave:</strong><br>
-                                            "Como sustentamos nossa capacidade de mudar e melhorar?"
+                                            "Como devemos ser vistos pelos nossos stakeholders?"
                                         </div>
                                     </div>
                                 </div>
