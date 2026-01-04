@@ -25,11 +25,24 @@ Aumentar o engajamento e a percepção de valor do usuário. Em vez de uma barra
 3. **Mensagens Educativas**: Textos dinâmicos que informam o sucesso da etapa e o "Próximo Passo" imediato.
 
 ### Status das Tarefas
-- [ ] Criação dos estilos CSS/JS para Toasts Premium.
-- [ ] Implementação do Event Listener Global no Layout Principal.
-- [ ] Integração do gatilho de notificação no `PeiGuidanceService` ou nos componentes de cadastro.
+- [x] Criação dos estilos CSS/JS para Toasts Premium.
+- [x] Implementação do Event Listener Global no Layout Principal.
+- [x] Integração do gatilho de notificação nos componentes de cadastro (Sempre que Salvar).
+- [x] Correção de sintaxe PHP em strings de notificação.
 
 ---
 
-## 4. Resumo Técnico de Intervenções
+## 4. Módulo: Estabilização de Assets e UI Global
+
+### Motivação
+Garantir que a identidade visual (ícones e estilos) seja consistente em diferentes ambientes de servidor (Local vs. Produção/VPN), eliminando falhas de carregamento de fontes do Bootstrap Icons.
+
+### Tarefas Executadas
+- [x] **Migração de Importação**: Movido o carregamento de ícones do SCSS para o `app.js` para melhor gestão do Vite.
+- [x] **Solução de Redundância (Incisiva)**: Implementação de link direto via CDN no `app.blade.php` para garantir a exibição dos ícones mesmo em servidores com mapeamento de caminhos complexos.
+- [x] **Padronização de Botões Premium**: Unificação de todos os botões de ação do sistema para o padrão `.gradient-theme-btn` (Pílula, Gradient, Elevation).
+
+---
+
+## 5. Resumo Técnico de Intervenções
 ... (atualizado conforme progresso) ...
