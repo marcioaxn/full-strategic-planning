@@ -159,7 +159,7 @@
                                             <button wire:click="edit('{{ $objetivo->cod_objetivo }}')" class="btn btn-sm btn-icon btn-ghost-primary rounded-circle" title="{{ __('Editar') }}">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            <button wire:click="delete('{{ $objetivo->cod_objetivo }}')" wire:confirm="{{ __('Tem certeza que deseja excluir este objetivo?') }}" class="btn btn-sm btn-icon btn-ghost-danger rounded-circle" title="{{ __('Excluir') }}">
+                                            <button wire:click="confirmDelete('{{ $objetivo->cod_objetivo }}')" class="btn btn-sm btn-icon btn-ghost-danger rounded-circle" title="{{ __('Excluir') }}">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
@@ -213,9 +213,20 @@
                         <div class="modal-body p-4">
                             <div class="row g-3">
                                 <div class="col-12">
-                                    <label class="form-label fw-bold small text-muted text-uppercase">{{ __('Título do Objetivo') }} <span class="text-danger">*</span></label>
-                                    <input type="text" wire:model="nom_objetivo" class="form-control @error('nom_objetivo') is-invalid @enderror" placeholder="{{ __('Ex: Aumentar a eficiência operacional') }}">
+                                    <div class="d-flex justify-content-between align-items-end mb-1">
+                                        <label class="form-label fw-bold small text-muted text-uppercase mb-0">{{ __('Título do Objetivo') }} <span class="text-danger">*</span></label>
+                                        <div wire:loading wire:target="nom_objetivo" class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                    </div>
+                                    <input type="text" wire:model.live.debounce.2000ms="nom_objetivo" class="form-control @error('nom_objetivo') is-invalid @enderror" placeholder="{{ __('Ex: Aumentar a eficiência operacional') }}">
                                     @error('nom_objetivo') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    
+                                    @if($smartFeedback)
+                                        <div class="mt-2 p-2 rounded bg-primary bg-opacity-10 border-start border-3 border-primary animate-fade-in position-relative">
+                                            <button type="button" class="btn-close small position-absolute top-0 end-0 m-1" style="font-size: 0.5rem;" wire:click="$set('smartFeedback', '')"></button>
+                                            <small class="text-primary fw-bold d-block mb-1"><i class="bi bi-info-circle me-1"></i>Feedback do Mentor SMART:</small>
+                                            <small class="text-dark d-block pe-3">{{ $smartFeedback }}</small>
+                                        </div>
+                                    @endif
                                 </div>
 
                                 <div class="col-md-8">
@@ -259,4 +270,47 @@
             </div>
         </div>
     @endif
+
+    {{-- Modal de Exclusão --}}
+    <x-confirmation-modal wire:model.live="showDeleteModal">
+        <x-slot name="title">
+            <div class="modal-header-modern">
+                <div class="modal-icon modal-icon-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <div>
+                    <h5 class="mb-1 fw-bold text-dark">{{ __('Excluir Objetivo') }}</h5>
+                    <p class="text-muted small mb-0">{{ __('Esta ação é irreversível') }}</p>
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="content">
+            <div class="delete-confirmation">
+                <p class="mb-2 text-dark">
+                    {{ __('Tem certeza que deseja excluir este objetivo estratégico?') }}
+                </p>
+                <div class="alert alert-warning bg-warning-subtle border-0">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Atenção:</strong> Todos os indicadores e planos de ação vinculados a este objetivo serão removidos.
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-secondary-button wire:click="$set('showDeleteModal', false)" wire:loading.attr="disabled" class="btn-modern">
+                {{ __('Cancelar') }}
+            </x-secondary-button>
+
+            <x-danger-button wire:click="delete" wire:loading.attr="disabled" class="btn-delete-modern ms-2">
+                <span wire:loading.remove wire:target="delete">
+                    <i class="bi bi-trash me-1"></i>{{ __('Excluir Agora') }}
+                </span>
+                <span wire:loading wire:target="delete">
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    {{ __('Excluindo...') }}
+                </span>
+            </x-danger-button>
+        </x-slot>
+    </x-confirmation-modal>
 </div>

@@ -85,6 +85,10 @@ class DeliverablesBoard extends Component
     public string $novaLabelNome = '';
     public string $novaLabelCor = '#1B408E';
 
+    public bool $showDeleteModal = false;
+    public ?string $entregaParaExcluirId = null;
+    public bool $isPermanentDelete = false;
+
     /** @var string|null ID do comentário que está sendo respondido */
     public ?string $respondendoComentarioId = null;
 
@@ -540,19 +544,41 @@ class DeliverablesBoard extends Component
         ]);
     }
 
-    public function excluir(string $entregaId): void
+    public function confirmDeleteEntrega(string $entregaId, bool $isPermanent = false): void
+    {
+        $this->authorize('update', $this->plano);
+        $this->entregaParaExcluirId = $entregaId;
+        $this->isPermanentDelete = $isPermanent;
+        $this->showDeleteModal = true;
+    }
+
+    public function excluir(): void
     {
         $this->authorize('update', $this->plano);
 
-        Entrega::where('cod_entrega', $entregaId)->delete();
+        if ($this->entregaParaExcluirId) {
+            if ($this->isPermanentDelete) {
+                Entrega::withTrashed()->where('cod_entrega', $this->entregaParaExcluirId)->forceDelete();
+                $title = 'Exclusão Permanente';
+                $message = 'A entrega foi removida definitivamente.';
+            } else {
+                Entrega::where('cod_entrega', $this->entregaParaExcluirId)->delete();
+                $title = 'Entrega Removida';
+                $message = 'A entrega foi movida para a lixeira.';
+            }
+            $this->entregaParaExcluirId = null;
+        }
 
+        $this->showDeleteModal = false;
         $this->closeDetails();
         $this->calcularProgresso();
 
-        $this->dispatch('notify', [
-            'type' => 'warning',
-            'message' => 'Entrega movida para lixeira. Será excluída permanentemente em 24 horas.'
-        ]);
+        $this->dispatch('mentor-notification', 
+            title: $title,
+            message: $message,
+            icon: 'bi-trash',
+            type: 'warning'
+        );
     }
 
     public function restaurar(string $entregaId): void

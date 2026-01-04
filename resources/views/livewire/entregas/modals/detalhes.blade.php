@@ -313,7 +313,7 @@
                 <button class="btn btn-sm btn-notion-secondary" wire:click="{{ $entrega->bln_arquivado ? 'desarquivar' : 'arquivar' }}('{{ $entrega->cod_entrega }}')">
                     <i class="bi bi-archive me-1"></i> {{ $entrega->bln_arquivado ? 'Desarquivar' : 'Arquivar' }}
                 </button>
-                <button class="btn btn-sm btn-notion-danger" wire:click="excluir('{{ $entrega->cod_entrega }}')" onclick="return confirm('Mover para lixeira?')">
+                <button class="btn btn-sm btn-notion-danger" wire:click="confirmDeleteEntrega('{{ $entrega->cod_entrega }}')">
                     <i class="bi bi-trash3 me-1"></i> Excluir
                 </button>
             </div>

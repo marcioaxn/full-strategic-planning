@@ -98,15 +98,28 @@ class PeiGuidanceService
         $phases['objetivos']['status'] = 'completed';
         $objetivoWarning = $perspectivasComObjetivo < $perspectivasCount ? " (Algumas perspectivas ainda estão sem objetivos)" : "";
 
-        // --- PHASE 5: Indicadores (KPIs) ---
+        // --- PHASE 5: Grau de Satisfação (NEW) ---
+        $grausCount = \App\Models\StrategicPlanning\GrauSatisfacao::count();
+        $phases['graus']['count'] = $grausCount;
+
+        if ($grausCount == 0) {
+            $phases['graus']['status'] = 'active';
+            return $this->buildResponse($phases, 'graus', 50, $pei, 
+                "Objetivos salvos!{$objetivoWarning} Agora, defina as cores e níveis do Grau de Satisfação.", 
+                'graus-satisfacao.index', 'Configurar Níveis');
+        }
+
+        $phases['graus']['status'] = 'completed';
+
+        // --- PHASE 6: Indicadores (KPIs) ---
         $objetivoIds = Objetivo::whereIn('cod_perspectiva', $perspectivaIds)->pluck('cod_objetivo');
         $indicadoresCount = Indicador::whereIn('cod_objetivo', $objetivoIds)->count();
         $phases['indicadores']['count'] = $indicadoresCount;
 
         if ($indicadoresCount == 0) {
             $phases['indicadores']['status'] = 'active';
-            return $this->buildResponse($phases, 'indicadores', 60, $pei, 
-                "Objetivos salvos!{$objetivoWarning} O próximo passo é criar Indicadores para medi-los.", 
+            return $this->buildResponse($phases, 'indicadores', 65, $pei, 
+                "Níveis de satisfação configurados! O próximo passo é criar Indicadores para medi-los.", 
                 'indicadores.index', 'Criar Indicadores');
         }
 
@@ -118,13 +131,13 @@ class PeiGuidanceService
         $phases['indicadores']['status'] = 'completed';
         $indicadorWarning = $objetivosComIndicador < $objetivosCount ? " (Faltam indicadores para alguns objetivos)" : "";
 
-        // --- PHASE 6: Planos de Ação ---
+        // --- PHASE 7: Planos de Ação ---
         $planosCount = PlanoDeAcao::whereIn('cod_objetivo', $objetivoIds)->count();
         $phases['planos']['count'] = $planosCount;
 
         if ($planosCount == 0) {
             $phases['planos']['status'] = 'active';
-            return $this->buildResponse($phases, 'planos', 80, $pei, 
+            return $this->buildResponse($phases, 'planos', 85, $pei, 
                 "Indicadores registrados!{$indicadorWarning} Agora, crie Planos de Ação para tirar a estratégia do papel.", 
                 'planos.index', 'Criar Planos');
         }
@@ -178,7 +191,7 @@ class PeiGuidanceService
 
     private function getNextStepInfo(string $currentPhase): ?array
     {
-        $order = ['ciclo', 'identidade', 'perspectivas', 'objetivos', 'indicadores', 'planos', 'monitoramento'];
+        $order = ['ciclo', 'identidade', 'perspectivas', 'objetivos', 'graus', 'indicadores', 'planos', 'monitoramento'];
         $index = array_search($currentPhase, $order);
         
         if ($index !== false && isset($order[$index + 1])) {
@@ -204,6 +217,7 @@ class PeiGuidanceService
             'identidade' => ['name' => 'Identidade', 'status' => 'locked', 'icon' => 'fingerprint'],
             'perspectivas' => ['name' => 'Perspectivas', 'status' => 'locked', 'icon' => 'layers'],
             'objetivos' => ['name' => 'Objetivos', 'status' => 'locked', 'icon' => 'bullseye'],
+            'graus' => ['name' => 'Grau de Satisfação', 'status' => 'locked', 'icon' => 'palette'],
             'indicadores' => ['name' => 'Indicadores', 'status' => 'locked', 'icon' => 'graph-up-arrow'],
             'planos' => ['name' => 'Planos de Ação', 'status' => 'locked', 'icon' => 'kanban'],
         ];
