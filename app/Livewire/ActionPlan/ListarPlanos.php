@@ -197,8 +197,13 @@ class ListarPlanos extends Component
         
         $plano->delete();
         $this->showDeleteModal = false;
-        session()->flash('message', 'Plano de ação excluído!');
-        session()->flash('style', 'danger');
+        
+        $this->dispatch('mentor-notification', 
+            title: 'Plano Removido',
+            message: 'O plano de ação foi excluído do sistema.',
+            icon: 'bi-trash',
+            type: 'warning'
+        );
     }
 
     public function resetForm()

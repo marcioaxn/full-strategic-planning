@@ -1,38 +1,81 @@
 <div>
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none" wire:navigate>Dashboard</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Graus de Satisfacao</li>
-                    </ol>
-                </nav>
-                <h2 class="h4 fw-bold mb-0">Graus de Satisfacao</h2>
+    {{-- Page Header --}}
+    <div class="leads-header d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="header-icon gradient-theme-icon">
+                    <i class="bi bi-palette-fill"></i>
+                </div>
+                <h1 class="h3 fw-bold mb-0">{{ __('Graus de Satisfação') }}</h1>
             </div>
+            <p class="text-muted mb-0">
+                {{ __('Defina as faixas de atingimento e cores do farol de desempenho.') }}
+            </p>
         </div>
-    </x-slot>
 
-    <div class="container-fluid py-4">
-        <!-- Header com Botão Novo Grau -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h5 class="text-primary fw-bold mb-0">
-                    <i class="bi bi-speedometer2 me-2"></i>Gerenciar Graus de Satisfação
-                </h5>
-            </div>
-            <button class="btn btn-primary" wire:click="openModal">
-                <i class="bi bi-plus-circle me-1"></i> Novo Grau
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-primary gradient-theme-btn px-4 shadow-sm" wire:click="openModal">
+                <i class="bi bi-plus-lg me-1"></i> {{ __('Novo Grau') }}
             </button>
         </div>
-        <!-- Mensagens Flash -->
-        @if (session()->has('message'))
-            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-                <i class="bi bi-check-circle me-2"></i>{{ session('message') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
+    </div>
 
+    @if (session()->has('message'))
+        <div class="alert alert-modern alert-success alert-dismissible fade show d-flex align-items-center gap-3 mb-4" role="alert">
+            <div class="alert-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <span class="flex-grow-1">{{ session('message') }}</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    {{-- Mentor de IA --}}
+    @if($aiEnabled)
+        <div class="ai-mentor-wrapper animate-fade-in">
+            <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="ai-magic-button shadow-sm">
+                <span wire:loading.remove wire:target="pedirAjudaIA">
+                    <i class="bi bi-robot"></i> {{ __('Sugerir Escala de Satisfação com IA') }}
+                </span>
+                <span wire:loading wire:target="pedirAjudaIA">
+                    <span class="spinner-border spinner-border-sm me-2"></span>{{ __('Calculando faixas ideais...') }}
+                </span>
+            </button>
+
+            @if($aiSuggestion)
+                <div class="ai-insight-card animate-fade-in">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-chat-left-dots-fill text-primary"></i>
+                            <h6 class="fw-bold mb-0">{{ __('Escala Sugerida pelo Mentor IA') }}</h6>
+                        </div>
+                        <button type="button" class="btn-close small" style="font-size: 0.7rem;" wire:click="$set('aiSuggestion', '')"></button>
+                    </div>
+                    <div class="card-body">
+                        @if(is_array($aiSuggestion))
+                            <div class="list-group list-group-flush border rounded-3 overflow-hidden">
+                                @foreach($aiSuggestion as $sug)
+                                    <div class="list-group-item d-flex align-items-center justify-content-between p-3 bg-light bg-opacity-25 hover-bg-white transition-all">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-circle border shadow-sm" style="background-color: {{ $sug['cor'] }}; width: 24px; height: 24px;"></div>
+                                            <div>
+                                                <span class="fw-bold text-dark">{{ $sug['nome'] }}</span>
+                                                <small class="text-muted ms-2">({{ $sug['min'] }}% a {{ $sug['max'] }}%)</small>
+                                            </div>
+                                        </div>
+                                        <button wire:click="aplicarSugestao('{{ $sug['nome'] }}', '{{ $sug['cor'] }}', {{ $sug['min'] }}, {{ $sug['max'] }})" 
+                                                class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
+                                            <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+        </div>
+    @endif
+
+    <div class="container-fluid px-0">
         <!-- Card Principal -->
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3">
@@ -142,16 +185,47 @@
             @endif
         </div>
 
-        <!-- Dica de Configuracao -->
-        <div class="alert alert-info mt-4 border-0 shadow-sm">
-            <div class="d-flex align-items-start">
-                <i class="bi bi-info-circle fs-4 me-3"></i>
-                <div>
-                    <h6 class="alert-heading fw-bold mb-1">Dica de Configuracao</h6>
-                    <p class="mb-0 small">
-                        Configure os graus de satisfacao para que os intervalos cubram de 0% a 100% (ou mais) sem sobreposicao.
-                        As cores podem ser nomes em ingles (ex: <code>red</code>, <code>green</code>, <code>blue</code>) ou codigos hexadecimais (ex: <code>#28a745</code>).
+        <!-- Dica de Configuracao (Novo Padrão) -->
+        <div class="card card-modern border-0 shadow-sm educational-card-gradient mt-4 overflow-hidden" x-data="{ open: false }">
+            <div class="card-body p-0">
+                <div class="p-3 px-4 d-flex align-items-center justify-content-between cursor-pointer" @click="open = !open">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-white bg-opacity-20 p-2">
+                            <i class="bi bi-lightbulb-fill text-white"></i>
+                        </div>
+                        <h6 class="fw-bold mb-0 text-white">{{ __('O que são os Graus de Satisfação?') }}</h6>
+                    </div>
+                    <i class="bi bi-chevron-down text-white transition-all" :class="open ? 'rotate-180' : ''"></i>
+                </div>
+                
+                <div x-show="open" x-collapse x-cloak class="p-4 bg-body text-body text-start">
+                    <p class="mb-3">
+                        O <strong>Grau de Satisfação</strong> é o motor que gera a sinalização visual (o famoso "farol") em todo o sistema. Ele traduz percentuais numéricos em status compreensíveis para a alta gestão.
                     </p>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="p-3 rounded-3 border bg-light h-100">
+                                <h6 class="fw-bold text-primary"><i class="bi bi-bullseye me-2"></i>Padronização</h6>
+                                <p class="small text-muted mb-0">Define uma régua única para que todos os departamentos falem a mesma língua ao medir o sucesso.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 rounded-3 border bg-light h-100">
+                                <h6 class="fw-bold text-success"><i class="bi bi-lightning-charge me-2"></i>Agilidade</h6>
+                                <p class="small text-muted mb-0">Permite que o CEO identifique em segundos quais áreas estão críticas através das cores automáticas.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 rounded-3 border bg-light h-100">
+                                <h6 class="fw-bold text-info"><i class="bi bi-check-all me-2"></i>Consistência</h6>
+                                <p class="small text-muted mb-0">Garante que o cálculo de atingimento dos objetivos e do mapa estratégico seja visualmente coerente.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info border-0 bg-info-subtle mt-3 mb-0 small">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <strong>Dica Técnica:</strong> Certifique-se de que os intervalos cubram de 0% a 100% sem lacunas. Use cores de alto contraste (ex: Vermelho para Crítico, Verde para Excelente) para facilitar a leitura rápida.
+                    </div>
                 </div>
             </div>
         </div>
@@ -254,11 +328,11 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="modal-footer bg-light">
-                            <button type="button" class="btn btn-secondary" wire:click="closeModal">
+                        <div class="modal-footer bg-light border-0">
+                            <button type="button" class="btn btn-secondary px-4" wire:click="closeModal">
                                 <i class="bi bi-x-circle me-1"></i> Cancelar
                             </button>
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary gradient-theme-btn px-4">
                                 <i class="bi bi-check-circle me-1"></i> {{ $isEditing ? 'Atualizar' : 'Salvar' }}
                             </button>
                         </div>
@@ -268,32 +342,51 @@
         </div>
     @endif
 
-    <!-- Modal de Confirmacao de Exclusao -->
-    @if($showDeleteModal)
-        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-            <div class="modal-dialog modal-dialog-centered modal-sm">
-                <div class="modal-content border-0 shadow">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title fw-bold">
-                            <i class="bi bi-exclamation-triangle me-2"></i>Confirmar Exclusao
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" wire:click="cancelDelete"></button>
-                    </div>
-                    <div class="modal-body text-center py-4">
-                        <i class="bi bi-trash fs-1 text-danger mb-3 d-block"></i>
-                        <p class="mb-0">Deseja realmente excluir este grau de satisfacao?</p>
-                        <small class="text-muted">Esta acao nao pode ser desfeita.</small>
-                    </div>
-                    <div class="modal-footer justify-content-center bg-light">
-                        <button type="button" class="btn btn-secondary" wire:click="cancelDelete">
-                            <i class="bi bi-x-circle me-1"></i> Cancelar
-                        </button>
-                        <button type="button" class="btn btn-danger" wire:click="delete">
-                            <i class="bi bi-trash me-1"></i> Sim, Excluir
-                        </button>
-                    </div>
+    {{-- Modal de Exclusão --}}
+    <x-confirmation-modal wire:model.live="showDeleteModal">
+        <x-slot name="title">
+            <div class="modal-header-modern">
+                <div class="modal-icon modal-icon-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <div>
+                    <h5 class="mb-1 fw-bold text-dark">{{ __('Excluir Grau de Satisfação') }}</h5>
+                    <p class="text-muted small mb-0">{{ __('Esta ação é irreversível') }}</p>
                 </div>
             </div>
-        </div>
-    @endif
+        </x-slot>
+
+        <x-slot name="content">
+            <div class="delete-confirmation text-start text-dark">
+                <p class="mb-2">
+                    {{ __('Tem certeza que deseja excluir este grau de satisfação?') }}
+                </p>
+                <div class="alert alert-warning bg-warning-subtle border-0">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Atenção:</strong> Isso afetará a sinalização (farol) de todos os indicadores que dependem desta faixa de atingimento.
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-secondary-button wire:click="$set('showDeleteModal', false)" wire:loading.attr="disabled" class="btn-modern">
+                {{ __('Cancelar') }}
+            </x-secondary-button>
+
+            <x-danger-button wire:click="delete" wire:loading.attr="disabled" class="btn-delete-modern ms-2">
+                <span wire:loading.remove wire:target="delete">
+                    <i class="bi bi-trash me-1"></i>{{ __('Excluir Agora') }}
+                </span>
+                <span wire:loading wire:target="delete">
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                </span>
+            </x-danger-button>
+        </x-slot>
+    </x-confirmation-modal>
+    <style>
+        .rotate-180 { transform: rotate(180deg); }
+        .transition-all { transition: all 0.3s ease; }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </div>

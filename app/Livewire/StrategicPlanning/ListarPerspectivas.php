@@ -15,6 +15,7 @@ class ListarPerspectivas extends Component
     public $peiAtivo;
 
     public bool $showModal = false;
+    public bool $showDeleteModal = false;
     public $perspectivaId;
     public $dsc_perspectiva;
     public $num_nivel_hierarquico_apresentacao;
@@ -170,12 +171,15 @@ class ListarPerspectivas extends Component
         );
 
         $after = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
+        $nextStepName = $after['next_step']['name'] ?? 'Monitoramento';
 
-        $this->dispatch('mentor-notification', 
-            title: $this->perspectivaId ? 'Perspectiva Atualizada!' : 'Perspectiva Criada!',
-            message: $after['message'],
-            icon: 'bi-layers-fill'
+        $alert = \App\Services\NotificationService::sendMentorAlert(
+            $this->perspectivaId ? 'Perspectiva Atualizada!' : 'Perspectiva Criada!',
+            $after['message'],
+            'bi-layers-fill'
         );
+
+        $this->dispatch('mentor-notification', ...$alert);
 
         $this->showModal = false;
         $this->resetForm();
@@ -183,11 +187,25 @@ class ListarPerspectivas extends Component
         session()->flash('status', 'Perspectiva salva com sucesso!');
     }
 
-    public function delete($id)
+    public function confirmDelete($id)
     {
-        Perspectiva::findOrFail($id)->delete();
+        $this->perspectivaId = $id;
+        $this->showDeleteModal = true;
+    }
+
+    public function delete()
+    {
+        Perspectiva::findOrFail($this->perspectivaId)->delete();
+        $this->showDeleteModal = false;
+        $this->perspectivaId = null;
         $this->carregarPerspectivas();
-        session()->flash('status', 'Perspectiva removida com sucesso!');
+        
+        $this->dispatch('mentor-notification', 
+            title: 'Perspectiva Removida',
+            message: 'O item foi excluído com sucesso do seu planejamento estratégico.',
+            icon: 'bi-trash',
+            type: 'warning'
+        );
     }
 
     public function resetForm()

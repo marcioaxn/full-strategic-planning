@@ -447,26 +447,46 @@
         </div>
     </div>
 
-    <!-- Modal Exclusão -->
-    <div class="modal fade @if($showDeleteModal) show @endif" tabindex="-1" style="@if($showDeleteModal) display: block; background: rgba(0,0,0,0.5); @else display: none; @endif">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-danger text-white border-0">
-                    <h5 class="modal-title fw-bold">Confirmar Exclusão</h5>
-                    <button type="button" class="btn-close btn-close-white" wire:click="$set('showDeleteModal', false)"></button>
+    {{-- Modal de Exclusão --}}
+    <x-confirmation-modal wire:model.live="showDeleteModal">
+        <x-slot name="title">
+            <div class="modal-header-modern">
+                <div class="modal-icon modal-icon-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
                 </div>
-                <div class="modal-body p-4 text-center">
-                    <div class="mb-3">
-                        <i class="bi bi-exclamation-circle fs-1 text-danger"></i>
-                    </div>
-                    <p class="mb-0 fs-5">Tem certeza que deseja excluir este plano?</p>
-                    <p class="text-muted small mt-2">Esta ação não pode ser desfeita.</p>
-                </div>
-                <div class="modal-footer border-0 p-4 justify-content-center">
-                    <button type="button" class="btn btn-light px-4" wire:click="$set('showDeleteModal', false)">Cancelar</button>
-                    <button type="button" class="btn btn-danger px-4" wire:click="delete">Sim, Excluir</button>
+                <div>
+                    <h5 class="mb-1 fw-bold text-dark">{{ __('Excluir Plano de Ação') }}</h5>
+                    <p class="text-muted small mb-0">{{ __('Esta ação é irreversível') }}</p>
                 </div>
             </div>
-        </div>
-    </div>
+        </x-slot>
+
+        <x-slot name="content">
+            <div class="delete-confirmation text-start">
+                <p class="mb-2 text-dark">
+                    {{ __('Tem certeza que deseja excluir este plano de ação?') }}
+                </p>
+                <div class="alert alert-warning bg-warning-subtle border-0">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Atenção:</strong> Todas as entregas, comentários e históricos vinculados a este plano serão removidos permanentemente.
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-secondary-button wire:click="$set('showDeleteModal', false)" wire:loading.attr="disabled" class="btn-modern">
+                {{ __('Cancelar') }}
+            </x-secondary-button>
+
+            <x-danger-button wire:click="delete" wire:loading.attr="disabled" class="btn-delete-modern ms-2">
+                <span wire:loading.remove wire:target="delete">
+                    <i class="bi bi-trash me-1"></i>{{ __('Excluir Agora') }}
+                </span>
+                <span wire:loading wire:target="delete">
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    {{ __('Excluindo...') }}
+                </span>
+            </x-danger-button>
+        </x-slot>
+    </x-confirmation-modal>
 </div>
