@@ -30,6 +30,61 @@
         </div>
     @endif
 
+    {{-- Mentor de IA --}}
+    @if($organizacaoId && $aiEnabled)
+        <div class="ai-mentor-wrapper animate-fade-in">
+            <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="ai-magic-button shadow-sm">
+                <span wire:loading.remove wire:target="pedirAjudaIA">
+                    <i class="bi bi-robot"></i> {{ __('Sugerir Riscos Estratégicos com IA') }}
+                </span>
+                <span wire:loading wire:target="pedirAjudaIA">
+                    <span class="spinner-border spinner-border-sm me-2"></span>{{ __('Analisando Objetivos Estratégicos...') }}
+                </span>
+            </button>
+
+            @if($aiSuggestion)
+                <div class="ai-insight-card animate-fade-in">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-shield-exclamation text-primary"></i>
+                            <h6 class="fw-bold mb-0">{{ __('Riscos Identificados pelo Mentor IA') }}</h6>
+                        </div>
+                        <button type="button" class="btn-close small" style="font-size: 0.7rem;" wire:click="$set('aiSuggestion', '')"></button>
+                    </div>
+                    <div class="card-body">
+                        @if(is_array($aiSuggestion))
+                            <div class="list-group list-group-flush border rounded-3 overflow-hidden">
+                                @foreach($aiSuggestion as $sug)
+                                    <div class="list-group-item d-flex align-items-start justify-content-between p-3 bg-light bg-opacity-25 hover-bg-white transition-all gap-3">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                <span class="fw-bold text-dark">{{ $sug['titulo'] }}</span>
+                                                <span class="badge bg-secondary-subtle text-secondary small border-0">{{ $sug['categoria'] }}</span>
+                                            </div>
+                                            <p class="small text-muted mb-2">{{ $sug['descricao'] }}</p>
+                                            <div class="p-2 rounded bg-info bg-opacity-10 border-start border-3 border-info">
+                                                <small class="text-info fw-bold d-block mb-1"><i class="bi bi-shield-check me-1"></i>Mitigação Sugerida:</small>
+                                                <small class="text-dark">{{ $sug['mitigacao'] }}</small>
+                                            </div>
+                                        </div>
+                                        <button wire:click="aplicarSugestao('{{ $sug['titulo'] }}', '{{ $sug['categoria'] }}', '{{ $sug['descricao'] }}')" 
+                                                class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
+                                            <i class="bi bi-plus-lg me-1"></i> {{ __('Identificar') }}
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="markdown-content">
+                                {!! Str::markdown($aiSuggestion) !!}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+        </div>
+    @endif
+
     @if(!$organizacaoId)
         <div class="alert alert-warning shadow-sm border-0 d-flex align-items-center p-4" role="alert">
             <i class="bi bi-building-exclamation fs-2 me-4"></i>
@@ -290,24 +345,45 @@
         </div>
     </div>
 
-    <!-- Modal Exclusão -->
-    <div class="modal fade @if($showDeleteModal) show @endif" tabindex="-1" style="@if($showDeleteModal) display: block; background: rgba(0,0,0,0.5); @else display: none; @endif">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-danger text-white border-0">
-                    <h5 class="modal-title fw-bold">Confirmar Exclusão</h5>
-                    <button type="button" class="btn-close btn-close-white" wire:click="$set('showDeleteModal', false)"></button>
+    {{-- Modal de Exclusão --}}
+    <x-confirmation-modal wire:model.live="showDeleteModal">
+        <x-slot name="title">
+            <div class="modal-header-modern">
+                <div class="modal-icon modal-icon-danger">
+                    <i class="bi bi-shield-x"></i>
                 </div>
-                <div class="modal-body p-4 text-center">
-                    <div class="mb-3 text-danger"><i class="bi bi-exclamation-triangle fs-1"></i></div>
-                    <p class="fs-5 mb-0">Excluir este risco?</p>
-                    <p class="text-muted small">A matriz de riscos será atualizada após esta ação.</p>
-                </div>
-                <div class="modal-footer border-0 p-4 justify-content-center">
-                    <button type="button" class="btn btn-light px-4" wire:click="$set('showDeleteModal', false)">Cancelar</button>
-                    <button type="button" class="btn btn-danger px-4" wire:click="delete">Sim, Excluir</button>
+                <div>
+                    <h5 class="mb-1 fw-bold text-dark">{{ __('Remover Risco') }}</h5>
+                    <p class="text-muted small mb-0">{{ __('Ação irreversível') }}</p>
                 </div>
             </div>
-        </div>
-    </div>
+        </x-slot>
+
+        <x-slot name="content">
+            <div class="delete-confirmation text-start">
+                <p class="mb-2 text-dark">
+                    {{ __('Tem certeza que deseja excluir este risco estratégico?') }}
+                </p>
+                <div class="alert alert-warning bg-warning-subtle border-0">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Atenção:</strong> Os planos de mitigação e ocorrências vinculadas também serão afetados.
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-secondary-button wire:click="$set('showDeleteModal', false)" wire:loading.attr="disabled" class="btn-modern">
+                {{ __('Cancelar') }}
+            </x-secondary-button>
+
+            <x-danger-button wire:click="delete" wire:loading.attr="disabled" class="btn-delete-modern ms-2">
+                <span wire:loading.remove wire:target="delete">
+                    <i class="bi bi-trash me-1"></i>{{ __('Excluir') }}
+                </span>
+                <span wire:loading wire:target="delete">
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                </span>
+            </x-danger-button>
+        </x-slot>
+    </x-confirmation-modal>
 </div>

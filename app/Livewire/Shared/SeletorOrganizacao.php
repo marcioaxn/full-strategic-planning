@@ -27,10 +27,13 @@ class SeletorOrganizacao extends Component
     {
         $user = auth()->user();
 
-        if ($user->isSuperAdmin()) {
+        if ($user && $user->isSuperAdmin()) {
             $this->organizacoes = Organization::orderBy('sgl_organizacao')->get();
-        } else {
+        } elseif ($user) {
             $this->organizacoes = $user->organizacoes()->orderBy('sgl_organizacao')->get();
+        } else {
+            // Guest access: show all organizations for public map
+            $this->organizacoes = Organization::orderBy('sgl_organizacao')->get();
         }
     }
 

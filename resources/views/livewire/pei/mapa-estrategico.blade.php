@@ -1,14 +1,16 @@
 <div class="mapa-canvas" wire:poll.10s>
     @guest
-        <!-- Navbar Pública para Visitantes -->
-        <nav class="navbar navbar-expand-lg fixed-top public-navbar border-bottom shadow-sm">
-            <div class="container-fluid px-4">
+        <!-- Navbar Pública Premium -->
+        <nav class="navbar navbar-expand-lg fixed-top public-navbar shadow-sm">
+            <div class="container-fluid px-4 py-2">
                 <a class="navbar-brand fw-bold d-flex align-items-center" href="/">
                     <div class="icon-shape gradient-theme-icon rounded-circle p-2 me-2 shadow-sm">
                         <i class="bi bi-diagram-3 fs-5 text-white"></i>
                     </div>
-                    <span class="brand-text-primary text-body">SPS</span>
-                    <span class="brand-text-secondary ms-2 small d-none d-md-inline text-muted">| Planejamento Estratégico</span>
+                    <div>
+                        <div class="brand-text-primary text-body lh-1" style="font-size: 1.2rem;">SPS</div>
+                        <div class="brand-text-secondary small text-muted lh-1" style="font-size: 0.65rem; letter-spacing: 1px;">PORTAL DA TRANSPARÊNCIA</div>
+                    </div>
                 </a>
 
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarPublic">
@@ -16,31 +18,52 @@
                 </button>
 
                 <div class="collapse navbar-collapse" id="navbarPublic">
-                    <ul class="navbar-nav ms-auto align-items-lg-center gap-2">
-                        <li class="nav-item dropdown me-lg-2">
-                            <button class="btn btn-theme-toggle dropdown-toggle border-0" type="button" id="themeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-circle-half fs-5"></i>
+                    {{-- Seletores Globais (Visíveis para Visitantes) --}}
+                    <div class="mx-auto d-flex flex-column flex-lg-row align-items-center gap-2 py-3 py-lg-0">
+                        @livewire('shared.seletor-organizacao')
+                        @livewire('shared.seletor-pei')
+                        @livewire('shared.seletor-ano')
+                    </div>
+
+                    <ul class="navbar-nav ms-auto align-items-center gap-3">
+                        <li class="nav-item">
+                            <button type="button"
+                                    id="guestThemeSwitcher"
+                                    class="btn btn-icon btn-ghost-secondary rounded-circle"
+                                    @click="cycleTheme()"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-placement="bottom"
+                                    :title="themeLabel">
+                                <i :class="`bi ${themeIcon} fs-5`"></i>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="themeDropdown">
-                                <li><button class="dropdown-item d-flex align-items-center" onclick="setTheme('light')"><i class="bi bi-sun me-2"></i> Claro</button></li>
-                                <li><button class="dropdown-item d-flex align-items-center" onclick="setTheme('dark')"><i class="bi bi-moon-stars me-2"></i> Escuro</button></li>
-                                <li><button class="dropdown-item d-flex align-items-center" onclick="setTheme('system')"><i class="bi bi-circle-half me-2"></i> Sistema</button></li>
-                            </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link-public active" href="/"><i class="bi bi-house-door me-1"></i>Início</a>
-                        </li>
-                        <li class="nav-item ms-lg-2">
-                            <a href="{{ route('login') }}" class="btn gradient-theme-btn px-4 shadow-sm text-white">
-                                <i class="bi bi-box-arrow-in-right me-1"></i> Entrar
+                            <a href="{{ route('login') }}" class="btn btn-premium px-4 shadow-sm">
+                                <i class="bi bi-person-circle me-2"></i> {{ __('Área Restrita') }}
                             </a>
                         </li>
                     </ul>
                 </div>
             </div>
         </nav>
-        @include('livewire.pei.partials.mapa-navbar-styles')
-        <div style="margin-top: 90px;"></div>
+        
+        <style>
+            .public-navbar {
+                background: rgba(var(--bs-body-bg-rgb), 0.85);
+                backdrop-filter: blur(12px) saturate(180%);
+                -webkit-backdrop-filter: blur(12px) saturate(180%);
+                border-bottom: 1px solid rgba(var(--bs-primary-rgb), 0.1);
+                transition: all 0.3s ease;
+            }
+            [data-bs-theme="dark"] .public-navbar {
+                background: rgba(30, 34, 39, 0.85);
+                border-bottom-color: rgba(255, 255, 255, 0.05);
+            }
+            .btn-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+            .btn-ghost-secondary:hover { background: rgba(var(--bs-secondary-rgb), 0.1); color: var(--bs-primary); }
+        </style>
+        
+        <div style="margin-top: 100px;"></div>
     @endguest
 
     @auth

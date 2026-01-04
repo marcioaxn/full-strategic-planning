@@ -14,7 +14,7 @@
     </a>
     <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-2 mt-2" aria-labelledby="navbarDropdownOrg" style="min-width: 250px; max-height: 400px; overflow-y: auto;">
         <li class="dropdown-header text-uppercase small fw-bold text-muted pb-2 border-bottom mb-2">
-            Minhas Organizações
+            {{ __('Unidades Organizacionais') }}
         </li>
         @forelse($organizacoes as $org)
             <li>

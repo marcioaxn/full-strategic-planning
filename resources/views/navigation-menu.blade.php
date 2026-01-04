@@ -46,6 +46,9 @@
         </div>
 
         <div class="d-flex align-items-center gap-2">
+            <!-- Central de Alertas Estratégicos -->
+            @livewire('shared.strategic-alerts-bell')
+
             <button type="button"
                     id="appThemeSwitcher"
                     class="btn btn-outline-secondary btn-iconno-border no-border"

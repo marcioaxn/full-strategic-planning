@@ -185,7 +185,7 @@
                                             </li>
                                         @endif
                                         <li>
-                                            <button class="dropdown-item text-danger" wire:click="excluir('{{ $entrega->cod_entrega }}')" onclick="return confirm('Mover para lixeira?')">
+                                            <button class="dropdown-item text-danger" wire:click="confirmDeleteEntrega('{{ $entrega->cod_entrega }}')">
                                                 <i class="bi bi-trash me-2"></i> Excluir
                                             </button>
                                         </li>

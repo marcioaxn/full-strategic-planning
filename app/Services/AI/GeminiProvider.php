@@ -77,4 +77,29 @@ class GeminiProvider implements AiProviderInterface
             return ['success' => false, 'message' => 'Não foi possível contatar os servidores da Google: ' . $e->getMessage()];
         }
     }
+
+    public function analyzeSmart(string $type, string $title, string $description = ''): ?string
+    {
+        $context = "Você é um auditor sênior de Planejamento Estratégico. 
+        Sua tarefa é analisar se o {$type} informado segue os critérios SMART (Específico, Mensurável, Atingível, Relevante, Prazo).
+        Forneça um feedback muito curto e direto (máximo 3 frases) com sugestões de melhoria.
+        Seja encorajador mas rigoroso com a metodologia.";
+
+        $prompt = "Título do {$type}: {$title}. Descrição: {$description}.";
+        
+        return $this->suggest($prompt, $context);
+    }
+
+    public function summarizeStrategy(array $stats, string $orgName): ?string
+    {
+        $context = "Você é um Chief Strategy Officer (CSO) experiente. 
+        Sua tarefa é analisar os KPIs do dashboard e escrever um resumo executivo de altíssimo nível para o CEO.
+        O texto deve ser curto (máximo 4 frases), direto e focado em INSIGHTS, não apenas repetindo números.
+        Destaque o que vai bem e onde há perigo.";
+
+        $statsJson = json_encode($stats);
+        $prompt = "Organização: {$orgName}. Estatísticas Atuais: {$statsJson}. Escreva o resumo executivo.";
+        
+        return $this->suggest($prompt, $context);
+    }
 }

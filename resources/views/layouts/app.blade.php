@@ -224,6 +224,11 @@
                             'icon' => 'check2-all'
                         ],
                         [
+                            'label' => __('Graus de Satisfação'),
+                            'route' => 'graus-satisfacao.index',
+                            'icon' => 'palette'
+                        ],
+                        [
                             'label' => __('Indicadores'),
                             'route' => 'indicadores.index',
                             'icon' => 'graph-up'
@@ -277,11 +282,6 @@
                             'label' => __('Usuários'),
                             'route' => 'usuarios.index',
                             'icon' => 'people'
-                        ],
-                        [
-                            'label' => __('Graus de Satisfação'),
-                            'route' => 'graus-satisfacao.index',
-                            'icon' => 'palette'
                         ],
                         [
                             'label' => __('Configurações'),

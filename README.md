@@ -9,7 +9,7 @@ This project was built upon the [Laravel Jetstream + Livewire + Bootstrap Starte
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
-- [Strategic Mentor & AI Intelligence](#-strategic-mentor--ai-intelligence)
+- [Strategic Mentor & AI Intelligence](#-strategic-mentor--ai-intelligence-new)
 - [Key Features](#-key-features)
 - [Tech Stack](#-tech-stack)
 - [Requirements](#-requirements)
@@ -25,41 +25,58 @@ This project was built upon the [Laravel Jetstream + Livewire + Bootstrap Starte
 
 ## 🎯 Overview
 
-The system provides a robust platform for organizations to execute their strategy. It moves beyond simple spreadsheets by integrating strategic objectives with real-time performance indicators, risk mitigation plans, and **Artificial Intelligence**.
+The system provides a robust platform for organizations to execute their strategy. It moves beyond simple spreadsheets by integrating strategic objectives with real-time performance indicators, risk mitigation plans, and **Cutting-edge Artificial Intelligence**.
 
-The system is designed with a "Single Page Application" (SPA) feel using **Livewire 3** and **wire:navigate**, ensuring a smooth and responsive user experience. It now features a **Strategic Mentor** that guides users through every step of the methodology.
+The system is designed with a "Single Page Application" (SPA) feel using **Livewire 3** and **wire:navigate**, ensuring a smooth and responsive user experience. It now features a **Strategic Mentor** that proactively guides and celebrates your progress.
 
 ---
 
-## 🤖 Strategic Mentor & AI Intelligence
+## 🤖 Strategic Mentor & AI Intelligence (New!)
 
-The system features a cutting-edge **Strategic Intelligence** module, designed to transform the planning process from a technical task into an inspired, guided experience.
+The system features a state-of-the-art **Strategic Intelligence** module, transforming planning from a manual chore into a guided, high-performance experience.
 
-### 🧭 Strategic Mentor (Real-time Guidance)
-- **Interactive Checklist**: A professional dashboard widget that guides users through the 6 essential phases of the PEI (Cycle, Identity, Perspectives, Objectives, KPIs, Action Plans).
-- **Progress Tracking**: Real-time completeness score with visual indicators and smart "Next Step" suggestions.
-- **UX Guardians**: Smart logic that ensures methodological integrity, preventing users from skipping crucial strategic steps.
+### 🧭 Strategic Mentor (Real-time Coaching)
+- **Proactive Guidance**: A professional dashboard widget that guides users through the 7 essential phases of the PEI (Cycle, Identity, Perspectives, Objectives, Satisfaction Levels, KPIs, Action Plans).
+- **Interactive Timeline**: Real-time completeness score with visual indicators and smart "Next Step" suggestions.
+- **Premium Feedback System**: Dynamic, interactive Toasts with progress bars and hover-pause logic that celebrate every strategic milestone.
+- **Graceful Completion**: An elegant "Mission Accomplished" state that minimizes the UI once 100% progress is reached, keeping the focus on results.
 
-### 🪄 AI-Powered Assistance
-- **Inspired Identity**: Generate tailored Mission, Vision, and Values based on your organization's context.
-- **Strategic Brainstorming**: AI-suggested objectives for each BSC perspective and relevant KPIs for every goal.
-- **Instant Action UX**: One-click application of AI suggestions directly into your plan—no copying or pasting required.
+### 🧭 Strategic Mentor (Real-time Coaching)
+- **Proactive Guidance**: A professional dashboard widget that guides users through the 7 essential phases of the PEI (Cycle, Identity, Perspectives, Objectives, Satisfaction Levels, KPIs, Action Plans).
+- **Interactive Timeline**: Real-time completeness score with visual indicators and smart "Next Step" suggestions.
+- **Premium Feedback System**: Dynamic, interactive Toasts with progress bars and hover-pause logic that celebrate every strategic milestone.
+- **Graceful Completion**: An elegant "Mission Accomplished" state that minimizes the UI once 100% progress is reached, keeping the focus on results.
 
-### ⚙️ Centralized AI Configuration
-- **Universal Provider Support**: Seamlessly switch between **Google Gemini** and **OpenAI (GPT-4)**.
-- **Enterprise Security**: API keys are managed through a dedicated administrative interface and stored using high-level encryption in the database.
-- **Real-time Testing**: Built-in diagnostic tools to verify AI provider connectivity instantly.
+### 🪄 AI-Powered Assistance Center
+- **Contextual Brainstorming**: Generate tailored Identity, Objectives, KPIs, and Risks based on your specific organizational context.
+- **Instant Action UX**: One-click application of AI suggestions directly into your planning—no copying or pasting required.
+- **SMART Preventive Audit**: Real-time AI analysis while you type, ensuring objectives and indicators meet the highest methodological standards (Specific, Measurable, Achievable, Relevant, Time-bound).
+- **Executive AI Minute**: A specialized feature for high management that generates human-like summaries of the entire strategic status in seconds.
+
+### 🔔 Strategic Alerts Center
+- **Persistent History**: A premium notification center (Bell icon) that tracks and stores every strategic achievement, warning, or system change.
+- **Real-time Updates**: Instant counters and an elegant dropdown for quick access to the latest organizational updates.
+
+### 🌐 Public Transparency Portal
+- **High-End Interface**: A specialized guest layout with **Glassmorphism** effects and premium gradients.
+- **Public Global Selectors**: Non-authenticated users can fully explore the strategic map by filtering by **Unit, Cycle (PEI), and Year**, ensuring absolute institutional transparency.
+
+### ⚙️ Universal AI Configuration
+- **Multi-Provider Support**: Choose between **Google Gemini** and **OpenAI (GPT-4)** through a dedicated administrative interface.
+- **Real-time Connectivity Testing**: Built-in diagnostic tools to verify your API keys and provider status instantly.
+- **Enterprise-grade Security**: All sensitive API keys are stored using high-level database encryption.
 
 ---
 
 ## ✨ Key Features
 
 ### 🧩 Strategic Planning (BSC)
+- **Strategic Mentor**: Smart coach for the entire planning lifecycle.
 - **Strategic Map**: Visual representation of the strategy (Perspectives, Objectives).
-- **Strategic Mentor**: Smart guide for the entire planning lifecycle.
-- **AI-Assisted Identity**: Mission, Vision, and Values generation.
-- **Objectives**: CRUD for Strategic Objectives with AI-powered suggestions.
-- **Perspectives**: Financial, Customer, Internal Processes, Learning & Growth.
+- **AI-Assisted Identity**: Mission, Vision, and Values generation with instant application.
+- **Objectives**: CRUD for Strategic Objectives with AI-suggested goals and SMART auditing.
+- **Perspectives**: Automated "Down-Top" logic for Finance, Customer, Processes, and Growth.
+- **Satisfaction Levels**: Custom color-coded scales for strategic monitoring.
 
 ### 📈 Performance Indicators (KPIs)
 - **Indicator Management**: Define formulas, frequencies, and data sources.
@@ -97,8 +114,10 @@ The system features a cutting-edge **Strategic Intelligence** module, designed t
 - **Framework**: Laravel 11 (PHP 8.2+)
 - **Frontend**: Livewire 3 + AlpineJS + Bootstrap 5
 - **Intelligence**: Google Gemini & OpenAI API
-- **Database**: PostgreSQL 13+ (with encrypted settings)
-- **Styling**: SCSS (Premium Custom Theme)
+- **Security**: Database Encryption for sensitive AI settings
+- **Database**: PostgreSQL 13+
+- **Styling**: SCSS (Premium Theme with Interactive Gradients)
+- **CDN Redundancy**: Intelligent asset loading for high-availability environments (VPN/Enterprise)
 - **PDF Generation**: `barryvdh/laravel-dompdf`
 - **Excel**: `maatwebsite/excel`
 - **Auditing**: `owen-it/laravel-auditing`

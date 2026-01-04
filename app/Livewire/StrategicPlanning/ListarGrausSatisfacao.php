@@ -27,8 +27,58 @@ class ListarGrausSatisfacao extends Component
 
     // Busca
     public $search = '';
+    public bool $aiEnabled = false;
+    public $aiSuggestion = '';
 
     protected $paginationTheme = 'bootstrap';
+
+    public function mount()
+    {
+        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
+    }
+
+    public function pedirAjudaIA()
+    {
+        if (!$this->aiEnabled) return;
+
+        $aiService = \App\Services\AI\AiServiceFactory::make();
+        if (!$aiService) return;
+
+        $this->aiSuggestion = 'Pensando...';
+        
+        $prompt = "Sugira uma escala de 4 a 5 Graus de Satisfação padrão para monitoramento estratégico. 
+        A escala deve cobrir de 0 a 100%. 
+        Para cada nível forneça: Descrição (ex: Crítico, Excelente), Cor (Hexadecimal vibrante), Valor Mínimo e Valor Máximo.
+        Responda OBRIGATORIAMENTE em formato JSON puro, contendo um array de objetos com os campos 'nome', 'cor', 'min' e 'max'.";
+        
+        $response = $aiService->suggest($prompt);
+        $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
+
+        if (is_array($decoded)) {
+            $this->aiSuggestion = $decoded;
+        } else {
+            $this->aiSuggestion = null;
+            session()->flash('error', 'Falha ao processar sugestões. Tente novamente.');
+        }
+    }
+
+    public function aplicarSugestao($nome, $cor, $min, $max)
+    {
+        $this->dsc_grau_satisfcao = $nome;
+        $this->cor = $cor;
+        $this->vlr_minimo = $min;
+        $this->vlr_maximo = $max;
+        
+        $this->save();
+        
+        // Remove da lista
+        if (is_array($this->aiSuggestion)) {
+            $this->aiSuggestion = array_filter($this->aiSuggestion, function($item) use ($nome) {
+                return $item['nome'] !== $nome;
+            });
+            if (empty($this->aiSuggestion)) $this->aiSuggestion = '';
+        }
+    }
 
     protected function rules()
     {
@@ -94,12 +144,19 @@ class ListarGrausSatisfacao extends Component
             $grau = GrauSatisfacao::find($this->cod_grau_satisfcao);
             if ($grau) {
                 $grau->update($data);
-                session()->flash('message', 'Grau de Satisfacao atualizado com sucesso!');
+                $title = 'Grau de Satisfação Atualizado!';
             }
         } else {
             GrauSatisfacao::create($data);
-            session()->flash('message', 'Grau de Satisfacao criado com sucesso!');
+            $title = 'Grau de Satisfação Criado!';
         }
+
+        $alert = \App\Services\NotificationService::sendMentorAlert(
+            $title,
+            "A faixa <strong>{$this->dsc_grau_satisfcao}</strong> ({$this->vlr_minimo}% - {$this->vlr_maximo}%) foi salva.",
+            'bi-palette'
+        );
+        $this->dispatch('mentor-notification', ...$alert);
 
         $this->closeModal();
     }
@@ -130,8 +187,16 @@ class ListarGrausSatisfacao extends Component
         if ($this->deleteId) {
             $grau = GrauSatisfacao::find($this->deleteId);
             if ($grau) {
+                $nome = $grau->dsc_grau_satisfcao;
                 $grau->delete();
-                session()->flash('message', 'Grau de Satisfacao excluido com sucesso!');
+                
+                $alert = \App\Services\NotificationService::sendMentorAlert(
+                    'Grau Removido',
+                    "A faixa <strong>{$nome}</strong> foi excluída.",
+                    'bi-trash',
+                    'warning'
+                );
+                $this->dispatch('mentor-notification', ...$alert);
             }
         }
 

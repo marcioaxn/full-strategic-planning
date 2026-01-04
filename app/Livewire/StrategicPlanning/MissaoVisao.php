@@ -31,6 +31,8 @@ class MissaoVisao extends Component
     public bool $isEditing = false;
     public bool $isEditingValores = false;
     public bool $aiEnabled = false;
+    public bool $showDeleteModal = false;
+    public $valorParaExcluirId;
     public $aiSuggestion = '';
 
     protected $listeners = [
@@ -232,11 +234,13 @@ class MissaoVisao extends Component
 
         $after = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
 
-        $this->dispatch('mentor-notification', 
-            title: 'Identidade Estratégica Salva!',
-            message: $after['message'],
-            icon: 'bi-fingerprint'
+        $alert = \App\Services\NotificationService::sendMentorAlert(
+            'Identidade Estratégica Salva!',
+            $after['message'],
+            'bi-fingerprint'
         );
+
+        $this->dispatch('mentor-notification', ...$alert);
 
         $this->isEditing = false;
         session()->flash('status', 'Identidade estratégica atualizada com sucesso!');
@@ -265,11 +269,12 @@ class MissaoVisao extends Component
 
         $after = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
         if ($after['progress'] > $before['progress']) {
-            $this->dispatch('mentor-notification', 
-                title: 'Valor Adicionado!',
-                message: "Princípios fortalecidos. Progresso: <strong>{$after['progress']}%</strong>.",
-                icon: 'bi-star-fill'
+            $alert = \App\Services\NotificationService::sendMentorAlert(
+                'Valor Adicionado!',
+                "Princípios fortalecidos. Progresso: <strong>{$after['progress']}%</strong>.",
+                'bi-star-fill'
             );
+            $this->dispatch('mentor-notification', ...$alert);
         }
 
         $this->novoValorTitulo = '';
@@ -278,11 +283,25 @@ class MissaoVisao extends Component
         session()->flash('status', 'Valor adicionado com sucesso!');
     }
 
-    public function removerValor($id)
+    public function confirmDeleteValor($id)
     {
-        Valor::find($id)->delete();
+        $this->valorParaExcluirId = $id;
+        $this->showDeleteModal = true;
+    }
+
+    public function removerValor()
+    {
+        Valor::find($this->valorParaExcluirId)->delete();
+        $this->valorParaExcluirId = null;
+        $this->showDeleteModal = false;
         $this->carregarDados();
-        session()->flash('status', 'Valor removido com sucesso!');
+        
+        $this->dispatch('mentor-notification', 
+            title: 'Valor Removido',
+            message: 'O princípio foi excluído da identidade estratégica.',
+            icon: 'bi-trash',
+            type: 'warning'
+        );
     }
 
     public function editarValor($id)
