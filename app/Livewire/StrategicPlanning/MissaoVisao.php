@@ -89,9 +89,21 @@ class MissaoVisao extends Component
 
     public function adicionarValorSugerido($nome, $descricao)
     {
+        $service = app(\App\Services\PeiGuidanceService::class);
+        $before = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
+
         $this->novoValorTitulo = $nome;
         $this->novoValorDescricao = $descricao;
         $this->adicionarValor();
+
+        $after = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
+        if ($after['progress'] > $before['progress']) {
+            $this->dispatch('mentor-notification', 
+                title: 'Princípio Registrado!',
+                message: "Valor organizacional adicionado com sucesso. Progresso: <strong>{$after['progress']}%</strong>.",
+                icon: 'bi-star-fill'
+            );
+        }
 
         // Remove o valor da lista de sugestões
         if (isset($this->aiSuggestion['valores'])) {
@@ -199,6 +211,9 @@ class MissaoVisao extends Component
             return;
         }
 
+        $service = app(\App\Services\PeiGuidanceService::class);
+        $before = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
+
         $this->validate([
             'missao' => 'nullable|string|max:5000',
             'visao' => 'nullable|string|max:5000',
@@ -215,6 +230,14 @@ class MissaoVisao extends Component
             ]
         );
 
+        $after = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
+
+        $this->dispatch('mentor-notification', 
+            title: 'Identidade Estratégica Salva!',
+            message: $after['message'],
+            icon: 'bi-fingerprint'
+        );
+
         $this->isEditing = false;
         session()->flash('status', 'Identidade estratégica atualizada com sucesso!');
     }
@@ -224,6 +247,9 @@ class MissaoVisao extends Component
     public function adicionarValor()
     {
         if (!$this->peiAtivo) return;
+
+        $service = app(\App\Services\PeiGuidanceService::class);
+        $before = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
 
         $this->validate([
             'novoValorTitulo' => 'required|string|max:255',
@@ -236,6 +262,15 @@ class MissaoVisao extends Component
             'nom_valor' => $this->novoValorTitulo,
             'dsc_valor' => $this->novoValorDescricao,
         ]);
+
+        $after = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
+        if ($after['progress'] > $before['progress']) {
+            $this->dispatch('mentor-notification', 
+                title: 'Valor Adicionado!',
+                message: "Princípios fortalecidos. Progresso: <strong>{$after['progress']}%</strong>.",
+                icon: 'bi-star-fill'
+            );
+        }
 
         $this->novoValorTitulo = '';
         $this->novoValorDescricao = '';
