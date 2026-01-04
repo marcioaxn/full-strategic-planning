@@ -162,6 +162,9 @@ class ListarObjetivos extends Component
 
     public function save()
     {
+        $service = app(\App\Services\PeiGuidanceService::class);
+        $before = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
+
         $this->validate([
             'nom_objetivo' => 'required|string|max:255',
             'dsc_objetivo' => 'nullable|string|max:1000',
@@ -177,6 +180,14 @@ class ListarObjetivos extends Component
                 'num_nivel_hierarquico_apresentacao' => $this->num_nivel_hierarquico_apresentacao,
                 'cod_perspectiva' => $this->cod_perspectiva,
             ]
+        );
+
+        $after = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
+
+        $this->dispatch('mentor-notification', 
+            title: $this->objetivoId ? 'Objetivo Atualizado!' : 'Objetivo Criado!',
+            message: $after['message'],
+            icon: 'bi-bullseye'
         );
 
         $this->showModal = false;

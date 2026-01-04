@@ -624,6 +624,108 @@ body {
     .card-header { background: rgba(255, 255, 255, 0.02); }
 }
 
+/* Premium Toast Notifications */
+.mentor-toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.mentor-toast {
+    pointer-events: auto;
+    min-width: 320px;
+    max-width: 450px;
+    background: var(--bs-body-bg);
+    border-radius: 16px;
+    padding: 1.25rem;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 1px solid rgba(105, 118, 222, 0.1);
+    animation: toast-slide-in 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.mentor-toast::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: linear-gradient(to bottom, #6976DE, #9c27b0);
+}
+
+.mentor-toast.success::before { background: linear-gradient(to bottom, #059669, #10B981); }
+
+.mentor-toast-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.mentor-toast-content {
+    flex-grow: 1;
+}
+
+.mentor-toast-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+    color: var(--bs-body-color);
+}
+
+.mentor-toast-message {
+    font-size: 0.8rem;
+    color: var(--bs-secondary-color);
+    line-height: 1.4;
+}
+
+.mentor-toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    background: rgba(var(--bs-primary-rgb), 0.2);
+}
+
+.mentor-toast-progress-bar {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(to right, #6976DE, #9c27b0);
+    transform-origin: left;
+}
+
+.mentor-toast.success .mentor-toast-progress-bar {
+    background: linear-gradient(to right, #059669, #10B981);
+}
+
+@keyframes toast-slide-in {
+    from { transform: translateX(100%) scale(0.9); opacity: 0; }
+    to { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+.toast-fade-out {
+    animation: toast-slide-out 0.4s ease forwards;
+}
+
+@keyframes toast-slide-out {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+}
+
 .rotate-180 { transform: rotate(180deg); }
 .transition-all { transition: all 0.3s ease; }
 .animate-fade-in { animation: fadeIn 0.4s ease-out; }

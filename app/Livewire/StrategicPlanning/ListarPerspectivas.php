@@ -88,6 +88,16 @@ class ListarPerspectivas extends Component
         }
     }
 
+    public function testarNotificacao()
+    {
+        $this->dispatch('mentor-notification', 
+            title: 'Teste de Comunicação',
+            message: 'Se você está lendo isso, o sistema de Toasts está <strong>funcional</strong>!',
+            icon: 'bi-megaphone-fill',
+            type: 'success'
+        );
+    }
+
     public function atualizarPEI($id)
     {
         $this->peiAtivo = PEI::find($id);
@@ -142,6 +152,9 @@ class ListarPerspectivas extends Component
 
     public function save()
     {
+        $service = app(\App\Services\PeiGuidanceService::class);
+        $before = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
+
         $this->validate([
             'dsc_perspectiva' => 'required|string|max:255',
             'num_nivel_hierarquico_apresentacao' => 'required|integer|min:1',
@@ -154,6 +167,14 @@ class ListarPerspectivas extends Component
                 'num_nivel_hierarquico_apresentacao' => $this->num_nivel_hierarquico_apresentacao,
                 'cod_pei' => $this->peiAtivo->cod_pei
             ]
+        );
+
+        $after = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
+
+        $this->dispatch('mentor-notification', 
+            title: $this->perspectivaId ? 'Perspectiva Atualizada!' : 'Perspectiva Criada!',
+            message: $after['message'],
+            icon: 'bi-layers-fill'
         );
 
         $this->showModal = false;
