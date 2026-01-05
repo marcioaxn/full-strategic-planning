@@ -47,6 +47,7 @@ The system features a state-of-the-art **Strategic Intelligence** module, transf
 - **Instant Action UX**: One-click application of AI suggestions directly into your planning—no copying or pasting required.
 - **SMART Preventive Audit**: Real-time AI analysis while you type, ensuring objectives and indicators meet the highest methodological standards (Specific, Measurable, Achievable, Relevant, Time-bound).
 - **Executive AI Minute**: A specialized feature for high management that generates human-like summaries of the entire strategic status in seconds.
+- **Predictive Reporting (PDF)**: The official Executive Report now features a dedicated AI section with **Trend Analytics**, projecting future performance based on historical KPI data and suggesting corrective actions.
 
 ### 🔔 Strategic Alerts Center
 - **Persistent History**: A premium notification center (Bell icon) that tracks and stores every strategic achievement, warning, or system change.
@@ -94,7 +95,7 @@ The system features a state-of-the-art **Strategic Intelligence** module, transf
 
 ### 📊 Reporting & Dashboard
 - **Executive Dashboard**: Real-time charts (Chart.js) and metrics.
-- **PDF Reports**: High-quality exports using DomPDF.
+- **Intelligent PDF Reports**: High-quality exports with built-in **AI Summaries** and **Predictive Analysis**.
 - **Excel Exports**: Data extraction for offline analysis.
 - **Global Context**: Smart selector for "Year" and "Organization" that filters all data globally.
 
