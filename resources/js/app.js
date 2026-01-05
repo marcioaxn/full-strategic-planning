@@ -175,8 +175,8 @@ document.addEventListener('livewire:load', () => {
 
     Livewire.hook('message.processed', (message, component) => {
         console.debug('[app.js] Livewire message.processed', component.id);
-        initTooltips(component.el);
-        initToasts(component.el);
+        initTooltips();
+        initToasts();
     });
 
     Livewire.on('refresh-navigation-menu', () => initTooltips());

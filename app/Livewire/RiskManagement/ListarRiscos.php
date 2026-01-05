@@ -30,6 +30,26 @@ class ListarRiscos extends Component
     public bool $aiEnabled = false;
     public $aiSuggestion = '';
 
+    // Campos do Formulário
+    public $form = [
+        'dsc_titulo' => '',
+        'txt_descricao' => '',
+        'dsc_categoria' => 'Operacional',
+        'num_probabilidade' => 3,
+        'num_impacto' => 3,
+        'txt_causas' => '',
+        'txt_consequencias' => '',
+        'cod_responsavel_monitoramento' => '',
+        'dsc_status' => 'Identificado',
+        'objetivos_vinculados' => [], 
+    ];
+
+    // Listas auxiliares
+    public $categoriasOptions = ['Estratégico', 'Operacional', 'Financeiro', 'Reputacional', 'Legal/Conformidade'];
+    public $statusOptions = ['Identificado', 'Em Monitoramento', 'Mitigado', 'Encerrado'];
+    public $objetivos = [];
+    public $usuarios = [];
+
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
         'peiSelecionado' => 'atualizarPEI'
