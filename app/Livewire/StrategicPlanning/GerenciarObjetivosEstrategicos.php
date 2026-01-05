@@ -21,10 +21,12 @@ class GerenciarObjetivosEstrategicos extends Component
 
     // Campos do Modal
     public $showModal = false;
-    public $showDeleteModal = false;
+    public bool $showDeleteModal = false;
     public $objetivoId;
     public $nom_objetivo_estrategico;
     public $cod_organizacao;
+    public bool $aiEnabled = false;
+    public $aiSuggestion = '';
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -38,9 +40,46 @@ class GerenciarObjetivosEstrategicos extends Component
 
     public function mount()
     {
+        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
         $this->organizacaoId = Session::get('organizacao_selecionada_id');
         $this->cod_organizacao = $this->organizacaoId;
+    }
+
+    public function pedirAjudaIA()
+    {
+        if (!$this->aiEnabled) return;
+
+        $aiService = \App\Services\AI\AiServiceFactory::make();
+        if (!$aiService) return;
+
+        $org = Organization::find($this->organizacaoId);
+        $this->aiSuggestion = 'Pensando...';
+        
+        $prompt = "Sugerir 3 grandes Objetivos Estratégicos de alto nível para a organização: '{$org->nom_organizacao}'. 
+        Responda OBRIGATORIAMENTE em formato JSON puro, contendo um array de objetos com o campo 'nome'.";
+        
+        $response = $aiService->suggest($prompt);
+        $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
+
+        if (is_array($decoded)) {
+            $this->aiSuggestion = $decoded;
+        } else {
+            $this->aiSuggestion = null;
+            session()->flash('error', 'Falha ao processar sugestões. Tente novamente.');
+        }
+    }
+
+    public function aplicarSugestao($nome)
+    {
+        $this->nom_objetivo_estrategico = $nome;
+        $this->save();
+        
+        // Remove da lista
+        if (is_array($this->aiSuggestion)) {
+            $this->aiSuggestion = array_filter($this->aiSuggestion, fn($item) => $item['nome'] !== $nome);
+            if (empty($this->aiSuggestion)) $this->aiSuggestion = '';
+        }
     }
 
     public function atualizarPEI($id)
@@ -97,7 +136,7 @@ class GerenciarObjetivosEstrategicos extends Component
         ]);
 
         if (!$this->peiAtivo) {
-            $this->dispatch('notify', message: 'Não existe um ciclo PEI ativo.', style: 'danger');
+            session()->flash('error', 'Não existe um ciclo PEI ativo.');
             return;
         }
 
@@ -110,9 +149,15 @@ class GerenciarObjetivosEstrategicos extends Component
             ]
         );
 
+        $alert = \App\Services\NotificationService::sendMentorAlert(
+            $this->objetivoId ? 'Objetivo Atualizado!' : 'Objetivo Criado!',
+            'A meta institucional foi registrada com sucesso.',
+            'bi-shield-check'
+        );
+        $this->dispatch('mentor-notification', ...$alert);
+
         $this->showModal = false;
         $this->resetForm();
-        $this->dispatch('notify', message: 'Objetivo Estratégico salvo com sucesso!', style: 'success');
     }
 
     public function confirmDelete($id)
@@ -127,7 +172,14 @@ class GerenciarObjetivosEstrategicos extends Component
             ObjetivoEstrategico::findOrFail($this->objetivoId)->delete();
             $this->objetivoId = null;
             $this->showDeleteModal = false;
-            $this->dispatch('notify', message: 'Objetivo Estratégico removido.', style: 'success');
+            
+            $alert = \App\Services\NotificationService::sendMentorAlert(
+                'Objetivo Removido',
+                'O item foi excluído do planejamento institucional.',
+                'bi-trash',
+                'warning'
+            );
+            $this->dispatch('mentor-notification', ...$alert);
         }
     }
 

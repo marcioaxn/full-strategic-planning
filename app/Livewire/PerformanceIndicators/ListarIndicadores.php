@@ -67,10 +67,10 @@ class ListarIndicadores extends Component
     public $grausSatisfacao = [];
 
     protected $queryString = [
-        'search' => ['except' => ''],
+        'search' => ['except' => '', 'as' => 'q'],
         'filtroVinculo' => ['except' => ''],
         'filtroObjetivo' => ['except' => ''],
-        'page' => ['except' => 1],
+        'page' => ['except' => 1, 'history' => true],
     ];
 
     public $peiAtivo;
