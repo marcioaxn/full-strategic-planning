@@ -774,6 +774,30 @@ body {
     to { transform: translateX(100%); opacity: 0; }
 }
 
+/* Kanban Drag and Drop Premium Styles */
+.notion-card-ghost {
+    opacity: 0.4;
+    background: var(--bs-primary-bg-subtle) !important;
+    border: 2px dashed var(--bs-primary) !important;
+}
+
+.notion-card-chosen {
+    transform: rotate(2deg) scale(1.05);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15) !important;
+    z-index: 100;
+}
+
+.is-dragging .notion-kanban-cards {
+    background-color: rgba(var(--bs-primary-rgb), 0.03);
+    min-height: 150px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.notion-kanban-column.is-dragging {
+    border: 1px dashed rgba(var(--bs-primary-rgb), 0.2);
+}
+
 .rotate-180 { transform: rotate(180deg); }
 .transition-all { transition: all 0.3s ease; }
 .animate-fade-in { animation: fadeIn 0.4s ease-out; }

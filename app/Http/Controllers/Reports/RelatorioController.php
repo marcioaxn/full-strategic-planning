@@ -134,9 +134,45 @@ class RelatorioController extends Controller
             'perspectiva' => $perspectivaId ? Perspectiva::find($perspectivaId)?->dsc_perspectiva : 'Todas'
         ];
 
+        // --- INTEGRAÇÃO COM IA: Resumo e Análise Preditiva ---
+        $aiSummary = null;
+        $aiTrends = null;
+        $aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', false);
+
+        if ($aiEnabled) {
+            $aiService = \App\Services\AI\AiServiceFactory::make();
+            if ($aiService) {
+                // Preparar Estatísticas para o Resumo
+                $stats = [
+                    'totalObjetivos' => Objetivo::whereHas('perspectiva', fn($q) => $q->where('cod_pei', $pei?->cod_pei))->count(),
+                    'totalIndicadores' => Indicador::whereHas('objetivo.perspectiva', fn($q) => $q->where('cod_pei', $pei?->cod_pei))->count(),
+                    'totalPlanos' => PlanoDeAcao::where('cod_organizacao', $organizacaoId)->count(),
+                    'riscosCriticos' => Risco::where('cod_organizacao', $organizacaoId)->where('cod_pei', $pei?->cod_pei)->criticos()->count(),
+                ];
+                $aiSummary = $aiService->summarizeStrategy($stats, $organizacao->nom_organizacao);
+
+                // Preparar Dados de Tendência (Histórico recente de indicadores)
+                $indicatorData = [];
+                $topIndicadores = Indicador::whereHas('organizacoes', function($q) use ($organizacaoId) {
+                        $q->where('tab_organizacoes.cod_organizacao', $organizacaoId);
+                    })->with(['evolucoes' => fn($q) => $q->where('num_ano', $ano)->orderBy('num_mes')])
+                    ->take(5)->get();
+
+                foreach ($topIndicadores as $ind) {
+                    $evolucoes = $ind->evolucoes->map(fn($e) => ['mes' => $e->num_mes, 'valor' => $e->vlr_realizado, 'previsto' => $e->vlr_previsto]);
+                    $indicatorData[] = [
+                        'nome' => $ind->nom_indicador,
+                        'historico' => $evolucoes->toArray()
+                    ];
+                }
+                $aiTrends = $aiService->analyzeTrends($indicatorData, $organizacao->nom_organizacao);
+            }
+        }
+
         $pdf = Pdf::loadView('relatorios.executivo', compact(
             'organizacao', 'identidade', 'valores', 'objetivosEstrategicos', 
-            'perspectivas', 'planos', 'filtros', 'swot', 'riscosSummary', 'riscosDetalhado', 'grausSatisfacao'
+            'perspectivas', 'planos', 'filtros', 'swot', 'riscosSummary', 'riscosDetalhado', 'grausSatisfacao',
+            'aiSummary', 'aiTrends'
         ));
         
         return $pdf->download("Relatorio_Executivo_{$organizacao->sgl_organizacao}_{$ano}.pdf");

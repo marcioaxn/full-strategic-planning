@@ -192,6 +192,37 @@
         @endif
     </div>
 
+    <!-- IA INSIGHTS: RESUMO E PREDIÇÃO -->
+    @if($aiSummary || $aiTrends)
+        <div class="section" style="background: #f8f9ff; padding: 15px; border-radius: 8px; border: 1px solid #e0e6f7;">
+            <div style="margin-bottom: 15px;">
+                <div style="color: #6976DE; font-weight: bold; font-size: 11px; text-transform: uppercase; margin-bottom: 8px;">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2103/2103633.png" width="12" style="vertical-align: middle; margin-right: 5px;">
+                    Insights do Mentor de IA
+                </div>
+                
+                @if($aiSummary)
+                    <div style="margin-bottom: 12px;">
+                        <strong style="color: #1B408E; font-size: 9px; display: block; margin-bottom: 4px;">RESUMO EXECUTIVO (AI MINUTE):</strong>
+                        <p style="margin: 0; font-size: 10px; line-height: 1.5; color: #333;">
+                            {!! nl2br(e($aiSummary)) !!}
+                        </p>
+                    </div>
+                @endif
+
+                @if($aiTrends)
+                    <div style="padding-top: 10px; border-top: 1px dashed #cbd5e1;">
+                        <strong style="color: #9c27b0; font-size: 9px; display: block; margin-bottom: 4px;">ANÁLISE PREDITIVA E TENDÊNCIAS:</strong>
+                        <p style="margin: 0; font-size: 10px; line-height: 1.5; color: #333; font-style: italic;">
+                            {!! nl2br(e($aiTrends)) !!}
+                        </p>
+                    </div>
+                @endif
+            </div>
+            <div style="font-size: 7px; color: #94a3b8; text-align: right;">* Análise gerada automaticamente por inteligência artificial baseada nos dados vigentes.</div>
+        </div>
+    @endif
+
     <!-- GRÁFICO DE DESEMPENHO (ANUNCIADO) -->
     <div class="section">
         <div class="section-title">Análise de Desempenho por Perspectiva</div>
