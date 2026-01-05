@@ -4,10 +4,14 @@ namespace App\Livewire\Deliverables;
 
 use Livewire\Component;
 use App\Models\ActionPlan\Entrega;
+use App\Models\ActionPlan\EntregaLabel;
 use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Attributes\Layout;
 use Livewire\WithFileUploads;
 
+#[Layout('layouts.app')]
 class DeliverablesBoard extends Component
 {
     use AuthorizesRequests, WithFileUploads;

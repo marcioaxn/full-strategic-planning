@@ -3,6 +3,7 @@
 namespace App\Livewire\StrategicPlanning;
 
 use App\Models\StrategicPlanning\GrauSatisfacao;
+use App\Models\StrategicPlanning\PEI;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -13,8 +14,10 @@ class ListarGrausSatisfacao extends Component
     use WithPagination;
 
     // Campos do formulario
-    public $cod_grau_satisfcao;
-    public $dsc_grau_satisfcao = '';
+    public $cod_grau_satisfacao;
+    public $cod_pei;
+    public $num_ano;
+    public $dsc_grau_satisfacao = '';
     public $cor = '';
     public $vlr_minimo = '';
     public $vlr_maximo = '';
@@ -23,7 +26,7 @@ class ListarGrausSatisfacao extends Component
     public $showModal = false;
     public $showDeleteModal = false;
     public $isEditing = false;
-    public $deleteId = null;
+    public $grauId = null; // Alterado de deleteId para grauId para consistência
 
     // Busca
     public $search = '';
@@ -64,7 +67,7 @@ class ListarGrausSatisfacao extends Component
 
     public function aplicarSugestao($nome, $cor, $min, $max)
     {
-        $this->dsc_grau_satisfcao = $nome;
+        $this->dsc_grau_satisfacao = $nome;
         $this->cor = $cor;
         $this->vlr_minimo = $min;
         $this->vlr_maximo = $max;
@@ -83,7 +86,7 @@ class ListarGrausSatisfacao extends Component
     protected function rules()
     {
         return [
-            'dsc_grau_satisfcao' => 'required|string|max:100',
+            'dsc_grau_satisfacao' => 'required|string|max:100',
             'cor' => 'required|string|max:50',
             'vlr_minimo' => 'required|numeric|min:0|max:999.99',
             'vlr_maximo' => 'required|numeric|min:0|max:999.99|gte:vlr_minimo',
@@ -91,7 +94,7 @@ class ListarGrausSatisfacao extends Component
     }
 
     protected $messages = [
-        'dsc_grau_satisfcao.required' => 'A descricao e obrigatoria.',
+        'dsc_grau_satisfacao.required' => 'A descricao e obrigatoria.',
         'cor.required' => 'A cor e obrigatoria.',
         'vlr_minimo.required' => 'O valor minimo e obrigatorio.',
         'vlr_minimo.numeric' => 'O valor minimo deve ser numerico.',
@@ -120,8 +123,10 @@ class ListarGrausSatisfacao extends Component
 
     public function resetForm()
     {
-        $this->cod_grau_satisfcao = null;
-        $this->dsc_grau_satisfcao = '';
+        $this->cod_grau_satisfacao = null;
+        $this->cod_pei = session('pei_selecionado_id');
+        $this->num_ano = null; // Default: Geral do Ciclo
+        $this->dsc_grau_satisfacao = '';
         $this->cor = '';
         $this->vlr_minimo = '';
         $this->vlr_maximo = '';
@@ -134,14 +139,16 @@ class ListarGrausSatisfacao extends Component
         $this->validate();
 
         $data = [
-            'dsc_grau_satisfcao' => $this->dsc_grau_satisfcao,
+            'dsc_grau_satisfacao' => $this->dsc_grau_satisfacao,
             'cor' => strtolower(trim($this->cor)),
             'vlr_minimo' => $this->vlr_minimo,
             'vlr_maximo' => $this->vlr_maximo,
+            'cod_pei' => $this->cod_pei ?? session('pei_selecionado_id'),
+            'num_ano' => $this->num_ano,
         ];
 
-        if ($this->isEditing && $this->cod_grau_satisfcao) {
-            $grau = GrauSatisfacao::find($this->cod_grau_satisfcao);
+        if ($this->isEditing && $this->cod_grau_satisfacao) {
+            $grau = GrauSatisfacao::find($this->cod_grau_satisfacao);
             if ($grau) {
                 $grau->update($data);
                 $title = 'Grau de Satisfação Atualizado!';
@@ -153,7 +160,7 @@ class ListarGrausSatisfacao extends Component
 
         $alert = \App\Services\NotificationService::sendMentorAlert(
             $title,
-            "A faixa <strong>{$this->dsc_grau_satisfcao}</strong> ({$this->vlr_minimo}% - {$this->vlr_maximo}%) foi salva.",
+            "A faixa <strong>{$this->dsc_grau_satisfacao}</strong> ({$this->vlr_minimo}% - {$this->vlr_maximo}%) foi salva.",
             'bi-palette'
         );
         $this->dispatch('mentor-notification', ...$alert);
@@ -166,8 +173,10 @@ class ListarGrausSatisfacao extends Component
         $grau = GrauSatisfacao::find($id);
 
         if ($grau) {
-            $this->cod_grau_satisfcao = $grau->cod_grau_satisfcao;
-            $this->dsc_grau_satisfcao = $grau->dsc_grau_satisfcao;
+            $this->cod_grau_satisfacao = $grau->cod_grau_satisfacao;
+            $this->cod_pei = $grau->cod_pei;
+            $this->num_ano = $grau->num_ano;
+            $this->dsc_grau_satisfacao = $grau->dsc_grau_satisfacao;
             $this->cor = $grau->cor;
             $this->vlr_minimo = $grau->vlr_minimo;
             $this->vlr_maximo = $grau->vlr_maximo;
@@ -178,21 +187,21 @@ class ListarGrausSatisfacao extends Component
 
     public function confirmDelete($id)
     {
-        $this->deleteId = $id;
+        $this->grauId = $id;
         $this->showDeleteModal = true;
     }
 
     public function delete()
     {
-        if ($this->deleteId) {
-            $grau = GrauSatisfacao::find($this->deleteId);
+        if ($this->grauId) {
+            $grau = GrauSatisfacao::find($this->grauId);
             if ($grau) {
-                $nome = $grau->dsc_grau_satisfcao;
+                $nome = $grau->dsc_grau_satisfacao;
                 $grau->delete();
                 
                 $alert = \App\Services\NotificationService::sendMentorAlert(
                     'Grau Removido',
-                    "A faixa <strong>{$nome}</strong> foi excluída.",
+                    "A faixa <strong>{$nome}</strong> foi excluída com sucesso.",
                     'bi-trash',
                     'warning'
                 );
@@ -201,27 +210,34 @@ class ListarGrausSatisfacao extends Component
         }
 
         $this->showDeleteModal = false;
-        $this->deleteId = null;
+        $this->grauId = null;
     }
 
     public function cancelDelete()
     {
         $this->showDeleteModal = false;
-        $this->deleteId = null;
+        $this->grauId = null;
     }
 
     public function render()
     {
+        $peiId = session('pei_selecionado_id');
+
         $graus = GrauSatisfacao::query()
+            ->where(function($q) use ($peiId) {
+                if ($peiId) $q->where('cod_pei', $peiId)->orWhereNull('cod_pei');
+            })
             ->when($this->search, function($query) {
-                $query->where('dsc_grau_satisfcao', 'ilike', '%' . $this->search . '%')
+                $query->where('dsc_grau_satisfacao', 'ilike', '%' . $this->search . '%')
                       ->orWhere('cor', 'ilike', '%' . $this->search . '%');
             })
-            ->orderBy('vlr_minimo')
-            ->paginate(10);
+            ->orderBy('num_ano', 'asc') // Agrupa por ano (maturidade)
+            ->orderBy('vlr_minimo', 'asc')
+            ->paginate(15);
 
         return view('livewire.p-e-i.listar-graus-satisfacao', [
-            'graus' => $graus
+            'graus' => $graus,
+            'availablePeis' => PEI::orderBy('num_ano_inicio_pei', 'desc')->get()
         ]);
     }
 }

@@ -1,27 +1,19 @@
 @props(['id' => null, 'maxWidth' => null])
 
 <x-modal :id="$id" :maxWidth="$maxWidth" {{ $attributes }}>
-    <div class="modal-body-modern">
-        <div class="modal-title-container">
+    <div class="p-4">
+        {{-- Título --}}
+        <div class="mb-4">
             {{ $title }}
         </div>
 
-        <div class="modal-content-container">
+        {{-- Conteúdo --}}
+        <div class="mb-4">
             {{ $content }}
         </div>
     </div>
 
-    <div class="modal-footer-modern modal-footer-actions">
+    <div class="modal-footer bg-light border-0 p-4 d-flex justify-content-end gap-2">
         {{ $footer }}
     </div>
 </x-modal>
-
-<style>
-    .modal-footer-actions {
-        justify-content: flex-end !important;
-    }
-
-    .modal-footer-actions > * {
-        margin: 0;
-    }
-</style>

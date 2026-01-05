@@ -109,7 +109,7 @@
                             @foreach($graus as $grau)
                                 <div class="d-flex align-items-center">
                                     <span class="rounded-circle me-2" style="width: 16px; height: 16px; background-color: {{ $grau->cor }};"></span>
-                                    <small>{{ $grau->dsc_grau_satisfcao }} (@brazil_number($grau->vlr_minimo, 2)-@brazil_percent($grau->vlr_maximo, 2))</small>
+                                    <small>{{ $grau->dsc_grau_satisfacao }} (@brazil_number($grau->vlr_minimo, 2)-@brazil_percent($grau->vlr_maximo, 2))</small>
                                 </div>
                             @endforeach
                         </div>
@@ -122,6 +122,7 @@
                             <tr>
                                 <th class="px-4" style="width: 1%;">Cor</th>
                                 <th>Descricao</th>
+                                <th>Ciclo / Ano</th>
                                 <th class="text-center">Código da Cor</th>
                                 <th class="text-center">Min (%)</th>
                                 <th class="text-center">Max (%)</th>
@@ -138,7 +139,15 @@
                                               title="{{ $grau->cor }}"></span>
                                     </td>
                                     <td>
-                                        <span class="fw-semibold">{{ $grau->dsc_grau_satisfcao }}</span>
+                                        <span class="fw-semibold text-dark">{{ $grau->dsc_grau_satisfacao }}</span>
+                                    </td>
+                                    <td>
+                                        @if($grau->cod_pei)
+                                            <small class="d-block fw-bold text-primary">{{ $grau->pei->dsc_pei ?? 'PEI' }}</small>
+                                            <small class="text-muted">{{ $grau->num_ano ? "Ano: {$grau->num_ano}" : 'Todo o ciclo' }}</small>
+                                        @else
+                                            <span class="badge bg-light text-muted border">Global</span>
+                                        @endif
                                     </td>
                                     <td class="text-center">
                                         <code class="bg-light px-2 py-1 rounded">{{ $grau->cor }}</code>
@@ -151,10 +160,10 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm">
-                                            <button class="btn btn-outline-primary" wire:click="edit('{{ $grau->cod_grau_satisfcao }}')" title="Editar">
+                                            <button class="btn btn-outline-primary" wire:click="edit('{{ $grau->cod_grau_satisfacao }}')" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            <button class="btn btn-outline-danger" wire:click="confirmDelete('{{ $grau->cod_grau_satisfcao }}')" title="Excluir">
+                                            <button class="btn btn-outline-danger" wire:click="confirmDelete('{{ $grau->cod_grau_satisfacao }}')" title="Excluir">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
@@ -185,46 +194,85 @@
             @endif
         </div>
 
-        <!-- Dica de Configuracao (Novo Padrão) -->
-        <div class="card card-modern border-0 shadow-sm educational-card-gradient mt-4 overflow-hidden" x-data="{ open: false }">
-            <div class="card-body p-0">
-                <div class="p-3 px-4 d-flex align-items-center justify-content-between cursor-pointer" @click="open = !open">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle bg-white bg-opacity-20 p-2">
-                            <i class="bi bi-lightbulb-fill text-white"></i>
-                        </div>
-                        <h6 class="fw-bold mb-0 text-white">{{ __('O que são os Graus de Satisfação?') }}</h6>
-                    </div>
-                    <i class="bi bi-chevron-down text-white transition-all" :class="open ? 'rotate-180' : ''"></i>
-                </div>
-                
-                <div x-show="open" x-collapse x-cloak class="p-4 bg-body text-body text-start">
-                    <p class="mb-3">
-                        O <strong>Grau de Satisfação</strong> é o motor que gera a sinalização visual (o famoso "farol") em todo o sistema. Ele traduz percentuais numéricos em status compreensíveis para a alta gestão.
-                    </p>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="p-3 rounded-3 border bg-light h-100">
-                                <h6 class="fw-bold text-primary"><i class="bi bi-bullseye me-2"></i>Padronização</h6>
-                                <p class="small text-muted mb-0">Define uma régua única para que todos os departamentos falem a mesma língua ao medir o sucesso.</p>
+        {{-- Satisfaction Degrees Help Section (Educational Pattern) --}}
+        <div class="card card-modern mt-4 border-0 shadow-sm educational-card-gradient">
+            <div class="card-body p-4 text-white">
+                <div class="row g-4">
+                    {{-- Main Explanation --}}
+                    <div class="col-12">
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-white bg-opacity-25 p-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                    <i class="bi bi-lightbulb-fill fs-3 text-white"></i>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="p-3 rounded-3 border bg-light h-100">
-                                <h6 class="fw-bold text-success"><i class="bi bi-lightning-charge me-2"></i>Agilidade</h6>
-                                <p class="small text-muted mb-0">Permite que o CEO identifique em segundos quais áreas estão críticas através das cores automáticas.</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="p-3 rounded-3 border bg-light h-100">
-                                <h6 class="fw-bold text-info"><i class="bi bi-check-all me-2"></i>Consistência</h6>
-                                <p class="small text-muted mb-0">Garante que o cálculo de atingimento dos objetivos e do mapa estratégico seja visualmente coerente.</p>
+                            <div class="flex-grow-1">
+                                <h5 class="fw-bold mb-2 text-white">{{ __('O que é o Grau de Satisfação?') }}</h5>
+                                <p class="mb-0 text-white-50" style="line-height: 1.6;">
+                                    O <strong>Grau de Satisfação</strong> é o motor de sinalização visual do sistema (o famoso "Farol"). Ele traduz o percentual de atingimento dos indicadores em status compreensíveis, permitindo que a alta gestão identifique instantaneamente a saúde da estratégia através de cores e conceitos.
+                                </p>
                             </div>
                         </div>
                     </div>
-                    <div class="alert alert-info border-0 bg-info-subtle mt-3 mb-0 small">
-                        <i class="bi bi-info-circle-fill me-2"></i>
-                        <strong>Dica Técnica:</strong> Certifique-se de que os intervalos cubram de 0% a 100% sem lacunas. Use cores de alto contraste (ex: Vermelho para Crítico, Verde para Excelente) para facilitar a leitura rápida.
+
+                    {{-- Maturity Thresholds Detail --}}
+                    <div class="col-12">
+                        <div class="bg-white bg-opacity-10 rounded-3 p-4">
+                            <h5 class="fw-bold mb-4 text-white text-center">
+                                <i class="bi bi-graph-up-arrow me-2"></i>
+                                Método: Maturity Thresholds (Limiares de Maturidade)
+                            </h5>
+
+                            <div class="row g-3">
+                                {{-- Nível 1: Evolução --}}
+                                <div class="col-12 col-md-4">
+                                    <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">1</span>
+                                            <h6 class="fw-bold mb-0 small">{{ __('Evolução por Ano') }}</h6>
+                                        </div>
+                                        <p class="small mb-0 opacity-90">Permite que a organização aumente o rigor das metas conforme amadurece. Ex: O "Verde" pode começar em 80% no primeiro ano e subir para 95% no último ano do PEI.</p>
+                                    </div>
+                                </div>
+
+                                {{-- Nível 2: Consistência --}}
+                                <div class="col-12 col-md-4">
+                                    <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">2</span>
+                                            <h6 class="fw-bold mb-0 small">{{ __('Vínculo ao Ciclo (PEI)') }}</h6>
+                                        </div>
+                                        <p class="small mb-0 opacity-90">Garante a integridade histórica. As regras de satisfação ficam "congeladas" para cada PEI, impedindo que mudanças futuras distorçam os resultados visuais do passado.</p>
+                                    </div>
+                                </div>
+
+                                {{-- Nível 3: Lógica de Cascata --}}
+                                <div class="col-12 col-md-4">
+                                    <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">3</span>
+                                            <h6 class="fw-bold mb-0 small">{{ __('Lógica de Fallback') }}</h6>
+                                        </div>
+                                        <p class="small mb-0 opacity-90">O sistema busca a régua mais específica (Ano), se não houver, usa a do Ciclo, e por fim a Global. Isso garante que o farol sempre funcione, mesmo sem configuração manual.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Why it matters --}}
+                    <div class="col-12">
+                        <div class="bg-body rounded-3 p-3 text-body shadow-sm">
+                            <div class="d-flex align-items-start gap-2 mb-2">
+                                <i class="bi bi-info-circle-fill mt-1 text-primary"></i>
+                                <div>
+                                    <strong class="small d-block mb-1">Impacto na Alta Gestão:</strong>
+                                    <p class="mb-0 small opacity-90">
+                                        Uma escala bem definida evita o "efeito melancia" (verde por fora, vermelho por dentro). Com o <strong>Maturity Thresholds</strong>, o CEO tem a segurança de que o desempenho apresentado reflete a exigência real de cada etapa do plano estratégico.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -244,18 +292,45 @@
                         <button type="button" class="btn-close btn-close-white" wire:click="closeModal"></button>
                     </div>
                     <form wire:submit="save">
-                        <div class="modal-body">
+                        <div class="modal-body bg-body p-4">
+                            <!-- Contexto: PEI e Ano (Thresholds de Maturidade) -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-8">
+                                    <label class="form-label fw-bold small text-muted text-uppercase">Ciclo PEI</label>
+                                    <select wire:model="cod_pei" class="form-select border-primary border-opacity-25">
+                                        <option value="">{{ __('Escala Global (Padrão)') }}</option>
+                                        @foreach($availablePeis as $p)
+                                            <option value="{{ $p->cod_pei }}">{{ $p->dsc_pei }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold small text-muted text-uppercase">Ano (Maturidade)</label>
+                                    <select wire:model="num_ano" class="form-select">
+                                        <option value="">{{ __('Todo o Ciclo') }}</option>
+                                        @if($cod_pei)
+                                            @php $selectedPei = $availablePeis->firstWhere('cod_pei', $cod_pei); @endphp
+                                            @if($selectedPei)
+                                                @foreach(range($selectedPei->num_ano_inicio_pei, $selectedPei->num_ano_fim_pei) as $ano)
+                                                    <option value="{{ $ano }}">{{ $ano }}</option>
+                                                @endforeach
+                                            @endif
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
+
                             <!-- Descricao -->
                             <div class="mb-3">
-                                <label for="dsc_grau_satisfcao" class="form-label fw-semibold">
+                                <label for="dsc_grau_satisfacao" class="form-label fw-semibold">
                                     Descricao <span class="text-danger">*</span>
                                 </label>
                                 <input type="text"
-                                       class="form-control @error('dsc_grau_satisfcao') is-invalid @enderror"
-                                       id="dsc_grau_satisfcao"
-                                       wire:model="dsc_grau_satisfcao"
+                                       class="form-control @error('dsc_grau_satisfacao') is-invalid @enderror"
+                                       id="dsc_grau_satisfacao"
+                                       wire:model="dsc_grau_satisfacao"
                                        placeholder="Ex: Excelente, Bom, Regular, Critico...">
-                                @error('dsc_grau_satisfcao')
+                                @error('dsc_grau_satisfacao')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -383,10 +458,4 @@
             </x-danger-button>
         </x-slot>
     </x-confirmation-modal>
-    <style>
-        .rotate-180 { transform: rotate(180deg); }
-        .transition-all { transition: all 0.3s ease; }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
 </div>
