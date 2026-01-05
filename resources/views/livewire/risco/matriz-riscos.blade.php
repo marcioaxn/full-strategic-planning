@@ -45,14 +45,16 @@
                                         
                                         $riscosNaCelula = $matriz[$i][$j] ?? [];
                                     @endphp
-                                    <div class="risk-cell border d-flex flex-wrap align-items-center justify-content-center p-2" 
-                                         style="background-color: {{ $bgColor }}22; min-height: 100px; flex: 1; border-color: {{ $bgColor }}44 !important;">
+                                    <div class="risk-cell border d-flex flex-wrap align-items-start justify-content-start p-2" 
+                                         style="background-color: {{ $bgColor }}15; min-height: 110px; flex: 1; border-color: {{ $bgColor }}33 !important;">
                                         @foreach($riscosNaCelula as $r)
-                                            <a href="{{ route('riscos.index') }}?search={{ $r->dsc_titulo }}" 
-                                               class="badge rounded-pill bg-white text-dark border shadow-sm m-1 text-decoration-none py-1 px-2 animate-pop" 
-                                               title="{{ $r->dsc_titulo }}"
-                                               style="font-size: 0.65rem; border-color: {{ $bgColor }} !important;">
-                                                R-{{ str_pad($r->num_codigo_risco, 2, '0', STR_PAD_LEFT) }}
+                                            <a href="{{ route('riscos.index') }}?search={{ urlencode($r->dsc_titulo) }}" 
+                                               class="risk-matrix-item animate-pop" 
+                                               data-bs-toggle="tooltip"
+                                               data-bs-placement="top"
+                                               title="{{ $r->dsc_titulo }}">
+                                                <div class="risk-color-bar" style="background-color: {{ $bgColor }};"></div>
+                                                <span class="risk-title-text">{{ $r->dsc_titulo }}</span>
                                             </a>
                                         @endforeach
                                     </div>
