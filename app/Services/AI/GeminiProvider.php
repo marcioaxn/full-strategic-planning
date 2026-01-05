@@ -102,4 +102,17 @@ class GeminiProvider implements AiProviderInterface
         
         return $this->suggest($prompt, $context);
     }
+
+    public function analyzeTrends(array $indicatorData, string $orgName): ?string
+    {
+        $context = "Você é um Analista de Dados Estratégicos. 
+        Sua tarefa é analisar o histórico de evolução dos indicadores da organização e prever tendências.
+        Identifique riscos de não atingimento de metas futuras e sugira ações corretivas.
+        Seja técnico, direto e use dados para justificar sua análise (máximo 5 frases).";
+
+        $dataJson = json_encode($indicatorData);
+        $prompt = "Organização: {$orgName}. Dados de Evolução: {$dataJson}. Realize a análise preditiva.";
+        
+        return $this->suggest($prompt, $context);
+    }
 }

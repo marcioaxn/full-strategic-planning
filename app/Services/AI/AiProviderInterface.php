@@ -23,4 +23,9 @@ interface AiProviderInterface
      * Generate an executive summary based on dashboard statistics.
      */
     public function summarizeStrategy(array $stats, string $orgName): ?string;
+
+    /**
+     * Perform predictive analysis based on historical indicator data.
+     */
+    public function analyzeTrends(array $indicatorData, string $orgName): ?string;
 }

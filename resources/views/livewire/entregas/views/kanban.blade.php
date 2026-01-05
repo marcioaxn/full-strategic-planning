@@ -2,22 +2,37 @@
 <div 
     class="notion-kanban" 
     x-data="{ 
-        dragging: null,
         init() {
-            // Inicializa SortableJS em cada coluna
+            this.setupSortable();
+            // Reinicializa quando o Livewire termina de atualizar o componente
+            Livewire.hook('message.processed', (message, component) => {
+                this.setupSortable();
+            });
+        },
+        setupSortable() {
             document.querySelectorAll('.notion-kanban-cards').forEach(column => {
-                new Sortable(column, {
+                if (column.sortable) return; // Evita múltiplas inicializações
+                
+                column.sortable = new Sortable(column, {
                     group: 'entregas',
-                    animation: 150,
+                    animation: 200,
                     ghostClass: 'notion-card-ghost',
                     chosenClass: 'notion-card-chosen',
                     dragClass: 'notion-card-drag',
+                    handle: '.notion-card', // Permite arrastar o card inteiro
+                    onStart: () => {
+                        document.querySelectorAll('.notion-kanban-column').forEach(c => c.classList.add('is-dragging'));
+                    },
                     onEnd: (evt) => {
+                        document.querySelectorAll('.notion-kanban-column').forEach(c => c.classList.remove('is-dragging'));
+                        
                         const entregaId = evt.item.dataset.entregaId;
                         const novoStatus = evt.to.dataset.status;
                         const novaPosicao = evt.newIndex + 1;
                         
-                        $wire.moverParaStatus(entregaId, novoStatus, novaPosicao);
+                        if (entregaId) {
+                            $wire.moverParaStatus(entregaId, novoStatus, novaPosicao);
+                        }
                     }
                 });
             });
