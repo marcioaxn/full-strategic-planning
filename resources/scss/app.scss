@@ -550,6 +550,55 @@ body {
     align-items: flex-start;
 }
 
+/* Premium Modals & UI Components */
+.modal-header-modern {
+    display: flex !important;
+    align-items: center !important;
+    gap: 1.25rem !important;
+    padding: 0.5rem 0 !important;
+    text-align: left !important;
+}
+
+.modal-icon {
+    width: 54px !important;
+    height: 54px !important;
+    border-radius: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.6rem !important;
+    flex-shrink: 0 !important;
+}
+
+.modal-icon-primary { background: rgba(var(--bs-primary-rgb), 0.15) !important; color: var(--bs-primary) !important; }
+.modal-icon-danger { background: rgba(220, 53, 69, 0.15) !important; color: #dc3545 !important; }
+.modal-icon-warning { background: rgba(255, 193, 7, 0.15) !important; color: #ffc107 !important; }
+
+.btn-modern {
+    border-radius: 50px !important;
+    padding: 0.6rem 1.6rem !important;
+    font-weight: 700 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    font-size: 0.75rem !important;
+}
+
+.btn-delete-modern {
+    @extend .btn-modern;
+    background: linear-gradient(135deg, #dc3545 0%, #a52834 100%) !important;
+    border: none !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3) !important;
+
+    &:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4) !important;
+        filter: brightness(1.1) !important;
+        color: white !important;
+    }
+}
+
 .ai-magic-button {
     background: linear-gradient(135deg, #6976DE 0%, #9c27b0 100%);
     color: white !important;

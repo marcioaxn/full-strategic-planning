@@ -43,6 +43,7 @@ The system features a state-of-the-art **Strategic Intelligence** module, transf
 
 ### 🧭 Strategic Mentor (Real-time Coaching)
 - **Proactive Guidance**: A professional dashboard widget that guides users through the 7 essential phases of the PEI (Cycle, Identity, Perspectives, Objectives, Satisfaction Levels, KPIs, Action Plans).
+- **Maturity Thresholds**: Advanced methodology that allows organizations to define different performance rules for each year of the cycle, enabling a dynamic and evolving "Traffic Light" system.
 - **Interactive Timeline**: Real-time completeness score with visual indicators and smart "Next Step" suggestions.
 - **Premium Feedback System**: Dynamic, interactive Toasts with progress bars and hover-pause logic that celebrate every strategic milestone.
 - **Graceful Completion**: An elegant "Mission Accomplished" state that minimizes the UI once 100% progress is reached, keeping the focus on results.
@@ -60,6 +61,7 @@ The system features a state-of-the-art **Strategic Intelligence** module, transf
 ### 🌐 Public Transparency Portal
 - **High-End Interface**: A specialized guest layout with **Glassmorphism** effects and premium gradients.
 - **Public Global Selectors**: Non-authenticated users can fully explore the strategic map by filtering by **Unit, Cycle (PEI), and Year**, ensuring absolute institutional transparency.
+- **Methodological Consistency**: Ensures that the general public sees the exact same calculated performance as internal users, respecting the maturity thresholds of each period.
 
 ### ⚙️ Universal AI Configuration
 - **Multi-Provider Support**: Choose between **Google Gemini** and **OpenAI (GPT-4)** through a dedicated administrative interface.
