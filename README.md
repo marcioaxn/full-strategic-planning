@@ -37,12 +37,6 @@ The system features a state-of-the-art **Strategic Intelligence** module, transf
 
 ### 🧭 Strategic Mentor (Real-time Coaching)
 - **Proactive Guidance**: A professional dashboard widget that guides users through the 7 essential phases of the PEI (Cycle, Identity, Perspectives, Objectives, Satisfaction Levels, KPIs, Action Plans).
-- **Interactive Timeline**: Real-time completeness score with visual indicators and smart "Next Step" suggestions.
-- **Premium Feedback System**: Dynamic, interactive Toasts with progress bars and hover-pause logic that celebrate every strategic milestone.
-- **Graceful Completion**: An elegant "Mission Accomplished" state that minimizes the UI once 100% progress is reached, keeping the focus on results.
-
-### 🧭 Strategic Mentor (Real-time Coaching)
-- **Proactive Guidance**: A professional dashboard widget that guides users through the 7 essential phases of the PEI (Cycle, Identity, Perspectives, Objectives, Satisfaction Levels, KPIs, Action Plans).
 - **Maturity Thresholds**: Advanced methodology that allows organizations to define different performance rules for each year of the cycle, enabling a dynamic and evolving "Traffic Light" system.
 - **Interactive Timeline**: Real-time completeness score with visual indicators and smart "Next Step" suggestions.
 - **Premium Feedback System**: Dynamic, interactive Toasts with progress bars and hover-pause logic that celebrate every strategic milestone.
