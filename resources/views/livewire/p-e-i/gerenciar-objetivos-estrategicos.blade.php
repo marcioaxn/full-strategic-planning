@@ -35,6 +35,49 @@
             </div>
         </div>
     @else
+        {{-- Mentor de IA --}}
+        @if($aiEnabled)
+            <div class="ai-mentor-wrapper animate-fade-in">
+                <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="ai-magic-button shadow-sm">
+                    <span wire:loading.remove wire:target="pedirAjudaIA">
+                        <i class="bi bi-robot"></i> {{ __('Sugerir Objetivos Institucionais com IA') }}
+                    </span>
+                    <span wire:loading wire:target="pedirAjudaIA">
+                        <span class="spinner-border spinner-border-sm me-2"></span>{{ __('Analisando contexto organizacional...') }}
+                    </span>
+                </button>
+
+                @if($aiSuggestion)
+                    <div class="ai-insight-card animate-fade-in">
+                        <div class="card-header">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-chat-left-dots-fill text-primary"></i>
+                                <h6 class="fw-bold mb-0">{{ __('Sugestões do Mentor IA') }}</h6>
+                            </div>
+                            <button type="button" class="btn-close small" style="font-size: 0.7rem;" wire:click="$set('aiSuggestion', '')"></button>
+                        </div>
+                        <div class="card-body">
+                            @if(is_array($aiSuggestion))
+                                <div class="list-group list-group-flush border rounded-3 overflow-hidden">
+                                    @foreach($aiSuggestion as $sug)
+                                        <div class="list-group-item d-flex align-items-start justify-content-between p-3 bg-light bg-opacity-25 hover-bg-white transition-all gap-3">
+                                            <div class="flex-grow-1">
+                                                <div class="fw-bold text-dark">{{ $sug['nome'] }}</div>
+                                            </div>
+                                            <button wire:click="aplicarSugestao('{{ $sug['nome'] }}')" 
+                                                    class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
+                                                <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+            </div>
+        @endif
+
         {{-- Filtros e Busca --}}
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-3 bg-light rounded-3">
@@ -149,31 +192,47 @@
         </div>
     </div>
 
-    {{-- Modal de Confirmação de Exclusão --}}
-    <div class="modal fade @if($showDeleteModal) show @endif" tabindex="-1" style="@if($showDeleteModal) display: block; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); @else display: none; @endif" role="dialog">
-        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
-            <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-body p-4 text-center">
-                    <div class="mb-3">
-                        <div class="icon-circle bg-danger bg-opacity-10 text-danger mx-auto mb-3" style="width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 2rem;">
-                            <i class="bi bi-exclamation-triangle"></i>
-                        </div>
-                        <h5 class="fw-bold text-dark">Confirmar Exclusão</h5>
-                        <p class="text-muted small">Você está prestes a excluir este Objetivo Estratégico. Esta ação não pode ser desfeita.</p>
-                    </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button wire:click="delete" class="btn btn-danger py-2 rounded-pill fw-bold shadow-sm">
-                            <i class="bi bi-trash me-2"></i>Sim, Excluir Objetivo
-                        </button>
-                        <button wire:click="resetForm" class="btn btn-light py-2 rounded-pill fw-bold">
-                            Cancelar
-                        </button>
-                    </div>
+    {{-- Modal de Exclusão --}}
+    <x-confirmation-modal wire:model.live="showDeleteModal">
+        <x-slot name="title">
+            <div class="modal-header-modern">
+                <div class="modal-icon modal-icon-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <div>
+                    <h5 class="mb-1 fw-bold text-dark">{{ __('Excluir Objetivo Estratégico') }}</h5>
+                    <p class="text-muted small mb-0">{{ __('Esta ação é irreversível') }}</p>
                 </div>
             </div>
-        </div>
-    </div>
+        </x-slot>
+
+        <x-slot name="content">
+            <div class="delete-confirmation text-start">
+                <p class="mb-2 text-dark">
+                    {{ __('Tem certeza que deseja excluir este objetivo institucional?') }}
+                </p>
+                <div class="alert alert-warning bg-warning-subtle border-0">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Atenção:</strong> Esta ação removerá o objetivo do planejamento corporativo.
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-secondary-button wire:click="resetForm" wire:loading.attr="disabled" class="btn-modern">
+                {{ __('Cancelar') }}
+            </x-secondary-button>
+
+            <x-danger-button wire:click="delete" wire:loading.attr="disabled" class="btn-delete-modern ms-2">
+                <span wire:loading.remove wire:target="delete">
+                    <i class="bi bi-trash me-1"></i>{{ __('Excluir') }}
+                </span>
+                <span wire:loading wire:target="delete">
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                </span>
+            </x-danger-button>
+        </x-slot>
+    </x-confirmation-modal>
 
     <style>
         .header-icon {
