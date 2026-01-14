@@ -75,7 +75,7 @@
                             <h5 class="fw-bold mb-1 text-white">
                                 <i class="bi bi-mortarboard me-2"></i>{{ __('O que é Análise SWOT?') }}
                             </h5>
-                            <p class="mb-0 text-white-50 small">
+                            <p class="mb-0 text-white small">
                                 {{ __('Aprenda a identificar Forças, Fraquezas, Oportunidades e Ameaças') }}
                             </p>
                         </div>
@@ -155,11 +155,11 @@
                                                 <div class="col-11">
                                                     <div class="row g-0">
                                                         <div class="col-md-6 p-3 border-end border-bottom bg-success bg-opacity-5">
-                                                            <h6 class="fw-bold text-success mb-2">
-                                                                <i class="bi bi-shield-fill-check me-1"></i>{{ __('FORÇAS') }}
+                                                            <h6 class="fw-bold text-white mb-2">
+                                                                <i class="bi bi-shield-fill-check me-1  text-white"></i>{{ __('FORÇAS') }}
                                                             </h6>
-                                                            <p class="small text-muted mb-2 fst-italic">{{ __('O que fazemos BEM?') }}</p>
-                                                            <ul class="small mb-0 ps-3">
+                                                            <p class="small  text-white mb-2 fst-italic">{{ __('O que fazemos BEM?') }}</p>
+                                                            <ul class="small mb-0 ps-3  text-white">
                                                                 <li>Equipe qualificada</li>
                                                                 <li>Infraestrutura moderna</li>
                                                                 <li>Processos bem definidos</li>
@@ -167,11 +167,11 @@
                                                             </ul>
                                                         </div>
                                                         <div class="col-md-6 p-3 border-bottom bg-warning bg-opacity-5">
-                                                            <h6 class="fw-bold text-warning mb-2">
-                                                                <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ __('FRAQUEZAS') }}
+                                                            <h6 class="fw-bold text-dark mb-2">
+                                                                <i class="bi bi-exclamation-triangle-fill me-1 text-dark"></i>{{ __('FRAQUEZAS') }}
                                                             </h6>
-                                                            <p class="small text-muted mb-2 fst-italic">{{ __('O que nos falta?') }}</p>
-                                                            <ul class="small mb-0 ps-3">
+                                                            <p class="small text-dark mb-2 fst-italic">{{ __('O que nos falta?') }}</p>
+                                                            <ul class="small mb-0 ps-3 text-dark">
                                                                 <li>Orçamento limitado</li>
                                                                 <li>Alta rotatividade de pessoal</li>
                                                                 <li>Sistemas desatualizados</li>
@@ -188,18 +188,18 @@
                                             <div class="row g-0">
                                                 <div class="col-1 bg-info bg-opacity-10 d-flex align-items-center justify-content-center border-end p-2">
                                                     <div class="text-center">
-                                                        <i class="bi bi-globe d-block fs-5 text-info mb-1"></i>
+                                                        <i class="bi bi-globe d-block fs-5 text-white mb-1"></i>
                                                         <small class="fw-bold text-info" style="writing-mode: vertical-rl; transform: rotate(180deg);">EXTERNO</small>
                                                     </div>
                                                 </div>
                                                 <div class="col-11">
                                                     <div class="row g-0">
                                                         <div class="col-md-6 p-3 border-end bg-primary bg-opacity-5">
-                                                            <h6 class="fw-bold text-primary mb-2">
-                                                                <i class="bi bi-star-fill me-1"></i>{{ __('OPORTUNIDADES') }}
+                                                            <h6 class="fw-bold  text-white mb-2">
+                                                                <i class="bi bi-star-fill me-1 text-white"></i>{{ __('OPORTUNIDADES') }}
                                                             </h6>
-                                                            <p class="small text-muted mb-2 fst-italic">{{ __('O que o ambiente oferece?') }}</p>
-                                                            <ul class="small mb-0 ps-3">
+                                                            <p class="small  text-white mb-2 fst-italic">{{ __('O que o ambiente oferece?') }}</p>
+                                                            <ul class="small mb-0 ps-3  text-white">
                                                                 <li>Novos editais de financiamento</li>
                                                                 <li>Parcerias com universidades</li>
                                                                 <li>Demanda crescente por serviços</li>
@@ -207,11 +207,11 @@
                                                             </ul>
                                                         </div>
                                                         <div class="col-md-6 p-3 bg-danger bg-opacity-5">
-                                                            <h6 class="fw-bold text-danger mb-2">
-                                                                <i class="bi bi-shield-x me-1"></i>{{ __('AMEAÇAS') }}
+                                                            <h6 class="fw-bold  text-white mb-2">
+                                                                <i class="bi bi-shield-x me-1 text-white"></i>{{ __('AMEAÇAS') }}
                                                             </h6>
-                                                            <p class="small text-muted mb-2 fst-italic">{{ __('O que pode nos prejudicar?') }}</p>
-                                                            <ul class="small mb-0 ps-3">
+                                                            <p class="small  text-white mb-2 fst-italic">{{ __('O que pode nos prejudicar?') }}</p>
+                                                            <ul class="small mb-0 ps-3  text-white">
                                                                 <li>Cortes orçamentários governamentais</li>
                                                                 <li>Concorrência de setor privado</li>
                                                                 <li>Mudanças na legislação</li>
@@ -235,22 +235,22 @@
                                         <div class="icon-circle bg-success bg-opacity-10 text-success">
                                             <i class="bi bi-shield-fill-check fs-5"></i>
                                         </div>
-                                        <h6 class="fw-bold mb-0 text-success">{{ __('Forças (Strengths)') }}</h6>
+                                        <h6 class="fw-bold mb-0 text-dark">{{ __('Forças (Strengths)') }}</h6>
                                     </div>
-                                    <p class="small text-muted mb-3">
+                                    <p class="small text-dark mb-3">
                                         <strong>{{ __('Definição:') }}</strong> {{ __('Fatores internos positivos que dão vantagem competitiva à organização.') }}
                                     </p>
                                     <div class="bg-light p-3 rounded-3 border mb-3">
                                         <p class="small mb-2 fw-semibold text-dark">{{ __('Perguntas-chave:') }}</p>
-                                        <ul class="small mb-0 ps-3">
+                                        <ul class="small mb-0 ps-3 text-dark">
                                             <li>{{ __('O que fazemos melhor que os outros?') }}</li>
                                             <li>{{ __('Quais recursos únicos possuímos?') }}</li>
                                             <li>{{ __('Quais processos são excelentes?') }}</li>
                                         </ul>
                                     </div>
                                     <div class="alert alert-success alert-sm py-2 px-3 mb-0">
-                                        <p class="small mb-1 fw-semibold">{{ __('Exemplo prático:') }}</p>
-                                        <p class="small mb-0 fst-italic">
+                                        <p class="small mb-1 fw-semibold text-dark">{{ __('Exemplo prático:') }}</p>
+                                        <p class="small mb-0 fst-italic text-dark">
                                             {{ __('"Equipe técnica com 15 anos de experiência média e certificações internacionais"') }}
                                         </p>
                                     </div>
@@ -265,22 +265,22 @@
                                         <div class="icon-circle bg-warning bg-opacity-10 text-warning">
                                             <i class="bi bi-exclamation-triangle-fill fs-5"></i>
                                         </div>
-                                        <h6 class="fw-bold mb-0 text-warning">{{ __('Fraquezas (Weaknesses)') }}</h6>
+                                        <h6 class="fw-bold mb-0 text-dark">{{ __('Fraquezas (Weaknesses)') }}</h6>
                                     </div>
-                                    <p class="small text-muted mb-3">
+                                    <p class="small text-dark mb-3">
                                         <strong>{{ __('Definição:') }}</strong> {{ __('Fatores internos negativos que limitam o desempenho da organização.') }}
                                     </p>
                                     <div class="bg-light p-3 rounded-3 border mb-3">
                                         <p class="small mb-2 fw-semibold text-dark">{{ __('Perguntas-chave:') }}</p>
-                                        <ul class="small mb-0 ps-3">
+                                        <ul class="small mb-0 ps-3 text-dark">
                                             <li>{{ __('Onde falhamos com frequência?') }}</li>
                                             <li>{{ __('Quais recursos nos faltam?') }}</li>
                                             <li>{{ __('O que os outros fazem melhor?') }}</li>
                                         </ul>
                                     </div>
                                     <div class="alert alert-warning alert-sm py-2 px-3 mb-0">
-                                        <p class="small mb-1 fw-semibold">{{ __('Exemplo prático:') }}</p>
-                                        <p class="small mb-0 fst-italic">
+                                        <p class="small mb-1 fw-semibold text-dark">{{ __('Exemplo prático:') }}</p>
+                                        <p class="small mb-0 fst-italic text-dark">
                                             {{ __('"Sistemas de TI defasados (10+ anos) causando retrabalho e lentidão nos processos"') }}
                                         </p>
                                     </div>
@@ -295,22 +295,22 @@
                                         <div class="icon-circle bg-primary bg-opacity-10 text-primary">
                                             <i class="bi bi-star-fill fs-5"></i>
                                         </div>
-                                        <h6 class="fw-bold mb-0 text-primary">{{ __('Oportunidades (Opportunities)') }}</h6>
+                                        <h6 class="fw-bold mb-0 text-dark">{{ __('Oportunidades (Opportunities)') }}</h6>
                                     </div>
-                                    <p class="small text-muted mb-3">
+                                    <p class="small text-dark mb-3">
                                         <strong>{{ __('Definição:') }}</strong> {{ __('Fatores externos positivos que podem ser aproveitados pela organização.') }}
                                     </p>
                                     <div class="bg-light p-3 rounded-3 border mb-3">
                                         <p class="small mb-2 fw-semibold text-dark">{{ __('Perguntas-chave:') }}</p>
-                                        <ul class="small mb-0 ps-3">
+                                        <ul class="small mb-0 ps-3 text-dark">
                                             <li>{{ __('Que mudanças no mercado nos favorecem?') }}</li>
                                             <li>{{ __('Quais tecnologias emergentes podemos usar?') }}</li>
                                             <li>{{ __('Há novas fontes de financiamento?') }}</li>
                                         </ul>
                                     </div>
                                     <div class="alert alert-primary alert-sm py-2 px-3 mb-0">
-                                        <p class="small mb-1 fw-semibold">{{ __('Exemplo prático:') }}</p>
-                                        <p class="small mb-0 fst-italic">
+                                        <p class="small mb-1 fw-semibold text-dark">{{ __('Exemplo prático:') }}</p>
+                                        <p class="small mb-0 fst-italic text-dark">
                                             {{ __('"Governo lançou edital de R$ 50M para digitalização de serviços públicos"') }}
                                         </p>
                                     </div>
@@ -325,22 +325,22 @@
                                         <div class="icon-circle bg-danger bg-opacity-10 text-danger">
                                             <i class="bi bi-shield-x fs-5"></i>
                                         </div>
-                                        <h6 class="fw-bold mb-0 text-danger">{{ __('Ameaças (Threats)') }}</h6>
+                                        <h6 class="fw-bold mb-0 text-dark">{{ __('Ameaças (Threats)') }}</h6>
                                     </div>
-                                    <p class="small text-muted mb-3">
+                                    <p class="small text-dark mb-3">
                                         <strong>{{ __('Definição:') }}</strong> {{ __('Fatores externos negativos que podem prejudicar a organização.') }}
                                     </p>
                                     <div class="bg-light p-3 rounded-3 border mb-3">
                                         <p class="small mb-2 fw-semibold text-dark">{{ __('Perguntas-chave:') }}</p>
-                                        <ul class="small mb-0 ps-3">
+                                        <ul class="small mb-0 ps-3 text-dark">
                                             <li>{{ __('Que mudanças legais nos afetam?') }}</li>
                                             <li>{{ __('Há concorrentes emergindo?') }}</li>
                                             <li>{{ __('O cenário econômico é desfavorável?') }}</li>
                                         </ul>
                                     </div>
                                     <div class="alert alert-danger alert-sm py-2 px-3 mb-0">
-                                        <p class="small mb-1 fw-semibold">{{ __('Exemplo prático:') }}</p>
-                                        <p class="small mb-0 fst-italic">
+                                        <p class="small mb-1 fw-semibold text-dark">{{ __('Exemplo prático:') }}</p>
+                                        <p class="small mb-0 fst-italic text-dark">
                                             {{ __('"Nova lei exige adequação de sistemas até 2026, sob pena de multa de R$ 500K"') }}
                                         </p>
                                     </div>
@@ -352,8 +352,8 @@
                         <div class="col-12">
                             <div class="card border-2 border-info">
                                 <div class="card-header bg-info bg-opacity-10">
-                                    <h6 class="fw-bold mb-0 text-info">
-                                        <i class="bi bi-lightbulb-fill me-2"></i>{{ __('Como usar a Matriz SWOT estrategicamente?') }}
+                                    <h6 class="fw-bold mb-0 text-dark">
+                                        <i class="bi bi-lightbulb-fill me-2 text-info"></i>{{ __('Como usar a Matriz SWOT estrategicamente?') }}
                                     </h6>
                                 </div>
                                 <div class="card-body">
@@ -364,8 +364,8 @@
                                                     <i class="bi bi-trophy-fill"></i>
                                                 </div>
                                                 <div>
-                                                    <h6 class="small fw-bold mb-1">{{ __('Estratégia FO (Forças + Oportunidades)') }}</h6>
-                                                    <p class="small text-muted mb-0">{{ __('Use suas forças para aproveitar as oportunidades. Ex: "Equipe qualificada" + "Novo edital" = Candidatar-se ao edital') }}</p>
+                                                    <h6 class="small fw-bold mb-1 text-dark">{{ __('Estratégia FO (Forças + Oportunidades)') }}</h6>
+                                                    <p class="small text-dark mb-0">{{ __('Use suas forças para aproveitar as oportunidades. Ex: "Equipe qualificada" + "Novo edital" = Candidatar-se ao edital') }}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -375,8 +375,8 @@
                                                     <i class="bi bi-tools"></i>
                                                 </div>
                                                 <div>
-                                                    <h6 class="small fw-bold mb-1">{{ __('Estratégia FrO (Fraquezas + Oportunidades)') }}</h6>
-                                                    <p class="small text-muted mb-0">{{ __('Use oportunidades para corrigir fraquezas. Ex: "Sistemas antigos" + "Edital de TI" = Modernizar infraestrutura') }}</p>
+                                                    <h6 class="small fw-bold mb-1 text-dark">{{ __('Estratégia FrO (Fraquezas + Oportunidades)') }}</h6>
+                                                    <p class="small text-dark mb-0">{{ __('Use oportunidades para corrigir fraquezas. Ex: "Sistemas antigos" + "Edital de TI" = Modernizar infraestrutura') }}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -386,8 +386,8 @@
                                                     <i class="bi bi-shield-check"></i>
                                                 </div>
                                                 <div>
-                                                    <h6 class="small fw-bold mb-1">{{ __('Estratégia FA (Forças + Ameaças)') }}</h6>
-                                                    <p class="small text-muted mb-0">{{ __('Use forças para defender-se de ameaças. Ex: "Boa reputação" mitiga "Concorrência crescente"') }}</p>
+                                                    <h6 class="small fw-bold mb-1 text-dark">{{ __('Estratégia FA (Forças + Ameaças)') }}</h6>
+                                                    <p class="small text-dark mb-0">{{ __('Use forças para defender-se de ameaças. Ex: "Boa reputação" mitiga "Concorrência crescente"') }}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -397,8 +397,8 @@
                                                     <i class="bi bi-exclamation-octagon-fill"></i>
                                                 </div>
                                                 <div>
-                                                    <h6 class="small fw-bold mb-1">{{ __('Estratégia FrA (Fraquezas + Ameaças)') }}</h6>
-                                                    <p class="small text-muted mb-0">{{ __('Minimize riscos. Ex: "Orçamento baixo" + "Cortes" = Zona de risco máximo - prioridade de ação!') }}</p>
+                                                    <h6 class="small fw-bold mb-1 text-dark">{{ __('Estratégia FrA (Fraquezas + Ameaças)') }}</h6>
+                                                    <p class="small text-dark mb-0">{{ __('Minimize riscos. Ex: "Orçamento baixo" + "Cortes" = Zona de risco máximo - prioridade de ação!') }}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -414,8 +414,8 @@
                                     <i class="bi bi-stars"></i>
                                 </div>
                                 <div>
-                                    <h6 class="fw-bold mb-2">{{ __('Dicas Profissionais') }}</h6>
-                                    <ul class="small mb-0 ps-3">
+                                    <h6 class="fw-bold mb-2 text-dark">{{ __('Dicas Profissionais') }}</h6>
+                                    <ul class="small mb-0 ps-3 text-dark">
                                         <li>{{ __('Seja específico e mensurável. Evite generalidades como "equipe boa" - prefira "equipe com 15 anos de experiência média".') }}</li>
                                         <li>{{ __('Envolva diferentes áreas na construção da matriz para ter visões complementares.') }}</li>
                                         <li>{{ __('Revise a SWOT periodicamente (semestral ou anual) - o ambiente muda constantemente.') }}</li>
