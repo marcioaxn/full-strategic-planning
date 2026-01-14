@@ -45,6 +45,242 @@
         </div>
     @endif
 
+    {{-- Seção Educativa: O que é o PEI? --}}
+    <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
+        <div class="card-header bg-transparent border-0 p-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-circle bg-white bg-opacity-25">
+                        <i class="bi bi-book-fill fs-4 text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1 text-white">
+                            <i class="bi bi-mortarboard me-2"></i>{{ __('O que é o PEI?') }}
+                        </h5>
+                        <p class="mb-0 text-white small">
+                            {{ __('Aprenda sobre o ciclo de planejamento estratégico') }}
+                        </p>
+                    </div>
+                </div>
+                <button
+                    @click="expanded = !expanded"
+                    class="btn btn-sm btn-light rounded-circle d-flex align-items-center justify-content-center"
+                    style="width: 36px; height: 36px;"
+                    :aria-expanded="expanded"
+                    aria-label="{{ __('Expandir/Recolher') }}"
+                >
+                    <i class="bi" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                </button>
+            </div>
+        </div>
+
+        <div x-show="expanded"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform scale-95"
+             x-transition:enter-end="opacity-100 transform scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 transform scale-100"
+             x-transition:leave-end="opacity-0 transform scale-95"
+             style="display: none;"
+        >
+            <div class="card-body p-4 bg-white border-top">
+                <div class="row g-4">
+                    {{-- Main Explanation --}}
+                    <div class="col-12">
+                        <div class="alert alert-info border-0 d-flex align-items-start gap-3 mb-0">
+                            <div class="icon-circle-mini bg-info bg-opacity-10 text-info flex-shrink-0">
+                                <i class="bi bi-lightbulb-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-2 text-dark">{{ __('Definição') }}</h6>
+                                <p class="mb-0 small text-dark">
+                                    O <strong>Planejamento Estratégico Institucional (PEI)</strong> é um instrumento de gestão estratégica de médio e longo prazo que define a direção da organização. Ele estabelece onde queremos chegar (Visão), como vamos chegar (Objetivos Estratégicos) e como saberemos que chegamos (Indicadores de Desempenho).
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Step-by-Step Implementation Guide --}}
+                    <div class="col-12">
+                        <div class="bg-light rounded-3 p-4 border">
+                            <h5 class="fw-bold mb-4 text-dark text-center">
+                                <i class="bi bi-diagram-3-fill me-2 text-primary"></i>
+                                Sequência de Implementação do PEI
+                            </h5>
+
+                            {{-- Steps Flow --}}
+                            <div class="row g-3">
+                                {{-- Step 1 --}}
+                                <div class="col-12 col-md-6 col-lg-3">
+                                    <div class="bg-white rounded-3 p-3 h-100 position-relative text-body shadow-sm border">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">1º</span>
+                                            <h6 class="fw-bold mb-0 small text-dark">Ciclo PEI</h6>
+                                        </div>
+                                        <p class="small mb-2 text-muted">Defina o período de vigência do planejamento.</p>
+                                        <div class="bg-light rounded p-2 small border">
+                                            <i class="bi bi-calendar-check me-1 text-primary"></i>
+                                            <strong class="text-dark">Exemplo:</strong><br>
+                                            <span class="text-dark">PEI 2024-2028</span><br>
+                                            <span class="text-muted">(5 anos)</span>
+                                        </div>
+                                        {{-- Arrow --}}
+                                        <div class="d-none d-lg-block position-absolute top-50 translate-middle-y text-primary" style="right: -15px;">
+                                            <i class="bi bi-arrow-right fs-4"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Step 2 --}}
+                                <div class="col-12 col-md-6 col-lg-3">
+                                    <div class="bg-white rounded-3 p-3 h-100 position-relative text-body shadow-sm border">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">2º</span>
+                                            <h6 class="fw-bold mb-0 small text-dark">Identidade</h6>
+                                        </div>
+                                        <p class="small mb-2 text-muted">Estabeleça Missão, Visão e Valores da organização.</p>
+                                        <div class="bg-light rounded p-2 small border">
+                                            <i class="bi bi-bullseye me-1 text-success"></i>
+                                            <strong class="text-dark">Exemplo:</strong><br>
+                                            <span class="text-dark">Visão: "Ser referência em gestão pública até 2028"</span>
+                                        </div>
+                                        {{-- Arrow --}}
+                                        <div class="d-none d-lg-block position-absolute top-50 translate-middle-y text-primary" style="right: -15px;">
+                                            <i class="bi bi-arrow-right fs-4"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Step 3 --}}
+                                <div class="col-12 col-md-6 col-lg-3">
+                                    <div class="bg-white rounded-3 p-3 h-100 position-relative text-body shadow-sm border">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">3º</span>
+                                            <h6 class="fw-bold mb-0 small text-dark">Perspectivas BSC</h6>
+                                        </div>
+                                        <p class="small mb-2 text-muted">Defina as 4 perspectivas do Balanced Scorecard.</p>
+                                        <div class="bg-light rounded p-2 small border">
+                                            <i class="bi bi-layers me-1 text-warning"></i>
+                                            <strong class="text-dark">Padrão:</strong><br>
+                                            <span class="text-dark">• Financeira<br>• Clientes<br>• Processos<br>• Aprendizado</span>
+                                        </div>
+                                        {{-- Arrow --}}
+                                        <div class="d-none d-lg-block position-absolute top-50 translate-middle-y text-primary" style="right: -15px;">
+                                            <i class="bi bi-arrow-right fs-4"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Step 4 --}}
+                                <div class="col-12 col-md-6 col-lg-3">
+                                    <div class="bg-white rounded-3 p-3 h-100 text-body shadow-sm border">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">4º</span>
+                                            <h6 class="fw-bold mb-0 small text-dark">Objetivos</h6>
+                                        </div>
+                                        <p class="small mb-2 text-muted">Crie objetivos estratégicos por perspectiva.</p>
+                                        <div class="bg-light rounded p-2 small border">
+                                            <i class="bi bi-trophy me-1 text-info"></i>
+                                            <strong class="text-dark">Exemplo:</strong><br>
+                                            <span class="text-dark">"Ampliar a satisfação do cidadão em 20%"</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Steps 5-7 (Second Row) --}}
+                                <div class="col-12 mt-3">
+                                    <div class="d-flex align-items-center justify-content-center mb-3">
+                                        <i class="bi bi-arrow-down fs-2 text-primary opacity-50"></i>
+                                    </div>
+                                </div>
+
+                                {{-- Step 5 --}}
+                                <div class="col-12 col-md-4">
+                                    <div class="bg-white rounded-3 p-3 h-100 text-body shadow-sm border">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">5º</span>
+                                            <h6 class="fw-bold mb-0 small text-dark">Indicadores (KPIs)</h6>
+                                        </div>
+                                        <p class="small mb-2 text-muted">Defina métricas para cada objetivo.</p>
+                                        <div class="bg-light rounded p-2 small border">
+                                            <i class="bi bi-graph-up me-1 text-danger"></i>
+                                            <strong class="text-dark">Exemplo:</strong><br>
+                                            <span class="text-dark">"Índice de Satisfação do Cidadão"</span><br>
+                                            <span class="text-muted">Meta: 85% até 2028</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Step 6 --}}
+                                <div class="col-12 col-md-4">
+                                    <div class="bg-white rounded-3 p-3 h-100 text-body shadow-sm border">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">6º</span>
+                                            <h6 class="fw-bold mb-0 small text-dark">Planos de Ação</h6>
+                                        </div>
+                                        <p class="small mb-2 text-muted">Crie projetos e iniciativas para alcançar os objetivos.</p>
+                                        <div class="bg-light rounded p-2 small border">
+                                            <i class="bi bi-kanban me-1 text-success"></i>
+                                            <strong class="text-dark">Exemplo:</strong><br>
+                                            <span class="text-dark">"Implementar Ouvidoria Digital"</span><br>
+                                            <span class="text-muted">Prazo: 12 meses</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Step 7 --}}
+                                <div class="col-12 col-md-4">
+                                    <div class="bg-white rounded-3 p-3 h-100 text-body shadow-sm border">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">7º</span>
+                                            <h6 class="fw-bold mb-0 small text-dark">Monitoramento</h6>
+                                        </div>
+                                        <p class="small mb-2 text-muted">Acompanhe a execução e resultados continuamente.</p>
+                                        <div class="bg-light rounded p-2 small border">
+                                            <i class="bi bi-speedometer2 me-1 text-warning"></i>
+                                            <strong class="text-dark">Atividades:</strong><br>
+                                            <span class="text-dark">• Atualizar evolução mensal<br>• Revisar semestralmente</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Bottom Info --}}
+                    <div class="col-12">
+                        <div class="alert alert-warning bg-warning bg-opacity-10 border-0 d-flex align-items-start gap-3 mb-0">
+                            <div class="icon-circle-mini bg-warning bg-opacity-25 text-warning flex-shrink-0">
+                                <i class="bi bi-info-circle-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-2 text-dark">{{ __('Importante: Siga a ordem!') }}</h6>
+                                <p class="mb-0 small text-dark">
+                                    {{ __('Cada etapa depende da anterior. Não é possível criar objetivos sem antes definir as perspectivas BSC, nem criar indicadores sem ter objetivos cadastrados. O sistema guiará você nesta sequência.') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Why PEI --}}
+                    <div class="col-12">
+                        <div class="alert alert-secondary border-0 d-flex align-items-start gap-3 mb-0">
+                            <div class="icon-circle-mini bg-secondary bg-opacity-10 text-secondary flex-shrink-0">
+                                <i class="bi bi-question-circle-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-2 text-dark">{{ __('Por que ter um PEI?') }}</h6>
+                                <p class="mb-0 small text-dark">
+                                    {{ __('O PEI garante que todos na organização trabalhem alinhados aos mesmos objetivos, permite mensurar resultados de forma objetiva, facilita a tomada de decisões estratégicas e demonstra transparência na gestão dos recursos públicos ou privados.') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Filters Card --}}
     <div class="card card-modern filters-card mb-4">
         <div class="card-body p-4">
@@ -115,7 +351,7 @@
                             <td class="ps-4">
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="icon-circle-header avatar-modern {{ $isAtivo ? 'bg-success' : ($isFuturo ? 'bg-info' : 'bg-secondary') }}">
-                                        <i class="bi bi-calendar-check"></i>
+                                        <i class="bi bi-calendar-check text-white"></i>
                                     </div>
                                     <div>
                                         <a href="{{ route('pei.detalhes', $pei->cod_pei) }}" wire:navigate class="fw-semibold text-body-emphasis text-decoration-none hover-primary">
@@ -135,15 +371,15 @@
                             </td>
                             <td>
                                 @if($isAtivo)
-                                    <span class="badge badge-status status-success">
+                                    <span class="badge bg-success">
                                         <i class="bi bi-check-circle-fill me-1"></i>Vigente
                                     </span>
                                 @elseif($isFuturo)
-                                    <span class="badge badge-status status-info">
+                                    <span class="badge bg-info text-dark">
                                         <i class="bi bi-clock-fill me-1"></i>Futuro
                                     </span>
                                 @else
-                                    <span class="badge badge-status status-secondary">
+                                    <span class="badge bg-secondary">
                                         <i class="bi bi-archive-fill me-1"></i>Encerrado
                                     </span>
                                 @endif
@@ -188,213 +424,6 @@
                 {{ $peis->onEachSide(1)->links() }}
             </div>
         @endif
-    </div>
-
-    {{-- PEI Help Section (Educational) --}}
-    <div class="card card-modern mt-4 border-0 shadow-sm educational-card-gradient">
-        <div class="card-body p-4 text-white">
-            <div class="row g-4">
-                {{-- Main Explanation --}}
-                <div class="col-12">
-                    <div class="d-flex align-items-start gap-3 mb-3">
-                        <div class="flex-shrink-0">
-                            <div class="icon-circle bg-white bg-opacity-25">
-                                <i class="bi bi-lightbulb-fill fs-3 text-white"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h5 class="fw-bold mb-2 text-white">O que é o PEI?</h5>
-                            <p class="mb-0 text-white-50" style="line-height: 1.6;">
-                                O <strong>Planejamento Estratégico Institucional (PEI)</strong> é um instrumento de gestão estratégica de médio e longo prazo
-                                que define a direção da organização. Ele estabelece onde queremos chegar (Visão), como vamos chegar (Objetivos Estratégicos)
-                                e como saberemos que chegamos (Indicadores de Desempenho).
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Step-by-Step Implementation Guide --}}
-                <div class="col-12">
-                    <div class="bg-white bg-opacity-10 rounded-3 p-4">
-                        <h5 class="fw-bold mb-4 text-white text-center">
-                            <i class="bi bi-diagram-3-fill me-2"></i>
-                            Sequência de Implementação do PEI
-                        </h5>
-
-                        {{-- Steps Flow --}}
-                        <div class="row g-3">
-                            {{-- Step 1 --}}
-                            <div class="col-12 col-md-6 col-lg-3">
-                                <div class="bg-body rounded-3 p-3 h-100 position-relative text-body shadow-sm">
-                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                        <span class="badge bg-primary text-white fw-bold px-2 py-1">1º</span>
-                                        <h6 class="fw-bold mb-0 small">Ciclo PEI</h6>
-                                    </div>
-                                    <p class="small mb-2 opacity-90">Defina o período de vigência do planejamento.</p>
-                                    <div class="bg-body-secondary rounded p-2 small">
-                                        <i class="bi bi-calendar-check me-1"></i>
-                                        <strong>Exemplo:</strong><br>
-                                        PEI 2024-2028<br>
-                                        <span class="opacity-75">(5 anos)</span>
-                                    </div>
-                                    {{-- Arrow --}}
-                                    <div class="d-none d-lg-block position-absolute top-50 translate-middle-y text-white" style="right: -15px;">
-                                        <i class="bi bi-arrow-right fs-4"></i>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Step 2 --}}
-                            <div class="col-12 col-md-6 col-lg-3">
-                                <div class="bg-body rounded-3 p-3 h-100 position-relative text-body shadow-sm">
-                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                        <span class="badge bg-primary text-white fw-bold px-2 py-1">2º</span>
-                                        <h6 class="fw-bold mb-0 small">Identidade</h6>
-                                    </div>
-                                    <p class="small mb-2 opacity-90">Estabeleça Missão, Visão e Valores da organização.</p>
-                                    <div class="bg-body-secondary rounded p-2 small">
-                                        <i class="bi bi-bullseye me-1"></i>
-                                        <strong>Exemplo:</strong><br>
-                                        Visão: "Ser referência em gestão pública até 2028"
-                                    </div>
-                                    {{-- Arrow --}}
-                                    <div class="d-none d-lg-block position-absolute top-50 translate-middle-y text-white" style="right: -15px;">
-                                        <i class="bi bi-arrow-right fs-4"></i>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Step 3 --}}
-                            <div class="col-12 col-md-6 col-lg-3">
-                                <div class="bg-body rounded-3 p-3 h-100 position-relative text-body shadow-sm">
-                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                        <span class="badge bg-primary text-white fw-bold px-2 py-1">3º</span>
-                                        <h6 class="fw-bold mb-0 small">Perspectivas BSC</h6>
-                                    </div>
-                                    <p class="small mb-2 opacity-90">Defina as 4 perspectivas do Balanced Scorecard.</p>
-                                    <div class="bg-body-secondary rounded p-2 small">
-                                        <i class="bi bi-layers me-1"></i>
-                                        <strong>Padrão:</strong><br>
-                                        • Financeira<br>
-                                        • Clientes<br>
-                                        • Processos<br>
-                                        • Aprendizado
-                                    </div>
-                                    {{-- Arrow --}}
-                                    <div class="d-none d-lg-block position-absolute top-50 translate-middle-y text-white" style="right: -15px;">
-                                        <i class="bi bi-arrow-right fs-4"></i>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Step 4 --}}
-                            <div class="col-12 col-md-6 col-lg-3">
-                                <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
-                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                        <span class="badge bg-primary text-white fw-bold px-2 py-1">4º</span>
-                                        <h6 class="fw-bold mb-0 small">Objetivos</h6>
-                                    </div>
-                                    <p class="small mb-2 opacity-90">Crie objetivos estratégicos por perspectiva.</p>
-                                    <div class="bg-body-secondary rounded p-2 small">
-                                        <i class="bi bi-trophy me-1"></i>
-                                        <strong>Exemplo:</strong><br>
-                                        "Ampliar a satisfação do cidadão em 20%"
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Steps 5-7 (Second Row) --}}
-                            <div class="col-12 mt-3">
-                                <div class="d-flex align-items-center justify-content-center mb-3">
-                                    <i class="bi bi-arrow-down fs-2 text-white opacity-75"></i>
-                                </div>
-                            </div>
-
-                            {{-- Step 5 --}}
-                            <div class="col-12 col-md-4">
-                                <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
-                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                        <span class="badge bg-primary text-white fw-bold px-2 py-1">5º</span>
-                                        <h6 class="fw-bold mb-0 small">Indicadores (KPIs)</h6>
-                                    </div>
-                                    <p class="small mb-2 opacity-90">Defina métricas para cada objetivo.</p>
-                                    <div class="bg-body-secondary rounded p-2 small">
-                                        <i class="bi bi-graph-up me-1"></i>
-                                        <strong>Exemplo:</strong><br>
-                                        "Índice de Satisfação do Cidadão"<br>
-                                        <span class="opacity-75">Meta: 85% até 2028</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Step 6 --}}
-                            <div class="col-12 col-md-4">
-                                <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
-                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                        <span class="badge bg-primary text-white fw-bold px-2 py-1">6º</span>
-                                        <h6 class="fw-bold mb-0 small">Planos de Ação</h6>
-                                    </div>
-                                    <p class="small mb-2 opacity-90">Crie projetos e iniciativas para alcançar os objetivos.</p>
-                                    <div class="bg-body-secondary rounded p-2 small">
-                                        <i class="bi bi-kanban me-1"></i>
-                                        <strong>Exemplo:</strong><br>
-                                        "Implementar Ouvidoria Digital"<br>
-                                        <span class="opacity-75">Prazo: 12 meses</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Step 7 --}}
-                            <div class="col-12 col-md-4">
-                                <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
-                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                        <span class="badge bg-primary text-white fw-bold px-2 py-1">7º</span>
-                                        <h6 class="fw-bold mb-0 small">Monitoramento</h6>
-                                    </div>
-                                    <p class="small mb-2 opacity-90">Acompanhe a execução e resultados continuamente.</p>
-                                    <div class="bg-body-secondary rounded p-2 small">
-                                        <i class="bi bi-speedometer2 me-1"></i>
-                                        <strong>Atividades:</strong><br>
-                                        • Atualizar evolução mensal<br>
-                                        • Revisar semestralmente
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Bottom Info --}}
-                <div class="col-12">
-                    <div class="bg-body rounded-3 p-3 text-body shadow-sm">
-                        <div class="d-flex align-items-start gap-2 mb-2">
-                            <i class="bi bi-info-circle-fill mt-1"></i>
-                            <div>
-                                <strong class="small d-block mb-1">⚠️ Importante: Siga a ordem!</strong>
-                                <p class="mb-0 small opacity-90">
-                                    Cada etapa depende da anterior. Não é possível criar objetivos sem antes definir as perspectivas BSC,
-                                    nem criar indicadores sem ter objetivos cadastrados. O sistema guiará você nesta sequência.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Why PEI --}}
-                <div class="col-12">
-                    <div class="bg-body rounded-3 p-3 text-body shadow-sm">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <i class="bi bi-question-circle-fill"></i>
-                            <strong class="small">Por que ter um PEI?</strong>
-                        </div>
-                        <p class="mb-0 small opacity-90">
-                            O PEI garante que todos na organização trabalhem alinhados aos mesmos objetivos, permite mensurar resultados de forma objetiva,
-                            facilita a tomada de decisões estratégicas e demonstra transparência na gestão dos recursos públicos ou privados.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     {{-- Create/Edit Modal --}}
