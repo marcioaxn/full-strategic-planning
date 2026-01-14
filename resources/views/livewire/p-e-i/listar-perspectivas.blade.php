@@ -3,10 +3,11 @@
     <div class="leads-header d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
         <div>
             <div class="d-flex align-items-center gap-2 mb-2">
-                <div class="header-icon gradient-theme-icon">
+                <div class="icon-circle-header gradient-theme-icon">
                     <i class="bi bi-layers-fill"></i>
                 </div>
                 <h1 class="h3 fw-bold mb-0">{{ __('Perspectivas BSC') }}</h1>
+                <span class="badge-modern badge-count">
             </div>
             <p class="text-muted mb-0">
                 {{ __('Gerencie as 4 perspectivas fundamentais do Balanced Scorecard para o ciclo:') }} 
@@ -28,7 +29,7 @@
 
     @if(session('status'))
         <div class="alert alert-modern alert-success alert-dismissible fade show d-flex align-items-center gap-3 mb-4" role="alert">
-            <div class="alert-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="icon-circle-mini"><i class="bi bi-check-circle-fill"></i></div>
             <span class="flex-grow-1">{{ session('status') }}</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -36,7 +37,7 @@
 
     @if(session('error'))
         <div class="alert alert-modern alert-danger alert-dismissible fade show d-flex align-items-center gap-3 mb-4" role="alert">
-            <div class="alert-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <div class="icon-circle-mini"><i class="bi bi-exclamation-triangle-fill"></i></div>
             <span class="flex-grow-1">{{ session('error') }}</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -136,11 +137,13 @@
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <div class="rounded-circle gradient-theme-icon d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                <div class="icon-circle-header gradient-theme-icon me-3">
                                                     <i class="bi bi-layers text-white"></i>
                                                 </div>
                                                 <div>
-                                                    <strong>{{ $perspectiva->dsc_perspectiva }}</strong>
+                                                    <a href="{{ route('pei.perspectivas.detalhes', $perspectiva->cod_perspectiva) }}" wire:navigate class="fw-bold text-dark text-decoration-none hover-primary">
+                                                        {{ $perspectiva->dsc_perspectiva }}
+                                                    </a>
                                                 </div>
                                             </div>
                                         </td>
@@ -151,6 +154,9 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group btn-group-sm">
+                                                <a href="{{ route('pei.perspectivas.detalhes', $perspectiva->cod_perspectiva) }}" wire:navigate class="btn btn-outline-info" title="Detalhar">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
                                                 <button type="button" class="btn btn-outline-primary" wire:click="edit('{{ $perspectiva->cod_perspectiva }}')" title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
@@ -186,7 +192,7 @@
                     <div class="col-12">
                         <div class="d-flex align-items-start gap-3 mb-3">
                             <div class="flex-shrink-0">
-                                <div class="rounded-circle bg-white bg-opacity-25 p-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <div class="icon-circle bg-white bg-opacity-25">
                                     <i class="bi bi-lightbulb-fill fs-3 text-white"></i>
                                 </div>
                             </div>
@@ -344,7 +350,7 @@
     <x-confirmation-modal wire:model.live="showDeleteModal">
         <x-slot name="title">
             <div class="modal-header-modern">
-                <div class="modal-icon modal-icon-danger">
+                <div class="icon-circle-mini modal-icon-danger">
                     <i class="bi bi-exclamation-triangle"></i>
                 </div>
                 <div>

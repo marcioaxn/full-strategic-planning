@@ -3,7 +3,7 @@
     <div class="leads-header d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
         <div>
             <div class="d-flex align-items-center gap-2 mb-2">
-                <div class="header-icon gradient-theme-icon">
+                <div class="icon-circle-header gradient-theme-icon">
                     <i class="bi bi-calendar-range-fill"></i>
                 </div>
                 <h1 class="h3 fw-bold mb-0">{{ __('Planos Estratégicos Institucionais (PEI)') }}</h1>
@@ -114,11 +114,13 @@
                         <tr class="table-row-hover" wire:key="pei-row-{{ $pei->cod_pei }}">
                             <td class="ps-4">
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="avatar-modern {{ $isAtivo ? 'bg-success' : ($isFuturo ? 'bg-info' : 'bg-secondary') }}">
+                                    <div class="icon-circle-header avatar-modern {{ $isAtivo ? 'bg-success' : ($isFuturo ? 'bg-info' : 'bg-secondary') }}">
                                         <i class="bi bi-calendar-check"></i>
                                     </div>
                                     <div>
-                                        <div class="fw-semibold text-body-emphasis">{{ $pei->dsc_pei }}</div>
+                                        <a href="{{ route('pei.detalhes', $pei->cod_pei) }}" wire:navigate class="fw-semibold text-body-emphasis text-decoration-none hover-primary">
+                                            {{ $pei->dsc_pei }}
+                                        </a>
                                     </div>
                                 </div>
                             </td>
@@ -148,6 +150,9 @@
                             </td>
                             <td class="text-end pe-4">
                                 <div class="action-buttons">
+                                    <a href="{{ route('pei.detalhes', $pei->cod_pei) }}" wire:navigate class="btn btn-icon btn-outline-info" data-bs-toggle="tooltip" title="{{ __('Detalhar') }}">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
                                     <x-action-button variant="outline-primary" icon="pencil" tooltip="{{ __('Editar') }}" wire:click="edit('{{ $pei->cod_pei }}')" class="btn-action-icon" />
                                     <x-action-button variant="outline-danger" icon="trash" tooltip="{{ __('Excluir') }}" wire:click="confirmDelete('{{ $pei->cod_pei }}')" class="btn-action-icon" />
                                 </div>
@@ -193,7 +198,7 @@
                 <div class="col-12">
                     <div class="d-flex align-items-start gap-3 mb-3">
                         <div class="flex-shrink-0">
-                            <div class="rounded-circle bg-white bg-opacity-25 p-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                            <div class="icon-circle bg-white bg-opacity-25">
                                 <i class="bi bi-lightbulb-fill fs-3 text-white"></i>
                             </div>
                         </div>
@@ -396,7 +401,7 @@
     <x-dialog-modal wire:key="pei-form-modal" wire:model.live="showModal" maxWidth="lg">
         <x-slot name="title">
             <div class="modal-header-modern">
-                <div class="modal-icon modal-icon-primary">
+                <div class="icon-circle-mini modal-icon-primary">
                     <i class="bi bi-{{ $peiId ? 'pencil' : 'calendar-plus' }}"></i>
                 </div>
                 <div>
@@ -411,6 +416,7 @@
                 <div class="col-12">
                     <label for="dsc_pei" class="form-label-modern">
                         {{ __('Descrição do PEI') }} <span class="text-danger">*</span>
+                        <x-tooltip title="Nome do ciclo estratégico (ex: PEI 2025-2029)" />
                     </label>
                     <input
                         id="dsc_pei"
@@ -428,6 +434,7 @@
                 <div class="col-12 col-md-6">
                     <label for="num_ano_inicio_pei" class="form-label-modern">
                         {{ __('Ano de Início') }} <span class="text-danger">*</span>
+                        <x-tooltip title="Primeiro ano de vigência do planejamento" />
                     </label>
                     <input
                         id="num_ano_inicio_pei"
@@ -446,6 +453,7 @@
                 <div class="col-12 col-md-6">
                     <label for="num_ano_fim_pei" class="form-label-modern">
                         {{ __('Ano de Término') }} <span class="text-danger">*</span>
+                        <x-tooltip title="Último ano de vigência do planejamento" />
                     </label>
                     <input
                         id="num_ano_fim_pei"
@@ -471,25 +479,23 @@
         </x-slot>
 
         <x-slot name="footer">
-            <div class="modal-footer-modern">
-                <span class="text-muted small">
-                    <span class="text-danger">*</span> {{ __('Campos obrigatórios') }}
-                </span>
-                <div class="d-flex gap-2">
-                    <x-secondary-button wire:click="$set('showModal', false)" wire:loading.attr="disabled" class="btn-modern">
-                        {{ __('Cancelar') }}
-                    </x-secondary-button>
+            <span class="text-muted small d-none d-sm-inline">
+                <span class="text-danger">*</span> {{ __('Campos obrigatórios') }}
+            </span>
+            <div class="d-flex gap-2">
+                <x-secondary-button wire:click="$set('showModal', false)" wire:loading.attr="disabled" class="btn-modern">
+                    {{ __('Cancelar') }}
+                </x-secondary-button>
 
-                    <x-button type="button" wire:click="save" wire:loading.attr="disabled" class="btn-save-modern">
-                        <span wire:loading.remove wire:target="save">
-                            <i class="bi bi-check-lg me-1"></i>{{ __('Salvar PEI') }}
-                        </span>
-                        <span wire:loading wire:target="save">
-                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                            {{ __('Salvando...') }}
-                        </span>
-                    </x-button>
-                </div>
+                <x-button type="button" wire:click="save" wire:loading.attr="disabled" class="btn-save-modern">
+                    <span wire:loading.remove wire:target="save">
+                        <i class="bi bi-check-lg me-1"></i>{{ __('Salvar PEI') }}
+                    </span>
+                    <span wire:loading wire:target="save">
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        {{ __('Salvando...') }}
+                    </span>
+                </x-button>
             </div>
         </x-slot>
     </x-dialog-modal>
@@ -498,7 +504,7 @@
     <x-confirmation-modal wire:key="pei-delete-modal" wire:model.live="showDeleteModal">
         <x-slot name="title">
             <div class="modal-header-modern">
-                <div class="modal-icon modal-icon-danger">
+                <div class="icon-circle-mini modal-icon-danger">
                     <i class="bi bi-exclamation-triangle"></i>
                 </div>
                 <div>
@@ -515,7 +521,13 @@
                 </p>
                 <div class="alert alert-warning bg-warning-subtle border-0">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <strong>Atenção:</strong> Todos os dados associados (perspectivas, objetivos, indicadores, planos de ação) também serão removidos.
+                    <strong>Atenção:</strong> A exclusão deste ciclo afetará:
+                    <ul class="mb-0 mt-2">
+                        <li>{{ $impactoExclusao['perspectivas'] ?? 0 }} Perspectivas</li>
+                        <li>{{ $impactoExclusao['objetivos'] ?? 0 }} Objetivos</li>
+                        <li>{{ $impactoExclusao['indicadores'] ?? 0 }} Indicadores</li>
+                        <li>{{ $impactoExclusao['planos'] ?? 0 }} Planos de Ação</li>
+                    </ul>
                 </div>
             </div>
         </x-slot>

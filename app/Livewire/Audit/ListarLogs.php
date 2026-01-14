@@ -54,7 +54,7 @@ class ListarLogs extends Component
         $this->showModal = true;
     }
 
-    public function render()
+    protected function getQuery()
     {
         $query = Audit::with('user')->latest();
 
@@ -84,6 +84,53 @@ class ListarLogs extends Component
                   ->orWhere('tags', 'like', '%' . $this->search . '%');
             });
         }
+
+        return $query;
+    }
+
+    public function exportar()
+    {
+        $query = $this->getQuery();
+        
+        $filename = "audit_logs_" . now()->format('Ymd_His') . ".csv";
+        $headers = [
+            "Content-type"        => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function() use ($query) {
+            $file = fopen('php://output', 'w');
+            // Adicionar BOM para Excel ler UTF-8 corretamente
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            fputcsv($file, ['ID', 'Data', 'Usuario', 'Evento', 'Modulo', 'ID Objeto', 'IP'], ';');
+
+            $query->chunk(200, function($logs) use ($file) {
+                foreach ($logs as $log) {
+                    fputcsv($file, [
+                        $log->id,
+                        $log->created_at->format('d/m/Y H:i:s'),
+                        $log->user->name ?? 'Sistema',
+                        $log->event,
+                        str_replace('App\\Models\\', '', $log->auditable_type),
+                        $log->auditable_id,
+                        $log->ip_address
+                    ], ';');
+                }
+            });
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function render()
+    {
+        $query = $this->getQuery();
 
         // Obter lista de models únicos que possuem auditoria para o filtro
         $modelsDisponiveis = Audit::select('auditable_type')->distinct()->get()->pluck('auditable_type');

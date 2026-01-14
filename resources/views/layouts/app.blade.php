@@ -263,6 +263,11 @@
                             'route' => 'relatorios.index',
                             'icon' => 'file-earmark-bar-graph'
                         ],
+                        [
+                            'label' => __('Histórico de Relatórios'),
+                            'route' => 'relatorios.historico',
+                            'icon' => 'clock-history'
+                        ],
                     ]
                 ],
 
@@ -372,7 +377,7 @@
                          @mouseenter="n.paused = true"
                          @mouseleave="n.paused = false">
                         
-                        <div class="mentor-toast-icon educational-card-gradient">
+                        <div class="icon-circle mentor-toast-icon educational-card-gradient">
                             <i class="bi fs-4 text-white" :class="n.icon || 'bi-patch-check-fill'"></i>
                         </div>
                         <div class="mentor-toast-content">
@@ -581,5 +586,6 @@
                 document.addEventListener('livewire:navigated', refreshCsrfToken);
             })();
         </script>
+        @stack('scripts')
     </body>
 </html>

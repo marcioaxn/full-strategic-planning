@@ -3,10 +3,13 @@
     <div class="leads-header d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
         <div>
             <div class="d-flex align-items-center gap-2 mb-2">
-                <div class="header-icon gradient-theme-icon">
+                <div class="icon-circle-header gradient-theme-icon">
                     <i class="bi bi-palette-fill"></i>
                 </div>
                 <h1 class="h3 fw-bold mb-0">{{ __('Graus de Satisfação') }}</h1>
+                <span class="badge-modern badge-count">
+                    {{ $graus->count() }}
+                </span>
             </div>
             <p class="text-muted mb-0">
                 {{ __('Defina as faixas de atingimento e cores do farol de desempenho.') }}
@@ -22,7 +25,7 @@
 
     @if (session()->has('message'))
         <div class="alert alert-modern alert-success alert-dismissible fade show d-flex align-items-center gap-3 mb-4" role="alert">
-            <div class="alert-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="icon-circle-mini"><i class="bi bi-check-circle-fill"></i></div>
             <span class="flex-grow-1">{{ session('message') }}</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -139,7 +142,9 @@
                                               title="{{ $grau->cor }}"></span>
                                     </td>
                                     <td>
-                                        <span class="fw-semibold text-dark">{{ $grau->dsc_grau_satisfacao }}</span>
+                                        <a href="{{ route('graus-satisfacao.detalhes', $grau->cod_grau_satisfacao) }}" wire:navigate class="fw-semibold text-dark text-decoration-none hover-primary">
+                                            {{ $grau->dsc_grau_satisfacao }}
+                                        </a>
                                     </td>
                                     <td>
                                         @if($grau->cod_pei)
@@ -160,6 +165,9 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm">
+                                            <a href="{{ route('graus-satisfacao.detalhes', $grau->cod_grau_satisfacao) }}" wire:navigate class="btn btn-outline-info" title="Detalhar">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
                                             <button class="btn btn-outline-primary" wire:click="edit('{{ $grau->cod_grau_satisfacao }}')" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
@@ -202,7 +210,7 @@
                     <div class="col-12">
                         <div class="d-flex align-items-start gap-3 mb-3">
                             <div class="flex-shrink-0">
-                                <div class="rounded-circle bg-white bg-opacity-25 p-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <div class="icon-circle bg-white bg-opacity-25">
                                     <i class="bi bi-lightbulb-fill fs-3 text-white"></i>
                                 </div>
                             </div>
@@ -421,7 +429,7 @@
     <x-confirmation-modal wire:model.live="showDeleteModal">
         <x-slot name="title">
             <div class="modal-header-modern">
-                <div class="modal-icon modal-icon-danger">
+                <div class="icon-circle-mini modal-icon-danger">
                     <i class="bi bi-exclamation-triangle"></i>
                 </div>
                 <div>

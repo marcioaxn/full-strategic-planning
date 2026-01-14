@@ -3,7 +3,7 @@
 <div {{ $attributes->merge(['class' => 'form-section-modern']) }}>
     <div class="card card-profile-modern border-0 shadow-sm">
         <div class="card-header-modern">
-            <div class="section-icon gradient-theme-icon">
+            <div class="icon-circle-header gradient-theme-icon">
                 <i class="bi bi-pencil-square"></i>
             </div>
             <div class="section-title-wrapper">

@@ -25,7 +25,7 @@
                 <button type="button"
                         class="dropdown-item d-flex align-items-center py-2 {{ $selecionadoId === $pei->cod_pei ? 'active' : '' }}"
                         wire:click="selecionar('{{ $pei->cod_pei }}')">
-                    <div class="avatar-pei-sm me-3 {{ $isAtivo ? 'bg-success' : 'bg-secondary' }} bg-opacity-10 {{ $isAtivo ? 'text-success' : 'text-secondary' }} rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.7rem;">
+                    <div class="icon-circle-mini avatar-pei-sm me-3 {{ $isAtivo ? 'bg-success' : 'bg-secondary' }} bg-opacity-10 {{ $isAtivo ? 'text-success' : 'text-secondary' }} rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.7rem;">
                         <i class="bi {{ $isAtivo ? 'bi-check-circle-fill' : 'bi-clock-history' }}"></i>
                     </div>
                     <div class="flex-grow-1">

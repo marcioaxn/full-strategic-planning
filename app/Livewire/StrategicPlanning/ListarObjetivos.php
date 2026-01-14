@@ -25,6 +25,7 @@ class ListarObjetivos extends Component
     public bool $aiEnabled = false;
     public $aiSuggestion = '';
     public $smartFeedback = '';
+    public $impactoExclusao = [];
 
     protected $listeners = [
         'peiSelecionado' => 'atualizarPEI'
@@ -196,7 +197,7 @@ class ListarObjetivos extends Component
             'nom_objetivo' => 'required|string|max:255',
             'dsc_objetivo' => 'nullable|string|max:1000',
             'num_nivel_hierarquico_apresentacao' => 'required|integer|min:1',
-            'cod_perspectiva' => 'required|exists:pei.tab_perspectiva,cod_perspectiva',
+            'cod_perspectiva' => 'required|exists:tab_perspectiva,cod_perspectiva',
         ]);
 
         Objetivo::updateOrCreate(
@@ -227,6 +228,14 @@ class ListarObjetivos extends Component
     public function confirmDelete($id)
     {
         $this->objetivoId = $id;
+        
+        $objetivo = Objetivo::withCount(['indicadores', 'planosAcao'])->findOrFail($id);
+        
+        $this->impactoExclusao = [
+            'indicadores' => $objetivo->indicadores_count,
+            'planos' => $objetivo->planos_acao_count,
+        ];
+        
         $this->showDeleteModal = true;
     }
 

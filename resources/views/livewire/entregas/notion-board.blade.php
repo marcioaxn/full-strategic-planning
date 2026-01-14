@@ -14,10 +14,11 @@
                     <span class="notion-icon">📋</span>
                     {{ $plano->dsc_plano_de_acao }}
                 </h2>
-                <p class="text-muted small mb-0 mt-1">
-                    <span class="badge bg-light text-dark border me-2">{{ $plano->tipoExecucao->dsc_tipo_execucao }}</span>
-                    {{ $plano->organizacao?->dsc_organizacao }}
-                </p>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                    <span class="text-muted small fw-medium">
+                        <i class="bi bi-building me-1"></i>{{ $plano->organizacao?->nom_organizacao }}
+                    </span>
+                </div>
             </div>
             @can('update', $plano)
                 <button wire:click="openEditModal" class="btn btn-primary gradient-theme-btn">
@@ -66,6 +67,52 @@
             @default
                 @include('livewire.entregas.views.kanban')
         @endswitch
+    </div>
+
+    {{-- Deliverables Help Section (Educational Pattern) --}}
+    <div class="card card-modern mt-5 border-0 shadow-sm educational-card-gradient animate-fade-in">
+        <div class="card-body p-4 text-white">
+            <div class="row g-4">
+                {{-- Main Explanation --}}
+                <div class="col-12">
+                    <div class="d-flex align-items-start gap-3 mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="icon-circle bg-white bg-opacity-25">
+                                <i class="bi bi-check2-all fs-3 text-white"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="fw-bold mb-2 text-white">{{ __('O que são Entregas?') }}</h5>
+                            <p class="mb-0 text-white-50" style="line-height: 1.6;">
+                                As <strong>Entregas</strong> são os passos concretos e operacionais necessários para concluir um Plano de Ação. Elas transformam grandes projetos em tarefas gerenciáveis, permitindo o acompanhamento diário do progresso, a distribuição de responsabilidades e a identificação de gargalos.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Tips Grid --}}
+                <div class="col-md-4">
+                    <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
+                        <h6 class="fw-bold text-white mb-2"><i class="bi bi-kanban me-2"></i>Gestão Visual (Kanban)</h6>
+                        <p class="small mb-0 opacity-75">Arraste os cartões entre as colunas para atualizar o status. Use o <strong>"Não Iniciado"</strong> para o backlog, <strong>"Em Andamento"</strong> para o que está sendo feito agora e <strong>"Concluído"</strong> para o que já foi entregue.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
+                        <h6 class="fw-bold text-white mb-2"><i class="bi bi-people me-2"></i>Responsabilidade</h6>
+                        <p class="small mb-0 opacity-75">Uma entrega sem responsável tende a não ser concluída. Atribua um ou mais usuários a cada cartão para garantir que todos saibam exatamente o que devem fazer.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
+                        <h6 class="fw-bold text-white mb-2"><i class="bi bi-alarm me-2"></i>Prazos e Prioridades</h6>
+                        <p class="small mb-0 opacity-75">Fique atento às cores! Entregas com <strong>prazos vencidos</strong> ganham destaque em vermelho. Utilize os níveis de prioridade para focar o esforço da equipe no que é mais crítico.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- Modal de Criação Rápida --}}
@@ -228,7 +275,7 @@
     <x-confirmation-modal wire:model.live="showDeleteModal">
         <x-slot name="title">
             <div class="modal-header-modern">
-                <div class="modal-icon modal-icon-danger">
+                <div class="icon-circle-mini modal-icon-danger">
                     <i class="bi bi-trash3"></i>
                 </div>
                 <div>

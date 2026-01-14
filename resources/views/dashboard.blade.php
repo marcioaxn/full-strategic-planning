@@ -6,7 +6,7 @@
                 <div class="flex-grow-1">
                     <div class="d-flex align-items-center gap-3 mb-2">
                         <div class="avatar-greeting">
-                            <div class="avatar-circle">
+                            <div class="icon-circle avatar-circle">
                                 <i class="bi bi-person-circle"></i>
                             </div>
                         </div>
@@ -39,7 +39,7 @@
     <div class="row g-3 g-lg-4 mb-4">
         <div class="col-6 col-lg-3">
             <div class="stat-card stat-card-primary">
-                <div class="stat-card-icon">
+                <div class="icon-circle stat-card-icon">
                     <i class="bi bi-rocket-takeoff"></i>
                 </div>
                 <div class="stat-card-content">
@@ -62,7 +62,7 @@
 
         <div class="col-6 col-lg-3">
             <div class="stat-card stat-card-success">
-                <div class="stat-card-icon">
+                <div class="icon-circle stat-card-icon">
                     <i class="bi bi-lightning-charge-fill"></i>
                 </div>
                 <div class="stat-card-content">
@@ -84,7 +84,7 @@
 
         <div class="col-6 col-lg-3">
             <div class="stat-card stat-card-warning">
-                <div class="stat-card-icon">
+                <div class="icon-circle stat-card-icon">
                     <i class="bi bi-plugin"></i>
                 </div>
                 <div class="stat-card-content">
@@ -108,7 +108,7 @@
 
         <div class="col-6 col-lg-3">
             <div class="stat-card stat-card-info">
-                <div class="stat-card-icon">
+                <div class="icon-circle stat-card-icon">
                     <i class="bi bi-flag-fill"></i>
                 </div>
                 <div class="stat-card-content">
@@ -142,7 +142,7 @@
         <div class="col-12 col-xl-4">
             <div class="checklist-card">
                 <div class="checklist-header">
-                    <div class="checklist-icon">
+                    <div class="icon-circle checklist-icon">
                         <i class="bi bi-list-check"></i>
                     </div>
                     <div class="checklist-title-area">
@@ -158,7 +158,7 @@
 
                 <div class="checklist-body">
                     <div class="checklist-item checklist-item-completed">
-                        <div class="checklist-item-icon">
+                        <div class="icon-circle-mini checklist-item-icon">
                             <i class="bi bi-check-circle-fill"></i>
                         </div>
                         <div class="checklist-item-content">
@@ -168,7 +168,7 @@
                     </div>
 
                     <div class="checklist-item checklist-item-completed">
-                        <div class="checklist-item-icon">
+                        <div class="icon-circle-mini checklist-item-icon">
                             <i class="bi bi-check-circle-fill"></i>
                         </div>
                         <div class="checklist-item-content">
@@ -178,7 +178,7 @@
                     </div>
 
                     <div class="checklist-item checklist-item-active">
-                        <div class="checklist-item-icon">
+                        <div class="icon-circle-mini checklist-item-icon">
                             <div class="spinner-border spinner-border-sm"></div>
                         </div>
                         <div class="checklist-item-content">
@@ -291,7 +291,7 @@
         <div class="col-12 col-lg-6">
             <div class="showcase-card">
                 <div class="showcase-card-header">
-                    <div class="showcase-icon showcase-icon-success">
+                    <div class="icon-circle showcase-icon-success">
                         <i class="bi bi-bell-fill"></i>
                     </div>
                     <div>
@@ -314,7 +314,7 @@
         <div class="col-12 col-lg-6">
             <div class="showcase-card">
                 <div class="showcase-card-header">
-                    <div class="showcase-icon showcase-icon-info">
+                    <div class="icon-circle showcase-icon-info">
                         <i class="bi bi-chat-dots-fill"></i>
                     </div>
                     <div class="flex-grow-1">

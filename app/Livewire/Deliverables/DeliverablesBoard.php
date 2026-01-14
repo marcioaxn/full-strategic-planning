@@ -52,6 +52,17 @@ class DeliverablesBoard extends Component
     /** @var float Progresso geral do plano */
     public float $progresso = 0;
 
+    /** @var array Lista de planos para o seletor */
+    public $planosDisponiveis = [];
+
+    /** @var string IDs para navegação estratégica */
+    public $perspectivaId = '';
+    public $objetivoId = '';
+
+    /** @var array Listas para os seletores */
+    public $perspectivasDisponiveis = [];
+    public $objetivosDisponiveis = [];
+
     // ========================================
     // PROPRIEDADES DO MODAL DE DETALHES
     // ========================================
@@ -111,17 +122,85 @@ class DeliverablesBoard extends Component
         if (!$idParaCarregar) {
             $orgId = session('organizacao_selecionada_id');
             if ($orgId) {
-                $idParaCarregar = PlanoDeAcao::where('cod_organizacao', $orgId)->first()?->cod_plano_de_acao;
+                $idParaCarregar = PlanoDeAcao::where('cod_organizacao', $orgId)->orderBy('created_at', 'desc')->first()?->cod_plano_de_acao;
             }
         }
 
         if ($idParaCarregar) {
-            $this->plano = PlanoDeAcao::with('tipoExecucao', 'organizacao')->findOrFail($idParaCarregar);
+            $this->plano = PlanoDeAcao::with(['tipoExecucao', 'organizacao', 'objetivo.perspectiva'])->findOrFail($idParaCarregar);
             $this->authorize('view', $this->plano);
             $this->calcularProgresso();
+            
+            // Sincroniza os IDs de navegação com o plano atual
+            if ($this->plano->objetivo) {
+                $this->objetivoId = $this->plano->cod_objetivo;
+                if ($this->plano->objetivo->perspectiva) {
+                    $this->perspectivaId = $this->plano->objetivo->cod_perspectiva;
+                }
+            }
         } else {
-            // Se nenhum plano for encontrado, deixamos $this->plano nulo e tratamos na view
-            $this->plano = new PlanoDeAcao(); // Objeto vazio para evitar erro de tipo na propriedade tipada
+            // Se nenhum plano for encontrado, tentamos pegar qualquer um que o usuário tenha acesso para não mostrar tela vazia
+            $primeiroDisponivel = PlanoDeAcao::first();
+            if ($primeiroDisponivel) {
+                $this->plano = $primeiroDisponivel;
+                $this->calcularProgresso();
+            } else {
+                $this->plano = new PlanoDeAcao();
+            }
+        }
+
+        $this->carregarListasEstrategicas();
+    }
+
+    public function carregarListasEstrategicas()
+    {
+        $peiId = session('pei_selecionado_id');
+        $orgId = session('organizacao_selecionada_id');
+
+        // 1. Carrega Perspectivas do PEI
+        $this->perspectivasDisponiveis = \App\Models\StrategicPlanning\Perspectiva::where('cod_pei', $peiId)
+            ->orderBy('num_nivel_hierarquico_apresentacao')
+            ->get();
+
+        // 2. Carrega Objetivos (Filtrados por Perspectiva se houver)
+        $this->objetivosDisponiveis = \App\Models\StrategicPlanning\Objetivo::query()
+            ->whereHas('perspectiva', fn($q) => $q->where('cod_pei', $peiId))
+            ->when($this->perspectivaId, fn($q) => $q->where('cod_perspectiva', $this->perspectivaId))
+            ->orderBy('nom_objetivo')
+            ->get();
+
+        // 3. Carrega Planos (Filtrados por Objetivo se houver, ou apenas pela Org)
+        $this->planosDisponiveis = PlanoDeAcao::query()
+            ->where('cod_organizacao', $orgId)
+            ->when($this->objetivoId, fn($q) => $q->where('cod_objetivo', $this->objetivoId))
+            ->orderBy('dsc_plano_de_acao')
+            ->get();
+    }
+
+    /**
+     * Hooks para quando o usuário muda os seletores na UI
+     */
+    public function updatedPerspectivaId()
+    {
+        $this->objetivoId = ''; // Reseta objetivo ao mudar perspectiva
+        $this->carregarListasEstrategicas();
+    }
+
+    public function updatedObjetivoId()
+    {
+        $this->carregarListasEstrategicas();
+        
+        // Se após filtrar os planos houver apenas um, ou se o usuário selecionou um objetivo, 
+        // ele pode querer pular direto para o primeiro plano disponível
+        if ($this->planosDisponiveis->count() === 1) {
+            return redirect()->route('planos.entregas', $this->planosDisponiveis->first()->cod_plano_de_acao);
+        }
+    }
+
+    public function mudarPlano($id)
+    {
+        if ($id) {
+            return redirect()->route('planos.entregas', $id);
         }
     }
 
@@ -395,6 +474,7 @@ class DeliverablesBoard extends Component
 
         $this->closeEditModal();
         $this->calcularProgresso();
+        $this->dispatch('re-init-sortable');
 
         $this->dispatch('notify', [
             'type' => 'success',
@@ -514,6 +594,7 @@ class DeliverablesBoard extends Component
         ]);
 
         $this->calcularProgresso();
+        $this->dispatch('re-init-sortable');
     }
 
     // ========================================

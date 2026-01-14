@@ -349,6 +349,45 @@
                 {{ $planos->links() }}
             </div>
         </div>
+
+        {{-- Action Plans Help Section (Educational Pattern) --}}
+        <div class="card card-modern mt-4 border-0 shadow-sm educational-card-gradient animate-fade-in">
+            <div class="card-body p-4 text-white">
+                <div class="row g-4">
+                    {{-- Main Explanation --}}
+                    <div class="col-12">
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="icon-circle bg-white bg-opacity-25">
+                                    <i class="bi bi-list-task fs-3 text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="fw-bold mb-2 text-white">{{ __('O que são Planos de Ação?') }}</h5>
+                                <p class="mb-0 text-white-50" style="line-height: 1.6;">
+                                    Os <strong>Planos de Ação</strong> são o conjunto de iniciativas, projetos ou processos necessários para atingir um objetivo estratégico. Enquanto o objetivo diz "onde queremos chegar", o plano de ação detalha "como vamos chegar lá", definindo prazos, orçamentos e responsáveis.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Tips Grid --}}
+                    <div class="col-md-6">
+                        <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
+                            <h6 class="fw-bold text-white mb-2"><i class="bi bi-info-circle me-2"></i>Plano vs. Entrega</h6>
+                            <p class="small mb-0 opacity-75">Um <strong>Plano</strong> é uma iniciativa macro (ex: "Implementar novo sistema de RH"). Já as <strong>Entregas</strong> são os passos menores dentro desse plano (ex: "Levantamento de requisitos", "Treinamento"). Se o seu plano dura menos de um mês, talvez ele seja apenas uma entrega!</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
+                            <h6 class="fw-bold text-white mb-2"><i class="bi bi-check-all me-2"></i>Metodologia 5W2H</h6>
+                            <p class="small mb-0 opacity-75">Para um plano eficaz, certifique-se de saber: <strong>O que</strong> será feito, <strong>Por que</strong>, <strong>Onde</strong>, <strong>Quando</strong>, <strong>Quem</strong> é o responsável, <strong>Como</strong> e <strong>Quanto</strong> custará.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     @endif
 
     <!-- Modal Criar/Editar -->
@@ -365,7 +404,32 @@
                     <div class="modal-body p-4">
                         <!-- Linha 1: Descrição -->
                         <div class="mb-3">
-                            <label class="form-label text-muted small text-uppercase fw-bold">Descrição do Plano</label>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label text-muted small text-uppercase fw-bold mb-0">Descrição do Plano</label>
+                                @if($aiEnabled)
+                                    <button type="button" wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="btn btn-xs btn-outline-magic py-0" style="font-size: 0.65rem;">
+                                        <i class="bi bi-robot me-1"></i> Sugerir com IA
+                                    </button>
+                                @endif
+                            </div>
+                            
+                            @if($aiSuggestion)
+                                <div class="alert alert-magic bg-primary bg-opacity-10 border-0 p-2 mb-3 animate-fade-in">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="fw-bold text-primary"><i class="bi bi-robot me-1"></i>Sugestões IA:</small>
+                                        <button type="button" class="btn-close" style="font-size: 0.5rem;" wire:click="$set('aiSuggestion', '')"></button>
+                                    </div>
+                                    <div class="list-group list-group-flush rounded border">
+                                        @foreach($aiSuggestion as $sug)
+                                            <button type="button" wire:click="aplicarSugestao('{{ $sug['nome'] }}')" class="list-group-item list-group-item-action py-1 px-2 x-small">
+                                                <div class="fw-bold">{{ $sug['nome'] }}</div>
+                                                <div class="text-muted" style="font-size: 0.65rem;">{{ $sug['justificativa'] }}</div>
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
                             <textarea wire:model="dsc_plano_de_acao" class="form-control @error('dsc_plano_de_acao') is-invalid @enderror" rows="2" placeholder="Descreva o plano de ação..."></textarea>
                             @error('dsc_plano_de_acao') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
@@ -400,12 +464,12 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
                                 <label class="form-label text-muted small text-uppercase fw-bold">Data Início</label>
-                                <input type="date" wire:model="dte_inicio" class="form-control @error('dte_inicio') is-invalid @enderror">
+                                <input type="date" wire:model.live="dte_inicio" class="form-control @error('dte_inicio') is-invalid @enderror">
                                 @error('dte_inicio') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-muted small text-uppercase fw-bold">Data Fim</label>
-                                <input type="date" wire:model="dte_fim" class="form-control @error('dte_fim') is-invalid @enderror">
+                                <input type="date" wire:model.live="dte_fim" class="form-control @error('dte_fim') is-invalid @enderror">
                                 @error('dte_fim') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-4">
@@ -417,6 +481,29 @@
                                 </select>
                                 @error('bln_status') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
+
+                            {{-- Alertas Educativos de Data --}}
+                            @if($dte_inicio && $dte_fim)
+                                <div class="col-12 mt-1">
+                                    @php
+                                        $start = \Carbon\Carbon::parse($dte_inicio);
+                                        $end = \Carbon\Carbon::parse($dte_fim);
+                                        $diff = $start->diffInDays($end, false);
+                                    @endphp
+
+                                    @if($diff < 0)
+                                        <div class="alert alert-danger py-1 px-2 small mb-0">
+                                            <i class="bi bi-exclamation-octagon me-1"></i>
+                                            A data de término deve ser posterior à data de início.
+                                        </div>
+                                    @elseif($diff < 30)
+                                        <div class="alert alert-warning py-1 px-2 small mb-0">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            <strong>Dica:</strong> Um prazo de apenas {{ $diff }} dias pode ser curto para um plano estratégico. Considere se não é apenas uma "Entrega".
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
 
                         <!-- Linha 4: Orçamento e Códigos -->
@@ -451,7 +538,7 @@
     <x-confirmation-modal wire:model.live="showDeleteModal">
         <x-slot name="title">
             <div class="modal-header-modern">
-                <div class="modal-icon modal-icon-danger">
+                <div class="icon-circle-mini modal-icon-danger">
                     <i class="bi bi-exclamation-triangle"></i>
                 </div>
                 <div>
