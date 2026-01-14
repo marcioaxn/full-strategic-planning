@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="d-flex align-items-center gap-3">
-            <div class="profile-header-icon gradient-theme-icon">
+            <div class="icon-circle-header gradient-theme-icon">
                 <i class="bi bi-person-circle"></i>
             </div>
             <div>

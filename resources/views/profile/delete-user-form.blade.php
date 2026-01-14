@@ -11,7 +11,7 @@
         <x-slot name="content">
         <div class="delete-account-modern">
             <div class="danger-zone">
-                <div class="danger-icon">
+                <div class="icon-circle danger-icon">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                 </div>
                 <div>
@@ -31,7 +31,7 @@
         <x-dialog-modal wire:model.live="confirmingUserDeletion">
             <x-slot name="title">
                 <div class="modal-header-danger">
-                    <div class="modal-icon-danger">
+                    <div class="icon-circle-mini modal-icon-danger">
                         <i class="bi bi-exclamation-triangle-fill"></i>
                     </div>
                     <div>

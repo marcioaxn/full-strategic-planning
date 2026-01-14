@@ -20,6 +20,7 @@ class ListarPeis extends Component
     public bool $showModal = false;
     public bool $showDeleteModal = false;
     public $peiId;
+    public $impactoExclusao = [];
 
     // Campos do Formulário
     public $dsc_pei = '';
@@ -101,6 +102,24 @@ class ListarPeis extends Component
     public function confirmDelete($id)
     {
         $this->peiId = $id;
+        $pei = PEI::withCount('perspectivas')->findOrFail($id);
+        
+        $perspIds = \App\Models\StrategicPlanning\Perspectiva::where('cod_pei', $id)->pluck('cod_perspectiva');
+        $objCount = \App\Models\StrategicPlanning\Objetivo::whereIn('cod_perspectiva', $perspIds)->count();
+        $indCount = \App\Models\PerformanceIndicators\Indicador::whereHas('objetivo', function($q) use ($perspIds) {
+            $q->whereIn('cod_perspectiva', $perspIds);
+        })->count();
+        $planCount = \App\Models\ActionPlan\PlanoDeAcao::whereHas('objetivo', function($q) use ($perspIds) {
+            $q->whereIn('cod_perspectiva', $perspIds);
+        })->count();
+
+        $this->impactoExclusao = [
+            'perspectivas' => $pei->perspectivas_count,
+            'objetivos' => $objCount,
+            'indicadores' => $indCount,
+            'planos' => $planCount,
+        ];
+
         $this->showDeleteModal = true;
     }
 

@@ -35,6 +35,9 @@ class AnaliseSWOT extends Component
     public $num_impacto = 3;
     public $txt_observacao = '';
 
+    public bool $aiEnabled = false;
+    public $aiSuggestion = '';
+
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
         'peiSelecionado' => 'atualizarPEI'
@@ -42,8 +45,64 @@ class AnaliseSWOT extends Component
 
     public function mount()
     {
+        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+    }
+
+    public function pedirAjudaIA()
+    {
+        if (!$this->aiEnabled) return;
+
+        try {
+            $aiService = \App\Services\AI\AiServiceFactory::make();
+            if (!$aiService) return;
+
+            $this->aiSuggestion = 'Pensando...';
+            
+            $prompt = "Sugira 3 Forças, 3 Fraquezas, 3 Oportunidades e 3 Ameaças para a análise SWOT da organização: {$this->organizacaoNome}.
+            Responda OBRIGATORIAMENTE em formato JSON puro com as chaves 'forcas', 'fraquezas', 'oportunidades', 'ameacas', cada uma contendo um array de strings.";
+            
+            $response = $aiService->suggest($prompt);
+            $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
+
+            if (is_array($decoded)) {
+                $this->aiSuggestion = $decoded;
+            } else {
+                throw new \Exception('Formato de resposta inválido.');
+            }
+        } catch (\Exception $e) {
+            \Log::error('Erro IA SWOT: ' . $e->getMessage());
+            $this->aiSuggestion = null;
+            session()->flash('error', 'Não foi possível gerar sugestões.');
+        }
+    }
+
+    public function adicionarSugerido($categoria, $item)
+    {
+        AnaliseAmbiental::create([
+            'cod_pei' => $this->peiAtivo->cod_pei,
+            'cod_organizacao' => $this->organizacaoId,
+            'dsc_tipo_analise' => AnaliseAmbiental::TIPO_SWOT,
+            'dsc_categoria' => $categoria,
+            'dsc_item' => $item,
+            'num_impacto' => 3,
+        ]);
+
+        $this->carregarDados();
+        
+        // Remover da sugestão
+        $map = [
+            'Força' => 'forcas',
+            'Fraqueza' => 'fraquezas',
+            'Oportunidade' => 'oportunidades',
+            'Ameaça' => 'ameacas'
+        ];
+        $key = $map[$categoria];
+        
+        if (isset($this->aiSuggestion[$key])) {
+            $this->aiSuggestion[$key] = array_filter($this->aiSuggestion[$key], fn($i) => $item !== $i);
+        }
     }
 
     public function atualizarPEI($id)

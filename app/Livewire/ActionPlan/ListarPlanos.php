@@ -25,6 +25,7 @@ class ListarPlanos extends Component
     public $filtroAno = '';
     public $filtroObjetivo = '';
     public $organizacaoId;
+    public $organizacaoNome;
 
     public bool $showModal = false;
     public bool $showDeleteModal = false;
@@ -40,6 +41,9 @@ class ListarPlanos extends Component
     public $bln_status = 'Não Iniciado';
     public $cod_ppa;
     public $cod_loa;
+
+    public bool $aiEnabled = false;
+    public $aiSuggestion = '';
 
     // Listas auxiliares
     public $objetivos = [];
@@ -60,15 +64,69 @@ class ListarPlanos extends Component
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
-        'peiSelecionado' => 'atualizarPEI'
+        'peiSelecionado' => 'atualizarPEI',
+        'anoSelecionado' => 'atualizarAno'
     ];
 
     public function mount()
     {
+        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
         $this->tiposExecucao = TipoExecucao::orderBy('dsc_tipo_execucao')->get();
-        $this->filtroAno = now()->year;
+        $this->filtroAno = Session::get('ano_selecionado', now()->year);
+    }
+
+    public function pedirAjudaIA()
+    {
+        if (!$this->aiEnabled) return;
+        
+        if (!$this->cod_objetivo) {
+             session()->flash('error', 'Selecione um objetivo no formulário primeiro.');
+             return;
+        }
+
+        try {
+            $aiService = \App\Services\AI\AiServiceFactory::make();
+            if (!$aiService) return;
+
+            $objetivo = Objetivo::find($this->cod_objetivo);
+            if (!$objetivo) {
+                session()->flash('error', 'Objetivo não encontrado.');
+                return;
+            }
+
+            $this->aiSuggestion = 'Pensando...';
+            
+            $prompt = "Sugira 3 planos de ação (iniciativas) para alcançar o objetivo estratégico: '{$objetivo->nom_objetivo}'.
+            Leve em conta que a organização é: {$this->organizacaoNome}.
+            Responda OBRIGATORIAMENTE em formato JSON puro, contendo um array de objetos com os campos 'nome' e 'justificativa'.";
+            
+            $response = $aiService->suggest($prompt);
+            $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
+
+            if (is_array($decoded)) {
+                $this->aiSuggestion = $decoded;
+            } else {
+                throw new \Exception('Falha ao decodificar resposta da IA.');
+            }
+        } catch (\Exception $e) {
+            \Log::error('Erro IA Planos: ' . $e->getMessage());
+            $this->aiSuggestion = null;
+            session()->flash('error', 'Não foi possível gerar sugestões no momento.');
+        }
+    }
+
+    public function aplicarSugestao($nome)
+    {
+        $this->dsc_plano_de_acao = $nome;
+        $this->aiSuggestion = '';
+    }
+
+    public function atualizarAno($ano)
+    {
+        $this->filtroAno = $ano;
+        $this->resetPage();
     }
 
     public function atualizarPEI($id)
@@ -94,6 +152,7 @@ class ListarPlanos extends Component
     public function atualizarOrganizacao($id)
     {
         $this->organizacaoId = $id;
+        $this->organizacaoNome = $id ? Organization::find($id)?->nom_organizacao : null;
         $this->resetPage();
         $this->carregarObjetivos();
     }
@@ -150,8 +209,8 @@ class ListarPlanos extends Component
     {
         $this->validate([
             'dsc_plano_de_acao' => 'required|string|max:255',
-            'cod_objetivo' => 'required|exists:pei.tab_objetivo,cod_objetivo',
-            'cod_tipo_execucao' => 'required|exists:pei.tab_tipo_execucao,cod_tipo_execucao',
+            'cod_objetivo' => 'required|exists:tab_objetivo,cod_objetivo',
+            'cod_tipo_execucao' => 'required|exists:tab_tipo_execucao,cod_tipo_execucao',
             'dte_inicio' => 'required|date',
             'dte_fim' => 'required|date|after_or_equal:dte_inicio',
             'vlr_orcamento_previsto' => 'nullable|numeric|min:0',
@@ -218,6 +277,7 @@ class ListarPlanos extends Component
         $this->bln_status = 'Não Iniciado';
         $this->cod_ppa = '';
         $this->cod_loa = '';
+        $this->aiSuggestion = '';
     }
 
     public function render()

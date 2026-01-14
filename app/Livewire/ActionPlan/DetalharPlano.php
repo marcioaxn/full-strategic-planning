@@ -29,8 +29,8 @@ class DetalharPlano extends Component
         $progresso = $this->plano->calcularProgressoEntregas();
 
         // Busca responsáveis únicos de todas as entregas do plano
-        $responsaveis = User::join('pei.rel_entrega_users_responsaveis as r', 'users.id', '=', 'r.cod_usuario')
-            ->join('pei.tab_entregas as e', 'r.cod_entrega', '=', 'e.cod_entrega')
+        $responsaveis = User::join('rel_entrega_users_responsaveis as r', 'users.id', '=', 'r.cod_usuario')
+            ->join('tab_entregas as e', 'r.cod_entrega', '=', 'e.cod_entrega')
             ->where('e.cod_plano_de_acao', $this->plano->cod_plano_de_acao)
             ->select('users.*')
             ->selectRaw("'Responsável' as dsc_perfil")

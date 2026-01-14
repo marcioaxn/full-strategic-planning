@@ -42,14 +42,25 @@ class LancarEvolucao extends Component
         'bln_atualizado' => 'required|in:Sim,Não',
     ];
 
+    protected $listeners = [
+        'anoSelecionado' => 'atualizarAno'
+    ];
+
+    public function atualizarAno($ano)
+    {
+        $this->ano = $ano;
+        $this->carregarPeriodo();
+        $this->carregarHistorico();
+    }
+
     public function mount($indicadorId)
     {
         $this->indicador = Indicador::findOrFail($indicadorId);
         $this->authorize('update', $this->indicador);
-        
-        $this->ano = now()->year;
+
+        $this->ano = session('ano_selecionado', now()->year);
         $this->mes = now()->month;
-        
+
         $this->carregarPeriodo();
         $this->carregarHistorico();
     }

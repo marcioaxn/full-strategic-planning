@@ -82,7 +82,7 @@
     <div class="row g-4 mb-4 align-items-stretch">
         <div class="col-xl-4 col-md-4">
             <div class="card-kpi shadow-sm h-100 position-relative">
-                <div class="kpi-icon bg-primary-subtle text-primary"><i class="bi bi-bullseye"></i></div>
+                <div class="icon-circle bg-primary-subtle text-primary"><i class="bi bi-bullseye"></i></div>
                 <div class="kpi-data">
                     <span class="kpi-label">Objetivos BSC</span>
                     <h3 class="kpi-value">{{ $stats['totalObjetivos'] }}</h3>
@@ -95,7 +95,7 @@
         </div>
         <div class="col-xl-4 col-md-4">
             <div class="card-kpi shadow-sm h-100 position-relative">
-                <div class="kpi-icon bg-success-subtle text-success"><i class="bi bi-graph-up-arrow"></i></div>
+                <div class="icon-circle bg-success-subtle text-success"><i class="bi bi-graph-up-arrow"></i></div>
                 <div class="kpi-data">
                     <span class="kpi-label">Execução dos Planos</span>
                     <h3 class="kpi-value">{{ number_format($stats['progressoPlanos'], 1) }}%</h3>
@@ -111,7 +111,7 @@
         </div>
         <div class="col-xl-4 col-md-4">
             <div class="card-kpi shadow-sm h-100 position-relative">
-                <div class="kpi-icon bg-danger-subtle text-danger"><i class="bi bi-exclamation-triangle"></i></div>
+                <div class="icon-circle bg-danger-subtle text-danger"><i class="bi bi-exclamation-triangle"></i></div>
                 <div class="kpi-data">
                     <span class="kpi-label">Riscos Críticos</span>
                     <h3 class="kpi-value text-danger">{{ $stats['riscosCriticos'] }}</h3>
@@ -132,7 +132,7 @@
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="kpi-icon bg-secondary-subtle text-secondary"><i class="bi bi-person-check"></i></div>
+                                <div class="icon-circle bg-secondary-subtle text-secondary"><i class="bi bi-person-check"></i></div>
                                 <div>
                                     <span class="small fw-bold text-muted">Entregas sob minha responsabilidade</span>
                                     <span class="badge bg-secondary-subtle text-secondary rounded-pill ms-2">{{ $minhasEntregas->count() }} pendentes</span>
@@ -256,7 +256,6 @@
         .dashboard-wrapper { padding: 5px; }
         .card-kpi { background: var(--bs-body-bg); border-radius: 12px; padding: 15px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--bs-border-color); transition: all 0.2s; }
         .card-kpi:hover { transform: translateY(-3px); border-color: var(--bs-primary); }
-        .kpi-icon { width: 42px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
         .kpi-label { font-size: 0.7rem; font-weight: 700; color: var(--bs-secondary); text-transform: uppercase; }
         .kpi-value { font-weight: 800; margin: 0; font-size: 1.5rem; color: var(--bs-body-color); }
         .kpi-context { font-size: 0.7rem; margin-top: 2px; line-height: 1.3; }

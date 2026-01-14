@@ -24,19 +24,28 @@ class ListarRelatorios extends Component
     public $perspectivaSelecionada = '';
 
     public $peiAtivo;
+    public $aiEnabled = false;
+    public $aiInsight = '';
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
-        'peiSelecionado' => 'atualizarPEI'
+        'peiSelecionado' => 'atualizarPEI',
+        'anoSelecionado' => 'atualizarAno'
     ];
+
+    public function atualizarAno($ano)
+    {
+        $this->anoSelecionado = $ano;
+    }
 
     public function mount()
     {
+        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
         $this->organizacoes = Organization::orderBy('nom_organizacao')->get();
 
         // Carregar Anos (baseado nos ciclos PEI ativos/recentes)
         $this->anos = range(date('Y') - 1, date('Y') + 4);
-        $this->anoSelecionado = date('Y');
+        $this->anoSelecionado = Session::get('ano_selecionado', date('Y'));
 
         // Carregar PEI
         $this->carregarPEI();
@@ -99,6 +108,44 @@ class ListarRelatorios extends Component
             'perspectiva' => $this->perspectivaSelecionada,
             'organizacao_id' => $this->organizacaoId
         ];
+    }
+
+    public function gerarInsightIA()
+    {
+        if (!$this->aiEnabled) return;
+        if (!$this->organizacaoId) {
+            session()->flash('error', 'Selecione uma organização.');
+            return;
+        }
+
+        if (!$this->peiAtivo) {
+            session()->flash('error', 'Não há Ciclo PEI ativo selecionado.');
+            return;
+        }
+
+        try {
+            $aiService = \App\Services\AI\AiServiceFactory::make();
+            if (!$aiService) return;
+
+            $this->aiInsight = 'Analisando dados estratégicos...';
+
+            // Coletar dados básicos para o prompt
+            $objetivos = \App\Models\StrategicPlanning\Objetivo::whereHas('perspectiva', function($q) {
+                $q->where('cod_pei', $this->peiAtivo->cod_pei);
+            })->get();
+            
+            $planos = \App\Models\ActionPlan\PlanoDeAcao::where('cod_organizacao', $this->organizacaoId)->get();
+            
+            $prompt = "Gere um resumo executivo estratégico (AI Minute) para a organização {$this->organizacaoNome} no ano {$this->anoSelecionado}.
+            Contexto: Possui " . $objetivos->count() . " objetivos estratégicos e " . $planos->count() . " planos de ação.
+            Destaque pontos de atenção e sugestões de melhoria. Use Markdown para formatação.";
+
+            $this->aiInsight = $aiService->suggest($prompt);
+        } catch (\Exception $e) {
+            \Log::error('Erro IA Relatórios: ' . $e->getMessage());
+            $this->aiInsight = '';
+            session()->flash('error', 'Falha ao gerar resumo inteligente.');
+        }
     }
 
     public function render()

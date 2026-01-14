@@ -1,7 +1,7 @@
 <div {{ $attributes->merge(['class' => 'action-section-modern']) }}>
     <div class="card card-profile-modern border-0 shadow-sm">
         <div class="card-header-modern">
-            <div class="section-icon section-icon-info">
+            <div class="icon-circle-header section-icon-info">
                 <i class="bi bi-info-circle"></i>
             </div>
             <div class="section-title-wrapper">
