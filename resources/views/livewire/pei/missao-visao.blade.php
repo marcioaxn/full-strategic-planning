@@ -45,7 +45,7 @@
             <div class="col-lg-6">
                 <div class="card h-100 border-0 shadow-sm overflow-hidden">
                     <div class="card-header bg-white py-3 border-0 d-flex align-items-center">
-                        <div class="icon-shape gradient-theme-icon rounded-3 p-2 me-3 shadow-sm">
+                        <div class="icon-circle-header gradient-theme-icon rounded-3 p-2 me-3 shadow-sm">
                             <i class="bi bi-bullseye fs-4"></i>
                         </div>
                         <h4 class="mb-0 fw-bold">Missão</h4>

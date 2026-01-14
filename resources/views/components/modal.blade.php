@@ -15,7 +15,22 @@
 @endphp
 
 <div
-    x-data="{ show: @entangle($attributes->wire('model')) }"
+    x-data="{ 
+        show: @entangle($attributes->wire('model')),
+        init() {
+            $watch('show', value => {
+                if (value) {
+                    // Espera o próximo frame do Alpine para garantir que o DOM está pronto
+                    $nextTick(() => {
+                        if (window.initTooltips) window.initTooltips();
+                    });
+                } else {
+                    // Limpa tooltips ao fechar para evitar que fiquem travados
+                    if (window.hideAllTooltips) window.hideAllTooltips();
+                }
+            });
+        }
+    }"
     x-on:close.stop="show = false"
     x-on:keydown.escape.window="show = false"
     x-show="show"

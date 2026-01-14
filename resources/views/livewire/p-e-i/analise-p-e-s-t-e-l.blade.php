@@ -1,4 +1,21 @@
 <div>
+    <style>
+        @media print {
+            body { background: white !important; }
+            .navbar, .sidebar, .leads-header, .alert, .btn, .breadcrumb, footer { display: none !important; }
+            .card { border: none !important; shadow: none !important; break-inside: avoid; }
+            .container-fluid { padding: 0 !important; width: 100% !important; max-width: 100% !important; }
+            .main-content { margin: 0 !important; padding: 0 !important; }
+            .pestel-print-header { display: block !important; margin-bottom: 20px; text-align: center; }
+        }
+        .pestel-print-header { display: none; }
+    </style>
+
+    <div class="pestel-print-header">
+        <h2>Análise PESTEL</h2>
+        <p>{{ $organizacaoNome }} - {{ $peiAtivo->dsc_pei ?? '' }}</p>
+    </div>
+
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -11,6 +28,23 @@
                     - <strong>{{ $organizacaoNome }}</strong>
                 @endif
             </p>
+        </div>
+        <div class="d-flex gap-2">
+            @if($organizacaoId && $peiAtivo && $aiEnabled)
+                <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="btn btn-outline-primary shadow-sm rounded-pill">
+                    <span wire:loading.remove wire:target="pedirAjudaIA">
+                        <i class="bi bi-robot"></i> Sugerir com IA
+                    </span>
+                    <span wire:loading wire:target="pedirAjudaIA">
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                    </span>
+                </button>
+            @endif
+            @if($organizacaoId && $peiAtivo)
+                <button onclick="window.print()" class="btn btn-outline-secondary">
+                    <i class="bi bi-printer me-1"></i> Imprimir
+                </button>
+            @endif
         </div>
     </div>
 
@@ -25,6 +59,47 @@
             Selecione uma organização no menu superior para visualizar ou cadastrar a análise PESTEL.
         </div>
     @else
+        @if($aiSuggestion)
+            <div class="card border-0 shadow-sm mb-4 animate-fade-in" style="background: linear-gradient(135deg, #fdf8ff 0%, #ffffff 100%);">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-3">
+                    <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-robot me-2"></i>Sugestões do Mentor IA (PESTEL)</h6>
+                    <button type="button" class="btn-close" style="font-size: 0.7rem;" wire:click="$set('aiSuggestion', '')"></button>
+                </div>
+                <div class="card-body">
+                    @if(is_array($aiSuggestion))
+                        <div class="row g-3">
+                            @foreach([
+                                'Político' => 'politico', 
+                                'Econômico' => 'economico', 
+                                'Social' => 'social', 
+                                'Tecnológico' => 'tecnologico', 
+                                'Ecológico' => 'ecologico', 
+                                'Legal' => 'legal'
+                            ] as $label => $key)
+                                @if(isset($aiSuggestion[$key]) && count($aiSuggestion[$key]) > 0)
+                                    <div class="col-md-2">
+                                        <div class="small fw-bold text-muted text-uppercase mb-2" style="font-size: 0.65rem;">{{ $label }}</div>
+                                        <div class="list-group list-group-flush border rounded">
+                                            @foreach($aiSuggestion[$key] as $item)
+                                                <button type="button" wire:click="adicionarSugerido('{{ $label }}', '{{ $item }}')" class="list-group-item list-group-item-action py-2 px-2 x-small d-flex justify-content-between align-items-center">
+                                                    <span class="text-truncate me-1">{{ $item }}</span>
+                                                    <i class="bi bi-plus-circle text-primary"></i>
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-3">
+                            <span class="spinner-border spinner-border-sm text-primary me-2"></span>
+                            <span class="text-muted">Analisando tendências globais...</span>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
         <!-- Grid PESTEL 3x2 -->
         <div class="row g-3">
             <!-- P - Político -->
@@ -398,5 +473,41 @@
             </div>
         </div>
         @endif
+
+        {{-- PESTEL Help Section --}}
+        <div class="card card-modern mt-4 border-0 shadow-sm educational-card-gradient animate-fade-in">
+            <div class="card-body p-4 text-white">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="icon-circle bg-white bg-opacity-25">
+                                    <i class="bi bi-compass-fill fs-3 text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="fw-bold mb-2 text-white">{{ __('O que é a Análise PESTEL?') }}</h5>
+                                <p class="mb-0 text-white-50" style="line-height: 1.6;">
+                                    A análise <strong>PESTEL</strong> foca exclusivamente no ambiente externo. Ela ajuda a mapear as grandes tendências que a organização não controla, mas que podem impactar drasticamente o planejamento a longo prazo.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="bg-white bg-opacity-10 rounded-3 p-3">
+                            <div class="row g-3">
+                                <div class="col-md-4 small"><strong>P (Político):</strong> Estabilidade, impostos, comércio exterior.</div>
+                                <div class="col-md-4 small"><strong>E (Econômico):</strong> Inflação, juros, crescimento do PIB.</div>
+                                <div class="col-md-4 small"><strong>S (Social):</strong> Demografia, cultura, hábitos de consumo.</div>
+                                <div class="col-md-4 small"><strong>T (Tecnológico):</strong> Automação, inovação, novos softwares.</div>
+                                <div class="col-md-4 small"><strong>E (Ecológico):</strong> Clima, reciclagem, sustentabilidade.</div>
+                                <div class="col-md-4 small"><strong>L (Legal):</strong> Leis trabalhistas, saúde e segurança.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     @endif
 </div>

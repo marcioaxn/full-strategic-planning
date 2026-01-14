@@ -42,7 +42,7 @@
                     <div class="card h-100 border-0 shadow-sm hover-shadow transition-all">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div class="icon-shape bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                <div class="icon-circle bg-warning bg-opacity-10 text-warning">
                                     <i class="bi bi-gem fs-4"></i>
                                 </div>
                                 <div class="dropdown">

@@ -25,19 +25,27 @@ Route::middleware([
 
     // Strategic Planning Module
     Route::get('/organizacoes', \App\Livewire\Organization\ListarOrganizacoes::class)->name('organizacoes.index');
+    Route::get('/organizacoes/{id}/detalhes', \App\Livewire\Organization\DetalharOrganizacao::class)->name('organizacoes.detalhes');
     Route::get('/usuarios', \App\Livewire\UserManagement\ListarUsuarios::class)->name('usuarios.index');
+    Route::get('/usuarios/{id}/detalhes', \App\Livewire\UserManagement\DetalharUsuario::class)->name('usuarios.detalhes');
     Route::get('/configuracoes', \App\Livewire\Admin\ConfiguracaoSistema::class)->name('admin.configuracoes');
     Route::get('/graus-satisfacao', \App\Livewire\StrategicPlanning\ListarGrausSatisfacao::class)->name('graus-satisfacao.index');
+    Route::get('/graus-satisfacao/{id}/detalhes', \App\Livewire\StrategicPlanning\DetalharGrauSatisfacao::class)->name('graus-satisfacao.detalhes');
     
     // Strategic Planning (PEI)
     Route::get('/pei', \App\Livewire\StrategicPlanning\MissaoVisao::class)->name('pei.index');
+    Route::get('/pei/identidade/{id}/detalhes', \App\Livewire\StrategicPlanning\DetalharIdentidade::class)->name('pei.identidade.detalhes');
     Route::get('/pei/ciclos', \App\Livewire\StrategicPlanning\ListarPeis::class)->name('pei.ciclos');
+    Route::get('/pei/{id}/detalhes', \App\Livewire\StrategicPlanning\DetalharPei::class)->name('pei.detalhes');
     Route::get('/pei/valores', \App\Livewire\StrategicPlanning\ListarValores::class)->name('pei.valores');
+    Route::get('/pei/valores/{id}/detalhes', \App\Livewire\StrategicPlanning\DetalharValor::class)->name('pei.valores.detalhes');
     Route::get('/pei/perspectivas', \App\Livewire\StrategicPlanning\ListarPerspectivas::class)->name('pei.perspectivas');
+    Route::get('/pei/perspectivas/{id}/detalhes', \App\Livewire\StrategicPlanning\DetalharPerspectiva::class)->name('pei.perspectivas.detalhes');
     Route::get('/pei/swot', \App\Livewire\StrategicPlanning\AnaliseSWOT::class)->name('pei.swot');
     Route::get('/pei/pestel', \App\Livewire\StrategicPlanning\AnalisePESTEL::class)->name('pei.pestel');
     Route::get('/pei/mapa', \App\Livewire\StrategicPlanning\MapaEstrategico::class)->name('pei.mapa');
     Route::get('/objetivos', \App\Livewire\StrategicPlanning\ListarObjetivos::class)->name('objetivos.index');
+    Route::get('/objetivos/{id}/detalhes', \App\Livewire\StrategicPlanning\DetalharObjetivo::class)->name('objetivos.detalhes');
     Route::get('/objetivos-estrategicos', \App\Livewire\StrategicPlanning\GerenciarObjetivosEstrategicos::class)->name('objetivos-estrategicos.index');
     Route::get('/objetivos/{objetivoId}/futuro', \App\Livewire\StrategicPlanning\GerenciarFuturoAlmejado::class)->name('objetivos.futuro');
     
@@ -68,9 +76,11 @@ Route::middleware([
                         
                             // Audit
                             Route::get('/auditoria', \App\Livewire\Audit\ListarLogs::class)->name('audit.index');
+                            Route::get('/auditoria/{id}/detalhes', \App\Livewire\Audit\DetalharLog::class)->name('audit.detalhes');
 
                             // Reports Menu
                             Route::get('/relatorios', \App\Livewire\Reports\ListarRelatorios::class)->name('relatorios.index');
+                            Route::get('/relatorios/historico', \App\Livewire\Reports\HistoricoRelatorios::class)->name('relatorios.historico');
 
                             // Reports PDF/Excel    
                 

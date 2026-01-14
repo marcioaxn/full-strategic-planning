@@ -41,12 +41,13 @@
     }
 
     .modal-footer-modern {
-        background: rgba(var(--bs-secondary-rgb), 0.03);
+        background: var(--app-surface-subtle-bg);
         border-top: 1px solid var(--bs-border-color);
-        padding: 1.5rem 2rem;
+        padding: 1.25rem 2rem;
         display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
     }
 
     [data-bs-theme="dark"] .modal-footer-modern {
@@ -54,11 +55,17 @@
         border-color: rgba(255, 255, 255, 0.05);
     }
 
-    @media (min-width: 576px) {
+    @media (max-width: 575.98px) {
         .modal-footer-modern {
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
+            flex-direction: column-reverse;
+            align-items: stretch;
+            padding: 1.25rem 1.5rem;
+        }
+        
+        .modal-footer-modern > div {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
     }
 </style>

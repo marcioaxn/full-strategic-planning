@@ -3,7 +3,7 @@
     <div class="leads-header d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
         <div>
             <div class="d-flex align-items-center gap-2 mb-2">
-                <div class="header-icon gradient-theme-icon">
+                <div class="icon-circle-header gradient-theme-icon">
                     <i class="bi bi-compass-fill"></i>
                 </div>
                 <h1 class="h3 fw-bold mb-0">{{ __('Identidade Estratégica') }}</h1>
@@ -30,6 +30,15 @@
             </div>
 
             @if($organizacaoId && !$isEditing && $peiAtivo)
+                @if($identidadeId)
+                    <a href="{{ route('pei.identidade.detalhes', $identidadeId) }}" 
+                       wire:navigate
+                       class="btn btn-outline-info btn-modern me-2"
+                       data-bs-toggle="tooltip" 
+                       title="{{ __('Ver detalhes e histórico') }}">
+                        <i class="bi bi-eye me-1"></i>{{ __('Detalhar') }}
+                    </a>
+                @endif
                 <x-action-button
                     variant="primary"
                     icon="pencil"
@@ -40,6 +49,174 @@
                     {{ __('Editar Missão/Visão') }}
                 </x-action-button>
             @endif
+        </div>
+    </div>
+
+    {{-- Seção Educativa: O que é Identidade Estratégica --}}
+    <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
+        <div class="card-header bg-transparent border-0 p-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-circle bg-white bg-opacity-25">
+                        <i class="bi bi-book-fill fs-4 text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1 text-white">
+                            <i class="bi bi-mortarboard me-2"></i>{{ __('O que é Identidade Estratégica?') }}
+                        </h5>
+                        <p class="mb-0 text-white-50 small">
+                            {{ __('Aprenda os conceitos fundamentais de Missão, Visão e Valores') }}
+                        </p>
+                    </div>
+                </div>
+                <button
+                    @click="expanded = !expanded"
+                    class="btn btn-sm btn-light rounded-circle d-flex align-items-center justify-content-center"
+                    style="width: 36px; height: 36px;"
+                    :aria-expanded="expanded"
+                    aria-label="{{ __('Expandir/Recolher') }}"
+                >
+                    <i class="bi" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                </button>
+            </div>
+        </div>
+
+        <div x-show="expanded"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform scale-95"
+             x-transition:enter-end="opacity-100 transform scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 transform scale-100"
+             x-transition:leave-end="opacity-0 transform scale-95"
+             style="display: none;"
+        >
+            <div class="card-body p-4 bg-white border-top">
+                <div class="row g-4">
+                    {{-- Introdução --}}
+                    <div class="col-12">
+                        <div class="alert alert-info border-0 d-flex align-items-start gap-3 mb-0">
+                            <div class="icon-circle-mini bg-info bg-opacity-10 text-info flex-shrink-0">
+                                <i class="bi bi-lightbulb-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-2">{{ __('Por que a Identidade Estratégica é importante?') }}</h6>
+                                <p class="mb-0 small">
+                                    {{ __('A Identidade Estratégica é a base do planejamento estratégico. Ela define quem somos (Missão), onde queremos chegar (Visão) e como nos comportamos no caminho (Valores). Sem uma identidade clara, a organização perde direção e coesão.') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Cards dos Conceitos --}}
+                    <div class="col-md-4">
+                        <div class="card h-100 border border-primary border-opacity-25 shadow-sm">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="icon-circle bg-primary bg-opacity-10 text-primary">
+                                        <i class="bi bi-bullseye fs-5"></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-0 text-primary">{{ __('Missão') }}</h6>
+                                </div>
+                                <p class="small text-muted mb-3">
+                                    <strong>{{ __('Definição:') }}</strong> {{ __('A razão de existir da organização. Responde à pergunta "Por que existimos?"') }}
+                                </p>
+                                <div class="bg-light p-3 rounded-3 border mb-3">
+                                    <p class="small mb-2 fw-semibold text-dark">{{ __('Características:') }}</p>
+                                    <ul class="small mb-0 ps-3">
+                                        <li>{{ __('Foco no presente') }}</li>
+                                        <li>{{ __('Define o propósito') }}</li>
+                                        <li>{{ __('Clara e inspiradora') }}</li>
+                                        <li>{{ __('Orientada ao público') }}</li>
+                                    </ul>
+                                </div>
+                                <div class="alert alert-primary alert-sm py-2 px-3 mb-0 d-flex align-items-start gap-2">
+                                    <i class="bi bi-chat-quote-fill flex-shrink-0"></i>
+                                    <p class="small mb-0 fst-italic">
+                                        {{ __('"Prover educação de qualidade acessível a todos"') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card h-100 border border-success border-opacity-25 shadow-sm">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="icon-circle bg-success bg-opacity-10 text-success">
+                                        <i class="bi bi-eye-fill fs-5"></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-0 text-success">{{ __('Visão') }}</h6>
+                                </div>
+                                <p class="small text-muted mb-3">
+                                    <strong>{{ __('Definição:') }}</strong> {{ __('O futuro desejado pela organização. Responde à pergunta "Onde queremos chegar?"') }}
+                                </p>
+                                <div class="bg-light p-3 rounded-3 border mb-3">
+                                    <p class="small mb-2 fw-semibold text-dark">{{ __('Características:') }}</p>
+                                    <ul class="small mb-0 ps-3">
+                                        <li>{{ __('Foco no futuro') }}</li>
+                                        <li>{{ __('Ambiciosa e motivadora') }}</li>
+                                        <li>{{ __('Mensurável no tempo') }}</li>
+                                        <li>{{ __('Desafiadora, mas realizável') }}</li>
+                                    </ul>
+                                </div>
+                                <div class="alert alert-success alert-sm py-2 px-3 mb-0 d-flex align-items-start gap-2">
+                                    <i class="bi bi-chat-quote-fill flex-shrink-0"></i>
+                                    <p class="small mb-0 fst-italic">
+                                        {{ __('"Ser referência nacional em educação até 2030"') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card h-100 border border-warning border-opacity-25 shadow-sm">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="icon-circle bg-warning bg-opacity-10 text-warning">
+                                        <i class="bi bi-star-fill fs-5"></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-0 text-warning">{{ __('Valores') }}</h6>
+                                </div>
+                                <p class="small text-muted mb-3">
+                                    <strong>{{ __('Definição:') }}</strong> {{ __('Princípios que guiam o comportamento. Respondem à pergunta "Como agimos?"') }}
+                                </p>
+                                <div class="bg-light p-3 rounded-3 border mb-3">
+                                    <p class="small mb-2 fw-semibold text-dark">{{ __('Características:') }}</p>
+                                    <ul class="small mb-0 ps-3">
+                                        <li>{{ __('Não negociáveis') }}</li>
+                                        <li>{{ __('Guiam decisões') }}</li>
+                                        <li>{{ __('Definem a cultura') }}</li>
+                                        <li>{{ __('Aplicáveis no dia a dia') }}</li>
+                                    </ul>
+                                </div>
+                                <div class="alert alert-warning alert-sm py-2 px-3 mb-0 d-flex align-items-start gap-2">
+                                    <i class="bi bi-chat-quote-fill flex-shrink-0"></i>
+                                    <p class="small mb-0 fst-italic">
+                                        {{ __('"Ética, Excelência, Inovação"') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Dica Final --}}
+                    <div class="col-12">
+                        <div class="alert alert-secondary border-0 d-flex align-items-start gap-3 mb-0">
+                            <div class="icon-circle-mini bg-secondary bg-opacity-10 text-secondary flex-shrink-0">
+                                <i class="bi bi-stars"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-2">{{ __('Dica Profissional') }}</h6>
+                                <p class="mb-0 small">
+                                    {{ __('Uma boa Identidade Estratégica deve ser memorável, clara e inspiradora. Evite jargões e frases genéricas. Envolva a equipe na construção para garantir alinhamento e engajamento. Use o Mentor de IA abaixo para obter sugestões personalizadas!') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -165,7 +342,7 @@
                             <div class="icon-circle bg-primary-subtle text-primary">
                                 <i class="bi bi-bullseye"></i>
                             </div>
-                            <h5 class="mb-0 fw-bold">{{ __('Missão') }}</h5>
+                            <h5 class="mb-0 fw-bold">{{ __('Missão') }} <x-tooltip title="Razão de existir da organização (presente)" /></h5>
                         </div>
                     </div>
                     <div class="card-body pt-0">
@@ -204,7 +381,7 @@
                             <div class="icon-circle bg-success-subtle text-success">
                                 <i class="bi bi-eye-fill"></i>
                             </div>
-                            <h5 class="mb-0 fw-bold">{{ __('Visão') }}</h5>
+                            <h5 class="mb-0 fw-bold">{{ __('Visão') }} <x-tooltip title="Onde a organização quer chegar (futuro)" /></h5>
                         </div>
                     </div>
                     <div class="card-body pt-0">
@@ -266,8 +443,39 @@
                             </div>
                             <h5 class="mb-0 fw-bold">{{ __('Valores Organizacionais') }}</h5>
                         </div>
+                        @if($peiAtivo)
+                            <button type="button" class="btn btn-sm btn-outline-warning rounded-pill" wire:click="$toggle('showExemplosValores')">
+                                <i class="bi bi-lightbulb me-1"></i> Ver Exemplos
+                            </button>
+                        @endif
                     </div>
                     <div class="card-body pt-0">
+                        @if($showExemplosValores)
+                            <div class="alert alert-warning bg-warning bg-opacity-10 border-warning border-opacity-25 mb-4 animate-fade-in">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-lightbulb me-2"></i>Biblioteca de Valores Comuns</h6>
+                                    <button type="button" class="btn-close" style="font-size: 0.7rem;" wire:click="$set('showExemplosValores', false)"></button>
+                                </div>
+                                <div class="row g-2">
+                                    @foreach([
+                                        ['Etica', 'Agir com integridade e transparencia.'],
+                                        ['Inovacao', 'Buscar novas solucoes e melhoria continua.'],
+                                        ['Foco no Cidadao', 'Priorizar as necessidades da sociedade.'],
+                                        ['Excelencia', 'Compromisso com a qualidade e resultados.'],
+                                        ['Valorizacao de Pessoas', 'Respeito e desenvolvimento dos colaboradores.'],
+                                        ['Sustentabilidade', 'Responsabilidade social, economica e ambiental.']
+                                    ] as $exemplo)
+                                        <div class="col-md-4">
+                                            <button type="button" wire:click="adicionarValorSugerido('{{ $exemplo[0] }}', '{{ $exemplo[1] }}')" class="btn btn-sm btn-white border w-100 text-start h-100 hover-shadow">
+                                                <div class="fw-bold small">{{ $exemplo[0] }}</div>
+                                                <div class="x-small text-muted text-truncate">{{ $exemplo[1] }}</div>
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
                         <p class="text-muted small mb-4">
                             {{ __('Os princípios fundamentais e crenças que orientam o comportamento e as decisões da organização.') }}
                         </p>
@@ -279,13 +487,20 @@
                                     <div class="card h-100 border-0 shadow-sm bg-light hover-card">
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <h6 class="fw-bold text-primary mb-0">{{ $valor->nom_valor }}</h6>
+                                                <a href="{{ route('pei.valores.detalhes', $valor->cod_valor) }}" wire:navigate class="fw-bold text-primary mb-0 text-decoration-none hover-primary">
+                                                    {{ $valor->nom_valor }}
+                                                </a>
                                                 @if($peiAtivo)
                                                     <div class="dropdown">
                                                         <button class="btn btn-sm btn-icon btn-ghost-secondary rounded-circle" type="button" data-bs-toggle="dropdown">
                                                             <i class="bi bi-three-dots-vertical"></i>
                                                         </button>
                                                         <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm">
+                                                            <li>
+                                                                <a class="dropdown-item small" href="{{ route('pei.valores.detalhes', $valor->cod_valor) }}" wire:navigate>
+                                                                    <i class="bi bi-eye me-2"></i>Detalhar
+                                                                </a>
+                                                            </li>
                                                             <li>
                                                                 <button class="dropdown-item small" wire:click="editarValor('{{ $valor->cod_valor }}')">
                                                                     <i class="bi bi-pencil me-2"></i>Editar
@@ -332,7 +547,7 @@
                                             @else
                                                 <button class="btn btn-link text-decoration-none text-muted d-flex flex-column align-items-center p-3"
                                                         wire:click="$set('novoValorTitulo', ' ')" {{-- Hack to show form --}}>
-                                                    <div class="rounded-circle bg-secondary bg-opacity-10 p-2 mb-2">
+                                                    <div class="icon-circle-mini bg-secondary bg-opacity-10">
                                                         <i class="bi bi-plus-lg text-secondary"></i>
                                                     </div>
                                                     <span class="small fw-semibold">Adicionar Novo Valor</span>
@@ -353,7 +568,7 @@
     <x-confirmation-modal wire:model.live="showDeleteModal">
         <x-slot name="title">
             <div class="modal-header-modern">
-                <div class="modal-icon modal-icon-danger">
+                <div class="icon-circle-mini modal-icon-danger">
                     <i class="bi bi-trash"></i>
                 </div>
                 <div>

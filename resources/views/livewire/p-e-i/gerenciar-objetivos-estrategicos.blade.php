@@ -1,12 +1,15 @@
 <div>
     {{-- Cabeçalho Interno --}}
-    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
+    <div class="leads-header d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
         <div>
             <div class="d-flex align-items-center gap-2 mb-2">
-                <div class="header-icon gradient-theme-icon">
+                <div class="icon-circle-header gradient-theme-icon">
                     <i class="bi bi-shield-check"></i>
                 </div>
-                <h1 class="h3 fw-bold mb-0">Objetivos Estratégicos</h1>
+                <h1 class="h3 fw-bold mb-0">{{ __('Objetivos Estratégicos') }}</h1>
+                <span class="badge-modern badge-count">
+                    {{ $objetivos->count() }}
+                </span>
             </div>
             <p class="text-muted mb-0">
                 @if($peiAtivo)
@@ -147,6 +150,45 @@
                 {{ $objetivos->links() }}
             </div>
         </div>
+
+        {{-- Strategic Objectives Help Section (Educational Pattern) --}}
+        <div class="card card-modern mt-4 border-0 shadow-sm educational-card-gradient animate-fade-in">
+            <div class="card-body p-4 text-white">
+                <div class="row g-4">
+                    {{-- Main Explanation --}}
+                    <div class="col-12">
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="icon-circle bg-white bg-opacity-25">
+                                    <i class="bi bi-shield-lock-fill fs-3 text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="fw-bold mb-2 text-white">{{ __('O que são Objetivos Estratégicos Institucionais?') }}</h5>
+                                <p class="mb-0 text-white-50" style="line-height: 1.6;">
+                                    Diferente dos objetivos das perspectivas do BSC, os <strong>Objetivos Estratégicos Institucionais</strong> são metas de altíssimo nível que representam as grandes prioridades da organização para o ciclo do PEI. Eles aparecem em destaque no topo do Mapa Estratégico e servem como o "norte" para todas as unidades da instituição.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Tips Grid --}}
+                    <div class="col-md-6">
+                        <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
+                            <h6 class="fw-bold text-white mb-2"><i class="bi bi-star-fill me-2"></i>Propósito Institucional</h6>
+                            <p class="small mb-0 opacity-75">Estes objetivos focam na missão global da organização. Eles devem ser amplos o suficiente para englobar várias frentes de trabalho, mas específicos o suficiente para serem alcançados no período de vigência do PEI.</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
+                            <h6 class="fw-bold text-white mb-2"><i class="bi bi-map-fill me-2"></i>Visualização no Mapa</h6>
+                            <p class="small mb-0 opacity-75">No Mapa Estratégico, esses objetivos são exibidos acima das perspectivas, demonstrando que o sucesso nas dimensões do BSC (Financeiro, Clientes, Processos, Aprendizado) é o que permite atingir estas metas institucionais.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     @endif
 
     {{-- Modal de Cadastro/Edição --}}
@@ -196,7 +238,7 @@
     <x-confirmation-modal wire:model.live="showDeleteModal">
         <x-slot name="title">
             <div class="modal-header-modern">
-                <div class="modal-icon modal-icon-danger">
+                <div class="icon-circle-mini modal-icon-danger">
                     <i class="bi bi-exclamation-triangle"></i>
                 </div>
                 <div>
@@ -236,15 +278,16 @@
 
     <style>
         .header-icon {
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 10px;
-            color: white;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
         }
+
+        .loading-opacity {
         .btn-icon:hover { transform: scale(1.1); }
         .modal-content { animation: fadeInUp 0.2s ease-out; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }

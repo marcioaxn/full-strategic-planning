@@ -37,7 +37,7 @@
             <!-- Email Field -->
             <div class="mb-3 form-group-modern">
                 <x-label for="email" value="{{ __('Email') }}" class="form-label-modern" />
-                <div class="input-icon-wrapper">
+                <div class="icon-circle-mini input-icon-wrapper">
                     <i class="bi bi-envelope input-icon"></i>
                     <x-input id="email"
                              type="email"
@@ -55,7 +55,7 @@
             <!-- Password Field -->
             <div class="mb-3 form-group-modern">
                 <x-label for="password" value="{{ __('Password') }}" class="form-label-modern" />
-                <div class="input-icon-wrapper position-relative">
+                <div class="icon-circle-mini input-icon-wrapper position-relative">
                     <i class="bi bi-lock input-icon"></i>
                     <x-input id="password"
                              type="password"
@@ -118,7 +118,7 @@
         </form>
 
         <!-- Security Badge -->
-        <div class="security-badge text-center mt-4">
+        <div class="icon-circle security-badge text-center mt-4">
             <i class="bi bi-shield-check text-success me-2"></i>
             <span class="small text-muted">{{ __('Your data is protected with encryption') }}</span>
         </div>

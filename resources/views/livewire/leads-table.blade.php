@@ -3,7 +3,7 @@
     <div class="leads-header d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
         <div>
             <div class="d-flex align-items-center gap-2 mb-2">
-                <div class="header-icon gradient-theme-icon">
+                <div class="icon-circle-header gradient-theme-icon">
                     <i class="bi bi-people-fill"></i>
                 </div>
                 <h1 class="h3 fw-bold mb-0">{{ __('Leads') }}</h1>
@@ -146,7 +146,7 @@
                         <tr class="table-row-hover" wire:key="lead-row-{{ $lead->id }}">
                             <td class="ps-4">
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="avatar-modern">
+                                    <div class="icon-circle-header avatar-modern">
                                         {{ strtoupper(substr($lead->name, 0, 2)) }}
                                     </div>
                                     <div>
@@ -233,7 +233,7 @@
                     <div class="card-body p-3">
                         <div class="d-flex align-items-start justify-content-between mb-3">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="avatar-modern avatar-mobile">
+                                <div class="icon-circle-header avatar-modern avatar-mobile">
                                     {{ strtoupper(substr($lead->name, 0, 2)) }}
                                 </div>
                                 <div>
@@ -320,7 +320,7 @@
     <x-dialog-modal wire:key="leads-form-modal" wire:model.live="showFormModal" maxWidth="2xl">
         <x-slot name="title">
             <div class="modal-header-modern">
-                <div class="modal-icon modal-icon-primary">
+                <div class="icon-circle-mini modal-icon-primary">
                     <i class="bi bi-{{ $editing ? 'pencil' : 'plus-lg' }}"></i>
                 </div>
                 <div>
@@ -438,25 +438,23 @@
         </x-slot>
 
         <x-slot name="footer">
-            <div class="modal-footer-modern">
-                <span class="text-muted small">
-                    <span class="text-danger">*</span> {{ __('Required fields') }}
-                </span>
-                <div class="d-flex gap-2">
-                    <x-secondary-button wire:click="closeFormModal" wire:loading.attr="disabled" class="btn-modern">
-                        {{ __('Cancel') }}
-                    </x-secondary-button>
+            <span class="text-muted small d-none d-sm-inline">
+                <span class="text-danger">*</span> {{ __('Required fields') }}
+            </span>
+            <div class="d-flex gap-2">
+                <x-secondary-button wire:click="closeFormModal" wire:loading.attr="disabled" class="btn-modern">
+                    {{ __('Cancel') }}
+                </x-secondary-button>
 
-                    <x-button type="button" wire:click="save" wire:loading.attr="disabled" class="btn-save-modern">
-                        <span wire:loading.remove wire:target="save">
-                            <i class="bi bi-check-lg me-1"></i>{{ __('Save') }}
-                        </span>
-                        <span wire:loading wire:target="save">
-                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                            {{ __('Saving...') }}
-                        </span>
-                    </x-button>
-                </div>
+                <x-button type="button" wire:click="save" wire:loading.attr="disabled" class="btn-save-modern">
+                    <span wire:loading.remove wire:target="save">
+                        <i class="bi bi-check-lg me-1"></i>{{ __('Save') }}
+                    </span>
+                    <span wire:loading wire:target="save">
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        {{ __('Saving...') }}
+                    </span>
+                </x-button>
             </div>
         </x-slot>
     </x-dialog-modal>
@@ -465,7 +463,7 @@
     <x-confirmation-modal wire:key="leads-delete-modal" wire:model.live="showDeleteModal">
         <x-slot name="title">
             <div class="modal-header-modern">
-                <div class="modal-icon modal-icon-danger">
+                <div class="icon-circle-mini modal-icon-danger">
                     <i class="bi bi-exclamation-triangle"></i>
                 </div>
                 <div>

@@ -87,14 +87,109 @@
 
         <!-- Coluna Direita: Gráficos e Evolução -->
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm mb-4">
+            <div class="card border-0 shadow-sm mb-4" 
+                 wire:key="chart-card-{{ $anoFiltro }}"
+                 x-data="{ 
+                    chartData: @entangle('chartData'),
+                    init() {
+                        this.initChart();
+                        
+                        // Escuta o evento explícito do Livewire para atualização forçada
+                        window.addEventListener('updateChart', event => {
+                            this.updateChartData(event.detail.data);
+                        });
+
+                        // Watch para mudanças via entangle (ex: mudanças no navbar)
+                        $watch('chartData', (value) => {
+                            this.updateChartData(value);
+                        });
+                    },
+                    initChart() {
+                        const canvas = document.getElementById('evolucaoChart');
+                        if (!canvas) return;
+                        
+                        // Garante que não existam gráficos fantasmas no mesmo canvas
+                        const existingChart = Chart.getChart(canvas);
+                        if (existingChart) existingChart.destroy();
+                        
+                        new Chart(canvas, {
+                            type: 'line',
+                            data: {
+                                labels: this.chartData.labels,
+                                datasets: [
+                                    {
+                                        label: 'Previsto',
+                                        data: this.chartData.previsto,
+                                        borderColor: '#6c757d',
+                                        borderDash: [5, 5],
+                                        tension: 0.1,
+                                        fill: false,
+                                        spanGaps: true
+                                    },
+                                    {
+                                        label: 'Realizado',
+                                        data: this.chartData.realizado,
+                                        borderColor: '#0d6efd',
+                                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                                        fill: true,
+                                        tension: 0.3,
+                                        pointRadius: 5,
+                                        pointBackgroundColor: '#0d6efd',
+                                        spanGaps: false
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    y: { 
+                                        beginAtZero: true,
+                                        ticks: {
+                                            callback: function(value) {
+                                                return value.toLocaleString('pt-BR');
+                                            }
+                                        }
+                                    }
+                                },
+                                plugins: {
+                                    legend: { position: 'bottom' },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                let label = context.dataset.label || '';
+                                                if (label) label += ': ';
+                                                if (context.parsed.y !== null) {
+                                                    label += context.parsed.y.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                                                }
+                                                return label;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    },
+                    updateChartData(data) {
+                        const canvas = document.getElementById('evolucaoChart');
+                        const chart = Chart.getChart(canvas);
+                        if (chart && data) {
+                            chart.data.datasets[0].data = data.previsto;
+                            chart.data.datasets[1].data = data.realizado;
+                            chart.update();
+                        }
+                    }
+                 }">
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold"><i class="bi bi-graph-up me-2 text-primary"></i>Evolução Temporal</h5>
-                    <select wire:model.live="anoFiltro" class="form-select form-select-sm w-auto">
-                        @for($i = now()->year - 2; $i <= now()->year + 1; $i++)
-                            <option value="{{ $i }}">{{ $i }}</option>
-                        @endfor
-                    </select>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="small text-muted">Ano:</span>
+                        <select wire:model.live="anoFiltro" class="form-select form-select-sm w-auto fw-bold">
+                            @foreach($anosDisponiveis as $ano)
+                                <option value="{{ $ano }}">{{ $ano }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="card-body p-4">
                     <div style="height: 300px;">
@@ -124,7 +219,7 @@
                             @endphp
                             @foreach($mesesNomes as $num => $nome)
                                 @php
-                                    $ev = $indicador->evolucoes->where('num_ano', $anoFiltro)->where('num_mes', $num)->first();
+                                    $ev = $indicador->evolucoes->where('num_ano', (int)$anoFiltro)->where('num_mes', $num)->first();
                                     $ating = $ev ? $ev->calcularAtingimento() : 0;
                                 @endphp
                                 <tr>
@@ -157,67 +252,4 @@
 
     <!-- Chart.js Script -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener('livewire:navigated', () => {
-            initChart();
-        });
-
-        let myChart;
-
-        function initChart() {
-            const ctx = document.getElementById('evolucaoChart');
-            if (!ctx) return;
-
-            const data = @json($chartData);
-
-            if (myChart) {
-                myChart.destroy();
-            }
-
-            myChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.labels,
-                    datasets: [
-                        {
-                            label: 'Previsto',
-                            data: data.previsto,
-                            borderColor: '#6c757d',
-                            borderDash: [5, 5],
-                            tension: 0.1,
-                            fill: false
-                        },
-                        {
-                            label: 'Realizado',
-                            data: data.realizado,
-                            borderColor: '#0d6efd',
-                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                            fill: true,
-                            tension: 0.3,
-                            pointRadius: 5,
-                            pointBackgroundColor: '#0d6efd'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true }
-                    },
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
-                }
-            });
-        }
-
-        window.addEventListener('updateChart', event => {
-            const data = event.detail.data;
-            myChart.data.labels = data.labels;
-            myChart.data.datasets[0].data = data.previsto;
-            myChart.data.datasets[1].data = data.realizado;
-            myChart.update();
-        });
-    </script>
 </div>

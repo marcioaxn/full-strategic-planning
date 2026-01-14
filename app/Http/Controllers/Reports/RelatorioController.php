@@ -53,15 +53,10 @@ class RelatorioController extends Controller
         
         $pei = PEI::ativos()->first();
         
-        // 1. Valores e Objetivos Estratégicos (Nova Entidade)
+        // 1. Valores (Identidade Cultural)
         $valores = Valor::where('cod_pei', $pei?->cod_pei)
             ->where('cod_organizacao', $organizacaoId)
             ->orderBy('nom_valor')
-            ->get();
-
-        $objetivosEstrategicos = ObjetivoEstrategico::where('cod_pei', $pei?->cod_pei)
-            ->where('cod_organizacao', $organizacaoId)
-            ->orderBy('created_at', 'asc')
             ->get();
 
         // 2. Perspectivas e Objetivos (BSC)
@@ -170,7 +165,7 @@ class RelatorioController extends Controller
         }
 
         $pdf = Pdf::loadView('relatorios.executivo', compact(
-            'organizacao', 'identidade', 'valores', 'objetivosEstrategicos', 
+            'organizacao', 'identidade', 'valores', 
             'perspectivas', 'planos', 'filtros', 'swot', 'riscosSummary', 'riscosDetalhado', 'grausSatisfacao',
             'aiSummary', 'aiTrends'
         ));

@@ -4,7 +4,7 @@
         <nav class="navbar navbar-expand-lg fixed-top public-navbar shadow-sm">
             <div class="container-fluid px-4 py-2">
                 <a class="navbar-brand fw-bold d-flex align-items-center" href="/">
-                    <div class="icon-shape gradient-theme-icon rounded-circle p-2 me-2 shadow-sm">
+                    <div class="icon-circle-header gradient-theme-icon rounded-circle p-2 me-2 shadow-sm">
                         <i class="bi bi-diagram-3 fs-5 text-white"></i>
                     </div>
                     <div>

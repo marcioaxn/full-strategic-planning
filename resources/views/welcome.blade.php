@@ -107,7 +107,7 @@
         <div class="container">
             <div class="row align-items-center min-vh-100 py-5">
                 <div class="col-lg-6 hero-content">
-                    <div class="hero-badge">
+                    <div class="icon-circle-mini hero-badge">
                         <i class="bi bi-stars me-2"></i>
                         <span>Laravel Jetstream Starter Kit</span>
                     </div>
@@ -129,7 +129,7 @@
                     </div>
                     <div class="hero-stats">
                         <div class="hero-stat">
-                            <div class="hero-stat-icon">
+                            <div class="icon-circle hero-stat-icon">
                                 <i class="bi bi-shield-check"></i>
                             </div>
                             <div class="hero-stat-content">
@@ -138,7 +138,7 @@
                             </div>
                         </div>
                         <div class="hero-stat">
-                            <div class="hero-stat-icon">
+                            <div class="icon-circle hero-stat-icon">
                                 <i class="bi bi-lightning-charge"></i>
                             </div>
                             <div class="hero-stat-content">
@@ -147,7 +147,7 @@
                             </div>
                         </div>
                         <div class="hero-stat">
-                            <div class="hero-stat-icon">
+                            <div class="icon-circle hero-stat-icon">
                                 <i class="bi bi-palette"></i>
                             </div>
                             <div class="hero-stat-content">
@@ -159,16 +159,16 @@
                 </div>
                 <div class="col-lg-6 hero-image">
                     <div class="hero-illustration">
-                        <div class="illustration-card card-1">
+                        <div class="icon-circle illustration-card card-1">
                             <i class="bi bi-code-slash"></i>
                         </div>
-                        <div class="illustration-card card-2">
+                        <div class="icon-circle illustration-card card-2">
                             <i class="bi bi-gear-fill"></i>
                         </div>
-                        <div class="illustration-card card-3">
+                        <div class="icon-circle illustration-card card-3">
                             <i class="bi bi-database-fill"></i>
                         </div>
-                        <div class="illustration-main">
+                        <div class="icon-circle illustration-main">
                             <i class="bi bi-laptop"></i>
                         </div>
                     </div>
@@ -181,7 +181,7 @@
     <section class="section-padding" id="about">
         <div class="container">
             <div class="section-header text-center">
-                <div class="section-badge">
+                <div class="icon-circle-mini section-badge">
                     <i class="bi bi-info-circle me-2"></i>About
                 </div>
                 <h2 class="section-title">Built for Modern Development</h2>
@@ -193,7 +193,7 @@
             <div class="row g-4">
                 <div class="col-md-6 col-lg-3">
                     <div class="feature-card">
-                        <div class="feature-icon feature-icon-primary">
+                        <div class="icon-circle feature-icon-primary">
                             <i class="bi bi-layers-fill"></i>
                         </div>
                         <h3 class="feature-title">Laravel 12</h3>
@@ -205,7 +205,7 @@
 
                 <div class="col-md-6 col-lg-3">
                     <div class="feature-card">
-                        <div class="feature-icon feature-icon-success">
+                        <div class="icon-circle feature-icon-success">
                             <i class="bi bi-lightning-charge-fill"></i>
                         </div>
                         <h3 class="feature-title">Livewire 3</h3>
@@ -217,7 +217,7 @@
 
                 <div class="col-md-6 col-lg-3">
                     <div class="feature-card">
-                        <div class="feature-icon feature-icon-warning">
+                        <div class="icon-circle feature-icon-warning">
                             <i class="bi bi-shield-lock-fill"></i>
                         </div>
                         <h3 class="feature-title">Jetstream</h3>
@@ -229,7 +229,7 @@
 
                 <div class="col-md-6 col-lg-3">
                     <div class="feature-card">
-                        <div class="feature-icon feature-icon-info">
+                        <div class="icon-circle feature-icon-info">
                             <i class="bi bi-palette-fill"></i>
                         </div>
                         <h3 class="feature-title">Bootstrap 5</h3>
@@ -246,7 +246,7 @@
     <section class="section-padding section-alt" id="features">
         <div class="container">
             <div class="section-header text-center">
-                <div class="section-badge">
+                <div class="icon-circle-mini section-badge">
                     <i class="bi bi-star-fill me-2"></i>Features
                 </div>
                 <h2 class="section-title">Everything You Need to Start</h2>
@@ -258,7 +258,7 @@
             <div class="row g-4 align-items-center mb-5">
                 <div class="col-lg-6">
                     <div class="feature-showcase-image">
-                        <div class="showcase-card showcase-primary">
+                        <div class="icon-circle showcase-card showcase-primary">
                             <i class="bi bi-person-check-fill"></i>
                             <span>Authentication</span>
                         </div>
@@ -295,7 +295,7 @@
             <div class="row g-4 align-items-center flex-lg-row-reverse mb-5">
                 <div class="col-lg-6">
                     <div class="feature-showcase-image">
-                        <div class="showcase-card showcase-success">
+                        <div class="icon-circle showcase-card showcase-success">
                             <i class="bi bi-grid-3x3-gap-fill"></i>
                             <span>Components</span>
                         </div>
@@ -332,7 +332,7 @@
             <div class="row g-4 align-items-center">
                 <div class="col-lg-6">
                     <div class="feature-showcase-image">
-                        <div class="showcase-card showcase-warning">
+                        <div class="icon-circle showcase-card showcase-warning">
                             <i class="bi bi-moon-stars-fill"></i>
                             <span>Dark Mode</span>
                         </div>
@@ -372,7 +372,7 @@
     <section class="section-padding" id="tech">
         <div class="container">
             <div class="section-header text-center">
-                <div class="section-badge">
+                <div class="icon-circle-mini section-badge">
                     <i class="bi bi-stack me-2"></i>Technology
                 </div>
                 <h2 class="section-title">Modern Technology Stack</h2>
@@ -383,7 +383,7 @@
 
             <div class="tech-grid">
                 <div class="tech-item">
-                    <div class="tech-icon">
+                    <div class="icon-circle-mini tech-icon">
                         <i class="bi bi-filetype-php"></i>
                     </div>
                     <div class="tech-name">PHP 8.2+</div>
@@ -391,7 +391,7 @@
                 </div>
 
                 <div class="tech-item">
-                    <div class="tech-icon">
+                    <div class="icon-circle-mini tech-icon">
                         <i class="bi bi-database-fill"></i>
                     </div>
                     <div class="tech-name">MySQL / PostgreSQL</div>
@@ -399,7 +399,7 @@
                 </div>
 
                 <div class="tech-item">
-                    <div class="tech-icon">
+                    <div class="icon-circle-mini tech-icon">
                         <i class="bi bi-window-stack"></i>
                     </div>
                     <div class="tech-name">Alpine.js</div>
@@ -407,7 +407,7 @@
                 </div>
 
                 <div class="tech-item">
-                    <div class="tech-icon">
+                    <div class="icon-circle-mini tech-icon">
                         <i class="bi bi-tsunami"></i>
                     </div>
                     <div class="tech-name">Vite</div>
@@ -415,7 +415,7 @@
                 </div>
 
                 <div class="tech-item">
-                    <div class="tech-icon">
+                    <div class="icon-circle-mini tech-icon">
                         <i class="bi bi-file-earmark-code"></i>
                     </div>
                     <div class="tech-name">SCSS</div>
@@ -423,7 +423,7 @@
                 </div>
 
                 <div class="tech-item">
-                    <div class="tech-icon">
+                    <div class="icon-circle-mini tech-icon">
                         <i class="bi bi-shield-fill-check"></i>
                     </div>
                     <div class="tech-name">Sanctum</div>
@@ -437,7 +437,7 @@
     <section class="section-padding section-alt" id="testimonials">
         <div class="container">
             <div class="section-header text-center">
-                <div class="section-badge">
+                <div class="icon-circle-mini section-badge">
                     <i class="bi bi-chat-quote-fill me-2"></i>Testimonials
                 </div>
                 <h2 class="section-title">Loved by Developers</h2>
@@ -460,7 +460,7 @@
                             "This starter kit saved me weeks of development time. The integration between Laravel, Livewire, and Bootstrap is flawless!"
                         </p>
                         <div class="testimonial-author">
-                            <div class="author-avatar">
+                            <div class="icon-circle author-avatar">
                                 <i class="bi bi-person-circle"></i>
                             </div>
                             <div class="author-info">
@@ -484,7 +484,7 @@
                             "The dark mode implementation is perfect, and the component library is exactly what I needed for my SaaS project."
                         </p>
                         <div class="testimonial-author">
-                            <div class="author-avatar">
+                            <div class="icon-circle author-avatar">
                                 <i class="bi bi-person-circle"></i>
                             </div>
                             <div class="author-info">
@@ -508,7 +508,7 @@
                             "Professional, clean code with excellent documentation. Perfect foundation for enterprise applications."
                         </p>
                         <div class="testimonial-author">
-                            <div class="author-avatar">
+                            <div class="icon-circle author-avatar">
                                 <i class="bi bi-person-circle"></i>
                             </div>
                             <div class="author-info">
@@ -529,7 +529,7 @@
                 <div class="col-lg-8">
                     <div class="contact-card">
                         <div class="section-header text-center">
-                            <div class="section-badge">
+                            <div class="icon-circle-mini section-badge">
                                 <i class="bi bi-envelope-fill me-2"></i>Contact
                             </div>
                             <h2 class="section-title">Get in Touch</h2>
@@ -540,7 +540,7 @@
 
                         <div class="contact-info">
                             <div class="contact-info-item">
-                                <div class="contact-info-icon">
+                                <div class="icon-circle contact-info-icon">
                                     <i class="bi bi-github"></i>
                                 </div>
                                 <div class="contact-info-content">
@@ -550,7 +550,7 @@
                             </div>
 
                             <div class="contact-info-item">
-                                <div class="contact-info-icon">
+                                <div class="icon-circle contact-info-icon">
                                     <i class="bi bi-book-fill"></i>
                                 </div>
                                 <div class="contact-info-content">
@@ -560,7 +560,7 @@
                             </div>
 
                             <div class="contact-info-item">
-                                <div class="contact-info-icon">
+                                <div class="icon-circle contact-info-icon">
                                     <i class="bi bi-chat-dots-fill"></i>
                                 </div>
                                 <div class="contact-info-content">
@@ -579,7 +579,7 @@
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <div class="footer-brand">
+                <div class="icon-circle footer-brand">
                     <i class="bi bi-rocket-takeoff-fill"></i>
                     <span>{{ config('app.name', 'Laravel') }}</span>
                 </div>

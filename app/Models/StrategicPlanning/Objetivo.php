@@ -87,6 +87,14 @@ class Objetivo extends Model implements Auditable
     }
 
     /**
+     * Relacionamento: Comentários
+     */
+    public function comentarios(): HasMany
+    {
+        return $this->hasMany(ObjetivoComentario::class, 'cod_objetivo', 'cod_objetivo');
+    }
+
+    /**
      * Métodos de Cálculo Agregado
      */
 

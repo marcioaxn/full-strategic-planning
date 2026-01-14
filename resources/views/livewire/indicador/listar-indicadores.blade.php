@@ -332,6 +332,77 @@
                 {{ $indicadores->links() }}
             </div>
         </div>
+
+        {{-- Indicators Help Section (Educational Pattern) --}}
+        <div class="card card-modern mt-4 border-0 shadow-sm educational-card-gradient animate-fade-in">
+            <div class="card-body p-4 text-white">
+                <div class="row g-4">
+                    {{-- Main Explanation --}}
+                    <div class="col-12">
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="icon-circle bg-white bg-opacity-25">
+                                    <i class="bi bi-graph-up-arrow fs-3 text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="fw-bold mb-2 text-white">{{ __('O que são Indicadores (KPIs)?') }}</h5>
+                                <p class="mb-0 text-white-50" style="line-height: 1.6;">
+                                    Os <strong>Indicadores de Desempenho (KPIs)</strong> são métricas quantitativas que permitem medir o progresso em direção aos objetivos. Eles são a "régua" da estratégia: sem indicadores, não é possível saber se um objetivo foi alcançado ou se um plano de ação está sendo efetivo.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Tips Grid --}}
+                    <div class="col-md-4">
+                        <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
+                            <h6 class="fw-bold text-white mb-2"><i class="bi bi-flag me-2"></i>Meta vs. Realizado</h6>
+                            <p class="small mb-0 opacity-75">A <strong>Meta</strong> é o valor que se pretende atingir. O <strong>Realizado</strong> é o valor obtido após a execução. O farol de desempenho compara esses dois valores para mostrar a saúde do indicador.</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
+                            <h6 class="fw-bold text-white mb-2"><i class="bi bi-bar-chart-steps me-2"></i>Linha de Base</h6>
+                            <p class="small mb-0 opacity-75">É o ponto de partida do indicador (o valor histórico ou inicial). Sem uma <strong>Linha de Base</strong>, não conseguimos medir o quanto evoluímos desde o início do planejamento.</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
+                            <h6 class="fw-bold text-white mb-2"><i class="bi bi-calendar-check me-2"></i>Periodicidade</h6>
+                            <p class="small mb-0 opacity-75">Define de quanto em quanto tempo o indicador deve ser atualizado (ex: mensal, trimestral). Manter os lançamentos em dia é fundamental para a governança estratégica.</p>
+                        </div>
+                    </div>
+
+                    {{-- Example Section --}}
+                    <div class="col-12 mt-2">
+                        <div class="bg-white bg-opacity-25 rounded-3 p-3 border border-white border-opacity-25">
+                            <h6 class="fw-bold text-white mb-3 small text-uppercase letter-spacing-1"><i class="bi bi-eye me-2"></i>Exemplo Prático:</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="x-small text-white-50 text-uppercase fw-bold">Indicador</div>
+                                    <div class="small fw-bold">Índice de Capacitação Digital</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="x-small text-white-50 text-uppercase fw-bold">Meta</div>
+                                    <div class="small fw-bold">90%</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="x-small text-white-50 text-uppercase fw-bold">Linha de Base</div>
+                                    <div class="small fw-bold">65% (Ano Anterior)</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="x-small text-white-50 text-uppercase fw-bold">Fórmula</div>
+                                    <div class="small fw-bold">(Servidores Treinados / Total) * 100</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     @endif
 
     <!-- Modal Criar/Editar -->
@@ -488,7 +559,7 @@
     <x-confirmation-modal wire:model.live="showDeleteModal">
         <x-slot name="title">
             <div class="modal-header-modern">
-                <div class="modal-icon modal-icon-danger">
+                <div class="icon-circle-mini modal-icon-danger">
                     <i class="bi bi-exclamation-triangle"></i>
                 </div>
                 <div>

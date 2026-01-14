@@ -3,7 +3,7 @@
     <div class="leads-header d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
         <div>
             <div class="d-flex align-items-center gap-2 mb-2">
-                <div class="header-icon gradient-theme-icon">
+                <div class="icon-circle-header gradient-theme-icon">
                     <i class="bi bi-people-fill"></i>
                 </div>
                 <h1 class="h3 fw-bold mb-0">{{ __('Usuários') }}</h1>
@@ -134,11 +134,11 @@
                         <tr class="table-row-hover" wire:key="user-row-{{ $user->id }}">
                             <td class="ps-4">
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="avatar-modern">
+                                    <div class="icon-circle-header avatar-modern">
                                         {{ strtoupper(substr($user->name, 0, 2)) }}
                                     </div>
                                     <div>
-                                        <div class="fw-semibold text-body-emphasis">{{ $user->name }}</div>
+                                        <a href="{{ route('usuarios.detalhes', $user->id) }}" wire:navigate class="fw-semibold text-body-emphasis text-decoration-none hover-primary">{{ $user->name }}</a>
                                         <div class="text-muted small">
                                             <i class="bi bi-envelope me-1"></i>{{ $user->email }}
                                         </div>
@@ -174,6 +174,10 @@
                             </td>
                             <td class="text-end pe-4">
                                 <div class="action-buttons">
+                                    <a href="{{ route('usuarios.detalhes', $user->id) }}" wire:navigate class="btn btn-icon btn-outline-info" data-bs-toggle="tooltip" title="{{ __('Detalhar') }}">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    
                                     @can('update', $user)
                                         <x-action-button variant="outline-primary" icon="pencil" tooltip="{{ __('Editar') }}" wire:click="edit('{{ $user->id }}')" class="btn-action-icon" />
                                     @endcan
@@ -232,7 +236,7 @@
                     <div class="card-body p-3">
                         <div class="d-flex align-items-start justify-content-between mb-3">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="avatar-modern avatar-mobile">
+                                <div class="icon-circle-header avatar-modern avatar-mobile">
                                     {{ strtoupper(substr($user->name, 0, 2)) }}
                                 </div>
                                 <div>
@@ -289,7 +293,7 @@
     <x-dialog-modal wire:key="user-form-modal" wire:model.live="showFormModal" maxWidth="3xl">
         <x-slot name="title">
             <div class="modal-header-modern">
-                <div class="modal-icon modal-icon-primary">
+                <div class="icon-circle-mini modal-icon-primary">
                     <i class="bi bi-{{ $editing ? 'pencil' : 'person-plus' }}"></i>
                 </div>
                 <div>
@@ -355,12 +359,16 @@
                                 type="password"
                                 class="form-control form-control-modern @error('form.password') is-invalid @enderror"
                                 placeholder="{{ $gerarSenhaAutomatica && !$editing ? 'Será gerada automaticamente' : '********' }}"
-                                wire:model="form.password"
+                                wire:model.live="form.password"
                                 @if($gerarSenhaAutomatica && !$editing) disabled @endif
                             >
                             @error('form.password')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
+
+                            @if(!$gerarSenhaAutomatica || $editing)
+                                <x-password-strength :password="$form['password'] ?? ''" />
+                            @endif
 
                             @if(!$editing)
                                 <div class="mt-2">
@@ -368,6 +376,7 @@
                                         <input class="form-check-input" type="checkbox" id="gerarSenhaAutomatica" wire:model.live="gerarSenhaAutomatica">
                                         <label class="form-check-label small" for="gerarSenhaAutomatica">
                                             <i class="bi bi-magic me-1"></i>{{ __('Gerar senha automática') }}
+                                            <x-tooltip title="Sistema cria senha segura e envia por e-mail" />
                                         </label>
                                     </div>
                                     @if($gerarSenhaAutomatica)
@@ -393,7 +402,10 @@
                         </div>
 
                         <div class="col-12 col-lg-3">
-                            <label for="trocarsenha" class="form-label-modern">{{ __('Exigir Troca de Senha') }}</label>
+                            <label for="trocarsenha" class="form-label-modern">
+                                {{ __('Exigir Troca de Senha') }}
+                                <x-tooltip title="0=Não, 1=Primeiro acesso, 2=Sempre" />
+                            </label>
                             <select id="trocarsenha" class="form-select form-select-modern" wire:model="form.trocarsenha">
                                 <option value="0">Não</option>
                                 <option value="1">Sim (No próximo login)</option>
@@ -407,7 +419,13 @@
                 <div class="col-12">
                     <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary">
                         <i class="bi bi-diagram-3 me-2"></i>{{ __('Vínculos Organizacionais') }}
+                        <x-tooltip title="Cada usuário pode ter perfis diferentes em cada organização" />
                     </h6>
+                    
+                    <div class="alert alert-light border small py-2 mb-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <strong>Perfis comuns:</strong> <span class="text-muted">Gestor PEI (Visualiza tudo), Gestor Unidade (Gerencia sua área), Responsável (Atualiza indicadores e entregas).</span>
+                    </div>
                     
                     <div class="card bg-light border-0 mb-3">
                         <div class="card-body p-3">
@@ -477,25 +495,23 @@
         </x-slot>
 
         <x-slot name="footer">
-            <div class="modal-footer-modern">
-                <span class="text-muted small">
-                    <span class="text-danger">*</span> {{ __('Campos obrigatórios') }}
-                </span>
-                <div class="d-flex gap-2">
-                    <x-secondary-button wire:click="closeFormModal" wire:loading.attr="disabled" class="btn-modern">
-                        {{ __('Cancelar') }}
-                    </x-secondary-button>
+            <span class="text-muted small d-none d-sm-inline">
+                <span class="text-danger">*</span> {{ __('Campos obrigatórios') }}
+            </span>
+            <div class="d-flex gap-2">
+                <x-secondary-button wire:click="closeFormModal" wire:loading.attr="disabled" class="btn-modern">
+                    {{ __('Cancelar') }}
+                </x-secondary-button>
 
-                    <x-button type="button" wire:click="save" wire:loading.attr="disabled" class="btn-save-modern">
-                        <span wire:loading.remove wire:target="save">
-                            <i class="bi bi-check-lg me-1"></i>{{ __('Salvar Usuário') }}
-                        </span>
-                        <span wire:loading wire:target="save">
-                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                            {{ __('Salvando...') }}
-                        </span>
-                    </x-button>
-                </div>
+                <x-button type="button" wire:click="save" wire:loading.attr="disabled" class="btn-save-modern">
+                    <span wire:loading.remove wire:target="save">
+                        <i class="bi bi-check-lg me-1"></i>{{ __('Salvar Usuário') }}
+                    </span>
+                    <span wire:loading wire:target="save">
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        {{ __('Salvando...') }}
+                    </span>
+                </x-button>
             </div>
         </x-slot>
     </x-dialog-modal>
@@ -504,7 +520,7 @@
     <x-confirmation-modal wire:key="user-delete-modal" wire:model.live="showDeleteModal">
         <x-slot name="title">
             <div class="modal-header-modern">
-                <div class="modal-icon modal-icon-danger">
+                <div class="icon-circle-mini modal-icon-danger">
                     <i class="bi bi-exclamation-triangle"></i>
                 </div>
                 <div>

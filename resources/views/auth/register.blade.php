@@ -18,7 +18,7 @@
             <!-- Name Field -->
             <div class="mb-3 form-group-modern">
                 <x-label for="name" value="{{ __('Name') }}" class="form-label-modern" />
-                <div class="input-icon-wrapper">
+                <div class="icon-circle-mini input-icon-wrapper">
                     <i class="bi bi-person input-icon"></i>
                     <x-input id="name"
                              type="text"
@@ -36,7 +36,7 @@
             <!-- Email Field -->
             <div class="mb-3 form-group-modern">
                 <x-label for="email" value="{{ __('Email') }}" class="form-label-modern" />
-                <div class="input-icon-wrapper">
+                <div class="icon-circle-mini input-icon-wrapper">
                     <i class="bi bi-envelope input-icon"></i>
                     <x-input id="email"
                              type="email"
@@ -53,7 +53,7 @@
             <!-- Password Field -->
             <div class="mb-3 form-group-modern">
                 <x-label for="password" value="{{ __('Password') }}" class="form-label-modern" />
-                <div class="input-icon-wrapper position-relative">
+                <div class="icon-circle-mini input-icon-wrapper position-relative">
                     <i class="bi bi-lock input-icon"></i>
                     <x-input id="password"
                              type="password"
@@ -83,19 +83,19 @@
                 <!-- Password Requirements -->
                 <div class="password-requirements mt-3" id="passwordRequirements">
                     <div class="requirement-title">{{ __('Password must contain:') }}</div>
-                    <div class="requirement-item" id="req-length">
+                    <div class="icon-circle-mini requirement-item" id="req-length">
                         <i class="bi bi-circle"></i>
                         <span>{{ __('At least 12 characters') }}</span>
                     </div>
-                    <div class="requirement-item" id="req-uppercase">
+                    <div class="icon-circle-mini requirement-item" id="req-uppercase">
                         <i class="bi bi-circle"></i>
                         <span>{{ __('At least 1 uppercase letter') }}</span>
                     </div>
-                    <div class="requirement-item" id="req-number">
+                    <div class="icon-circle-mini requirement-item" id="req-number">
                         <i class="bi bi-circle"></i>
                         <span>{{ __('At least 1 number') }}</span>
                     </div>
-                    <div class="requirement-item" id="req-special">
+                    <div class="icon-circle-mini requirement-item" id="req-special">
                         <i class="bi bi-circle"></i>
                         <span>{{ __('At least 2 special characters') }}</span>
                     </div>
@@ -105,7 +105,7 @@
             <!-- Confirm Password Field -->
             <div class="mb-3 form-group-modern">
                 <x-label for="password_confirmation" value="{{ __('Confirm Password') }}" class="form-label-modern" />
-                <div class="input-icon-wrapper position-relative">
+                <div class="icon-circle-mini input-icon-wrapper position-relative">
                     <i class="bi bi-lock-fill input-icon"></i>
                     <x-input id="password_confirmation"
                              type="password"
@@ -164,7 +164,7 @@
         </form>
 
         <!-- Security Badge -->
-        <div class="security-badge text-center mt-4">
+        <div class="icon-circle security-badge text-center mt-4">
             <i class="bi bi-shield-check text-success me-2"></i>
             <span class="small text-muted">{{ __('Your data is protected with encryption') }}</span>
         </div>

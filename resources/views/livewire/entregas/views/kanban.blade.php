@@ -4,33 +4,49 @@
     x-data="{ 
         init() {
             this.setupSortable();
-            // Reinicializa quando o Livewire termina de atualizar o componente
-            Livewire.hook('message.processed', (message, component) => {
+            
+            document.addEventListener('livewire:navigated', () => {
                 this.setupSortable();
+            });
+
+            Livewire.on('re-init-sortable', () => {
+                this.$nextTick(() => {
+                    this.setupSortable();
+                });
             });
         },
         setupSortable() {
+            if (typeof Sortable === 'undefined') {
+                console.error('SortableJS not loaded yet');
+                return;
+            }
+
             document.querySelectorAll('.notion-kanban-cards').forEach(column => {
-                if (column.sortable) return; // Evita múltiplas inicializações
+                if (column.sortableInstance) {
+                    column.sortableInstance.destroy();
+                }
                 
-                column.sortable = new Sortable(column, {
+                column.sortableInstance = new Sortable(column, {
                     group: 'entregas',
                     animation: 200,
                     ghostClass: 'notion-card-ghost',
                     chosenClass: 'notion-card-chosen',
                     dragClass: 'notion-card-drag',
-                    handle: '.notion-card', // Permite arrastar o card inteiro
+                    fallbackOnBody: true,
+                    swapThreshold: 0.65,
+                    handle: '.notion-card',
+                    draggable: '.notion-card',
                     onStart: () => {
                         document.querySelectorAll('.notion-kanban-column').forEach(c => c.classList.add('is-dragging'));
                     },
                     onEnd: (evt) => {
                         document.querySelectorAll('.notion-kanban-column').forEach(c => c.classList.remove('is-dragging'));
                         
-                        const entregaId = evt.item.dataset.entregaId;
-                        const novoStatus = evt.to.dataset.status;
+                        const entregaId = evt.item.getAttribute('data-entrega-id');
+                        const novoStatus = evt.to.getAttribute('data-status');
                         const novaPosicao = evt.newIndex + 1;
                         
-                        if (entregaId) {
+                        if (entregaId && novoStatus) {
                             $wire.moverParaStatus(entregaId, novoStatus, novaPosicao);
                         }
                     }
@@ -39,6 +55,34 @@
         }
     }"
 >
+    <style>
+        .notion-card-ghost {
+            opacity: 0.4;
+            background: #ebf5ff !important;
+            border: 2px dashed #4361ee !important;
+        }
+        .notion-card-chosen {
+            transform: rotate(2deg);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+        }
+        .is-dragging .notion-kanban-cards {
+            min-height: 200px;
+            background: rgba(0,0,0,0.02);
+            border-radius: 8px;
+        }
+        .cursor-grab { cursor: grab; }
+        .cursor-grabbing { cursor: grabbing; }
+
+        /* Oculta o placeholder se houver qualquer card na coluna */
+        .notion-kanban-cards:has(.notion-card) .empty-placeholder {
+            display: none !important;
+        }
+        /* Garante que o placeholder apareça se não houver cards */
+        .notion-kanban-cards .empty-placeholder {
+            display: block;
+        }
+    </style>
+
     @foreach(\App\Models\ActionPlan\Entrega::STATUS_OPTIONS as $status)
         @php
             $entregasDoStatus = $entregasPorStatus[$status] ?? collect();
@@ -65,15 +109,16 @@
             </div>
 
             {{-- Cards --}}
-            <div class="notion-kanban-cards" data-status="{{ $status }}">
-                @forelse($entregasDoStatus as $entrega)
+            <div class="notion-kanban-cards" data-status="{{ $status }}" wire:key="kanban-col-{{ $status }}">
+                {{-- Placeholder fixo para colunas vazias --}}
+                <div class="text-center py-4 text-muted small empty-placeholder">
+                    <i class="bi bi-inbox opacity-50"></i>
+                    <p class="mb-0 mt-1">Nenhuma entrega</p>
+                </div>
+
+                @foreach($entregasDoStatus as $entrega)
                     @include('livewire.entregas.partials.card', ['entrega' => $entrega])
-                @empty
-                    <div class="text-center py-4 text-muted small">
-                        <i class="bi bi-inbox opacity-50"></i>
-                        <p class="mb-0 mt-1">Nenhuma entrega</p>
-                    </div>
-                @endforelse
+                @endforeach
             </div>
 
             {{-- Botão Adicionar (footer) --}}
