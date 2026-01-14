@@ -4,11 +4,16 @@
             <div>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-1">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Auditoria</li>
                     </ol>
                 </nav>
                 <h2 class="h4 fw-bold mb-0">Logs de Auditoria do Sistema</h2>
+            </div>
+            <div class="d-flex gap-2">
+                <button wire:click="exportar" class="btn btn-outline-success shadow-sm">
+                    <i class="bi bi-file-earmark-excel me-1"></i> Exportar CSV
+                </button>
             </div>
         </div>
     </x-slot>
@@ -113,9 +118,9 @@
                                 <small class="fw-mono text-muted">{{ $log->ip_address }}</small>
                             </td>
                             <td class="text-end pe-4">
-                                <button wire:click="verDetalhes('{{ $log->id }}')" class="btn btn-sm btn-outline-secondary border-0">
+                                <a href="{{ route('audit.detalhes', $log->id) }}" wire:navigate class="btn btn-sm btn-outline-secondary border-0">
                                     <i class="bi bi-search"></i> Detalhes
-                                </button>
+                                </a>
                             </td>
                         </tr>
                     @empty

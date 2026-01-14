@@ -35,7 +35,7 @@
                             <img src="{{ $this->user->profile_photo_url }}"
                                  alt="{{ $this->user->name }}"
                                  class="profile-photo">
-                            <div class="profile-photo-overlay">
+                            <div class="icon-circle profile-photo-overlay">
                                 <i class="bi bi-camera-fill"></i>
                             </div>
                         </div>
@@ -44,7 +44,7 @@
                             <div class="profile-photo"
                                   x-bind:style="'background-image: url(' + photoPreview + ');'">
                             </div>
-                            <div class="profile-photo-overlay">
+                            <div class="icon-circle profile-photo-overlay">
                                 <i class="bi bi-camera-fill"></i>
                             </div>
                         </div>

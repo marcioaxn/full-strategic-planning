@@ -3,10 +3,10 @@
     <div class="leads-header d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
         <div>
             <div class="d-flex align-items-center gap-2 mb-2">
-                <div class="header-icon gradient-theme-icon">
-                    <i class="bi bi-building"></i>
+                <div class="icon-circle-header gradient-theme-icon">
+                    <i class="bi bi-building-fill"></i>
                 </div>
-                <h1 class="h3 fw-bold mb-0">{{ __('Organizações') }}</h1>
+                <h1 class="h3 fw-bold mb-0">{{ __('Unidades Organizacionais') }}</h1>
                 <span class="badge-modern badge-count">
                     {{ $organizacoes->total() }}
                 </span>
@@ -113,11 +113,13 @@
                         <tr class="table-row-hover" wire:key="org-row-{{ $org->cod_organizacao }}">
                             <td class="ps-4">
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="avatar-modern">
+                                    <div class="icon-circle-header avatar-modern">
                                         {{ strtoupper(substr($org->sgl_organizacao, 0, 3)) }}
                                     </div>
                                     <div>
-                                        <div class="fw-semibold text-body-emphasis">{{ $org->nom_organizacao }}</div>
+                                        <a href="{{ route('organizacoes.detalhes', $org->cod_organizacao) }}" wire:navigate class="fw-semibold text-body-emphasis text-decoration-none hover-primary">
+                                            {{ $org->nom_organizacao }}
+                                        </a>
                                         <div class="text-muted small">
                                             <i class="bi bi-tag me-1"></i>{{ $org->sgl_organizacao }}
                                         </div>
@@ -139,6 +141,10 @@
                             </td>
                             <td class="text-end pe-4">
                                 <div class="action-buttons">
+                                    <a href="{{ route('organizacoes.detalhes', $org->cod_organizacao) }}" wire:navigate class="btn btn-icon btn-outline-info" data-bs-toggle="tooltip" title="{{ __('Detalhar') }}">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    
                                     @can('update', $org)
                                         <x-action-button variant="outline-primary" icon="pencil" tooltip="{{ __('Editar') }}" wire:click="edit('{{ $org->cod_organizacao }}')" class="btn-action-icon" />
                                     @endcan
@@ -201,7 +207,7 @@
                     <div class="card-body p-3">
                         <div class="d-flex align-items-start justify-content-between mb-3">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="avatar-modern avatar-mobile">
+                                <div class="icon-circle-header avatar-modern avatar-mobile">
                                     {{ strtoupper(substr($org->sgl_organizacao, 0, 3)) }}
                                 </div>
                                 <div>
@@ -259,7 +265,7 @@
     <x-dialog-modal wire:key="org-form-modal" wire:model.live="showFormModal" maxWidth="2xl">
         <x-slot name="title">
             <div class="modal-header-modern">
-                <div class="modal-icon modal-icon-primary">
+                <div class="icon-circle-mini modal-icon-primary">
                     <i class="bi bi-{{ $editing ? 'pencil' : 'plus-lg' }}"></i>
                 </div>
                 <div>
@@ -274,6 +280,7 @@
                 <div class="col-12 col-lg-4">
                     <label for="sgl_organizacao" class="form-label-modern">
                         {{ __('Sigla') }} <span class="text-danger">*</span>
+                        <x-tooltip title="Abreviação da organização (ex: SEAE, DRH)" />
                     </label>
                     <div class="input-group input-group-modern">
                         <span class="input-group-text"><i class="bi bi-tag"></i></span>
@@ -292,9 +299,44 @@
                 </div>
 
                 <div class="col-12 col-lg-8">
-                    <label for="nom_organizacao" class="form-label-modern">
-                        {{ __('Nome da Organização') }} <span class="text-danger">*</span>
-                    </label>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="nom_organizacao" class="form-label-modern mb-0">
+                            {{ __('Nome da Organização') }} <span class="text-danger">*</span>
+                            <x-tooltip title="Nome completo da unidade organizacional" />
+                        </label>
+                        @if($aiEnabled)
+                            <button type="button" wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="btn btn-xs btn-outline-magic py-0" style="font-size: 0.65rem;">
+                                <i class="bi bi-robot me-1"></i> Sugerir com IA
+                            </button>
+                        @endif
+                    </div>
+                    
+                    @if($aiSuggestion)
+                        <div class="alert alert-magic bg-primary bg-opacity-10 border-0 p-3 mb-3 animate-fade-in rounded-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold text-primary small mb-0"><i class="bi bi-stars me-1"></i>Insights do Mentor IA</h6>
+                                <button type="button" class="btn-close" style="font-size: 0.5rem;" wire:click="$set('aiSuggestion', '')"></button>
+                            </div>
+                            
+                            <div class="row g-2">
+                                <div class="col-12 mb-2">
+                                    <span class="x-small text-muted d-block mb-1">Sugestão de Sigla:</span>
+                                    <button type="button" wire:click="aplicarSugestaoSigla('{{ $aiSuggestion['sigla'] }}')" class="btn btn-sm btn-white border px-3">
+                                        <strong>{{ $aiSuggestion['sigla'] }}</strong> <i class="bi bi-arrow-down-short ms-1"></i>
+                                    </button>
+                                </div>
+                                <div class="col-12">
+                                    <span class="x-small text-muted d-block mb-1">Estrutura Sugerida:</span>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach($aiSuggestion['subunidades'] as $sub)
+                                            <span class="badge bg-white text-dark border fw-normal">{{ $sub }}</span>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     <div class="input-group input-group-modern">
                         <span class="input-group-text"><i class="bi bi-building"></i></span>
                         <input
@@ -312,50 +354,39 @@
                 </div>
 
                 <div class="col-12">
-                    <label for="rel_cod_organizacao" class="form-label-modern">
-                        {{ __('Organização Pai') }}
-                    </label>
-                    <div class="input-group input-group-modern">
-                        <span class="input-group-text"><i class="bi bi-diagram-2"></i></span>
-                        <select
-                            id="rel_cod_organizacao"
-                            class="form-select form-select-modern @error('form.rel_cod_organizacao') is-invalid @enderror"
-                            wire:model="form.rel_cod_organizacao"
-                        >
-                            <option value="">{{ __('Nenhuma (Raiz)') }}</option>
-                            @foreach ($this->organizacoesPai as $orgPai)
-                                <option value="{{ $orgPai['id'] }}">{{ $orgPai['label'] }}</option>
-                            @endforeach
-                        </select>
+                    <div class="alert alert-info bg-info-subtle border-0">
+                        <div class="d-flex gap-3">
+                            <i class="bi bi-info-circle-fill fs-4"></i>
+                            <div>
+                                <h6 class="fw-bold mb-1">{{ __('Como funciona a Hierarquia?') }}</h6>
+                                <p class="small mb-0 opacity-75">
+                                    {{ __('O sistema organiza as unidades em árvore. Ex: Uma Secretaria (Pai) pode ter várias Diretorias (Filhas). Se você está criando a unidade principal da sua instituição, deixe o campo "Organização Pai" vazio.') }}
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-text small">{{ __('Selecione a organização superior na hierarquia. Deixe vazio para criar uma organização raiz.') }}</div>
-                    @error('form.rel_cod_organizacao')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
                 </div>
             </div>
         </x-slot>
 
         <x-slot name="footer">
-            <div class="modal-footer-modern">
-                <span class="text-muted small">
-                    <span class="text-danger">*</span> {{ __('Campos obrigatórios') }}
-                </span>
-                <div class="d-flex gap-2">
-                    <x-secondary-button wire:click="closeFormModal" wire:loading.attr="disabled" class="btn-modern">
-                        {{ __('Cancelar') }}
-                    </x-secondary-button>
+            <span class="text-muted small d-none d-sm-inline">
+                <span class="text-danger">*</span> {{ __('Campos obrigatórios') }}
+            </span>
+            <div class="d-flex gap-2">
+                <x-secondary-button wire:click="closeFormModal" wire:loading.attr="disabled" class="btn-modern">
+                    {{ __('Cancelar') }}
+                </x-secondary-button>
 
-                    <x-button type="button" wire:click="save" wire:loading.attr="disabled" class="btn-save-modern">
-                        <span wire:loading.remove wire:target="save">
-                            <i class="bi bi-check-lg me-1"></i>{{ __('Salvar') }}
-                        </span>
-                        <span wire:loading wire:target="save">
-                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                            {{ __('Salvando...') }}
-                        </span>
-                    </x-button>
-                </div>
+                <x-button type="button" wire:click="save" wire:loading.attr="disabled" class="btn-save-modern">
+                    <span wire:loading.remove wire:target="save">
+                        <i class="bi bi-check-lg me-1"></i>{{ __('Salvar') }}
+                    </span>
+                    <span wire:loading wire:target="save">
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        {{ __('Salvando...') }}
+                    </span>
+                </x-button>
             </div>
         </x-slot>
     </x-dialog-modal>
@@ -364,7 +395,7 @@
     <x-confirmation-modal wire:key="org-delete-modal" wire:model.live="showDeleteModal">
         <x-slot name="title">
             <div class="modal-header-modern">
-                <div class="modal-icon modal-icon-danger">
+                <div class="icon-circle-mini modal-icon-danger">
                     <i class="bi bi-exclamation-triangle"></i>
                 </div>
                 <div>

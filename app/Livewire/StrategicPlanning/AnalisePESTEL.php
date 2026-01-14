@@ -34,6 +34,9 @@ class AnalisePESTEL extends Component
     public $num_impacto = 3;
     public $txt_observacao = '';
 
+    public bool $aiEnabled = false;
+    public $aiSuggestion = '';
+
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
         'peiSelecionado' => 'atualizarPEI'
@@ -41,8 +44,66 @@ class AnalisePESTEL extends Component
 
     public function mount()
     {
+        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+    }
+
+    public function pedirAjudaIA()
+    {
+        if (!$this->aiEnabled) return;
+
+        try {
+            $aiService = \App\Services\AI\AiServiceFactory::make();
+            if (!$aiService) return;
+
+            $this->aiSuggestion = 'Pensando...';
+            
+            $prompt = "Sugira 2 fatores para cada dimensão da análise PESTEL (Político, Econômico, Social, Tecnológico, Ecológico, Legal) para a organização: {$this->organizacaoNome}.
+            Responda OBRIGATORIAMENTE em formato JSON puro com as chaves 'politico', 'economico', 'social', 'tecnologico', 'ecologico', 'legal', cada uma contendo um array de strings.";
+            
+            $response = $aiService->suggest($prompt);
+            $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
+
+            if (is_array($decoded)) {
+                $this->aiSuggestion = $decoded;
+            } else {
+                throw new \Exception('Resposta em formato inválido.');
+            }
+        } catch (\Exception $e) {
+            \Log::error('Erro IA PESTEL: ' . $e->getMessage());
+            $this->aiSuggestion = null;
+            session()->flash('error', 'Não foi possível gerar sugestões.');
+        }
+    }
+
+    public function adicionarSugerido($categoria, $item)
+    {
+        AnaliseAmbiental::create([
+            'cod_pei' => $this->peiAtivo->cod_pei,
+            'cod_organizacao' => $this->organizacaoId,
+            'dsc_tipo_analise' => AnaliseAmbiental::TIPO_PESTEL,
+            'dsc_categoria' => $categoria,
+            'dsc_item' => $item,
+            'num_impacto' => 3,
+        ]);
+
+        $this->carregarDados();
+        
+        // Remover da sugestão
+        $map = [
+            'Político' => 'politico',
+            'Econômico' => 'economico',
+            'Social' => 'social',
+            'Tecnológico' => 'tecnologico',
+            'Ecológico' => 'ecologico',
+            'Legal' => 'legal'
+        ];
+        $key = $map[$categoria];
+        
+        if (isset($this->aiSuggestion[$key])) {
+            $this->aiSuggestion[$key] = array_filter($this->aiSuggestion[$key], fn($i) => $item !== $i);
+        }
     }
 
     public function atualizarPEI($id)

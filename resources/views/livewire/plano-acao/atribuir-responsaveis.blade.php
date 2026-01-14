@@ -1,16 +1,27 @@
 <div>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-1">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('planos.index') }}" class="text-decoration-none">Planos de Ação</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Atribuir Responsáveis</li>
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('planos.index') }}" wire:navigate class="text-decoration-none">Planos de Ação</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('planos.detalhes', $plano->cod_plano_de_acao) }}" wire:navigate class="text-decoration-none">{{ Str::limit($plano->dsc_plano_de_acao, 30) }}</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Responsáveis</li>
                     </ol>
                 </nav>
-                <h2 class="h4 fw-bold mb-0">Gestores do Plano</h2>
-                <p class="text-muted small mb-0">{{ $plano->dsc_plano_de_acao }}</p>
+                <h2 class="h3 fw-bold mb-0 text-gray-800">
+                    <i class="bi bi-people-fill me-2 text-primary"></i>Gestores e Responsáveis
+                </h2>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10 px-2">PLANO</span>
+                    <span class="text-secondary fw-medium">{{ $plano->dsc_plano_de_acao }}</span>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ route('planos.detalhes', $plano->cod_plano_de_acao) }}" wire:navigate class="btn btn-outline-secondary shadow-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar para o Plano
+                </a>
             </div>
         </div>
     </x-slot>

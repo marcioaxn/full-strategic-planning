@@ -20,6 +20,7 @@ class MissaoVisao extends Component
     public $visao = '';
     public $organizacaoId;
     public $organizacaoNome;
+    public $identidadeId;
     public $peiAtivo;
 
     // Propriedades para Valores
@@ -30,6 +31,7 @@ class MissaoVisao extends Component
 
     public bool $isEditing = false;
     public bool $isEditingValores = false;
+    public bool $showExemplosValores = false;
     public bool $aiEnabled = false;
     public bool $showDeleteModal = false;
     public $valorParaExcluirId;
@@ -56,23 +58,28 @@ class MissaoVisao extends Component
              return;
         }
 
-        $aiService = \App\Services\AI\AiServiceFactory::make();
-        if (!$aiService) return;
+        try {
+            $aiService = \App\Services\AI\AiServiceFactory::make();
+            if (!$aiService) return;
 
-        $this->aiSuggestion = 'Pensando...';
-        
-        $prompt = "Sugira Missão, Visão e 5 Valores para a organização: {$this->organizacaoNome}. 
-        Responda OBRIGATORIAMENTE em formato JSON puro com os campos: 
-        'missao' (string), 'visao' (string) e 'valores' (array de objetos com 'nome' e 'descricao').";
-        
-        $response = $aiService->suggest($prompt);
-        $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
+            $this->aiSuggestion = 'Pensando...';
+            
+            $prompt = "Sugira Missão, Visão e 5 Valores para a organização: {$this->organizacaoNome}. 
+            Responda OBRIGATORIAMENTE em formato JSON puro com os campos: 
+            'missao' (string), 'visao' (string) e 'valores' (array de objetos com 'nome' e 'descricao').";
+            
+            $response = $aiService->suggest($prompt);
+            $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
 
-        if (is_array($decoded)) {
-            $this->aiSuggestion = $decoded;
-        } else {
+            if (is_array($decoded)) {
+                $this->aiSuggestion = $decoded;
+            } else {
+                throw new \Exception('Formato de resposta inválido');
+            }
+        } catch (\Exception $e) {
+            \Log::error('Erro IA MissaoVisao: ' . $e->getMessage());
             $this->aiSuggestion = null;
-            session()->flash('error', 'Falha ao processar sugestões. Tente novamente.');
+            session()->flash('error', 'Falha ao processar sugestões.');
         }
     }
 
@@ -91,21 +98,9 @@ class MissaoVisao extends Component
 
     public function adicionarValorSugerido($nome, $descricao)
     {
-        $service = app(\App\Services\PeiGuidanceService::class);
-        $before = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
-
         $this->novoValorTitulo = $nome;
         $this->novoValorDescricao = $descricao;
         $this->adicionarValor();
-
-        $after = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
-        if ($after['progress'] > $before['progress']) {
-            $this->dispatch('mentor-notification', 
-                title: 'Princípio Registrado!',
-                message: "Valor organizacional adicionado com sucesso. Progresso: <strong>{$after['progress']}%</strong>.",
-                icon: 'bi-star-fill'
-            );
-        }
 
         // Remove o valor da lista de sugestões
         if (isset($this->aiSuggestion['valores'])) {
@@ -152,6 +147,7 @@ class MissaoVisao extends Component
 
     public function resetarDados()
     {
+        $this->identidadeId = null;
         $this->missao = '';
         $this->visao = '';
         $this->organizacaoNome = '';
@@ -172,9 +168,11 @@ class MissaoVisao extends Component
             ->first();
 
         if ($dados) {
+            $this->identidadeId = $dados->cod_missao_visao_valores;
             $this->missao = $dados->dsc_missao;
             $this->visao = $dados->dsc_visao;
         } else {
+            $this->identidadeId = null;
             $this->missao = '';
             $this->visao = '';
         }

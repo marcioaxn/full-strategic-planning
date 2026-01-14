@@ -3,39 +3,64 @@
     <div class="card-body p-3">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
             {{-- View Switcher --}}
-            <div class="notion-view-switcher">
-                <button 
-                    wire:click="setView('kanban')" 
-                    class="notion-view-btn {{ $view === 'kanban' ? 'active' : '' }}"
-                    title="Kanban"
-                >
-                    <i class="bi bi-kanban"></i>
-                    <span class="d-none d-md-inline">Kanban</span>
-                </button>
-                <button 
-                    wire:click="setView('lista')" 
-                    class="notion-view-btn {{ $view === 'lista' ? 'active' : '' }}"
-                    title="Lista"
-                >
-                    <i class="bi bi-list-ul"></i>
-                    <span class="d-none d-md-inline">Lista</span>
-                </button>
-                <button 
-                    wire:click="setView('timeline')" 
-                    class="notion-view-btn {{ $view === 'timeline' ? 'active' : '' }}"
-                    title="Timeline"
-                >
-                    <i class="bi bi-bar-chart-steps"></i>
-                    <span class="d-none d-md-inline">Timeline</span>
-                </button>
-                <button 
-                    wire:click="setView('calendario')" 
-                    class="notion-view-btn {{ $view === 'calendario' ? 'active' : '' }}"
-                    title="Calendário"
-                >
-                    <i class="bi bi-calendar3"></i>
-                    <span class="d-none d-md-inline">Calendário</span>
-                </button>
+            <div class="d-flex align-items-center gap-3">
+                <div class="notion-view-switcher">
+                    <button 
+                        wire:click="setView('kanban')" 
+                        class="notion-view-btn {{ $view === 'kanban' ? 'active' : '' }}"
+                        title="Kanban"
+                    >
+                        <i class="bi bi-kanban"></i>
+                        <span class="d-none d-md-inline">Kanban</span>
+                    </button>
+                    <button 
+                        wire:click="setView('lista')" 
+                        class="notion-view-btn {{ $view === 'lista' ? 'active' : '' }}"
+                        title="Lista"
+                    >
+                        <i class="bi bi-list-ul"></i>
+                        <span class="d-none d-md-inline">Lista</span>
+                    </button>
+                </div>
+
+            {{-- Navegação Estratégica em Cascata --}}
+            <div class="d-flex align-items-center gap-2 flex-grow-1 mx-3" style="max-width: 800px;">
+                {{-- 1. Perspectiva --}}
+                <div class="flex-grow-1">
+                    <select wire:model.live="perspectivaId" class="form-select form-select-sm border-0 bg-light shadow-xs fw-semibold">
+                        <option value="">Todas Perspectivas</option>
+                        @foreach($perspectivasDisponiveis as $p)
+                            <option value="{{ $p->cod_perspectiva }}">{{ $p->dsc_perspectiva }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <i class="bi bi-chevron-right text-muted small"></i>
+
+                {{-- 2. Objetivo --}}
+                <div class="flex-grow-1">
+                    <select wire:model.live="objetivoId" class="form-select form-select-sm border-0 bg-light shadow-xs fw-semibold">
+                        <option value="">Todos Objetivos</option>
+                        @foreach($objetivosDisponiveis as $obj)
+                            <option value="{{ $obj->cod_objetivo }}">{{ Str::limit($obj->nom_objetivo, 40) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <i class="bi bi-chevron-right text-muted small"></i>
+
+                {{-- 3. Plano de Ação --}}
+                <div class="flex-grow-1">
+                    <select class="form-select form-select-sm border-0 bg-primary bg-opacity-10 text-primary fw-bold shadow-xs" 
+                            onchange="$wire.mudarPlano(this.value)">
+                        @foreach($planosDisponiveis as $p)
+                            <option value="{{ $p->cod_plano_de_acao }}" {{ $p->cod_plano_de_acao === $plano->cod_plano_de_acao ? 'selected' : '' }}>
+                                {{ Str::limit($p->dsc_plano_de_acao, 40) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
             </div>
 
             {{-- Filtros --}}

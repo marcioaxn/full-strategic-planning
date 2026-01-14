@@ -19,7 +19,7 @@
             <div class="card card-modern border-0 shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 text-primary">
+                        <div class="icon-circle bg-primary bg-opacity-10 text-primary">
                             <i class="bi bi-robot fs-4"></i>
                         </div>
                         <div>

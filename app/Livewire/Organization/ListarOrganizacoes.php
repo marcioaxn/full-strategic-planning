@@ -37,6 +37,53 @@ class ListarOrganizacoes extends Component
     public ?string $flashMessage = null;
     public string $flashStyle = 'success';
 
+    public bool $aiEnabled = false;
+    public $aiSuggestion = '';
+
+    public function mount()
+    {
+        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
+    }
+
+    public function pedirAjudaIA()
+    {
+        if (!$this->aiEnabled) return;
+        
+        if (empty($this->form['nom_organizacao'])) {
+             session()->flash('error', 'Digite o nome da organização primeiro.');
+             return;
+        }
+
+        try {
+            $aiService = \App\Services\AI\AiServiceFactory::make();
+            if (!$aiService) return;
+
+            $this->aiSuggestion = 'Pensando...';
+            
+            $prompt = "Sugira uma sigla curta e impactante e 3 possíveis subunidades (filiais ou departamentos) para a organização: '{$this->form['nom_organizacao']}'.
+            Responda OBRIGATORIAMENTE em formato JSON puro, contendo os campos 'sigla' (string) e 'subunidades' (array de strings).";
+            
+            $response = $aiService->suggest($prompt);
+            $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
+
+            if (is_array($decoded)) {
+                $this->aiSuggestion = $decoded;
+            } else {
+                throw new \Exception('Falha ao decodificar');
+            }
+        } catch (\Exception $e) {
+            \Log::error('Erro IA Org: ' . $e->getMessage());
+            $this->aiSuggestion = null;
+            session()->flash('error', 'Não foi possível gerar sugestões.');
+        }
+    }
+
+    public function aplicarSugestaoSigla($sigla)
+    {
+        $this->form['sgl_organizacao'] = $sigla;
+        $this->aiSuggestion['sigla_aplicada'] = true;
+    }
+
     protected string $paginationTheme = 'bootstrap';
 
     protected $queryString = [
