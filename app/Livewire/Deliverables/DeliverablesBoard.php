@@ -9,6 +9,7 @@ use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\WithFileUploads;
 
 #[Layout('layouts.app')]
@@ -111,6 +112,29 @@ class DeliverablesBoard extends Component
     public $anexosUpload = [];
 
     // ========================================
+    // PROPRIEDADES DO CALENDÁRIO
+    // ========================================
+
+    /** @var int Mês atual do calendário (1-12) */
+    public int $calendarioMes;
+
+    /** @var int Ano atual do calendário */
+    public int $calendarioAno;
+
+    // ========================================
+    // PROPRIEDADES DO GANTT/TIMELINE
+    // ========================================
+
+    /** @var string Data de início da timeline (Y-m-d) */
+    public string $timelineInicio;
+
+    /** @var string Data de fim da timeline (Y-m-d) */
+    public string $timelineFim;
+
+    /** @var string Nível de zoom: dia, semana, mes */
+    public string $timelineZoom = 'semana';
+
+    // ========================================
     // CICLO DE VIDA
     // ========================================
 
@@ -148,6 +172,14 @@ class DeliverablesBoard extends Component
                 $this->plano = new PlanoDeAcao();
             }
         }
+
+        // Inicializa calendário no mês atual
+        $this->calendarioMes = (int) now()->format('m');
+        $this->calendarioAno = (int) now()->format('Y');
+
+        // Inicializa timeline (4 semanas: 1 semana atrás + 3 semanas à frente)
+        $this->timelineInicio = now()->subWeek()->startOfWeek()->format('Y-m-d');
+        $this->timelineFim = now()->addWeeks(3)->endOfWeek()->format('Y-m-d');
 
         $this->carregarListasEstrategicas();
     }
@@ -335,6 +367,158 @@ class DeliverablesBoard extends Component
     {
         $this->mostrarLixeira = !$this->mostrarLixeira;
         $this->mostrarArquivados = false;
+    }
+
+    // ========================================
+    // AÇÕES DO CALENDÁRIO
+    // ========================================
+
+    /**
+     * Navega para o mês anterior
+     */
+    public function calendarioAnterior(): void
+    {
+        $this->calendarioMes--;
+        if ($this->calendarioMes < 1) {
+            $this->calendarioMes = 12;
+            $this->calendarioAno--;
+        }
+    }
+
+    /**
+     * Navega para o próximo mês
+     */
+    public function calendarioProximo(): void
+    {
+        $this->calendarioMes++;
+        if ($this->calendarioMes > 12) {
+            $this->calendarioMes = 1;
+            $this->calendarioAno++;
+        }
+    }
+
+    /**
+     * Volta para o mês atual
+     */
+    public function calendarioHoje(): void
+    {
+        $this->calendarioMes = (int) now()->format('m');
+        $this->calendarioAno = (int) now()->format('Y');
+    }
+
+    /**
+     * Navega para um mês/ano específico
+     */
+    public function calendarioIrPara(int $mes, int $ano): void
+    {
+        $this->calendarioMes = max(1, min(12, $mes));
+        $this->calendarioAno = $ano;
+    }
+
+    // ========================================
+    // AÇÕES DO GANTT/TIMELINE
+    // ========================================
+
+    /**
+     * Navega para o período anterior
+     */
+    public function timelineAnterior(): void
+    {
+        $inicio = \Carbon\Carbon::parse($this->timelineInicio);
+        $fim = \Carbon\Carbon::parse($this->timelineFim);
+        $duracao = $inicio->diffInDays($fim);
+
+        // Move metade do período para trás
+        $deslocamento = (int) ceil($duracao / 2);
+        $this->timelineInicio = $inicio->subDays($deslocamento)->format('Y-m-d');
+        $this->timelineFim = $fim->subDays($deslocamento)->format('Y-m-d');
+    }
+
+    /**
+     * Navega para o próximo período
+     */
+    public function timelineProximo(): void
+    {
+        $inicio = \Carbon\Carbon::parse($this->timelineInicio);
+        $fim = \Carbon\Carbon::parse($this->timelineFim);
+        $duracao = $inicio->diffInDays($fim);
+
+        // Move metade do período para frente
+        $deslocamento = (int) ceil($duracao / 2);
+        $this->timelineInicio = $inicio->addDays($deslocamento)->format('Y-m-d');
+        $this->timelineFim = $fim->addDays($deslocamento)->format('Y-m-d');
+    }
+
+    /**
+     * Centraliza na data atual
+     */
+    public function timelineHoje(): void
+    {
+        $this->timelineInicio = now()->subWeek()->startOfWeek()->format('Y-m-d');
+        $this->timelineFim = now()->addWeeks(3)->endOfWeek()->format('Y-m-d');
+    }
+
+    /**
+     * Aumenta o zoom (menos dias visíveis)
+     */
+    public function timelineZoomIn(): void
+    {
+        $inicio = \Carbon\Carbon::parse($this->timelineInicio);
+        $fim = \Carbon\Carbon::parse($this->timelineFim);
+        $duracao = $inicio->diffInDays($fim);
+
+        if ($duracao > 7) {
+            // Reduz o período em 25%
+            $reducao = (int) ceil($duracao * 0.25);
+            $this->timelineInicio = $inicio->addDays((int)($reducao / 2))->format('Y-m-d');
+            $this->timelineFim = $fim->subDays((int)($reducao / 2))->format('Y-m-d');
+            $this->timelineZoom = 'dia';
+        }
+    }
+
+    /**
+     * Diminui o zoom (mais dias visíveis)
+     */
+    public function timelineZoomOut(): void
+    {
+        $inicio = \Carbon\Carbon::parse($this->timelineInicio);
+        $fim = \Carbon\Carbon::parse($this->timelineFim);
+        $duracao = $inicio->diffInDays($fim);
+
+        if ($duracao < 120) {
+            // Aumenta o período em 50%
+            $aumento = (int) ceil($duracao * 0.5);
+            $this->timelineInicio = $inicio->subDays((int)($aumento / 2))->format('Y-m-d');
+            $this->timelineFim = $fim->addDays((int)($aumento / 2))->format('Y-m-d');
+            $this->timelineZoom = $duracao > 30 ? 'mes' : 'semana';
+        }
+    }
+
+    /**
+     * Define período específico para a timeline
+     */
+    public function timelineDefinirPeriodo(string $inicio, string $fim): void
+    {
+        $this->timelineInicio = $inicio;
+        $this->timelineFim = $fim;
+    }
+
+    /**
+     * Atualiza o prazo de uma entrega via drag & drop no Gantt
+     */
+    public function atualizarPrazoEntrega(string $entregaId, string $novoPrazo): void
+    {
+        $entrega = Entrega::findOrFail($entregaId);
+        $this->authorize('update', $this->plano);
+
+        $entrega->update([
+            'dte_prazo' => $novoPrazo
+        ]);
+
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => 'Prazo atualizado com sucesso!'
+        ]);
     }
 
     // ========================================

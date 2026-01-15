@@ -5,21 +5,65 @@
             {{-- View Switcher --}}
             <div class="d-flex align-items-center gap-3">
                 <div class="notion-view-switcher">
-                    <button 
-                        wire:click="setView('kanban')" 
+                    <button
+                        wire:click="setView('kanban')"
+                        wire:loading.class="loading"
+                        wire:target="setView('kanban')"
                         class="notion-view-btn {{ $view === 'kanban' ? 'active' : '' }}"
                         title="Kanban"
                     >
-                        <i class="bi bi-kanban"></i>
+                        <span wire:loading.remove wire:target="setView('kanban')">
+                            <i class="bi bi-kanban"></i>
+                        </span>
+                        <span wire:loading wire:target="setView('kanban')">
+                            <span class="spinner-border spinner-border-sm btn-spinner" role="status"></span>
+                        </span>
                         <span class="d-none d-md-inline">Kanban</span>
                     </button>
-                    <button 
-                        wire:click="setView('lista')" 
+                    <button
+                        wire:click="setView('lista')"
+                        wire:loading.class="loading"
+                        wire:target="setView('lista')"
                         class="notion-view-btn {{ $view === 'lista' ? 'active' : '' }}"
                         title="Lista"
                     >
-                        <i class="bi bi-list-ul"></i>
+                        <span wire:loading.remove wire:target="setView('lista')">
+                            <i class="bi bi-list-ul"></i>
+                        </span>
+                        <span wire:loading wire:target="setView('lista')">
+                            <span class="spinner-border spinner-border-sm btn-spinner" role="status"></span>
+                        </span>
                         <span class="d-none d-md-inline">Lista</span>
+                    </button>
+                    <button
+                        wire:click="setView('calendario')"
+                        wire:loading.class="loading"
+                        wire:target="setView('calendario')"
+                        class="notion-view-btn {{ $view === 'calendario' ? 'active' : '' }}"
+                        title="Calendário"
+                    >
+                        <span wire:loading.remove wire:target="setView('calendario')">
+                            <i class="bi bi-calendar3"></i>
+                        </span>
+                        <span wire:loading wire:target="setView('calendario')">
+                            <span class="spinner-border spinner-border-sm btn-spinner" role="status"></span>
+                        </span>
+                        <span class="d-none d-md-inline">Calendário</span>
+                    </button>
+                    <button
+                        wire:click="setView('timeline')"
+                        wire:loading.class="loading"
+                        wire:target="setView('timeline')"
+                        class="notion-view-btn {{ $view === 'timeline' ? 'active' : '' }}"
+                        title="Gantt"
+                    >
+                        <span wire:loading.remove wire:target="setView('timeline')">
+                            <i class="bi bi-bar-chart-steps"></i>
+                        </span>
+                        <span wire:loading wire:target="setView('timeline')">
+                            <span class="spinner-border spinner-border-sm btn-spinner" role="status"></span>
+                        </span>
+                        <span class="d-none d-md-inline">Gantt</span>
                     </button>
                 </div>
 
