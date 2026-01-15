@@ -23,6 +23,380 @@
         </div>
     </x-slot>
 
+    {{-- Seção Educativa: O que são Riscos Estratégicos --}}
+    <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
+        <div class="card-header bg-transparent border-0 p-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-circle bg-white bg-opacity-25">
+                        <i class="bi bi-book-fill fs-4 text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1 text-white">
+                            <i class="bi bi-mortarboard me-2"></i>{{ __('O que são Riscos Estratégicos?') }}
+                        </h5>
+                        <p class="mb-0 text-white-50 small">
+                            {{ __('Aprenda a identificar, avaliar e gerenciar riscos') }}
+                        </p>
+                    </div>
+                </div>
+                <button @click="expanded = !expanded" class="btn btn-link text-white text-decoration-none p-0" type="button">
+                    <i class="bi fs-4" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                </button>
+            </div>
+        </div>
+
+        <div x-show="expanded" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0" style="display: none;">
+            <div class="card-body p-4 bg-white border-top">
+                {{-- Introdução --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-info-circle me-2"></i>{{ __('O que são Riscos Estratégicos?') }}
+                    </h6>
+                    <p class="text-muted mb-3">
+                        <strong>Riscos Estratégicos</strong> são eventos incertos (positivos ou negativos) que podem <strong>afetar o alcance dos objetivos estratégicos</strong>.
+                        São ameaças ou oportunidades externas e internas que devem ser identificadas, avaliadas e gerenciadas proativamente.
+                    </p>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-lightbulb text-warning me-2"></i>
+                        <strong>Por que gerenciar riscos?</strong> Gestão de riscos permite antecipar problemas antes que se tornem crises,
+                        aproveitar oportunidades emergentes e tomar decisões mais informadas.
+                    </p>
+                </div>
+
+                {{-- Matriz de Riscos (Probabilidade x Impacto) --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-grid-3x3-gap me-2"></i>{{ __('Matriz de Riscos (Probabilidade x Impacto)') }}
+                    </h6>
+                    <p class="small text-muted mb-3">
+                        A <strong>Matriz de Riscos</strong> classifica riscos combinando <strong>Probabilidade</strong> (chance de ocorrer)
+                        e <strong>Impacto</strong> (consequência se ocorrer). Isso prioriza quais riscos merecem atenção imediata.
+                    </p>
+
+                    <div class="table-responsive mb-3">
+                        <table class="table table-bordered table-sm text-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" class="align-middle fw-bold small bg-light" style="width: 15%;">
+                                        <i class="bi bi-arrow-down me-1"></i>Probabilidade<br>
+                                        <i class="bi bi-arrow-right me-1"></i>Impacto
+                                    </th>
+                                    <th class="fw-bold small bg-light">Muito Baixo</th>
+                                    <th class="fw-bold small bg-light">Baixo</th>
+                                    <th class="fw-bold small bg-light">Médio</th>
+                                    <th class="fw-bold small bg-light">Alto</th>
+                                    <th class="fw-bold small bg-light">Muito Alto</th>
+                                </tr>
+                            </thead>
+                            <tbody class="small">
+                                <tr>
+                                    <td class="fw-bold bg-light">Muito Alta</td>
+                                    <td class="bg-warning bg-opacity-25">Médio</td>
+                                    <td class="bg-warning bg-opacity-50">Alto</td>
+                                    <td class="bg-danger bg-opacity-25">Alto</td>
+                                    <td class="bg-danger bg-opacity-50">Crítico</td>
+                                    <td class="bg-danger bg-opacity-75">Crítico</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold bg-light">Alta</td>
+                                    <td class="bg-success bg-opacity-25">Baixo</td>
+                                    <td class="bg-warning bg-opacity-25">Médio</td>
+                                    <td class="bg-warning bg-opacity-50">Alto</td>
+                                    <td class="bg-danger bg-opacity-25">Alto</td>
+                                    <td class="bg-danger bg-opacity-50">Crítico</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold bg-light">Média</td>
+                                    <td class="bg-success bg-opacity-25">Baixo</td>
+                                    <td class="bg-success bg-opacity-50">Baixo</td>
+                                    <td class="bg-warning bg-opacity-25">Médio</td>
+                                    <td class="bg-warning bg-opacity-50">Alto</td>
+                                    <td class="bg-danger bg-opacity-25">Alto</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold bg-light">Baixa</td>
+                                    <td class="bg-success bg-opacity-10">Muito Baixo</td>
+                                    <td class="bg-success bg-opacity-25">Baixo</td>
+                                    <td class="bg-success bg-opacity-50">Baixo</td>
+                                    <td class="bg-warning bg-opacity-25">Médio</td>
+                                    <td class="bg-warning bg-opacity-50">Alto</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold bg-light">Muito Baixa</td>
+                                    <td class="bg-success bg-opacity-10">Muito Baixo</td>
+                                    <td class="bg-success bg-opacity-10">Muito Baixo</td>
+                                    <td class="bg-success bg-opacity-25">Baixo</td>
+                                    <td class="bg-success bg-opacity-50">Baixo</td>
+                                    <td class="bg-warning bg-opacity-25">Médio</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="alert alert-info mb-0">
+                        <p class="fw-bold small mb-1"><i class="bi bi-info-circle me-1"></i>Como Interpretar:</p>
+                        <ul class="x-small mb-0">
+                            <li><strong class="text-danger">Crítico/Alto:</strong> Requer ação imediata e plano de mitigação robusto</li>
+                            <li><strong class="text-warning">Médio:</strong> Monitorar atentamente e preparar plano de resposta</li>
+                            <li><strong class="text-success">Baixo/Muito Baixo:</strong> Aceitar e revisar periodicamente</li>
+                        </ul>
+                    </div>
+                </div>
+
+                {{-- Categorias de Riscos --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-tags me-2"></i>{{ __('Categorias de Riscos') }}
+                    </h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card border-2 border-danger h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <div class="icon-circle-mini bg-danger bg-opacity-10 text-danger">
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-danger">Operacional</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        Falhas em processos, sistemas, pessoas ou eventos externos.
+                                        <br><strong>Ex:</strong> Queda de sistema crítico, rotatividade de pessoal-chave
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-2 border-warning h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <div class="icon-circle-mini bg-warning bg-opacity-10 text-warning">
+                                            <i class="bi bi-currency-dollar"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-warning">Financeiro</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        Mudanças econômicas, orçamentárias ou fiscais.
+                                        <br><strong>Ex:</strong> Contingenciamento orçamentário, inflação acima do previsto
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-2 border-info h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <div class="icon-circle-mini bg-info bg-opacity-10 text-info">
+                                            <i class="bi bi-briefcase"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-info">Estratégico</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        Mudanças no ambiente político, social ou competitivo.
+                                        <br><strong>Ex:</strong> Nova legislação que altera competências, mudança de prioridades governamentais
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-2 border-primary h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <div class="icon-circle-mini bg-primary bg-opacity-10 text-primary">
+                                            <i class="bi bi-shield-check"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-primary">Conformidade</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        Não cumprimento de leis, normas ou regulamentos.
+                                        <br><strong>Ex:</strong> Multas por descumprimento de LGPD, processos de auditoria desfavoráveis
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Estratégias de Resposta --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-shield-fill-check me-2"></i>{{ __('Estratégias de Resposta a Riscos') }}
+                    </h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-2 text-danger">
+                                        <i class="bi bi-x-circle me-1"></i>Evitar
+                                    </h6>
+                                    <p class="x-small text-muted mb-0">
+                                        Eliminar completamente o risco mudando o plano.
+                                        <br><strong>Ex:</strong> Cancelar projeto com risco regulatório inaceitável
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-2 text-warning">
+                                        <i class="bi bi-arrow-down-circle me-1"></i>Mitigar
+                                    </h6>
+                                    <p class="x-small text-muted mb-0">
+                                        Reduzir probabilidade ou impacto com ações preventivas.
+                                        <br><strong>Ex:</strong> Criar backup de sistema crítico, treinar equipe redundante
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-2 text-info">
+                                        <i class="bi bi-arrow-right-circle me-1"></i>Transferir
+                                    </h6>
+                                    <p class="x-small text-muted mb-0">
+                                        Passar o risco para terceiros (seguros, contratos).
+                                        <br><strong>Ex:</strong> Contratar seguro, terceirizar atividade arriscada
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-2 text-success">
+                                        <i class="bi bi-check-circle me-1"></i>Aceitar
+                                    </h6>
+                                    <p class="x-small text-muted mb-0">
+                                        Aceitar conscientemente riscos baixos e monitorar.
+                                        <br><strong>Ex:</strong> Riscos muito improváveis ou de baixo impacto
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Exemplo Prático --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-star me-2"></i>{{ __('Exemplo de Risco Estratégico Completo') }}
+                    </h6>
+
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="icon-circle-mini bg-danger bg-opacity-10 text-danger">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                </div>
+                                <h6 class="fw-bold mb-0">Contingenciamento Orçamentário Abrupto</h6>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <p class="small mb-1 text-muted"><strong>Descrição:</strong></p>
+                                    <p class="x-small mb-3">Redução inesperada de 30% do orçamento aprovado devido a ajuste fiscal</p>
+
+                                    <p class="small mb-1 text-muted"><strong>Categoria:</strong></p>
+                                    <p class="x-small mb-3">Financeiro</p>
+
+                                    <p class="small mb-1 text-muted"><strong>Objetivo Afetado:</strong></p>
+                                    <p class="x-small mb-0">"Implementar novo sistema de gestão até dez/2025"</p>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <p class="small mb-1 text-muted"><strong>Probabilidade:</strong></p>
+                                    <p class="x-small mb-3">Alta (histórico de contingenciamentos nos últimos 3 anos)</p>
+
+                                    <p class="small mb-1 text-muted"><strong>Impacto:</strong></p>
+                                    <p class="x-small mb-3">Muito Alto (inviabiliza o projeto)</p>
+
+                                    <p class="small mb-1 text-muted"><strong>Nível de Risco:</strong></p>
+                                    <p class="x-small mb-0"><span class="badge bg-danger">Crítico</span></p>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="alert alert-warning mb-0 py-2">
+                                        <p class="fw-bold small mb-1"><i class="bi bi-shield-check me-1"></i>Plano de Mitigação:</p>
+                                        <ul class="x-small mb-0">
+                                            <li>Dividir projeto em fases menores e priorizadas</li>
+                                            <li>Buscar fontes alternativas de financiamento (parcerias, convênios)</li>
+                                            <li>Manter diálogo constante com área orçamentária para antecipar cortes</li>
+                                            <li>Criar versão "mínima viável" do sistema que custe 50% menos</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Dicas Profissionais --}}
+                <div>
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-trophy me-2"></i>{{ __('Boas Práticas de Gestão de Riscos') }}
+                    </h6>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Identifique riscos continuamente</p>
+                                    <p class="x-small text-muted mb-0">Revisão trimestral mínima. Novos riscos surgem com mudanças no ambiente</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Envolva especialistas</p>
+                                    <p class="x-small text-muted mb-0">Quem vive o processo conhece os riscos melhor que gestores. Ouça a equipe</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Priorize pelo nível de risco</p>
+                                    <p class="x-small text-muted mb-0">Não dá para mitigar tudo. Foque nos riscos críticos e altos primeiro</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Documente planos de resposta</p>
+                                    <p class="x-small text-muted mb-0">Se o risco se materializar, a equipe deve saber exatamente o que fazer</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Monitore indicadores de alerta precoce</p>
+                                    <p class="x-small text-muted mb-0">Ex: Para risco de atraso, monitore % de entregas concluídas no prazo semanalmente</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @if (session()->has('status'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i> {{ session('status') }}

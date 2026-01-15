@@ -31,6 +31,332 @@
         </div>
     </x-slot>
 
+    {{-- Seção Educativa: O que são Indicadores (KPIs) --}}
+    <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
+        <div class="card-header bg-transparent border-0 p-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-circle bg-white bg-opacity-25">
+                        <i class="bi bi-book-fill fs-4 text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1 text-white">
+                            <i class="bi bi-mortarboard me-2"></i>{{ __('O que são Indicadores (KPIs)?') }}
+                        </h5>
+                        <p class="mb-0 text-white-50 small">
+                            {{ __('Aprenda a medir e monitorar o desempenho estratégico') }}
+                        </p>
+                    </div>
+                </div>
+                <button @click="expanded = !expanded" class="btn btn-link text-white text-decoration-none p-0" type="button">
+                    <i class="bi fs-4" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                </button>
+            </div>
+        </div>
+
+        <div x-show="expanded" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0" style="display: none;">
+            <div class="card-body p-4 bg-white border-top">
+                {{-- Introdução --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-info-circle me-2"></i>{{ __('O que são Indicadores?') }}
+                    </h6>
+                    <p class="text-muted mb-3">
+                        <strong>Indicadores</strong> (ou KPIs - Key Performance Indicators) são <strong>métricas quantificáveis</strong> que medem o progresso em direção aos objetivos estratégicos.
+                        Eles transformam conceitos abstratos ("melhorar atendimento") em <strong>números concretos</strong> ("reduzir tempo de espera para 15 minutos").
+                    </p>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-lightbulb text-warning me-2"></i>
+                        <strong>Por que usar?</strong> "O que não é medido, não é gerenciado" (Peter Drucker).
+                        Indicadores permitem monitorar desempenho, identificar desvios cedo e tomar decisões baseadas em dados.
+                    </p>
+                </div>
+
+                {{-- Tipos de Indicadores: Leading vs Lagging --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-diagram-3 me-2"></i>{{ __('Tipos de Indicadores') }}
+                    </h6>
+                    <p class="small text-muted mb-3">
+                        Indicadores se dividem em dois grandes grupos:
+                    </p>
+
+                    <div class="row g-3">
+                        {{-- Leading (Tendência) --}}
+                        <div class="col-md-6">
+                            <div class="card border-2 border-primary h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-primary bg-opacity-10 text-primary">
+                                            <i class="bi bi-speedometer"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-primary">Leading (Tendência)</h6>
+                                    </div>
+                                    <p class="small text-muted mb-3">
+                                        Indicadores de <strong>processo</strong>. Medem atividades que <strong>influenciam resultados futuros</strong>.
+                                        São preditivos e controláveis.
+                                    </p>
+                                    <div class="bg-light p-2 rounded mb-2">
+                                        <p class="fw-bold x-small mb-1 text-dark">Exemplos:</p>
+                                        <ul class="x-small text-muted mb-0">
+                                            <li>Nº de servidores treinados/mês</li>
+                                            <li>Horas de manutenção preventiva</li>
+                                            <li>Nº de processos mapeados</li>
+                                            <li>Taxa de participação em pesquisas</li>
+                                        </ul>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        <i class="bi bi-arrow-right text-primary me-1"></i>
+                                        <strong>Use quando:</strong> Quer influenciar resultados futuros com ações hoje
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Lagging (Resultado) --}}
+                        <div class="col-md-6">
+                            <div class="card border-2 border-success h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-success bg-opacity-10 text-success">
+                                            <i class="bi bi-trophy"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-success">Lagging (Resultado)</h6>
+                                    </div>
+                                    <p class="small text-muted mb-3">
+                                        Indicadores de <strong>resultado</strong>. Medem <strong>conquistas já alcançadas</strong>.
+                                        Mostram o impacto final, mas são difíceis de mudar no curto prazo.
+                                    </p>
+                                    <div class="bg-light p-2 rounded mb-2">
+                                        <p class="fw-bold x-small mb-1 text-dark">Exemplos:</p>
+                                        <ul class="x-small text-muted mb-0">
+                                            <li>Satisfação do cidadão (%)</li>
+                                            <li>Taxa de execução orçamentária</li>
+                                            <li>Tempo médio de atendimento</li>
+                                            <li>Índice de transparência</li>
+                                        </ul>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        <i class="bi bi-arrow-right text-success me-1"></i>
+                                        <strong>Use quando:</strong> Quer medir o impacto final do trabalho realizado
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Polaridade --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-arrows-expand me-2"></i>{{ __('Polaridade: Maior ou Menor é Melhor?') }}
+                    </h6>
+                    <p class="small text-muted mb-3">
+                        A <strong>polaridade</strong> define se o objetivo é <strong>aumentar</strong> ou <strong>diminuir</strong> o valor do indicador.
+                    </p>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-success bg-opacity-5 h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="bi bi-arrow-up-circle-fill text-success fs-4"></i>
+                                        <h6 class="fw-bold mb-0">Maior é Melhor</h6>
+                                    </div>
+                                    <p class="small text-muted mb-2">
+                                        Queremos que o valor <strong>cresça</strong>. O sucesso é medido pelo aumento.
+                                    </p>
+                                    <div class="bg-white p-2 rounded">
+                                        <p class="fw-bold x-small mb-1">Exemplos:</p>
+                                        <ul class="x-small text-muted mb-0">
+                                            <li>Satisfação dos cidadãos (%)</li>
+                                            <li>Taxa de execução orçamentária (%)</li>
+                                            <li>Nº de processos digitalizados</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-danger bg-opacity-5 h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="bi bi-arrow-down-circle-fill text-danger fs-4"></i>
+                                        <h6 class="fw-bold mb-0">Menor é Melhor</h6>
+                                    </div>
+                                    <p class="small text-muted mb-2">
+                                        Queremos que o valor <strong>diminua</strong>. O sucesso é medido pela redução.
+                                    </p>
+                                    <div class="bg-white p-2 rounded">
+                                        <p class="fw-bold x-small mb-1">Exemplos:</p>
+                                        <ul class="x-small text-muted mb-0">
+                                            <li>Tempo médio de atendimento (min)</li>
+                                            <li>Taxa de processos atrasados (%)</li>
+                                            <li>Nº de reclamações/mês</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Fórmula e Unidade de Medida --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-calculator me-2"></i>{{ __('Fórmula e Unidade de Medida') }}
+                    </h6>
+
+                    <div class="card border-0 bg-light mb-3">
+                        <div class="card-body">
+                            <p class="small text-muted mb-3">
+                                Todo indicador deve ter uma <strong>fórmula clara</strong> e uma <strong>unidade de medida</strong> para garantir consistência.
+                            </p>
+
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-primary">
+                                        <tr>
+                                            <th class="fw-bold small">Indicador</th>
+                                            <th class="fw-bold small">Fórmula</th>
+                                            <th class="fw-bold small">Unidade</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="small">
+                                        <tr>
+                                            <td>Taxa de Satisfação</td>
+                                            <td>(Clientes satisfeitos / Total de respondentes) × 100</td>
+                                            <td>%</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Tempo Médio de Atendimento</td>
+                                            <td>Soma dos tempos / Nº de atendimentos</td>
+                                            <td>minutos</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Taxa de Execução Orçamentária</td>
+                                            <td>(Orçamento executado / Orçamento aprovado) × 100</td>
+                                            <td>%</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Processos Digitalizados</td>
+                                            <td>Contagem direta</td>
+                                            <td>unidades</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Exemplo Completo --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-star me-2"></i>{{ __('Exemplo Completo de Indicador') }}
+                    </h6>
+
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">
+                                <i class="bi bi-graph-up me-2"></i>Taxa de Satisfação dos Cidadãos
+                            </h6>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <p class="small mb-1 text-muted"><strong>Objetivo vinculado:</strong></p>
+                                    <p class="x-small mb-3">"Aumentar satisfação dos cidadãos com serviços públicos"</p>
+
+                                    <p class="small mb-1 text-muted"><strong>Descrição:</strong></p>
+                                    <p class="x-small mb-3">Percentual de cidadãos que avaliaram o atendimento como "bom" ou "excelente"</p>
+
+                                    <p class="small mb-1 text-muted"><strong>Fórmula:</strong></p>
+                                    <p class="x-small mb-3">(Avaliações positivas / Total de avaliações) × 100</p>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <p class="small mb-1 text-muted"><strong>Unidade:</strong></p>
+                                    <p class="x-small mb-3">Percentual (%)</p>
+
+                                    <p class="small mb-1 text-muted"><strong>Polaridade:</strong></p>
+                                    <p class="x-small mb-3"><i class="bi bi-arrow-up-circle text-success me-1"></i>Maior é melhor</p>
+
+                                    <p class="small mb-1 text-muted"><strong>Tipo:</strong></p>
+                                    <p class="x-small mb-3">Lagging (resultado)</p>
+
+                                    <p class="small mb-1 text-muted"><strong>Periodicidade:</strong></p>
+                                    <p class="x-small mb-0">Mensal</p>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="alert alert-info mb-0 py-2">
+                                        <p class="fw-bold small mb-1"><i class="bi bi-bullseye me-1"></i>Meta para 2025:</p>
+                                        <p class="x-small mb-0">Alcançar 85% de satisfação até dezembro/2025 (baseline atual: 68%)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Dicas Profissionais --}}
+                <div>
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-trophy me-2"></i>{{ __('Boas Práticas para Indicadores Eficazes') }}
+                    </h6>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Use critério SMART</p>
+                                    <p class="x-small text-muted mb-0">Específico, Mensurável, Atingível, Relevante e Temporal. Ex: "85% até dez/2025"</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Evite indicadores "vaidade"</p>
+                                    <p class="x-small text-muted mb-0">Foque no que importa. "Nº de curtidas" não mede impacto real na sociedade</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Combine Leading e Lagging</p>
+                                    <p class="x-small text-muted mb-0">Monitore ações (leading) E resultados (lagging) para visão completa</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Documente fonte dos dados</p>
+                                    <p class="x-small text-muted mb-0">Especifique de onde vem o dado: sistema X, pesquisa Y, relatório Z</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Revise e ajuste periodicamente</p>
+                                    <p class="x-small text-muted mb-0">Se um indicador sempre fica verde ou sempre vermelho, revise a meta ou a relevância dele</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @if (session()->has('status'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i> {{ session('status') }}
@@ -330,77 +656,6 @@
             </div>
             <div class="card-footer bg-white border-top py-3">
                 {{ $indicadores->links() }}
-            </div>
-        </div>
-
-        {{-- Indicators Help Section (Educational Pattern) --}}
-        <div class="card card-modern mt-4 border-0 shadow-sm educational-card-gradient animate-fade-in">
-            <div class="card-body p-4 text-white">
-                <div class="row g-4">
-                    {{-- Main Explanation --}}
-                    <div class="col-12">
-                        <div class="d-flex align-items-start gap-3 mb-3">
-                            <div class="flex-shrink-0">
-                                <div class="icon-circle bg-white bg-opacity-25">
-                                    <i class="bi bi-graph-up-arrow fs-3 text-white"></i>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h5 class="fw-bold mb-2 text-white">{{ __('O que são Indicadores (KPIs)?') }}</h5>
-                                <p class="mb-0 text-white-50" style="line-height: 1.6;">
-                                    Os <strong>Indicadores de Desempenho (KPIs)</strong> são métricas quantitativas que permitem medir o progresso em direção aos objetivos. Eles são a "régua" da estratégia: sem indicadores, não é possível saber se um objetivo foi alcançado ou se um plano de ação está sendo efetivo.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Tips Grid --}}
-                    <div class="col-md-4">
-                        <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
-                            <h6 class="fw-bold text-white mb-2"><i class="bi bi-flag me-2"></i>Meta vs. Realizado</h6>
-                            <p class="small mb-0 opacity-75">A <strong>Meta</strong> é o valor que se pretende atingir. O <strong>Realizado</strong> é o valor obtido após a execução. O farol de desempenho compara esses dois valores para mostrar a saúde do indicador.</p>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
-                            <h6 class="fw-bold text-white mb-2"><i class="bi bi-bar-chart-steps me-2"></i>Linha de Base</h6>
-                            <p class="small mb-0 opacity-75">É o ponto de partida do indicador (o valor histórico ou inicial). Sem uma <strong>Linha de Base</strong>, não conseguimos medir o quanto evoluímos desde o início do planejamento.</p>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
-                            <h6 class="fw-bold text-white mb-2"><i class="bi bi-calendar-check me-2"></i>Periodicidade</h6>
-                            <p class="small mb-0 opacity-75">Define de quanto em quanto tempo o indicador deve ser atualizado (ex: mensal, trimestral). Manter os lançamentos em dia é fundamental para a governança estratégica.</p>
-                        </div>
-                    </div>
-
-                    {{-- Example Section --}}
-                    <div class="col-12 mt-2">
-                        <div class="bg-white bg-opacity-25 rounded-3 p-3 border border-white border-opacity-25">
-                            <h6 class="fw-bold text-white mb-3 small text-uppercase letter-spacing-1"><i class="bi bi-eye me-2"></i>Exemplo Prático:</h6>
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="x-small text-white-50 text-uppercase fw-bold">Indicador</div>
-                                    <div class="small fw-bold">Índice de Capacitação Digital</div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="x-small text-white-50 text-uppercase fw-bold">Meta</div>
-                                    <div class="small fw-bold">90%</div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="x-small text-white-50 text-uppercase fw-bold">Linha de Base</div>
-                                    <div class="small fw-bold">65% (Ano Anterior)</div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="x-small text-white-50 text-uppercase fw-bold">Fórmula</div>
-                                    <div class="small fw-bold">(Servidores Treinados / Total) * 100</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     @endif

@@ -28,6 +28,324 @@
         </div>
     </x-slot>
 
+    {{-- Seção Educativa: O que são Entregas/Marcos --}}
+    <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
+        <div class="card-header bg-transparent border-0 p-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-circle bg-white bg-opacity-25">
+                        <i class="bi bi-book-fill fs-4 text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1 text-white">
+                            <i class="bi bi-mortarboard me-2"></i>{{ __('O que são Entregas?') }}
+                        </h5>
+                        <p class="mb-0 text-white-50 small">
+                            {{ __('Aprenda a gerenciar marcos e entregas com metodologia Kanban') }}
+                        </p>
+                    </div>
+                </div>
+                <button @click="expanded = !expanded" class="btn btn-link text-white text-decoration-none p-0" type="button">
+                    <i class="bi fs-4" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                </button>
+            </div>
+        </div>
+
+        <div x-show="expanded" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0" style="display: none;">
+            <div class="card-body p-4 bg-white border-top">
+                {{-- Introdução --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-info-circle me-2"></i>{{ __('O que são Entregas?') }}
+                    </h6>
+                    <p class="text-muted mb-3">
+                        <strong>Entregas</strong> (ou Marcos) são os <strong>passos operacionais concretos</strong> que compõem um Plano de Ação.
+                        Enquanto o Plano de Ação define o "o quê" em alto nível, as Entregas detalham o "como" passo a passo,
+                        transformando grandes projetos em <strong>tarefas gerenciáveis</strong>.
+                    </p>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-lightbulb text-warning me-2"></i>
+                        <strong>Por que usar Entregas?</strong> Elas permitem acompanhamento diário do progresso, distribuição clara de responsabilidades,
+                        identificação rápida de gargalos e celebração de conquistas incrementais.
+                    </p>
+                </div>
+
+                {{-- Metodologia Kanban --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-kanban me-2"></i>{{ __('Gestão Visual com Kanban') }}
+                    </h6>
+                    <p class="small text-muted mb-3">
+                        O sistema <strong>Kanban</strong> organiza entregas em 3 colunas que representam o fluxo de trabalho:
+                    </p>
+
+                    <div class="row g-3 mb-4">
+                        {{-- Não Iniciado --}}
+                        <div class="col-md-4">
+                            <div class="card border-2 border-secondary h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-secondary bg-opacity-10 text-secondary">
+                                            <i class="bi bi-inbox"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-secondary">Não Iniciado</h6>
+                                    </div>
+                                    <p class="small text-muted mb-3">
+                                        <strong>Backlog:</strong> Entregas planejadas que ainda não foram iniciadas. Aguardam priorização ou recursos disponíveis.
+                                    </p>
+                                    <div class="bg-light p-2 rounded">
+                                        <p class="x-small mb-0 text-muted">
+                                            <strong>Exemplo:</strong> "Elaborar Termo de Referência para licitação"
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Em Andamento --}}
+                        <div class="col-md-4">
+                            <div class="card border-2 border-primary h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-primary bg-opacity-10 text-primary">
+                                            <i class="bi bi-play-circle"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-primary">Em Andamento</h6>
+                                    </div>
+                                    <p class="small text-muted mb-3">
+                                        <strong>WIP (Work in Progress):</strong> Entregas em execução ativa. Limite a quantidade para evitar sobrecarga da equipe.
+                                    </p>
+                                    <div class="bg-light p-2 rounded">
+                                        <p class="x-small mb-0 text-muted">
+                                            <strong>Exemplo:</strong> "Realizar treinamento da equipe técnica"
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Concluído --}}
+                        <div class="col-md-4">
+                            <div class="card border-2 border-success h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-success bg-opacity-10 text-success">
+                                            <i class="bi bi-check-circle"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-success">Concluído</h6>
+                                    </div>
+                                    <p class="small text-muted mb-3">
+                                        <strong>Done:</strong> Entregas finalizadas e validadas. O que está aqui já foi entregue e aprovado.
+                                    </p>
+                                    <div class="bg-light p-2 rounded">
+                                        <p class="x-small mb-0 text-muted">
+                                            <strong>Exemplo:</strong> "Contrato assinado com fornecedor"
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mb-0">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-lightbulb-fill"></i>
+                            <div>
+                                <p class="fw-bold small mb-1">Dica de Fluxo Kanban</p>
+                                <p class="x-small mb-0">
+                                    Arraste e solte os cartões entre as colunas para atualizar o status automaticamente.
+                                    Evite ter muitas entregas "Em Andamento" ao mesmo tempo (ideal: 2-3 por pessoa).
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Anatomia de uma Boa Entrega --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-journal-text me-2"></i>{{ __('Elementos de uma Entrega Completa') }}
+                    </h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                        <h6 class="fw-bold mb-0 small">Título claro e específico</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        Use verbos de ação e seja específico. <br>
+                                        ✅ "Publicar edital de licitação no DOU"<br>
+                                        ❌ "Trabalhar na licitação"
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                        <h6 class="fw-bold mb-0 small">Responsável definido</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        Atribua cada entrega a uma pessoa específica.<br>
+                                        Entregas sem dono tendem a não serem concluídas.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                        <h6 class="fw-bold mb-0 small">Prazo realista</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        Defina data de início e conclusão. <br>
+                                        Entregas com prazo vencido aparecem em destaque vermelho.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                        <h6 class="fw-bold mb-0 small">Prioridade definida</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        Use Alta/Média/Baixa para orientar a equipe sobre<br>
+                                        o que deve ser feito primeiro.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Exemplo Prático --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-star me-2"></i>{{ __('Exemplo: Plano "Modernizar Atendimento" dividido em Entregas') }}
+                    </h6>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="fw-bold small">Entrega</th>
+                                    <th class="fw-bold small">Responsável</th>
+                                    <th class="fw-bold small">Prazo</th>
+                                    <th class="fw-bold small">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="small">
+                                <tr>
+                                    <td>1. Mapear processos atuais de atendimento</td>
+                                    <td>Ana Silva (Processos)</td>
+                                    <td>15/02 - 28/02</td>
+                                    <td><span class="badge bg-success">Concluído</span></td>
+                                </tr>
+                                <tr>
+                                    <td>2. Elaborar Termo de Referência para sistema</td>
+                                    <td>Carlos Souza (TI)</td>
+                                    <td>01/03 - 15/03</td>
+                                    <td><span class="badge bg-primary">Em Andamento</span></td>
+                                </tr>
+                                <tr>
+                                    <td>3. Publicar licitação no portal de compras</td>
+                                    <td>Maria Santos (Compras)</td>
+                                    <td>20/03 - 25/03</td>
+                                    <td><span class="badge bg-secondary">Não Iniciado</span></td>
+                                </tr>
+                                <tr>
+                                    <td>4. Contratar fornecedor vencedor</td>
+                                    <td>Maria Santos (Compras)</td>
+                                    <td>15/04 - 30/04</td>
+                                    <td><span class="badge bg-secondary">Não Iniciado</span></td>
+                                </tr>
+                                <tr>
+                                    <td>5. Treinar equipe no novo sistema</td>
+                                    <td>João Pereira (RH)</td>
+                                    <td>15/05 - 30/05</td>
+                                    <td><span class="badge bg-secondary">Não Iniciado</span></td>
+                                </tr>
+                                <tr>
+                                    <td>6. Realizar piloto em uma unidade</td>
+                                    <td>Ana Silva (Processos)</td>
+                                    <td>01/06 - 30/06</td>
+                                    <td><span class="badge bg-secondary">Não Iniciado</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Dicas Profissionais --}}
+                <div>
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-trophy me-2"></i>{{ __('Boas Práticas de Gestão de Entregas') }}
+                    </h6>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Granularidade adequada</p>
+                                    <p class="x-small text-muted mb-0">Entregas devem durar entre 3-15 dias. Muito curtas geram burocracia; muito longas dificultam acompanhamento</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Atualize status diariamente</p>
+                                    <p class="x-small text-muted mb-0">Reserve 5 minutos por dia para mover cartões. Kanban desatualizado perde utilidade</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Evite sobrecarga (WIP limit)</p>
+                                    <p class="x-small text-muted mb-0">Limite entregas "Em Andamento". É melhor concluir 2 bem feitas do que iniciar 10 e não terminar nenhuma</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Celebre conquistas</p>
+                                    <p class="x-small text-muted mb-0">Cada entrega concluída é um marco. Reconheça o progresso da equipe publicamente</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Realize reuniões rápidas (Daily Standup)</p>
+                                    <p class="x-small text-muted mb-0">Encontros de 15min diários ou semanais para revisar o board: "O que fiz?", "O que vou fazer?", "Há impedimentos?"</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Toolbar --}}
     @include('livewire.entregas.partials.toolbar')
 
@@ -67,52 +385,6 @@
             @default
                 @include('livewire.entregas.views.kanban')
         @endswitch
-    </div>
-
-    {{-- Deliverables Help Section (Educational Pattern) --}}
-    <div class="card card-modern mt-5 border-0 shadow-sm educational-card-gradient animate-fade-in">
-        <div class="card-body p-4 text-white">
-            <div class="row g-4">
-                {{-- Main Explanation --}}
-                <div class="col-12">
-                    <div class="d-flex align-items-start gap-3 mb-3">
-                        <div class="flex-shrink-0">
-                            <div class="icon-circle bg-white bg-opacity-25">
-                                <i class="bi bi-check2-all fs-3 text-white"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h5 class="fw-bold mb-2 text-white">{{ __('O que são Entregas?') }}</h5>
-                            <p class="mb-0 text-white-50" style="line-height: 1.6;">
-                                As <strong>Entregas</strong> são os passos concretos e operacionais necessários para concluir um Plano de Ação. Elas transformam grandes projetos em tarefas gerenciáveis, permitindo o acompanhamento diário do progresso, a distribuição de responsabilidades e a identificação de gargalos.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Tips Grid --}}
-                <div class="col-md-4">
-                    <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
-                        <h6 class="fw-bold text-white mb-2"><i class="bi bi-kanban me-2"></i>Gestão Visual (Kanban)</h6>
-                        <p class="small mb-0 opacity-75">Arraste os cartões entre as colunas para atualizar o status. Use o <strong>"Não Iniciado"</strong> para o backlog, <strong>"Em Andamento"</strong> para o que está sendo feito agora e <strong>"Concluído"</strong> para o que já foi entregue.</p>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
-                        <h6 class="fw-bold text-white mb-2"><i class="bi bi-people me-2"></i>Responsabilidade</h6>
-                        <p class="small mb-0 opacity-75">Uma entrega sem responsável tende a não ser concluída. Atribua um ou mais usuários a cada cartão para garantir que todos saibam exatamente o que devem fazer.</p>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
-                        <h6 class="fw-bold text-white mb-2"><i class="bi bi-alarm me-2"></i>Prazos e Prioridades</h6>
-                        <p class="small mb-0 opacity-75">Fique atento às cores! Entregas com <strong>prazos vencidos</strong> ganham destaque em vermelho. Utilize os níveis de prioridade para focar o esforço da equipe no que é mais crítico.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     {{-- Modal de Criação Rápida --}}
