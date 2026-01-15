@@ -231,16 +231,96 @@
             })();
         </script>
 
-        <!-- CSRF Token Auto-Refresh -->
+        <!-- Sistema Global de Tratamento de Erro 419 - CSRF/Session Expired (Guest) -->
         <script>
             (function() {
                 'use strict';
 
-                // Refresh CSRF token every 10 minutes (600000ms)
-                const REFRESH_INTERVAL = 600000; // 10 minutes
+                const LOGIN_URL = '{{ route("login") }}';
+                const REFRESH_INTERVAL = 300000; // 5 minutos
+                let isRedirecting = false;
 
+                /**
+                 * Redireciona para login de forma limpa
+                 */
+                function redirectToLogin() {
+                    if (isRedirecting) return;
+                    isRedirecting = true;
+                    localStorage.setItem('session_expired', 'true');
+                    window.location.href = LOGIN_URL;
+                }
+
+                /**
+                 * Intercepta TODAS as chamadas fetch para capturar erro 419
+                 */
+                const originalFetch = window.fetch;
+                window.fetch = async function(...args) {
+                    try {
+                        const response = await originalFetch.apply(this, args);
+                        if (response.status === 419) {
+                            console.warn('[SEAE] Sessão expirada (419). Redirecionando para login...');
+                            redirectToLogin();
+                        }
+                        return response;
+                    } catch (error) {
+                        throw error;
+                    }
+                };
+
+                /**
+                 * Intercepta XMLHttpRequest
+                 */
+                const originalXHROpen = XMLHttpRequest.prototype.open;
+                const originalXHRSend = XMLHttpRequest.prototype.send;
+
+                XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+                    this._url = url;
+                    return originalXHROpen.apply(this, [method, url, ...rest]);
+                };
+
+                XMLHttpRequest.prototype.send = function(...args) {
+                    this.addEventListener('load', function() {
+                        if (this.status === 419) {
+                            redirectToLogin();
+                        }
+                    });
+                    return originalXHRSend.apply(this, args);
+                };
+
+                /**
+                 * Listener para erros do Livewire
+                 */
+                document.addEventListener('livewire:init', function() {
+                    if (window.Livewire) {
+                        Livewire.hook('request', ({ fail }) => {
+                            fail(({ status, preventDefault }) => {
+                                if (status === 419) {
+                                    preventDefault();
+                                    redirectToLogin();
+                                }
+                            });
+                        });
+                    }
+                });
+
+                /**
+                 * Atualiza o token CSRF
+                 */
+                function updateCsrfToken(newToken) {
+                    const metaTag = document.querySelector('meta[name="csrf-token"]');
+                    if (metaTag) {
+                        metaTag.setAttribute('content', newToken);
+                    }
+                    document.querySelectorAll('input[name="_token"]').forEach(input => {
+                        input.value = newToken;
+                    });
+                }
+
+                /**
+                 * Renova o token CSRF periodicamente
+                 */
                 function refreshCsrfToken() {
-                    fetch('/refresh-csrf', {
+                    originalFetch('/refresh-csrf', {
                         method: 'GET',
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
@@ -249,41 +329,34 @@
                         credentials: 'same-origin'
                     })
                     .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Failed to refresh CSRF token');
+                        if (response.status === 419) {
+                            redirectToLogin();
+                            return null;
                         }
+                        if (!response.ok) return null;
                         return response.json();
                     })
                     .then(data => {
-                        if (data.csrf_token) {
-                            // Update all CSRF token meta tags
-                            const metaTag = document.querySelector('meta[name="csrf-token"]');
-                            if (metaTag) {
-                                metaTag.setAttribute('content', data.csrf_token);
-                            }
-
-                            // Update all CSRF input fields
-                            const csrfInputs = document.querySelectorAll('input[name="_token"]');
-                            csrfInputs.forEach(input => {
-                                input.value = data.csrf_token;
-                            });
-
-                            console.log('CSRF token refreshed successfully');
+                        if (data && data.csrf_token) {
+                            updateCsrfToken(data.csrf_token);
                         }
                     })
-                    .catch(error => {
-                        console.error('CSRF token refresh error:', error);
-                    });
+                    .catch(() => {});
                 }
 
-                // Start auto-refresh
+                // Refresh periódico
                 setInterval(refreshCsrfToken, REFRESH_INTERVAL);
 
-                // Also refresh on page visibility change (user returns to tab)
+                // Refresh quando volta para a aba
                 document.addEventListener('visibilitychange', function() {
                     if (!document.hidden) {
                         refreshCsrfToken();
                     }
+                });
+
+                // Refresh inicial
+                document.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(refreshCsrfToken, 2000);
                 });
             })();
         </script>
