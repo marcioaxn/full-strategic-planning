@@ -21,25 +21,32 @@
 
         <!-- Global Theme Gradient Classes -->
         <style>
-            .gradient-theme { background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-light)) !important; }
+            /* Hardcoded colors to prevent variable loss during Livewire updates */
+            :root {
+                --theme-primary: #1B408E;
+                --theme-primary-light: #4361EE;
+                --theme-primary-rgb: 27, 64, 142;
+            }
+
+            .gradient-theme { background: linear-gradient(135deg, #1B408E, #4361EE) !important; }
             .gradient-theme-btn {
-                background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-light));
+                background: linear-gradient(135deg, #1B408E, #4361EE);
                 border: none; color: white;
-                box-shadow: 0 2px 8px rgba(var(--theme-primary-rgb), 0.25);
+                box-shadow: 0 2px 8px rgba(27, 64, 142, 0.25);
                 transition: all 0.2s ease;
             }
-            .gradient-theme-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.35); color: white; }
-            .gradient-theme-icon { background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-light)); color: white; }
+            .gradient-theme-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(27, 64, 142, 0.35); color: white; }
+            .gradient-theme-icon { background: linear-gradient(135deg, #1B408E, #4361EE); color: white; }
             
             .btn-premium {
-                background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-light) 100%) !important;
+                background: linear-gradient(135deg, #1B408E 0%, #4361EE 100%) !important;
                 border: none !important; color: white !important; font-weight: 600 !important;
                 padding: 0.5rem 1.5rem; border-radius: 50px !important;
-                box-shadow: 0 4px 15px rgba(var(--theme-primary-rgb), 0.3);
+                box-shadow: 0 4px 15px rgba(27, 64, 142, 0.3);
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
                 display: inline-flex; align-items: center; gap: 8px;
             }
-            .btn-premium:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(var(--theme-primary-rgb), 0.4); filter: brightness(1.1); color: white !important; }
+            .btn-premium:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(27, 64, 142, 0.4); filter: brightness(1.1); color: white !important; }
             
             /* Navbar Styles - Moved from component to layout to prevent re-render loss */
             .public-navbar {
