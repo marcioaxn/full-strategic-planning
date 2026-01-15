@@ -1,12 +1,20 @@
+{{-- Garantir carregamento do SortableJS --}}
+@once
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" defer></script>
+@endonce
+
 {{-- View Kanban --}}
-<div 
-    class="notion-kanban" 
-    x-data="{ 
+<div
+    class="notion-kanban"
+    x-data="{
+        retryCount: 0,
+        maxRetries: 20,
         init() {
-            this.setupSortable();
-            
+            this.waitForSortableAndInit();
+
             document.addEventListener('livewire:navigated', () => {
-                this.setupSortable();
+                this.retryCount = 0;
+                this.waitForSortableAndInit();
             });
 
             Livewire.on('re-init-sortable', () => {
@@ -15,9 +23,19 @@
                 });
             });
         },
+        waitForSortableAndInit() {
+            if (typeof Sortable !== 'undefined') {
+                this.setupSortable();
+            } else if (this.retryCount < this.maxRetries) {
+                this.retryCount++;
+                setTimeout(() => this.waitForSortableAndInit(), 100);
+            } else {
+                console.error('SortableJS não carregou após múltiplas tentativas');
+            }
+        },
         setupSortable() {
             if (typeof Sortable === 'undefined') {
-                console.error('SortableJS not loaded yet');
+                console.error('SortableJS not loaded');
                 return;
             }
 
@@ -25,7 +43,7 @@
                 if (column.sortableInstance) {
                     column.sortableInstance.destroy();
                 }
-                
+
                 column.sortableInstance = new Sortable(column, {
                     group: 'entregas',
                     animation: 200,
@@ -41,11 +59,11 @@
                     },
                     onEnd: (evt) => {
                         document.querySelectorAll('.notion-kanban-column').forEach(c => c.classList.remove('is-dragging'));
-                        
+
                         const entregaId = evt.item.getAttribute('data-entrega-id');
                         const novoStatus = evt.to.getAttribute('data-status');
                         const novaPosicao = evt.newIndex + 1;
-                        
+
                         if (entregaId && novoStatus) {
                             $wire.moverParaStatus(entregaId, novoStatus, novaPosicao);
                         }
@@ -131,8 +149,3 @@
         </div>
     @endforeach
 </div>
-
-{{-- SortableJS será carregado via CDN ou npm --}}
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-@endpush

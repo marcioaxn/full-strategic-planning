@@ -18,6 +18,302 @@
         </div>
     </x-slot>
 
+    {{-- Seção Educativa: O que são Planos de Ação --}}
+    <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
+        <div class="card-header bg-transparent border-0 p-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-circle bg-white bg-opacity-25">
+                        <i class="bi bi-book-fill fs-4 text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1 text-white">
+                            <i class="bi bi-mortarboard me-2"></i>{{ __('O que são Planos de Ação?') }}
+                        </h5>
+                        <p class="mb-0 text-white-50 small">
+                            {{ __('Aprenda a transformar objetivos estratégicos em ações concretas') }}
+                        </p>
+                    </div>
+                </div>
+                <button @click="expanded = !expanded" class="btn btn-link text-white text-decoration-none p-0" type="button">
+                    <i class="bi fs-4" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                </button>
+            </div>
+        </div>
+
+        <div x-show="expanded" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0" style="display: none;">
+            <div class="card-body p-4 bg-white border-top">
+                {{-- Introdução --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-info-circle me-2"></i>{{ __('O que é um Plano de Ação?') }}
+                    </h6>
+                    <p class="text-muted mb-3">
+                        Um <strong>Plano de Ação</strong> é o conjunto de atividades organizadas para alcançar um <strong>objetivo estratégico</strong>.
+                        Ele detalha <strong>o quê</strong> será feito, <strong>quem</strong> será responsável, <strong>quando</strong> será executado,
+                        <strong>onde</strong> acontecerá, <strong>por quê</strong> é necessário, <strong>como</strong> será feito e <strong>quanto</strong> custará.
+                    </p>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-lightbulb text-warning me-2"></i>
+                        <strong>Por que é importante?</strong> Sem planos de ação, os objetivos estratégicos ficam apenas no papel.
+                        Os planos garantem execução prática, alocação de recursos e acompanhamento de resultados.
+                    </p>
+                </div>
+
+                {{-- Metodologia 5W2H --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-grid-3x3 me-2"></i>{{ __('Metodologia 5W2H') }}
+                    </h6>
+                    <p class="small text-muted mb-3">
+                        A ferramenta <strong>5W2H</strong> estrutura o plano de ação respondendo 7 perguntas essenciais:
+                    </p>
+
+                    <div class="row g-3">
+                        {{-- What --}}
+                        <div class="col-md-6">
+                            <div class="card border-2 border-primary h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <div class="icon-circle-mini bg-primary bg-opacity-10 text-primary">
+                                            <i class="bi bi-question-circle"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-primary">What - O Quê?</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        Qual ação será executada? Descreva de forma clara e específica.
+                                        <br><strong>Ex:</strong> "Implementar sistema de gestão de processos"
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Who --}}
+                        <div class="col-md-6">
+                            <div class="card border-2 border-success h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <div class="icon-circle-mini bg-success bg-opacity-10 text-success">
+                                            <i class="bi bi-person"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-success">Who - Quem?</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        Quem será o responsável pela execução?
+                                        <br><strong>Ex:</strong> "Coordenação de TI + Consultor externo"
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- When --}}
+                        <div class="col-md-6">
+                            <div class="card border-2 border-warning h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <div class="icon-circle-mini bg-warning bg-opacity-10 text-warning">
+                                            <i class="bi bi-calendar"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-warning">When - Quando?</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        Qual o prazo de início e término?
+                                        <br><strong>Ex:</strong> "Início: 01/03/2025 - Término: 30/08/2025"
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Where --}}
+                        <div class="col-md-6">
+                            <div class="card border-2 border-info h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <div class="icon-circle-mini bg-info bg-opacity-10 text-info">
+                                            <i class="bi bi-geo-alt"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-info">Where - Onde?</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        Onde será executado? Local, setor ou unidade.
+                                        <br><strong>Ex:</strong> "Sede Central + 5 unidades regionais"
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Why --}}
+                        <div class="col-md-6">
+                            <div class="card border-2 border-danger h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <div class="icon-circle-mini bg-danger bg-opacity-10 text-danger">
+                                            <i class="bi bi-lightbulb"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-danger">Why - Por Quê?</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        Qual a justificativa? Por que é necessário?
+                                        <br><strong>Ex:</strong> "Reduzir tempo de tramitação de processos em 40%"
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- How --}}
+                        <div class="col-md-6">
+                            <div class="card border-2 border-primary h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <div class="icon-circle-mini bg-primary bg-opacity-10 text-primary">
+                                            <i class="bi bi-tools"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-primary">How - Como?</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        Como será executado? Método, etapas, estratégia.
+                                        <br><strong>Ex:</strong> "Licitação → Contratação → Treinamento → Implantação"
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- How Much --}}
+                        <div class="col-12">
+                            <div class="card border-2 border-success">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <div class="icon-circle-mini bg-success bg-opacity-10 text-success">
+                                            <i class="bi bi-currency-dollar"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-success">How Much - Quanto?</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-0">
+                                        Qual o custo estimado? Orçamento previsto.
+                                        <br><strong>Ex:</strong> "R$ 150.000,00 (software + consultoria + treinamento)"
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Exemplo Completo --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-star me-2"></i>{{ __('Exemplo de Plano de Ação Completo') }}
+                    </h6>
+
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="icon-circle-mini bg-primary bg-opacity-10 text-primary">
+                                    <i class="bi bi-clipboard-check"></i>
+                                </div>
+                                <h6 class="fw-bold mb-0">Plano: Modernizar Atendimento ao Cidadão</h6>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tbody class="small">
+                                        <tr>
+                                            <td class="fw-bold text-primary" style="width: 120px;">What</td>
+                                            <td>Implementar sistema de atendimento multicanal (presencial, telefone, WhatsApp, portal web)</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold text-success">Who</td>
+                                            <td>Diretoria de Atendimento + TI (coordenador: José Silva)</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold text-warning">When</td>
+                                            <td>Início: 15/02/2025 | Término: 30/09/2025 (7 meses)</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold text-info">Where</td>
+                                            <td>Sede Central + 3 postos de atendimento regionais</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold text-danger">Why</td>
+                                            <td>Reduzir tempo de espera de 45min para 15min e aumentar satisfação dos cidadãos para 85%</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold text-primary">How</td>
+                                            <td>
+                                                1. Mapear processos atuais<br>
+                                                2. Licitar sistema integrado<br>
+                                                3. Treinar equipe<br>
+                                                4. Pilotar em 1 unidade<br>
+                                                5. Expandir para todas as unidades
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold text-success">How Much</td>
+                                            <td>R$ 280.000,00 (software R$ 150k + treinamento R$ 30k + equipamentos R$ 100k)</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Dicas Profissionais --}}
+                <div>
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-trophy me-2"></i>{{ __('Dicas para Planos de Ação Eficazes') }}
+                    </h6>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Seja específico</p>
+                                    <p class="x-small text-muted mb-0">Evite descrições genéricas. Use verbos de ação: "Implementar", "Capacitar", "Reduzir"</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Defina responsáveis claros</p>
+                                    <p class="x-small text-muted mb-0">Cada plano deve ter um gestor identificado nominalmente, não apenas "setor X"</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Estabeleça marcos intermediários</p>
+                                    <p class="x-small text-muted mb-0">Divida planos longos em entregas menores para facilitar monitoramento</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Estime orçamento realisticamente</p>
+                                    <p class="x-small text-muted mb-0">Preveja custos diretos e indiretos. Adicione margem de contingência (10-15%)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Monitore progresso regularmente</p>
+                                    <p class="x-small text-muted mb-0">Acompanhe status semanalmente ou quinzenalmente. Identifique desvios cedo para agir a tempo</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @if (session()->has('message'))
         <div class="alert alert-{{ session('style') }} alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>
@@ -347,45 +643,6 @@
             </div>
             <div class="card-footer bg-white border-top py-3">
                 {{ $planos->links() }}
-            </div>
-        </div>
-
-        {{-- Action Plans Help Section (Educational Pattern) --}}
-        <div class="card card-modern mt-4 border-0 shadow-sm educational-card-gradient animate-fade-in">
-            <div class="card-body p-4 text-white">
-                <div class="row g-4">
-                    {{-- Main Explanation --}}
-                    <div class="col-12">
-                        <div class="d-flex align-items-start gap-3 mb-3">
-                            <div class="flex-shrink-0">
-                                <div class="icon-circle bg-white bg-opacity-25">
-                                    <i class="bi bi-list-task fs-3 text-white"></i>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h5 class="fw-bold mb-2 text-white">{{ __('O que são Planos de Ação?') }}</h5>
-                                <p class="mb-0 text-white-50" style="line-height: 1.6;">
-                                    Os <strong>Planos de Ação</strong> são o conjunto de iniciativas, projetos ou processos necessários para atingir um objetivo estratégico. Enquanto o objetivo diz "onde queremos chegar", o plano de ação detalha "como vamos chegar lá", definindo prazos, orçamentos e responsáveis.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Tips Grid --}}
-                    <div class="col-md-6">
-                        <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
-                            <h6 class="fw-bold text-white mb-2"><i class="bi bi-info-circle me-2"></i>Plano vs. Entrega</h6>
-                            <p class="small mb-0 opacity-75">Um <strong>Plano</strong> é uma iniciativa macro (ex: "Implementar novo sistema de RH"). Já as <strong>Entregas</strong> são os passos menores dentro desse plano (ex: "Levantamento de requisitos", "Treinamento"). Se o seu plano dura menos de um mês, talvez ele seja apenas uma entrega!</p>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
-                            <h6 class="fw-bold text-white mb-2"><i class="bi bi-check-all me-2"></i>Metodologia 5W2H</h6>
-                            <p class="small mb-0 opacity-75">Para um plano eficaz, certifique-se de saber: <strong>O que</strong> será feito, <strong>Por que</strong>, <strong>Onde</strong>, <strong>Quando</strong>, <strong>Quem</strong> é o responsável, <strong>Como</strong> e <strong>Quanto</strong> custará.</p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     @endif

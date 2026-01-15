@@ -27,6 +27,294 @@
         </div>
     </div>
 
+    {{-- Seção Educativa: O que são Perspectivas BSC --}}
+    <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
+        <div class="card-header bg-transparent border-0 p-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-circle bg-white bg-opacity-25">
+                        <i class="bi bi-book-fill fs-4 text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1 text-white">
+                            <i class="bi bi-mortarboard me-2"></i>{{ __('O que são Perspectivas BSC?') }}
+                        </h5>
+                        <p class="mb-0 text-white-50 small">
+                            {{ __('Entenda as 4 dimensões estratégicas do Balanced Scorecard') }}
+                        </p>
+                    </div>
+                </div>
+                <button @click="expanded = !expanded" class="btn btn-link text-white text-decoration-none p-0" type="button">
+                    <i class="bi fs-4" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                </button>
+            </div>
+        </div>
+
+        <div x-show="expanded" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0" style="display: none;">
+            <div class="card-body p-4 bg-white border-top">
+                {{-- Introdução --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-info-circle me-2"></i>{{ __('O que é BSC?') }}
+                    </h6>
+                    <p class="text-muted mb-3">
+                        O <strong>Balanced Scorecard (BSC)</strong> é uma metodologia de gestão estratégica que organiza objetivos em <strong>4 perspectivas interligadas</strong>.
+                        Criado por Robert Kaplan e David Norton, o BSC equilibra indicadores financeiros e não-financeiros, oferecendo uma visão integrada do desempenho organizacional.
+                    </p>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-lightbulb text-warning me-2"></i>
+                        <strong>Por que usar perspectivas?</strong> Elas garantem que a estratégia não foque apenas em resultados financeiros,
+                        mas também em clientes, processos internos e capacidade de aprendizado e crescimento.
+                    </p>
+                </div>
+
+                {{-- Diagrama de Cascata (Causa e Efeito) --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-diagram-3 me-2"></i>{{ __('Relação de Causa e Efeito') }}
+                    </h6>
+                    <p class="small text-muted mb-3">
+                        As perspectivas se conectam em uma cadeia lógica: investir em <strong>aprendizado</strong> melhora os <strong>processos</strong>,
+                        que atendem melhor os <strong>clientes</strong>, gerando melhores <strong>resultados</strong>.
+                    </p>
+
+                    <div class="d-flex flex-column gap-2">
+                        {{-- Perspectiva 1: Financeira/Resultados (TOP) --}}
+                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 border border-success bg-success bg-opacity-5">
+                            <div class="icon-circle-mini bg-success bg-opacity-10 text-success">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-0 text-success">1. Perspectiva Financeira / Resultados</h6>
+                                <p class="x-small text-muted mb-0">Como agregar valor à sociedade e aos stakeholders?</p>
+                            </div>
+                            <span class="badge bg-success">TOPO</span>
+                        </div>
+
+                        {{-- Arrow --}}
+                        <div class="text-center text-muted">
+                            <i class="bi bi-arrow-down-short fs-3"></i>
+                            <p class="x-small mb-0">é resultado de</p>
+                        </div>
+
+                        {{-- Perspectiva 2: Clientes/Sociedade --}}
+                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 border border-info bg-info bg-opacity-5">
+                            <div class="icon-circle-mini bg-info bg-opacity-10 text-info">
+                                <i class="bi bi-people"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-0 text-info">2. Perspectiva Clientes / Sociedade</h6>
+                                <p class="x-small text-muted mb-0">Como encantar os cidadãos e usuários dos serviços?</p>
+                            </div>
+                        </div>
+
+                        {{-- Arrow --}}
+                        <div class="text-center text-muted">
+                            <i class="bi bi-arrow-down-short fs-3"></i>
+                            <p class="x-small mb-0">é resultado de</p>
+                        </div>
+
+                        {{-- Perspectiva 3: Processos Internos --}}
+                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 border border-warning bg-warning bg-opacity-5">
+                            <div class="icon-circle-mini bg-warning bg-opacity-10 text-warning">
+                                <i class="bi bi-gear"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-0 text-warning">3. Perspectiva Processos Internos</h6>
+                                <p class="x-small text-muted mb-0">Em quais processos devemos ser excelentes?</p>
+                            </div>
+                        </div>
+
+                        {{-- Arrow --}}
+                        <div class="text-center text-muted">
+                            <i class="bi bi-arrow-down-short fs-3"></i>
+                            <p class="x-small mb-0">é resultado de</p>
+                        </div>
+
+                        {{-- Perspectiva 4: Aprendizado e Crescimento (BASE) --}}
+                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 border border-primary bg-primary bg-opacity-5">
+                            <div class="icon-circle-mini bg-primary bg-opacity-10 text-primary">
+                                <i class="bi bi-mortarboard"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-0 text-primary">4. Perspectiva Aprendizado e Crescimento</h6>
+                                <p class="x-small text-muted mb-0">Como desenvolver nossa capacidade de inovar e melhorar?</p>
+                            </div>
+                            <span class="badge bg-primary">BASE</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Detalhamento das 4 Perspectivas --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-journal-text me-2"></i>{{ __('Entenda cada Perspectiva') }}
+                    </h6>
+
+                    <div class="row g-3">
+                        {{-- Financeira/Resultados --}}
+                        <div class="col-md-6">
+                            <div class="card h-100 border-2 border-success">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-success bg-opacity-10 text-success">
+                                            <i class="bi bi-graph-up-arrow"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-success">Financeira / Resultados</h6>
+                                    </div>
+                                    <p class="small text-muted mb-3">
+                                        Mede o <strong>valor entregue</strong> à sociedade e aos stakeholders. No setor público, foca em eficiência, eficácia e impacto social.
+                                    </p>
+                                    <div class="mb-3">
+                                        <p class="fw-bold x-small mb-1 text-dark">Exemplos de Objetivos:</p>
+                                        <ul class="x-small text-muted mb-0">
+                                            <li>Reduzir custos operacionais em 15%</li>
+                                            <li>Aumentar arrecadação própria</li>
+                                            <li>Melhorar índice de execução orçamentária</li>
+                                            <li>Aumentar retorno social dos investimentos</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Clientes/Sociedade --}}
+                        <div class="col-md-6">
+                            <div class="card h-100 border-2 border-info">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-info bg-opacity-10 text-info">
+                                            <i class="bi bi-people"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-info">Clientes / Sociedade</h6>
+                                    </div>
+                                    <p class="small text-muted mb-3">
+                                        Avalia a <strong>satisfação dos cidadãos</strong> e usuários dos serviços públicos. Foca em qualidade, acessibilidade e transparência.
+                                    </p>
+                                    <div class="mb-3">
+                                        <p class="fw-bold x-small mb-1 text-dark">Exemplos de Objetivos:</p>
+                                        <ul class="x-small text-muted mb-0">
+                                            <li>Aumentar satisfação dos cidadãos para 85%</li>
+                                            <li>Reduzir tempo de espera no atendimento</li>
+                                            <li>Ampliar canais digitais de atendimento</li>
+                                            <li>Melhorar transparência e acesso à informação</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Processos Internos --}}
+                        <div class="col-md-6">
+                            <div class="card h-100 border-2 border-warning">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-warning bg-opacity-10 text-warning">
+                                            <i class="bi bi-gear"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-warning">Processos Internos</h6>
+                                    </div>
+                                    <p class="small text-muted mb-3">
+                                        Identifica <strong>processos críticos</strong> que devem ter excelência operacional para entregar valor aos clientes e resultados.
+                                    </p>
+                                    <div class="mb-3">
+                                        <p class="fw-bold x-small mb-1 text-dark">Exemplos de Objetivos:</p>
+                                        <ul class="x-small text-muted mb-0">
+                                            <li>Digitalizar 100% dos processos administrativos</li>
+                                            <li>Reduzir prazo de licitações em 30%</li>
+                                            <li>Implementar gestão de riscos operacionais</li>
+                                            <li>Padronizar fluxos de trabalho críticos</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Aprendizado e Crescimento --}}
+                        <div class="col-md-6">
+                            <div class="card h-100 border-2 border-primary">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-primary bg-opacity-10 text-primary">
+                                            <i class="bi bi-mortarboard"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-primary">Aprendizado e Crescimento</h6>
+                                    </div>
+                                    <p class="small text-muted mb-3">
+                                        Foca no <strong>capital humano, tecnológico e organizacional</strong> necessário para sustentar a estratégia e a inovação contínua.
+                                    </p>
+                                    <div class="mb-3">
+                                        <p class="fw-bold x-small mb-1 text-dark">Exemplos de Objetivos:</p>
+                                        <ul class="x-small text-muted mb-0">
+                                            <li>Capacitar 100% dos servidores em inovação</li>
+                                            <li>Implementar cultura de gestão de dados</li>
+                                            <li>Modernizar infraestrutura de TI</li>
+                                            <li>Aumentar engajamento dos colaboradores</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Dicas Profissionais --}}
+                <div>
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-star me-2"></i>{{ __('Dicas para Usar as Perspectivas BSC') }}
+                    </h6>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Equilíbrio é essencial</p>
+                                    <p class="x-small text-muted mb-0">Distribua objetivos entre as 4 perspectivas. Não concentre tudo em uma dimensão</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Pense em causa-efeito</p>
+                                    <p class="x-small text-muted mb-0">Conecte objetivos entre perspectivas: aprendizado → processos → clientes → resultados</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Personalize para o setor público</p>
+                                    <p class="x-small text-muted mb-0">Adapte "Financeira" para "Resultados" e "Clientes" para "Sociedade/Cidadãos"</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Defina cores e ícones</p>
+                                    <p class="x-small text-muted mb-0">Padronize a identidade visual de cada perspectiva no Mapa Estratégico</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Comece pela base</p>
+                                    <p class="x-small text-muted mb-0">Ao planejar, pergunte-se: "O que precisamos aprender?" → "Que processos melhorar?" → "Como atender melhor?" → "Que resultados alcançar?"</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @if(session('status'))
         <div class="alert alert-modern alert-success alert-dismissible fade show d-flex align-items-center gap-3 mb-4" role="alert">
             <div class="icon-circle-mini"><i class="bi bi-check-circle-fill"></i></div>
@@ -184,122 +472,6 @@
         </div>
 
     @if($peiAtivo)
-        {{-- BSC Perspectives Help Section (Educational Pattern) --}}
-        <div class="card card-modern mt-4 border-0 shadow-sm educational-card-gradient">
-            <div class="card-body p-4 text-white">
-                <div class="row g-4">
-                    {{-- Main Explanation --}}
-                    <div class="col-12">
-                        <div class="d-flex align-items-start gap-3 mb-3">
-                            <div class="flex-shrink-0">
-                                <div class="icon-circle bg-white bg-opacity-25">
-                                    <i class="bi bi-lightbulb-fill fs-3 text-white"></i>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h5 class="fw-bold mb-2 text-white">{{ __('O que são as Perspectivas do BSC?') }}</h5>
-                                <p class="mb-0 text-white-50" style="line-height: 1.6;">
-                                    As <strong>Perspectivas</strong> são as quatro dimensões fundamentais do <em>Balanced Scorecard</em>. Elas permitem que a organização visualize sua estratégia de forma equilibrada, indo além dos indicadores financeiros tradicionais e cobrindo os pilares que sustentam o sucesso a longo prazo.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Perspectives Detail Cards --}}
-                    <div class="col-12">
-                        <div class="bg-white bg-opacity-10 rounded-3 p-4">
-                            <h5 class="fw-bold mb-4 text-white text-center">
-                                <i class="bi bi-grid-3x3-gap-fill me-2"></i>
-                                Os 4 Pilares da Estratégia
-                            </h5>
-
-                            <div class="row g-3">
-                                {{-- Aprendizado --}}
-                                <div class="col-12 col-md-6 col-lg-3">
-                                    <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
-                                        <div class="d-flex align-items-center gap-2 mb-2">
-                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">1</span>
-                                            <h6 class="fw-bold mb-0 small">{{ __('Aprendizado e Crescimento') }}</h6>
-                                        </div>
-                                        <p class="small mb-2 opacity-90">Foco no capital humano, sistemas, cultura e infraestrutura.</p>
-                                        <div class="bg-body-secondary rounded p-2 small">
-                                            <i class="bi bi-mortarboard-fill me-1"></i>
-                                            <strong>Pergunta-chave:</strong><br>
-                                            "Como sustentamos nossa capacidade de mudar e melhorar?"
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Processos --}}
-                                <div class="col-12 col-md-6 col-lg-3">
-                                    <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
-                                        <div class="d-flex align-items-center gap-2 mb-2">
-                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">2</span>
-                                            <h6 class="fw-bold mb-0 small">{{ __('Processos Internos') }}</h6>
-                                        </div>
-                                        <p class="small mb-2 opacity-90">Foco na excelência operacional e nos processos críticos de negócio.</p>
-                                        <div class="bg-body-secondary rounded p-2 small">
-                                            <i class="bi bi-gear-wide-connected me-1"></i>
-                                            <strong>Pergunta-chave:</strong><br>
-                                            "Em quais processos devemos ser excelentes para ter sucesso?"
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Clientes --}}
-                                <div class="col-12 col-md-6 col-lg-3">
-                                    <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
-                                        <div class="d-flex align-items-center gap-2 mb-2">
-                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">3</span>
-                                            <h6 class="fw-bold mb-0 small">{{ __('Clientes / Usuários') }}</h6>
-                                        </div>
-                                        <p class="small mb-2 opacity-90">Foco na satisfação, retenção e na proposta de valor para o público-alvo.</p>
-                                        <div class="bg-body-secondary rounded p-2 small">
-                                            <i class="bi bi-people-fill me-1"></i>
-                                            <strong>Pergunta-chave:</strong><br>
-                                            "Como o cliente nos enxerga e o que ele espera de nós?"
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Financeira --}}
-                                <div class="col-12 col-md-6 col-lg-3">
-                                    <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
-                                        <div class="d-flex align-items-center gap-2 mb-2">
-                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">4</span>
-                                            <h6 class="fw-bold mb-0 small">{{ __('Financeira / Sociedade') }}</h6>
-                                        </div>
-                                        <p class="small mb-2 opacity-90">Foco nos resultados financeiros e no valor entregue ao cidadão/sociedade.</p>
-                                        <div class="bg-body-secondary rounded p-2 small">
-                                            <i class="bi bi-cash-stack me-1"></i>
-                                            <strong>Pergunta-chave:</strong><br>
-                                            "Como devemos ser vistos pelos nossos stakeholders?"
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Bottom Advice --}}
-                    <div class="col-12">
-                        <div class="bg-body rounded-3 p-3 text-body shadow-sm">
-                            <div class="d-flex align-items-start gap-2 mb-2">
-                                <i class="bi bi-info-circle-fill mt-1 text-primary"></i>
-                                <div>
-                                    <strong class="small d-block mb-1">Dica de Gestão:</strong>
-                                    <p class="mb-0 small opacity-90">
-                                        A ordem das perspectivas cria uma relação de causa e efeito. O <strong>Aprendizado</strong> sustenta os <strong>Processos</strong>, que satisfazem os <strong>Clientes</strong>, resultando no sucesso <strong>Financeiro</strong>.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
-
         <!-- Modal de Criação/Edição -->
         @if($showModal)
         <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
@@ -344,6 +516,7 @@
             </div>
         </div>
         @endif
+    @endif
     @endif
 
     {{-- Modal de Exclusão --}}

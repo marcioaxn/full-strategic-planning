@@ -23,6 +23,330 @@
         </div>
     </div>
 
+    {{-- Seção Educativa: O que são Graus de Satisfação --}}
+    <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
+        <div class="card-header bg-transparent border-0 p-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-circle bg-white bg-opacity-25">
+                        <i class="bi bi-book-fill fs-4 text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1 text-white">
+                            <i class="bi bi-mortarboard me-2"></i>{{ __('O que são Graus de Satisfação?') }}
+                        </h5>
+                        <p class="mb-0 text-white-50 small">
+                            {{ __('Entenda como funcionam os semáforos de desempenho') }}
+                        </p>
+                    </div>
+                </div>
+                <button @click="expanded = !expanded" class="btn btn-link text-white text-decoration-none p-0" type="button">
+                    <i class="bi fs-4" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                </button>
+            </div>
+        </div>
+
+        <div x-show="expanded" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0" style="display: none;">
+            <div class="card-body p-4 bg-white border-top">
+                {{-- Introdução --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-info-circle me-2"></i>{{ __('O que são Graus de Satisfação?') }}
+                    </h6>
+                    <p class="text-muted mb-3">
+                        <strong>Graus de Satisfação</strong> são faixas de desempenho que classificam o <strong>percentual de atingimento</strong> de metas de indicadores.
+                        Funcionam como um <strong>semáforo visual</strong> (farol de desempenho) que facilita a interpretação rápida dos resultados:
+                        verde indica bom desempenho, amarelo alerta para atenção, e vermelho sinaliza problemas críticos.
+                    </p>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-lightbulb text-warning me-2"></i>
+                        <strong>Por que usar?</strong> Ao invés de analisar números brutos (ex: "atingimos 73,5%"),
+                        o gestor visualiza cores e entende imediatamente se o resultado é satisfatório ou requer intervenção.
+                    </p>
+                </div>
+
+                {{-- Como Funciona o Farol --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-traffic-light me-2"></i>{{ __('Como Funciona o Farol de Desempenho') }}
+                    </h6>
+                    <p class="small text-muted mb-3">
+                        Cada grau de satisfação define um <strong>intervalo percentual</strong> (ex: 0% a 50%, 51% a 80%, 81% a 100%)
+                        e uma <strong>cor associada</strong>. O sistema compara o percentual atingido com essas faixas e exibe a cor correspondente.
+                    </p>
+
+                    <div class="card border-0 bg-light mb-3">
+                        <div class="card-body p-3">
+                            <p class="fw-bold small mb-2 text-dark">
+                                <i class="bi bi-calculator me-1"></i>Fórmula do Percentual de Atingimento:
+                            </p>
+                            <div class="alert alert-info mb-0 py-2 px-3">
+                                <p class="mb-0 small">
+                                    <strong>% Atingimento = (Valor Realizado / Meta) × 100</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        {{-- Exemplo: Crítico --}}
+                        <div class="col-md-4">
+                            <div class="card border-2 border-danger h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="rounded-circle border" style="background-color: #dc3545; width: 24px; height: 24px;"></div>
+                                        <h6 class="fw-bold mb-0 text-danger">Crítico</h6>
+                                    </div>
+                                    <p class="small text-muted mb-2">
+                                        <strong>Faixa:</strong> 0% a 50%
+                                    </p>
+                                    <p class="x-small text-muted mb-0">
+                                        Resultado muito abaixo da meta. Requer ação imediata e plano de recuperação.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Exemplo: Insatisfatório --}}
+                        <div class="col-md-4">
+                            <div class="card border-2 border-warning h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="rounded-circle border" style="background-color: #ffc107; width: 24px; height: 24px;"></div>
+                                        <h6 class="fw-bold mb-0 text-warning">Insatisfatório</h6>
+                                    </div>
+                                    <p class="small text-muted mb-2">
+                                        <strong>Faixa:</strong> 51% a 80%
+                                    </p>
+                                    <p class="x-small text-muted mb-0">
+                                        Resultado abaixo do esperado. Atenção necessária para evitar piora.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Exemplo: Satisfatório --}}
+                        <div class="col-md-4">
+                            <div class="card border-2 border-success h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="rounded-circle border" style="background-color: #28a745; width: 24px; height: 24px;"></div>
+                                        <h6 class="fw-bold mb-0 text-success">Satisfatório</h6>
+                                    </div>
+                                    <p class="small text-muted mb-2">
+                                        <strong>Faixa:</strong> 81% a 100%
+                                    </p>
+                                    <p class="x-small text-muted mb-0">
+                                        Meta atingida ou próxima do esperado. Manter os esforços atuais.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Exemplos de Escalas Populares --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-palette me-2"></i>{{ __('Escalas de Desempenho Mais Usadas') }}
+                    </h6>
+
+                    <div class="row g-3">
+                        {{-- Escala 3 Níveis (Clássica) --}}
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-traffic-light me-2"></i>Escala 3 Níveis (Clássica)
+                                    </h6>
+                                    <div class="d-flex flex-column gap-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle" style="background-color: #dc3545; width: 16px; height: 16px;"></div>
+                                            <span class="small">Crítico: 0% a 70%</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle" style="background-color: #ffc107; width: 16px; height: 16px;"></div>
+                                            <span class="small">Atenção: 71% a 89%</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle" style="background-color: #28a745; width: 16px; height: 16px;"></div>
+                                            <span class="small">Adequado: 90% a 100%</span>
+                                        </div>
+                                    </div>
+                                    <p class="x-small text-muted mt-2 mb-0">
+                                        <strong>Uso:</strong> Ideal para gestão pública. Exige 90%+ para considerar satisfatório.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Escala 5 Níveis (Detalhada) --}}
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-speedometer2 me-2"></i>Escala 5 Níveis (Detalhada)
+                                    </h6>
+                                    <div class="d-flex flex-column gap-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle" style="background-color: #8B0000; width: 16px; height: 16px;"></div>
+                                            <span class="small">Péssimo: 0% a 40%</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle" style="background-color: #dc3545; width: 16px; height: 16px;"></div>
+                                            <span class="small">Ruim: 41% a 60%</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle" style="background-color: #ffc107; width: 16px; height: 16px;"></div>
+                                            <span class="small">Regular: 61% a 80%</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle" style="background-color: #17a2b8; width: 16px; height: 16px;"></div>
+                                            <span class="small">Bom: 81% a 95%</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle" style="background-color: #28a745; width: 16px; height: 16px;"></div>
+                                            <span class="small">Excelente: 96% a 100%</span>
+                                        </div>
+                                    </div>
+                                    <p class="x-small text-muted mt-2 mb-0">
+                                        <strong>Uso:</strong> Para análises mais granulares e reconhecimento de alta performance.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Exemplo Prático --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-star me-2"></i>{{ __('Exemplo Prático de Aplicação') }}
+                    </h6>
+
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <p class="small text-muted mb-3">
+                                <strong>Indicador:</strong> "Reduzir tempo médio de atendimento"<br>
+                                <strong>Meta:</strong> 15 minutos<br>
+                                <strong>Valor realizado:</strong> 18 minutos<br>
+                                <strong>Polaridade:</strong> Menor é melhor
+                            </p>
+
+                            <div class="alert alert-info mb-3 py-2">
+                                <p class="small mb-0">
+                                    <strong>Cálculo:</strong> % Atingimento = (Meta / Realizado) × 100 = (15 / 18) × 100 = <strong>83,3%</strong>
+                                </p>
+                            </div>
+
+                            <table class="table table-sm table-borderless mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="small fw-bold">Grau</th>
+                                        <th class="small fw-bold">Faixa</th>
+                                        <th class="small fw-bold">Resultado</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="small">
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="rounded-circle" style="background-color: #dc3545; width: 12px; height: 12px;"></div>
+                                                Crítico
+                                            </div>
+                                        </td>
+                                        <td>0% a 70%</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr class="table-warning">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="rounded-circle" style="background-color: #ffc107; width: 12px; height: 12px;"></div>
+                                                Atenção
+                                            </div>
+                                        </td>
+                                        <td>71% a 89%</td>
+                                        <td><strong>83,3% ← Aqui!</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="rounded-circle" style="background-color: #28a745; width: 12px; height: 12px;"></div>
+                                                Adequado
+                                            </div>
+                                        </td>
+                                        <td>90% a 100%</td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <p class="small text-muted mt-3 mb-0">
+                                <i class="bi bi-arrow-right-circle text-warning me-1"></i>
+                                <strong>Interpretação:</strong> Indicador em <strong class="text-warning">Atenção</strong>.
+                                O tempo de atendimento está próximo da meta, mas ainda precisa melhorar para atingir 90%+.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Dicas Profissionais --}}
+                <div>
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-trophy me-2"></i>{{ __('Dicas para Definir Graus de Satisfação') }}
+                    </h6>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Evite sobreposição de faixas</p>
+                                    <p class="x-small text-muted mb-0">As faixas devem ser contíguas e exclusivas. Ex: 0-70%, 71-89%, 90-100%</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Use cores intuitivas</p>
+                                    <p class="x-small text-muted mb-0">Vermelho = problema, Amarelo = alerta, Verde = sucesso. Evite cores confusas como roxo ou marrom</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Seja rigoroso com o "verde"</p>
+                                    <p class="x-small text-muted mb-0">No setor público, 90%+ para "Adequado" é comum. Evite aprovar resultados abaixo de 80%</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Padronize para toda a organização</p>
+                                    <p class="x-small text-muted mb-0">Use a mesma escala em todos os indicadores para facilitar comparações</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Considere indicadores de polaridade reversa</p>
+                                    <p class="x-small text-muted mb-0">Quando "menor é melhor" (ex: tempo de espera), o sistema inverte o cálculo automaticamente: (Meta/Realizado)×100</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @if (session()->has('message'))
         <div class="alert alert-modern alert-success alert-dismissible fade show d-flex align-items-center gap-3 mb-4" role="alert">
             <div class="icon-circle-mini"><i class="bi bi-check-circle-fill"></i></div>
@@ -200,90 +524,6 @@
                     {{ $graus->links() }}
                 </div>
             @endif
-        </div>
-
-        {{-- Satisfaction Degrees Help Section (Educational Pattern) --}}
-        <div class="card card-modern mt-4 border-0 shadow-sm educational-card-gradient">
-            <div class="card-body p-4 text-white">
-                <div class="row g-4">
-                    {{-- Main Explanation --}}
-                    <div class="col-12">
-                        <div class="d-flex align-items-start gap-3 mb-3">
-                            <div class="flex-shrink-0">
-                                <div class="icon-circle bg-white bg-opacity-25">
-                                    <i class="bi bi-lightbulb-fill fs-3 text-white"></i>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h5 class="fw-bold mb-2 text-white">{{ __('O que é o Grau de Satisfação?') }}</h5>
-                                <p class="mb-0 text-white-50" style="line-height: 1.6;">
-                                    O <strong>Grau de Satisfação</strong> é o motor de sinalização visual do sistema (o famoso "Farol"). Ele traduz o percentual de atingimento dos indicadores em status compreensíveis, permitindo que a alta gestão identifique instantaneamente a saúde da estratégia através de cores e conceitos.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Maturity Thresholds Detail --}}
-                    <div class="col-12">
-                        <div class="bg-white bg-opacity-10 rounded-3 p-4">
-                            <h5 class="fw-bold mb-4 text-white text-center">
-                                <i class="bi bi-graph-up-arrow me-2"></i>
-                                Método: Maturity Thresholds (Limiares de Maturidade)
-                            </h5>
-
-                            <div class="row g-3">
-                                {{-- Nível 1: Evolução --}}
-                                <div class="col-12 col-md-4">
-                                    <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
-                                        <div class="d-flex align-items-center gap-2 mb-2">
-                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">1</span>
-                                            <h6 class="fw-bold mb-0 small">{{ __('Evolução por Ano') }}</h6>
-                                        </div>
-                                        <p class="small mb-0 opacity-90">Permite que a organização aumente o rigor das metas conforme amadurece. Ex: O "Verde" pode começar em 80% no primeiro ano e subir para 95% no último ano do PEI.</p>
-                                    </div>
-                                </div>
-
-                                {{-- Nível 2: Consistência --}}
-                                <div class="col-12 col-md-4">
-                                    <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
-                                        <div class="d-flex align-items-center gap-2 mb-2">
-                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">2</span>
-                                            <h6 class="fw-bold mb-0 small">{{ __('Vínculo ao Ciclo (PEI)') }}</h6>
-                                        </div>
-                                        <p class="small mb-0 opacity-90">Garante a integridade histórica. As regras de satisfação ficam "congeladas" para cada PEI, impedindo que mudanças futuras distorçam os resultados visuais do passado.</p>
-                                    </div>
-                                </div>
-
-                                {{-- Nível 3: Lógica de Cascata --}}
-                                <div class="col-12 col-md-4">
-                                    <div class="bg-body rounded-3 p-3 h-100 text-body shadow-sm">
-                                        <div class="d-flex align-items-center gap-2 mb-2">
-                                            <span class="badge bg-primary text-white fw-bold px-2 py-1">3</span>
-                                            <h6 class="fw-bold mb-0 small">{{ __('Lógica de Fallback') }}</h6>
-                                        </div>
-                                        <p class="small mb-0 opacity-90">O sistema busca a régua mais específica (Ano), se não houver, usa a do Ciclo, e por fim a Global. Isso garante que o farol sempre funcione, mesmo sem configuração manual.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Why it matters --}}
-                    <div class="col-12">
-                        <div class="bg-body rounded-3 p-3 text-body shadow-sm">
-                            <div class="d-flex align-items-start gap-2 mb-2">
-                                <i class="bi bi-info-circle-fill mt-1 text-primary"></i>
-                                <div>
-                                    <strong class="small d-block mb-1">Impacto na Alta Gestão:</strong>
-                                    <p class="mb-0 small opacity-90">
-                                        Uma escala bem definida evita o "efeito melancia" (verde por fora, vermelho por dentro). Com o <strong>Maturity Thresholds</strong>, o CEO tem a segurança de que o desempenho apresentado reflete a exigência real de cada etapa do plano estratégico.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
