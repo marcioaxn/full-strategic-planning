@@ -368,7 +368,23 @@
     </div>
 
     {{-- Conteúdo Principal (Views) --}}
-    <div class="notion-content">
+    <div class="notion-content position-relative">
+        {{-- Overlay de Loading durante transição de views --}}
+        <div
+            wire:loading.flex
+            wire:target="setView, calendarioAnterior, calendarioProximo, calendarioHoje, calendarioIrPara, timelineAnterior, timelineProximo, timelineHoje, timelineZoomIn, timelineZoomOut"
+            class="notion-view-loading-overlay"
+        >
+            <div class="notion-view-spinner">
+                <div class="spinner-wrapper">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                </div>
+                <p class="mt-3 mb-0 text-muted fw-medium">Carregando visualização...</p>
+            </div>
+        </div>
+
         @switch($view)
             @case('kanban')
                 @include('livewire.entregas.views.kanban')
@@ -858,7 +874,7 @@
             .notion-kanban {
                 flex-direction: column;
             }
-            
+
             .notion-kanban-column {
                 min-width: 100%;
                 max-width: 100%;
@@ -867,6 +883,76 @@
             .notion-side-panel {
                 width: 100%;
             }
+        }
+
+        /* Loading Overlay para transição de Views */
+        .notion-view-loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            min-height: 400px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            animation: fadeInOverlay 0.15s ease-out;
+        }
+
+        [data-bs-theme="dark"] .notion-view-loading-overlay {
+            background: rgba(30, 34, 39, 0.85);
+        }
+
+        @keyframes fadeInOverlay {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .notion-view-spinner {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .notion-view-spinner .spinner-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 8px 32px rgba(var(--bs-primary-rgb), 0.2);
+            animation: pulseSpinner 1.5s ease-in-out infinite;
+        }
+
+        [data-bs-theme="dark"] .notion-view-spinner .spinner-wrapper {
+            background: #2d3748;
+        }
+
+        @keyframes pulseSpinner {
+            0%, 100% { transform: scale(1); box-shadow: 0 8px 32px rgba(var(--bs-primary-rgb), 0.2); }
+            50% { transform: scale(1.05); box-shadow: 0 12px 40px rgba(var(--bs-primary-rgb), 0.3); }
+        }
+
+        .notion-view-spinner .spinner-border {
+            border-width: 0.3em;
+        }
+
+        /* Animação de loading nos botões de view */
+        .notion-view-btn.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .notion-view-btn .btn-spinner {
+            width: 14px;
+            height: 14px;
+            border-width: 2px;
         }
     </style>
 </div>
