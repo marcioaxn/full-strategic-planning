@@ -29,6 +29,378 @@
         </div>
     </div>
 
+    {{-- Seção Educativa: O que são Objetivos Estratégicos --}}
+    <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
+        <div class="card-header bg-transparent border-0 p-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-circle bg-white bg-opacity-25">
+                        <i class="bi bi-book-fill fs-4 text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1 text-white">
+                            <i class="bi bi-mortarboard me-2"></i>{{ __('O que são Objetivos Estratégicos?') }}
+                        </h5>
+                        <p class="mb-0 text-white-50 small">
+                            {{ __('Aprenda a criar objetivos SMART alinhados à estratégia institucional') }}
+                        </p>
+                    </div>
+                </div>
+                <button @click="expanded = !expanded" class="btn btn-link text-white text-decoration-none p-0" type="button">
+                    <i class="bi fs-4" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                </button>
+            </div>
+        </div>
+
+        <div x-show="expanded" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0" style="display: none;">
+            <div class="card-body p-4 bg-white border-top">
+                {{-- Introdução --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-info-circle me-2"></i>{{ __('O que são Objetivos Estratégicos?') }}
+                    </h6>
+                    <p class="text-muted mb-3">
+                        <strong>Objetivos Estratégicos</strong> são declarações que descrevem <strong>o que a organização pretende alcançar</strong> no médio e longo prazo
+                        para cumprir sua missão e realizar sua visão de futuro. Eles traduzem a estratégia em metas concretas e mensuráveis.
+                    </p>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-lightbulb text-warning me-2"></i>
+                        <strong>Por que são importantes?</strong> Objetivos estratégicos conectam a alta gestão (missão/visão) com a execução operacional (planos de ação).
+                        São o elo entre "onde queremos chegar" e "como vamos chegar lá".
+                    </p>
+                </div>
+
+                {{-- Metodologia SMART --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-bullseye me-2"></i>{{ __('Critérios SMART para Objetivos') }}
+                    </h6>
+                    <p class="small text-muted mb-3">
+                        Todo objetivo estratégico deve atender aos <strong>5 critérios SMART</strong> para ser eficaz:
+                    </p>
+
+                    <div class="row g-3">
+                        {{-- S - Specific --}}
+                        <div class="col-md-6">
+                            <div class="card border-2 border-primary h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-primary bg-opacity-10 text-primary">
+                                            <i class="bi bi-crosshair"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-primary">S - Específico (Specific)</h6>
+                                    </div>
+                                    <p class="small text-muted mb-2">
+                                        O objetivo responde <strong>"O quê?"</strong>, <strong>"Quem?"</strong> e <strong>"Por quê?"</strong> de forma clara.
+                                    </p>
+                                    <div class="bg-light p-2 rounded">
+                                        <p class="x-small mb-1"><strong class="text-danger">❌ Ruim:</strong> "Melhorar atendimento"</p>
+                                        <p class="x-small mb-0"><strong class="text-success">✅ Bom:</strong> "Reduzir tempo médio de atendimento ao cidadão de 45min para 15min"</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- M - Measurable --}}
+                        <div class="col-md-6">
+                            <div class="card border-2 border-success h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-success bg-opacity-10 text-success">
+                                            <i class="bi bi-graph-up"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-success">M - Mensurável (Measurable)</h6>
+                                    </div>
+                                    <p class="small text-muted mb-2">
+                                        Possui <strong>indicadores (KPIs)</strong> que permitem acompanhar o progresso quantitativamente.
+                                    </p>
+                                    <div class="bg-light p-2 rounded">
+                                        <p class="x-small mb-1"><strong class="text-danger">❌ Ruim:</strong> "Aumentar satisfação"</p>
+                                        <p class="x-small mb-0"><strong class="text-success">✅ Bom:</strong> "Alcançar 85% de satisfação na pesquisa NPS"</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- A - Achievable --}}
+                        <div class="col-md-6">
+                            <div class="card border-2 border-warning h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-warning bg-opacity-10 text-warning">
+                                            <i class="bi bi-ladder"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-warning">A - Atingível (Achievable)</h6>
+                                    </div>
+                                    <p class="small text-muted mb-2">
+                                        Desafiador, mas <strong>realista</strong> considerando recursos, orçamento e capacidade da equipe.
+                                    </p>
+                                    <div class="bg-light p-2 rounded">
+                                        <p class="x-small mb-1"><strong class="text-danger">❌ Ruim:</strong> "Zerar fila de processos em 1 mês" (com backlog de 10 anos)</p>
+                                        <p class="x-small mb-0"><strong class="text-success">✅ Bom:</strong> "Reduzir fila em 30% em 12 meses"</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- R - Relevant --}}
+                        <div class="col-md-6">
+                            <div class="card border-2 border-info h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-info bg-opacity-10 text-info">
+                                            <i class="bi bi-link-45deg"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-info">R - Relevante (Relevant)</h6>
+                                    </div>
+                                    <p class="small text-muted mb-2">
+                                        Está <strong>alinhado</strong> com a missão, visão e prioridades estratégicas da organização.
+                                    </p>
+                                    <div class="bg-light p-2 rounded">
+                                        <p class="x-small mb-1"><strong class="text-danger">❌ Ruim:</strong> Objetivo isolado, sem conexão com missão</p>
+                                        <p class="x-small mb-0"><strong class="text-success">✅ Bom:</strong> Objetivo contribui diretamente para realizar a visão institucional</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- T - Time-bound --}}
+                        <div class="col-12">
+                            <div class="card border-2 border-danger">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-danger bg-opacity-10 text-danger">
+                                            <i class="bi bi-calendar-check"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-danger">T - Temporal (Time-bound)</h6>
+                                    </div>
+                                    <p class="small text-muted mb-2">
+                                        Possui <strong>prazo definido</strong> para ser alcançado. Sem prazo, não há senso de urgência.
+                                    </p>
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <div class="bg-light p-2 rounded">
+                                                <p class="x-small mb-0"><strong class="text-danger">❌ Ruim:</strong> "Implementar novo sistema"</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="bg-light p-2 rounded">
+                                                <p class="x-small mb-0"><strong class="text-success">✅ Bom:</strong> "Implementar novo sistema até dezembro/2025"</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Hierarquia de Objetivos (Estratégico vs Tático vs Operacional) --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-diagram-3 me-2"></i>{{ __('Níveis de Objetivos') }}
+                    </h6>
+                    <p class="small text-muted mb-3">
+                        Objetivos se organizam em <strong>3 níveis hierárquicos</strong>:
+                    </p>
+
+                    <div class="d-flex flex-column gap-2">
+                        {{-- Estratégico (Topo) --}}
+                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 border border-danger bg-danger bg-opacity-5">
+                            <div class="icon-circle-mini bg-danger bg-opacity-10 text-danger">
+                                <i class="bi bi-trophy"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-0 text-danger">1. Estratégico (Alta Gestão)</h6>
+                                <p class="x-small text-muted mb-0">
+                                    <strong>Prazo:</strong> 3-5 anos | <strong>Foco:</strong> Visão de futuro, transformação institucional<br>
+                                    <strong>Ex:</strong> "Tornar-se referência nacional em transparência até 2027"
+                                </p>
+                            </div>
+                            <span class="badge bg-danger">TOPO</span>
+                        </div>
+
+                        {{-- Arrow --}}
+                        <div class="text-center text-muted">
+                            <i class="bi bi-arrow-down-short fs-3"></i>
+                            <p class="x-small mb-0">se desdobra em</p>
+                        </div>
+
+                        {{-- Tático (Meio) --}}
+                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 border border-warning bg-warning bg-opacity-5">
+                            <div class="icon-circle-mini bg-warning bg-opacity-10 text-warning">
+                                <i class="bi bi-flag"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-0 text-warning">2. Tático (Gerências/Diretorias)</h6>
+                                <p class="x-small text-muted mb-0">
+                                    <strong>Prazo:</strong> 1-2 anos | <strong>Foco:</strong> Projetos e programas departamentais<br>
+                                    <strong>Ex:</strong> "Implementar portal de transparência ativa até dez/2025"
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Arrow --}}
+                        <div class="text-center text-muted">
+                            <i class="bi bi-arrow-down-short fs-3"></i>
+                            <p class="x-small mb-0">se desdobra em</p>
+                        </div>
+
+                        {{-- Operacional (Base) --}}
+                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 border border-primary bg-primary bg-opacity-5">
+                            <div class="icon-circle-mini bg-primary bg-opacity-10 text-primary">
+                                <i class="bi bi-gear"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-0 text-primary">3. Operacional (Equipes/Setores)</h6>
+                                <p class="x-small text-muted mb-0">
+                                    <strong>Prazo:</strong> 3-12 meses | <strong>Foco:</strong> Tarefas e atividades do dia a dia<br>
+                                    <strong>Ex:</strong> "Publicar relatório mensal de execução orçamentária até dia 10"
+                                </p>
+                            </div>
+                            <span class="badge bg-primary">BASE</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-3 mb-0">
+                        <p class="small mb-0">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <strong>Nesta página:</strong> Você gerencia objetivos <strong class="text-danger">Estratégicos</strong> (nível institucional, vinculados ao PEI).
+                        </p>
+                    </div>
+                </div>
+
+                {{-- Exemplo Completo de Objetivo SMART --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-star me-2"></i>{{ __('Exemplo de Objetivo Estratégico SMART Completo') }}
+                    </h6>
+
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="icon-circle-mini bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-trophy"></i>
+                                </div>
+                                <h6 class="fw-bold mb-0">Objetivo: Melhorar Eficiência do Atendimento ao Cidadão</h6>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-sm table-borderless mb-3">
+                                    <tbody class="small">
+                                        <tr>
+                                            <td class="fw-bold text-primary" style="width: 140px;">
+                                                <i class="bi bi-crosshair me-1"></i>Específico
+                                            </td>
+                                            <td>Reduzir o tempo médio de atendimento presencial nos balcões de atendimento</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold text-success">
+                                                <i class="bi bi-graph-up me-1"></i>Mensurável
+                                            </td>
+                                            <td>
+                                                <strong>Indicador:</strong> Tempo médio de atendimento (minutos)<br>
+                                                <strong>Meta:</strong> Reduzir de 45min (baseline 2024) para 15min<br>
+                                                <strong>Fonte de dados:</strong> Sistema de senhas eletrônicas
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold text-warning">
+                                                <i class="bi bi-ladder me-1"></i>Atingível
+                                            </td>
+                                            <td>
+                                                Sim. Recursos disponíveis: R$ 150k para novo sistema + treinamento de 20 atendentes.<br>
+                                                Benchmark: outras prefeituras similares já alcançaram 12-18min
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold text-info">
+                                                <i class="bi bi-link-45deg me-1"></i>Relevante
+                                            </td>
+                                            <td>
+                                                Alinhado à <strong>Visão:</strong> "Ser referência em atendimento de excelência"<br>
+                                                Contribui para <strong>Perspectiva BSC:</strong> Clientes/Sociedade
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold text-danger">
+                                                <i class="bi bi-calendar-check me-1"></i>Temporal
+                                            </td>
+                                            <td>
+                                                <strong>Prazo:</strong> Alcançar meta até 31/12/2025 (18 meses)<br>
+                                                <strong>Marcos intermediários:</strong> 35min em jun/25, 25min em set/25, 15min em dez/25
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="alert alert-success mb-0 py-2">
+                                <p class="small mb-0">
+                                    <strong>✅ Objetivo aprovado!</strong> Atende aos 5 critérios SMART e está pronto para execução.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Dicas Profissionais --}}
+                <div>
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-trophy me-2"></i>{{ __('Boas Práticas para Definir Objetivos Estratégicos') }}
+                    </h6>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Limite a quantidade</p>
+                                    <p class="x-small text-muted mb-0">5-7 objetivos estratégicos por ciclo PEI. Mais que isso dispersa esforços e recursos</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Use verbos de ação</p>
+                                    <p class="x-small text-muted mb-0">Aumentar, Reduzir, Implementar, Melhorar, Alcançar. Evite "Garantir", "Assegurar" (vagos)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Distribua entre perspectivas BSC</p>
+                                    <p class="x-small text-muted mb-0">Equilibre objetivos nas 4 perspectivas: Financeira, Clientes, Processos, Aprendizado</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Vincule indicadores desde o início</p>
+                                    <p class="x-small text-muted mb-0">Não crie objetivo sem saber como vai medir. Defina KPIs junto com o objetivo</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Envolva stakeholders</p>
+                                    <p class="x-small text-muted mb-0">Discuta objetivos com equipes, gestores e alta direção antes de finalizar. Objetivos impostos têm menos engajamento</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @if(!$peiAtivo)
         <div class="alert alert-modern alert-danger shadow-sm border-0 d-flex align-items-center p-4">
             <i class="bi bi-exclamation-octagon fs-2 me-4"></i>
@@ -148,45 +520,6 @@
             </div>
             <div class="card-footer bg-white border-top py-3">
                 {{ $objetivos->links() }}
-            </div>
-        </div>
-
-        {{-- Strategic Objectives Help Section (Educational Pattern) --}}
-        <div class="card card-modern mt-4 border-0 shadow-sm educational-card-gradient animate-fade-in">
-            <div class="card-body p-4 text-white">
-                <div class="row g-4">
-                    {{-- Main Explanation --}}
-                    <div class="col-12">
-                        <div class="d-flex align-items-start gap-3 mb-3">
-                            <div class="flex-shrink-0">
-                                <div class="icon-circle bg-white bg-opacity-25">
-                                    <i class="bi bi-shield-lock-fill fs-3 text-white"></i>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h5 class="fw-bold mb-2 text-white">{{ __('O que são Objetivos Estratégicos Institucionais?') }}</h5>
-                                <p class="mb-0 text-white-50" style="line-height: 1.6;">
-                                    Diferente dos objetivos das perspectivas do BSC, os <strong>Objetivos Estratégicos Institucionais</strong> são metas de altíssimo nível que representam as grandes prioridades da organização para o ciclo do PEI. Eles aparecem em destaque no topo do Mapa Estratégico e servem como o "norte" para todas as unidades da instituição.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Tips Grid --}}
-                    <div class="col-md-6">
-                        <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
-                            <h6 class="fw-bold text-white mb-2"><i class="bi bi-star-fill me-2"></i>Propósito Institucional</h6>
-                            <p class="small mb-0 opacity-75">Estes objetivos focam na missão global da organização. Eles devem ser amplos o suficiente para englobar várias frentes de trabalho, mas específicos o suficiente para serem alcançados no período de vigência do PEI.</p>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="bg-white bg-opacity-10 rounded-3 p-3 h-100">
-                            <h6 class="fw-bold text-white mb-2"><i class="bi bi-map-fill me-2"></i>Visualização no Mapa</h6>
-                            <p class="small mb-0 opacity-75">No Mapa Estratégico, esses objetivos são exibidos acima das perspectivas, demonstrando que o sucesso nas dimensões do BSC (Financeiro, Clientes, Processos, Aprendizado) é o que permite atingir estas metas institucionais.</p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     @endif

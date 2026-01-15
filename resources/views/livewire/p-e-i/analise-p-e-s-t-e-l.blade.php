@@ -48,6 +48,296 @@
         </div>
     </div>
 
+    {{-- Seção Educativa: O que é Análise PESTEL --}}
+    <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
+        <div class="card-header bg-transparent border-0 p-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-circle bg-white bg-opacity-25">
+                        <i class="bi bi-book-fill fs-4 text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1 text-white">
+                            <i class="bi bi-mortarboard me-2"></i>{{ __('O que é Análise PESTEL?') }}
+                        </h5>
+                        <p class="mb-0 text-white-50 small">
+                            {{ __('Compreenda os fatores externos que impactam sua organização') }}
+                        </p>
+                    </div>
+                </div>
+                <button @click="expanded = !expanded" class="btn btn-link text-white text-decoration-none p-0" type="button">
+                    <i class="bi fs-4" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                </button>
+            </div>
+        </div>
+
+        <div x-show="expanded" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0" style="display: none;">
+            <div class="card-body p-4 bg-white border-top">
+                {{-- Introdução --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-info-circle me-2"></i>{{ __('O que é PESTEL?') }}
+                    </h6>
+                    <p class="text-muted mb-3">
+                        A <strong>Análise PESTEL</strong> é uma ferramenta estratégica que avalia o <strong>macroambiente externo</strong> da organização.
+                        Ela identifica fatores externos que podem representar <strong>oportunidades</strong> ou <strong>ameaças</strong> ao cumprimento da missão institucional.
+                    </p>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-lightbulb text-warning me-2"></i>
+                        <strong>Por que é importante?</strong> Fatores externos estão fora do controle da organização, mas conhecê-los permite antecipar mudanças,
+                        mitigar riscos e aproveitar oportunidades emergentes.
+                    </p>
+                </div>
+
+                {{-- Matriz Visual dos 6 Fatores --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-grid-3x3 me-2"></i>{{ __('Os 6 Fatores do Macroambiente') }}
+                    </h6>
+
+                    <div class="row g-3">
+                        {{-- Político --}}
+                        <div class="col-md-4">
+                            <div class="card h-100 border-2 border-danger">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-danger bg-opacity-10 text-danger">
+                                            <i class="bi bi-building"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-danger">P - Político</h6>
+                                    </div>
+                                    <p class="small text-muted mb-0">
+                                        Leis, regulamentações, políticas governamentais, estabilidade política, acordos internacionais.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Econômico --}}
+                        <div class="col-md-4">
+                            <div class="card h-100 border-2 border-success">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-success bg-opacity-10 text-success">
+                                            <i class="bi bi-currency-dollar"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-success">E - Econômico</h6>
+                                    </div>
+                                    <p class="small text-muted mb-0">
+                                        Taxas de juros, inflação, crescimento econômico, câmbio, políticas fiscais, orçamento público.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Social --}}
+                        <div class="col-md-4">
+                            <div class="card h-100 border-2 border-info">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-info bg-opacity-10 text-info">
+                                            <i class="bi bi-people"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-info">S - Social</h6>
+                                    </div>
+                                    <p class="small text-muted mb-0">
+                                        Demografia, cultura, educação, saúde pública, expectativas da sociedade, mudanças comportamentais.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Tecnológico --}}
+                        <div class="col-md-4">
+                            <div class="card h-100 border-2 border-primary">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-primary bg-opacity-10 text-primary">
+                                            <i class="bi bi-cpu"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-primary">T - Tecnológico</h6>
+                                    </div>
+                                    <p class="small text-muted mb-0">
+                                        Inovações tecnológicas, automação, transformação digital, infraestrutura de TI, cibersegurança.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Ecológico/Ambiental --}}
+                        <div class="col-md-4">
+                            <div class="card h-100 border-2 border-success">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-success bg-opacity-10 text-success">
+                                            <i class="bi bi-tree"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-success">E - Ecológico</h6>
+                                    </div>
+                                    <p class="small text-muted mb-0">
+                                        Sustentabilidade, mudanças climáticas, gestão de resíduos, energias renováveis, licenciamento ambiental.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Legal --}}
+                        <div class="col-md-4">
+                            <div class="card h-100 border-2 border-warning">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div class="icon-circle-mini bg-warning bg-opacity-10 text-warning">
+                                            <i class="bi bi-file-earmark-text"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-warning">L - Legal</h6>
+                                    </div>
+                                    <p class="small text-muted mb-0">
+                                        Legislação trabalhista, normas de compliance, LGPD, licitações públicas, marcos regulatórios.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Exemplos Práticos --}}
+                <div class="mb-4 pb-4 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-lightbulb me-2"></i>{{ __('Exemplos Práticos') }}
+                    </h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-success bg-opacity-5">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                        <h6 class="fw-bold mb-0 small">Oportunidade</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-2">
+                                        <strong>Tecnológico:</strong> Nova lei de governo digital obriga órgãos públicos a digitalizarem processos.
+                                    </p>
+                                    <p class="x-small text-muted mb-0">
+                                        <i class="bi bi-arrow-right text-success me-1"></i>
+                                        <strong>Impacto:</strong> Oportunidade para modernizar sistemas e melhorar eficiência.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-danger bg-opacity-5">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                                        <h6 class="fw-bold mb-0 small">Ameaça</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-2">
+                                        <strong>Econômico:</strong> Contingenciamento orçamentário reduz recursos disponíveis.
+                                    </p>
+                                    <p class="x-small text-muted mb-0">
+                                        <i class="bi bi-arrow-right text-danger me-1"></i>
+                                        <strong>Impacto:</strong> Necessidade de priorizar projetos e otimizar gastos.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-success bg-opacity-5">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                        <h6 class="fw-bold mb-0 small">Oportunidade</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-2">
+                                        <strong>Social:</strong> Crescente demanda da sociedade por transparência pública.
+                                    </p>
+                                    <p class="x-small text-muted mb-0">
+                                        <i class="bi bi-arrow-right text-success me-1"></i>
+                                        <strong>Impacto:</strong> Criar portal de transparência aumenta confiança institucional.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-danger bg-opacity-5">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                                        <h6 class="fw-bold mb-0 small">Ameaça</h6>
+                                    </div>
+                                    <p class="x-small text-muted mb-2">
+                                        <strong>Legal:</strong> Nova legislação exige adequação à LGPD com prazo curto.
+                                    </p>
+                                    <p class="x-small text-muted mb-0">
+                                        <i class="bi bi-arrow-right text-danger me-1"></i>
+                                        <strong>Impacto:</strong> Risco de multas se não houver conformidade rápida.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Dicas Profissionais --}}
+                <div>
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-star me-2"></i>{{ __('Dicas para uma Boa Análise PESTEL') }}
+                    </h6>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Monitore tendências</p>
+                                    <p class="x-small text-muted mb-0">Acompanhe notícias, publicações governamentais e relatórios setoriais</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Seja específico</p>
+                                    <p class="x-small text-muted mb-0">Identifique fatores concretos, não genéricos. Ex: "Lei 14.129/2021" ao invés de "legislação"</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Classifique impactos</p>
+                                    <p class="x-small text-muted mb-0">Cada fator é oportunidade ou ameaça? Qual a intensidade: alta, média ou baixa?</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Revise periodicamente</p>
+                                    <p class="x-small text-muted mb-0">O macroambiente muda constantemente. Atualize a análise ao menos 1x por ano</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <p class="fw-bold small mb-0">Conecte com SWOT</p>
+                                    <p class="x-small text-muted mb-0">Use os fatores PESTEL para enriquecer sua Análise SWOT (especialmente Oportunidades e Ameaças)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @if(!$peiAtivo)
         <div class="alert alert-warning">
             <i class="bi bi-exclamation-triangle me-2"></i>
@@ -473,41 +763,5 @@
             </div>
         </div>
         @endif
-
-        {{-- PESTEL Help Section --}}
-        <div class="card card-modern mt-4 border-0 shadow-sm educational-card-gradient animate-fade-in">
-            <div class="card-body p-4 text-white">
-                <div class="row g-4">
-                    <div class="col-12">
-                        <div class="d-flex align-items-start gap-3 mb-3">
-                            <div class="flex-shrink-0">
-                                <div class="icon-circle bg-white bg-opacity-25">
-                                    <i class="bi bi-compass-fill fs-3 text-white"></i>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h5 class="fw-bold mb-2 text-white">{{ __('O que é a Análise PESTEL?') }}</h5>
-                                <p class="mb-0 text-white-50" style="line-height: 1.6;">
-                                    A análise <strong>PESTEL</strong> foca exclusivamente no ambiente externo. Ela ajuda a mapear as grandes tendências que a organização não controla, mas que podem impactar drasticamente o planejamento a longo prazo.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-12">
-                        <div class="bg-white bg-opacity-10 rounded-3 p-3">
-                            <div class="row g-3">
-                                <div class="col-md-4 small"><strong>P (Político):</strong> Estabilidade, impostos, comércio exterior.</div>
-                                <div class="col-md-4 small"><strong>E (Econômico):</strong> Inflação, juros, crescimento do PIB.</div>
-                                <div class="col-md-4 small"><strong>S (Social):</strong> Demografia, cultura, hábitos de consumo.</div>
-                                <div class="col-md-4 small"><strong>T (Tecnológico):</strong> Automação, inovação, novos softwares.</div>
-                                <div class="col-md-4 small"><strong>E (Ecológico):</strong> Clima, reciclagem, sustentabilidade.</div>
-                                <div class="col-md-4 small"><strong>L (Legal):</strong> Leis trabalhistas, saúde e segurança.</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     @endif
 </div>
