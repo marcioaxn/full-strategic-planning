@@ -42,14 +42,32 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // Handle CSRF Token Mismatch (419 Página Expirada)
+        // Solução definitiva: NUNCA mostrar página de erro 419 ao usuário
         $exceptions->render(function (TokenMismatchException $e, Request $request) {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Token CSRF inválido.'], 419);
+            // Invalida sessão atual para evitar estados inconsistentes
+            if ($request->hasSession()) {
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
             }
 
+            // Faz logout se usuário estiver autenticado
+            if (auth()->check()) {
+                auth()->logout();
+            }
+
+            // Para requisições JSON/AJAX/Livewire, retorna JSON para o interceptador JavaScript
+            if ($request->expectsJson() || $request->ajax() || $request->header('X-Livewire')) {
+                return response()->json([
+                    'message' => 'Sessão expirada. Redirecionando para login...',
+                    'redirect' => route('login'),
+                    'session_expired' => true
+                ], 419);
+            }
+
+            // Para requisições normais, redireciona para login com mensagem amigável
             return redirect()
-                ->to(url('/'))
-                ->with('status', 'Sua sessão expirou por inatividade. Você foi redirecionado para a página inicial.');
+                ->route('login')
+                ->with('status', 'Sua sessão expirou por inatividade. Por favor, faça login novamente.');
         });
 
         // Handle 403 Forbidden (Acesso Negado)

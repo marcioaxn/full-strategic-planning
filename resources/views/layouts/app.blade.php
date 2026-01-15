@@ -518,16 +518,143 @@
             });
         </script>
 
-        <!-- CSRF Token Auto-Refresh -->
+        <!-- Sistema Global de Tratamento de Erro 419 - CSRF/Session Expired -->
         <script>
             (function() {
                 'use strict';
 
-                // Refresh CSRF token every 10 minutes (600000ms)
-                const REFRESH_INTERVAL = 600000; // 10 minutes
+                const LOGIN_URL = '{{ route("login") }}';
+                const REFRESH_INTERVAL = 300000; // 5 minutos (mais frequente para evitar expiração)
+                let isRedirecting = false; // Previne múltiplos redirecionamentos
 
+                /**
+                 * Redireciona para login de forma limpa
+                 * Define flag no localStorage para exibir mensagem na página de login
+                 */
+                function redirectToLogin() {
+                    if (isRedirecting) return;
+                    isRedirecting = true;
+
+                    // Define flag para mostrar mensagem na página de login
+                    localStorage.setItem('session_expired', 'true');
+
+                    // Redireciona imediatamente
+                    window.location.href = LOGIN_URL;
+                }
+
+                /**
+                 * Verifica se a resposta é um erro 419 e redireciona se for
+                 */
+                function handle419Response(response) {
+                    if (response && response.status === 419) {
+                        console.warn('[SEAE] Sessão expirada (419). Redirecionando para login...');
+                        redirectToLogin();
+                        return true;
+                    }
+                    return false;
+                }
+
+                /**
+                 * Intercepta TODAS as chamadas fetch
+                 * Isso captura Livewire, AJAX, e qualquer outra requisição
+                 */
+                const originalFetch = window.fetch;
+                window.fetch = async function(...args) {
+                    try {
+                        const response = await originalFetch.apply(this, args);
+
+                        // Verifica se é erro 419
+                        if (response.status === 419) {
+                            handle419Response(response);
+                            // Retorna resposta mesmo assim para não quebrar o fluxo
+                            return response;
+                        }
+
+                        return response;
+                    } catch (error) {
+                        throw error;
+                    }
+                };
+
+                /**
+                 * Intercepta XMLHttpRequest para capturar requisições antigas
+                 */
+                const originalXHROpen = XMLHttpRequest.prototype.open;
+                const originalXHRSend = XMLHttpRequest.prototype.send;
+
+                XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+                    this._url = url;
+                    return originalXHROpen.apply(this, [method, url, ...rest]);
+                };
+
+                XMLHttpRequest.prototype.send = function(...args) {
+                    this.addEventListener('load', function() {
+                        if (this.status === 419) {
+                            console.warn('[SEAE] XHR 419 detectado. Redirecionando...');
+                            redirectToLogin();
+                        }
+                    });
+                    return originalXHRSend.apply(this, args);
+                };
+
+                /**
+                 * Listener específico para erros do Livewire
+                 */
+                document.addEventListener('livewire:init', function() {
+                    if (window.Livewire) {
+                        // Hook nos erros de requisição do Livewire
+                        Livewire.hook('request', ({ fail }) => {
+                            fail(({ status, preventDefault }) => {
+                                if (status === 419) {
+                                    preventDefault();
+                                    console.warn('[SEAE] Livewire 419 interceptado. Redirecionando...');
+                                    redirectToLogin();
+                                }
+                            });
+                        });
+                    }
+                });
+
+                /**
+                 * Fallback: escuta evento de erro do Livewire (versões mais antigas)
+                 */
+                window.addEventListener('livewire:error', function(event) {
+                    if (event.detail && event.detail.status === 419) {
+                        event.preventDefault();
+                        redirectToLogin();
+                    }
+                });
+
+                /**
+                 * Atualiza o token CSRF em toda a aplicação
+                 */
+                function updateCsrfToken(newToken) {
+                    // Meta tag
+                    const metaTag = document.querySelector('meta[name="csrf-token"]');
+                    if (metaTag) {
+                        metaTag.setAttribute('content', newToken);
+                    }
+
+                    // Inputs hidden
+                    document.querySelectorAll('input[name="_token"]').forEach(input => {
+                        input.value = newToken;
+                    });
+
+                    // Axios (se existir)
+                    if (window.axios) {
+                        window.axios.defaults.headers.common['X-CSRF-TOKEN'] = newToken;
+                    }
+
+                    console.log('[SEAE] Token CSRF atualizado');
+                }
+
+                /**
+                 * Renova o token CSRF periodicamente
+                 * Usa GET que não depende de CSRF válido
+                 */
                 function refreshCsrfToken() {
-                    fetch('/refresh-csrf', {
+                    // Usa originalFetch para evitar loop infinito
+                    originalFetch('/refresh-csrf', {
                         method: 'GET',
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
@@ -536,54 +663,46 @@
                         credentials: 'same-origin'
                     })
                     .then(response => {
+                        if (response.status === 419) {
+                            // Se até o refresh falhar com 419, sessão está morta
+                            redirectToLogin();
+                            return null;
+                        }
                         if (!response.ok) {
-                            throw new Error('Failed to refresh CSRF token');
+                            throw new Error('Falha ao renovar token');
                         }
                         return response.json();
                     })
                     .then(data => {
-                        if (data.csrf_token) {
-                            // Update all CSRF token meta tags
-                            const metaTag = document.querySelector('meta[name="csrf-token"]');
-                            if (metaTag) {
-                                metaTag.setAttribute('content', data.csrf_token);
-                            }
-
-                            // Update all CSRF input fields
-                            const csrfInputs = document.querySelectorAll('input[name="_token"]');
-                            csrfInputs.forEach(input => {
-                                input.value = data.csrf_token;
-                            });
-
-                            // Update Livewire CSRF token if available
-                            if (window.Livewire && window.Livewire.components) {
-                                window.Livewire.components.componentsById.forEach(component => {
-                                    if (component.data && component.data._token) {
-                                        component.data._token = data.csrf_token;
-                                    }
-                                });
-                            }
-
-                            console.log('CSRF token refreshed successfully');
+                        if (data && data.csrf_token) {
+                            updateCsrfToken(data.csrf_token);
                         }
                     })
                     .catch(error => {
-                        console.error('CSRF token refresh error:', error);
+                        console.warn('[SEAE] Erro ao renovar CSRF:', error.message);
                     });
                 }
 
-                // Start auto-refresh
+                // Inicia refresh periódico (a cada 5 minutos)
                 setInterval(refreshCsrfToken, REFRESH_INTERVAL);
 
-                // Also refresh on page visibility change (user returns to tab)
+                // Refresh quando usuário volta para a aba
                 document.addEventListener('visibilitychange', function() {
                     if (!document.hidden) {
                         refreshCsrfToken();
                     }
                 });
 
-                // Refresh when Livewire navigates (SPA navigation)
+                // Refresh após navegação SPA do Livewire
                 document.addEventListener('livewire:navigated', refreshCsrfToken);
+
+                // Refresh inicial após carregamento
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Pequeno delay para não sobrecarregar no carregamento
+                    setTimeout(refreshCsrfToken, 2000);
+                });
+
+                console.log('[SEAE] Sistema de proteção contra erro 419 ativo');
             })();
         </script>
         @stack('scripts')
