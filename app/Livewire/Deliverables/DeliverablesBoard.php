@@ -8,6 +8,7 @@ use App\Models\ActionPlan\EntregaLabel;
 use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\WithFileUploads;
@@ -935,11 +936,19 @@ class DeliverablesBoard extends Component
     }
 
     #[On('adicionar-comentario')]
-    public function adicionarComentario(string $entregaId, string $conteudo, ?string $comentarioPaiId = null): void
+    public function adicionarComentario($entregaId, $conteudo = null, $comentarioPaiId = null): void
     {
+        // Robustez: Se vier como array (payload do evento não desempacotado), extrair valores
+        if (is_array($entregaId)) {
+            $data = $entregaId;
+            $entregaId = $data['entregaId'] ?? null;
+            $conteudo = $data['conteudo'] ?? null;
+            $comentarioPaiId = $data['comentarioPaiId'] ?? null;
+        }
+
         $this->authorize('update', $this->plano);
 
-        if (strlen($conteudo) < 1) {
+        if (empty($entregaId) || empty($conteudo)) {
             return;
         }
 
