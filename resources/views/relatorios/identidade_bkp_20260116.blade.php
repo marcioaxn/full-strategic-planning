@@ -4,72 +4,110 @@
     <meta charset="utf-8">
     <title>Mapa Estratégico</title>
     <style>
-        @page { margin: 0.5cm; size: a4 landscape; }
-        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 9px; color: #333; line-height: 1.2; margin: 0; padding: 0; }
+        @page { margin: 1cm; size: a4 landscape; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 10px; color: #333; line-height: 1.3; margin: 0; padding: 0; }
         
         /* Cores */
         .text-primary { color: #1B408E; }
+        .bg-primary { background-color: #1B408E; color: white; }
+        .bg-light { background-color: #f8f9fa; }
         
-        /* Cabeçalho Compacto */
-        .header { border-bottom: 2px solid #1B408E; padding-bottom: 5px; margin-bottom: 10px; display: table; width: 100%; }
-        .header-left { display: table-cell; width: 60%; vertical-align: bottom; }
-        .header-right { display: table-cell; width: 40%; text-align: right; vertical-align: bottom; }
-        .doc-title { font-size: 18px; font-weight: bold; color: #1B408E; text-transform: uppercase; margin: 0; }
-        .doc-subtitle { font-size: 11px; color: #555; margin: 2px 0 0 0; }
-        
-        /* Mapa Estratégico Compacto */
-        .map-container { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-        .persp-row { page-break-inside: avoid; }
-        
-        /* Header da Perspectiva */
-        .persp-header-cell; 
-            width: 30px; 
+        /* Capa */
+        .cover-page { 
+            position: relative; 
+            height: 950px;
             text-align: center; 
-            vertical-align: middle; 
-            color: white; 
-            font-weight: bold; 
-            font-size: 9px; 
-            text-transform: uppercase; 
-            border-radius: 4px 0 0 4px;
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            page-break-after: always;
         }
-        .persp-header-text {
-            writing-mode: vertical-rl; 
-            transform: rotate(180deg); 
-            white-space: nowrap;
-            padding: 5px 0;
-            margin: 0 auto;
-        }
+        .cover-title { font-size: 36px; font-weight: bold; color: #1B408E; margin-bottom: 5px; text-transform: uppercase; }
+        .cover-subtitle { font-size: 20px; color: #555; margin-top: 5px; margin-bottom: 60px; }
+        .cover-meta { font-size: 11px; color: #777; margin-top: 100px; border-top: 1px solid #eee; padding-top: 20px; display: inline-block; width: 60%; }
 
-        .persp-body-cell; 
-            background: #fdfdfd; 
-            border: 1px solid #ddd; 
-            border-left: none; 
-            border-radius: 0 4px 4px 0; 
-            padding: 5px; 
-            vertical-align: middle;
+        /* Mapa Estratégico */
+        .map-header-row { width: 100%; margin-bottom: 15px; border-collapse: collapse; }
+        .map-card { 
+            border: 1px dashed #ccc; 
+            padding: 10px; 
+            background: #ffffff; 
+            font-size: 10px; 
+            text-align: center; 
+            border-radius: 6px; 
+            height: auto;
+            display: block;
+            box-sizing: border-box;
         }
-
-        /* Card de Objetivo Ultra Compacto */
+        
+        .map-container { margin-top: 20px; }
+        .persp-row { margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; page-break-inside: avoid; }
+        .persp-header { 
+            background: #1B408E; color: white; 
+            padding: 8px; text-align: center; 
+            font-weight: bold; text-transform: uppercase; font-size: 11px; 
+            letter-spacing: 1px;
+        }
+        .persp-body { padding: 10px; background: #fdfdfd; text-align: center; }
+        
         .obj-card {
             display: inline-block;
-            width: 23%; 
+            width: 28%;
             vertical-align: top;
             background: #fff;
             border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 5px;
-            margin: 3px;
+            border-radius: 6px;
+            padding: 8px;
+            margin: 5px;
             text-align: left;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
             position: relative;
-            min-height: 40px;
+            min-height: 60px;
         }
-        .obj-title { font-weight: bold; font-size: 8px; color: #333; margin-bottom: 3px; display: block; line-height: 1.1; }
-        .obj-status { position: absolute; top: 0; right: 0; width: 8px; height: 8px; border-radius: 0 4px 0 4px; }
-        .obj-meta { font-size: 7px; color: #777; margin-top: 2px; }
+        .obj-title { font-weight: bold; font-size: 9px; color: #333; margin-bottom: 5px; display: block; }
+        .obj-status { position: absolute; top: 0; right: 0; width: 10px; height: 10px; border-radius: 0 6px 0 6px; }
 
-        /* Rodapé */
-        footer { position: fixed; bottom: -15px; left: 0; right: 0; height: 15px; text-align: center; font-size: 7px; color: #999; border-top: 1px solid #eee; padding-top: 2px; }
+        /* Tabelas */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; page-break-inside: auto; }
+        tr { page-break-inside: avoid; }
+        th, td { border: 1px solid #e0e0e0; padding: 6px 8px; text-align: left; vertical-align: middle; }
+        th { background: #f1f5f9; color: #1B408E; font-weight: bold; font-size: 9px; text-transform: uppercase; }
+        
+        /* Badges e Status */
+        .badge { padding: 3px 8px; border-radius: 10px; font-size: 8px; font-weight: bold; display: inline-block; text-align: center; white-space: nowrap; }
+        
+        /* Seções */
+        .chapter-title { 
+            font-size: 18px; color: #1B408E; 
+            border-bottom: 2px solid #1B408E; 
+            padding-bottom: 8px; margin: 25px 0 15px 0; 
+            text-transform: uppercase; font-weight: bold;
+        }
+        .sub-title { 
+            background: #eef2f7; color: #2c3e50; 
+            padding: 5px 10px; font-weight: bold; font-size: 10px; 
+            border-left: 4px solid #1B408E; margin: 15px 0 10px 0; 
+        }
+
+        /* Legenda Semáforo */
+        .legend-container { margin-bottom: 15px; background: #fff; padding: 10px; border: 1px solid #eee; border-radius: 5px; }
+        .legend-title { font-weight: bold; font-size: 9px; margin-bottom: 5px; color: #666; text-transform: uppercase; }
+        .legend-item { display: inline-block; margin-right: 15px; font-size: 8px; }
+        .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+
+        /* Entregas */
+        .deliverables-table { width: 95%; margin: 5px auto 10px auto; border: 1px solid #eee; }
+        .deliverables-table th { background: #fff; color: #666; font-size: 8px; border-bottom: 1px solid #eee; }
+        .deliverables-table td { font-size: 8px; border-bottom: 1px solid #eee; background: #fff; }
+
+        /* Rodapé de Página */
+        footer { position: fixed; bottom: -30px; left: 0; right: 0; height: 30px; text-align: center; font-size: 8px; color: #999; border-top: 1px solid #eee; padding-top: 5px; }
+
+        /* Utilitários */
+        .page-break { page-break-after: always; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .bold { font-weight: bold; }
     </style>
 </head>
 <body>

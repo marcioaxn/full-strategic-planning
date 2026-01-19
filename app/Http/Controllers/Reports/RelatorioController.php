@@ -3,29 +3,22 @@
 namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
-
-use App\Models\Organization;
-use App\Models\StrategicPlanning\PEI;
-use App\Models\StrategicPlanning\Perspectiva;
-use App\Models\StrategicPlanning\MissaoVisaoValores;
-use App\Models\StrategicPlanning\Valor;
-use App\Models\StrategicPlanning\Objetivo;
-use App\Models\StrategicPlanning\ObjetivoEstrategico;
-use App\Models\PerformanceIndicators\Indicador;
-use App\Models\ActionPlan\PlanoDeAcao;
-use App\Models\StrategicPlanning\GrauSatisfacao;
-use App\Models\RiskManagement\Risco;
+use App\Services\Reports\ReportGenerationService;
 use App\Exports\ObjetivosExport;
 use App\Exports\IndicadoresExport;
 use App\Exports\PlanosExport;
 use App\Exports\RiscosExport;
 use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 
 class RelatorioController extends Controller
 {
-    // ... outros métodos ...
+    protected $reportService;
+
+    public function __construct(ReportGenerationService $reportService)
+    {
+        $this->reportService = $reportService;
+    }
 
     public function executivo(Request $request, $organizacaoId = null)
     {
@@ -36,151 +29,20 @@ class RelatorioController extends Controller
         $periodo = $request->query('periodo') ?? 'anual';
         $perspectivaId = $request->query('perspectiva');
 
-        // Traduzir período para mês limite de cálculo
-        $mesLimite = 12;
-        switch($periodo) {
-            case '1_semestre': $mesLimite = 6; break;
-            case '2_semestre': $mesLimite = 12; break;
-            case '1_trimestre': $mesLimite = 3; break;
-            case '2_trimestre': $mesLimite = 6; break;
-            case '3_trimestre': $mesLimite = 9; break;
-            case '4_trimestre': $mesLimite = 12; break;
-            default: $mesLimite = ($ano == date('Y') ? date('n') : 12);
-        }
-
-        $organizacao = Organization::findOrFail($organizacaoId);
-        $identidade = MissaoVisaoValores::where('cod_organizacao', $organizacaoId)->first() ?? new MissaoVisaoValores();
+        $result = $this->reportService->generateExecutivo($organizacaoId, $ano, $periodo, $perspectivaId);
         
-        $pei = PEI::ativos()->first();
-        
-        // 1. Valores (Identidade Cultural)
-        $valores = Valor::where('cod_pei', $pei?->cod_pei)
-            ->where('cod_organizacao', $organizacaoId)
-            ->orderBy('nom_valor')
-            ->get();
-
-        // 2. Perspectivas e Objetivos (BSC)
-        $queryPerspectivas = Perspectiva::where('cod_pei', $pei?->cod_pei);
-        if ($perspectivaId) {
-            $queryPerspectivas->where('cod_perspectiva', $perspectivaId);
-        }
-        $perspectivas = $queryPerspectivas->with(['objetivos.indicadores'])->ordenadoPorNivel()->get();
-        
-        // 3. Planos de Ação (Ordenados por Perspectiva > Objetivo > Plano)
-        $planos = PlanoDeAcao::where('cod_organizacao', $organizacaoId)
-            ->with(['entregas', 'objetivo.perspectiva'])
-            ->where(function($q) use ($ano) {
-                $q->whereYear('dte_inicio', '<=', $ano)
-                  ->whereYear('dte_fim', '>=', $ano);
-            })
-            ->get()
-            ->sortBy([
-                ['objetivo.perspectiva.num_nivel_hierarquico_apresentacao', 'asc'],
-                ['objetivo.num_nivel_hierarquico_apresentacao', 'asc'],
-                ['dsc_plano_de_acao', 'asc']
-            ]);
-
-        // 4. Análise SWOT
-        $swot = \App\Models\StrategicPlanning\AnaliseAmbiental::swot() 
-            ->where('cod_pei', $pei?->cod_pei)
-            ->where('cod_organizacao', $organizacaoId)
-            ->get()
-            ->groupBy('dsc_categoria');
-
-        // 5. Gestão de Riscos (Sumário e Lista Detalhada)
-        $riscosDetalhado = Risco::where('cod_organizacao', $organizacaoId)
-            ->where('cod_pei', $pei?->cod_pei)
-            ->orderByRaw('(num_probabilidade * num_impacto) DESC')
-            ->get();
-
-        $riscosSummary = Risco::where('cod_organizacao', $organizacaoId)
-            ->selectRaw("
-                CASE
-                    WHEN (num_probabilidade * num_impacto) >= 15 THEN 'Crítico'
-                    WHEN (num_probabilidade * num_impacto) >= 10 THEN 'Alto'
-                    WHEN (num_probabilidade * num_impacto) >= 5 THEN 'Médio'
-                    ELSE 'Baixo'
-                END as nivel,
-                count(*) as total
-            ")
-            ->groupByRaw('nivel')
-            ->pluck('total', 'nivel')
-            ->toArray();
-
-        // 6. Graus de Satisfação (Para coerência de cores)
-        $grausSatisfacao = GrauSatisfacao::orderBy('vlr_minimo')->get();
-
-        // Mapeamento de nomes de períodos
-        $periodosMap = [
-            'anual' => 'Anual (Completo)',
-            '1_semestre' => '1º Semestre',
-            '2_semestre' => '2º Semestre',
-            '1_trimestre' => '1º Trimestre',
-            '2_trimestre' => '2º Trimestre',
-            '3_trimestre' => '3º Trimestre',
-            '4_trimestre' => '4º Trimestre',
-        ];
-        $periodoNome = $periodosMap[$periodo] ?? $periodo;
-
-        $filtros = [
-            'ano' => $ano,
-            'mesLimite' => $mesLimite,
-            'periodo' => $periodoNome,
-            'perspectiva' => $perspectivaId ? Perspectiva::find($perspectivaId)?->dsc_perspectiva : 'Todas'
-        ];
-
-        // --- INTEGRAÇÃO COM IA: Resumo e Análise Preditiva ---
-        $aiSummary = null;
-        $aiTrends = null;
-        $aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', false);
-
-        if ($aiEnabled) {
-            $aiService = \App\Services\AI\AiServiceFactory::make();
-            if ($aiService) {
-                // Preparar Estatísticas para o Resumo
-                $stats = [
-                    'totalObjetivos' => Objetivo::whereHas('perspectiva', fn($q) => $q->where('cod_pei', $pei?->cod_pei))->count(),
-                    'totalIndicadores' => Indicador::whereHas('objetivo.perspectiva', fn($q) => $q->where('cod_pei', $pei?->cod_pei))->count(),
-                    'totalPlanos' => PlanoDeAcao::where('cod_organizacao', $organizacaoId)->count(),
-                    'riscosCriticos' => Risco::where('cod_organizacao', $organizacaoId)->where('cod_pei', $pei?->cod_pei)->criticos()->count(),
-                ];
-                $aiSummary = $aiService->summarizeStrategy($stats, $organizacao->nom_organizacao);
-
-                // Preparar Dados de Tendência (Histórico recente de indicadores)
-                $indicatorData = [];
-                $topIndicadores = Indicador::whereHas('organizacoes', function($q) use ($organizacaoId) {
-                        $q->where('tab_organizacoes.cod_organizacao', $organizacaoId);
-                    })->with(['evolucoes' => fn($q) => $q->where('num_ano', $ano)->orderBy('num_mes')])
-                    ->take(5)->get();
-
-                foreach ($topIndicadores as $ind) {
-                    $evolucoes = $ind->evolucoes->map(fn($e) => ['mes' => $e->num_mes, 'valor' => $e->vlr_realizado, 'previsto' => $e->vlr_previsto]);
-                    $indicatorData[] = [
-                        'nome' => $ind->nom_indicador,
-                        'historico' => $evolucoes->toArray()
-                    ];
-                }
-                $aiTrends = $aiService->analyzeTrends($indicatorData, $organizacao->nom_organizacao);
-            }
-        }
-
-        $pdf = Pdf::loadView('relatorios.executivo', compact(
-            'organizacao', 'identidade', 'valores', 
-            'perspectivas', 'planos', 'filtros', 'swot', 'riscosSummary', 'riscosDetalhado', 'grausSatisfacao',
-            'aiSummary', 'aiTrends'
-        ));
-        
-        return $pdf->download("Relatorio_Executivo_{$organizacao->sgl_organizacao}_{$ano}.pdf");
+        return response()->streamDownload(function () use ($result) {
+            echo $result['content'];
+        }, $result['filename']);
     }
 
-    public function identidade($organizacaoId)
+    public function identidade(Request $request, $organizacaoId)
     {
-        $organizacao = Organization::findOrFail($organizacaoId);
-        $identidade = MissaoVisaoValores::where('cod_organizacao', $organizacaoId)->first();
-        $valores = Valor::where('cod_organizacao', $organizacaoId)->orderBy('nom_valor')->get();
-        if (!$identidade) { $identidade = new MissaoVisaoValores(); }
-        $pdf = Pdf::loadView('relatorios.identidade', compact('organizacao', 'identidade', 'valores'));
-        return $pdf->download("Identidade_{$organizacao->sgl_organizacao}.pdf");
+        $ano = $request->query('ano') ?? session('ano_selecionado') ?? date('Y');
+        $result = $this->reportService->generateIdentidade($organizacaoId, $ano);
+        return response()->streamDownload(function () use ($result) {
+            echo $result['content'];
+        }, $result['filename']);
     }
 
     public function objetivosPdf(Request $request)
@@ -189,31 +51,15 @@ class RelatorioController extends Controller
         $perspectivaId = $request->query('perspectiva');
         $ano = $request->query('ano') ?? date('Y');
 
-        $pei = PEI::ativos()->first();
-        if (!$pei) { return back(); }
-
-        $organizacao = $organizacaoId ? Organization::find($organizacaoId) : null;
-
-        $query = Perspectiva::where('cod_pei', $pei->cod_pei);
-        if ($perspectivaId) {
-            $query->where('cod_perspectiva', $perspectivaId);
-        }
-
-        $perspectivas = $query->with('objetivos')->ordenadoPorNivel()->get();
-
-        $filtros = [
-            'ano' => $ano,
-            'organizacao' => $organizacao ? $organizacao->nom_organizacao : 'Todas',
-            'perspectiva' => $perspectivaId ? Perspectiva::find($perspectivaId)?->dsc_perspectiva : 'Todas'
-        ];
-
-        $pdf = Pdf::loadView('relatorios.objetivos', compact('pei', 'perspectivas', 'filtros', 'organizacao'));
-        return $pdf->download("Objetivos_Estrategicos_{$ano}.pdf");
+        $result = $this->reportService->generateObjetivos($organizacaoId, $ano, $perspectivaId);
+        return response()->streamDownload(function () use ($result) {
+            echo $result['content'];
+        }, $result['filename']);
     }
 
     public function objetivosExcel()
     {
-        $pei = PEI::ativos()->first();
+        $pei = \App\Models\StrategicPlanning\PEI::ativos()->first();
         if (!$pei) { return back(); }
         return Excel::download(new ObjetivosExport($pei->cod_pei), "Objetivos_Estrategicos.xlsx");
     }
@@ -224,35 +70,10 @@ class RelatorioController extends Controller
         $ano = $request->query('ano') ?? date('Y');
         $periodo = $request->query('periodo') ?? 'anual';
 
-        $organizacao = Organization::find($organizacaoId);
-        $query = Indicador::query();
-        if ($organizacaoId) {
-            $query->whereHas('organizacoes', function($q) use ($organizacaoId) {
-                $q->where('tab_organizacoes.cod_organizacao', $organizacaoId);
-            })->orWhereHas('planoDeAcao', function($q) use ($organizacaoId) {
-                $q->where('cod_organizacao', $organizacaoId);
-            });
-        }
-        $indicadores = $query->with(['objetivo', 'planoDeAcao'])->get();
-
-        $periodosMap = [
-            'anual' => 'Anual (Completo)',
-            '1_semestre' => '1º Semestre',
-            '2_semestre' => '2º Semestre',
-            '1_trimestre' => '1º Trimestre',
-            '2_trimestre' => '2º Trimestre',
-            '3_trimestre' => '3º Trimestre',
-            '4_trimestre' => '4º Trimestre',
-        ];
-
-        $filtros = [
-            'ano' => $ano,
-            'periodo' => $periodosMap[$periodo] ?? $periodo,
-            'organizacao' => $organizacao ? $organizacao->nom_organizacao : 'Todas'
-        ];
-
-        $pdf = Pdf::loadView('relatorios.indicadores', compact('indicadores', 'organizacao', 'filtros'));
-        return $pdf->download("Indicadores_Desempenho_{$ano}.pdf");
+        $result = $this->reportService->generateIndicadores($organizacaoId, $ano, $periodo);
+        return response()->streamDownload(function () use ($result) {
+            echo $result['content'];
+        }, $result['filename']);
     }
 
     public function indicadoresExcel($organizacaoId = null)
@@ -266,25 +87,10 @@ class RelatorioController extends Controller
         $organizacaoId = $request->query('organizacao_id') ?? session('organizacao_selecionada_id');
         $ano = $request->query('ano') ?? date('Y');
 
-        $organizacao = $organizacaoId ? Organization::find($organizacaoId) : null;
-
-        $query = PlanoDeAcao::query()->with(['objetivo', 'entregas', 'responsaveis']);
-
-        if ($organizacaoId) {
-            $query->where('cod_organizacao', $organizacaoId);
-        }
-
-        // Filtrar por ano (início ou fim no ano selecionado)
-        $query->where(function($q) use ($ano) {
-            $q->whereYear('dte_inicio', $ano)
-              ->orWhereYear('dte_fim', $ano);
-        });
-
-        $planos = $query->orderBy('dte_fim')->get();
-
-        $pdf = Pdf::loadView('relatorios.planos', compact('planos', 'organizacao', 'ano'));
-        $nomeArquivo = $organizacao ? "Planos_Acao_{$organizacao->sgl_organizacao}_{$ano}.pdf" : "Planos_Acao_{$ano}.pdf";
-        return $pdf->download($nomeArquivo);
+        $result = $this->reportService->generatePlanos($organizacaoId, $ano);
+        return response()->streamDownload(function () use ($result) {
+            echo $result['content'];
+        }, $result['filename']);
     }
 
     public function planosExcel(Request $request)
@@ -292,7 +98,7 @@ class RelatorioController extends Controller
         $organizacaoId = $request->query('organizacao_id') ?? session('organizacao_selecionada_id');
         $ano = $request->query('ano') ?? date('Y');
 
-        $organizacao = $organizacaoId ? Organization::find($organizacaoId) : null;
+        $organizacao = $organizacaoId ? \App\Models\Organization::find($organizacaoId) : null;
         $nomeArquivo = $organizacao ? "Planos_Acao_{$organizacao->sgl_organizacao}_{$ano}.xlsx" : "Planos_Acao_{$ano}.xlsx";
 
         return Excel::download(new PlanosExport($organizacaoId, $ano), $nomeArquivo);
@@ -302,28 +108,38 @@ class RelatorioController extends Controller
     {
         $organizacaoId = $request->query('organizacao_id') ?? session('organizacao_selecionada_id');
 
-        $organizacao = $organizacaoId ? Organization::find($organizacaoId) : null;
-
-        $query = Risco::query()->with(['mitigacoes', 'ocorrencias']);
-
-        if ($organizacaoId) {
-            $query->where('cod_organizacao', $organizacaoId);
-        }
-
-        $riscos = $query->orderByRaw('(num_probabilidade * num_impacto) DESC')->get();
-
-        $pdf = Pdf::loadView('relatorios.riscos', compact('riscos', 'organizacao'));
-        $nomeArquivo = $organizacao ? "Riscos_{$organizacao->sgl_organizacao}.pdf" : "Riscos_Geral.pdf";
-        return $pdf->download($nomeArquivo);
+        $result = $this->reportService->generateRiscos($organizacaoId);
+        return response()->streamDownload(function () use ($result) {
+            echo $result['content'];
+        }, $result['filename']);
     }
 
     public function riscosExcel(Request $request)
     {
         $organizacaoId = $request->query('organizacao_id') ?? session('organizacao_selecionada_id');
 
-        $organizacao = $organizacaoId ? Organization::find($organizacaoId) : null;
+        $organizacao = $organizacaoId ? \App\Models\Organization::find($organizacaoId) : null;
         $nomeArquivo = $organizacao ? "Riscos_{$organizacao->sgl_organizacao}.xlsx" : "Riscos_Geral.xlsx";
 
         return Excel::download(new RiscosExport($organizacaoId), $nomeArquivo);
+    }
+
+    public function integrado(Request $request, $organizacaoId = null)
+    {
+        $organizacaoId = $organizacaoId ?? $request->query('organizacaoId') ?? session('organizacao_selecionada_id');
+        if (!$organizacaoId) return back();
+
+        $ano = $request->query('ano') ?? session('ano_selecionado') ?? date('Y');
+        $periodo = $request->query('periodo') ?? 'anual';
+        $includeAi = $request->query('include_ai') === '1';
+
+        // Aumentar timeout para geração de PDF pesado
+        set_time_limit(300); 
+
+        $result = $this->reportService->generateIntegrado($organizacaoId, $ano, $periodo, $includeAi);
+        
+        return response()->streamDownload(function () use ($result) {
+            echo $result['content'];
+        }, $result['filename']);
     }
 }

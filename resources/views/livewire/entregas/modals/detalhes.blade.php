@@ -268,7 +268,7 @@
                 <div class="d-flex justify-content-end mt-2">
                     <button type="button" class="btn btn-sm btn-primary notion-btn-send"
                             x-bind:disabled="!comentario.trim() || submitting"
-                            @click="submitting = true; $wire.dispatch('adicionar-comentario', { entregaId: '{{ $entrega->cod_entrega }}', conteudo: comentario }); comentario = ''; submitting = false;">
+                            @click="submitting = true; await $wire.adicionarComentario('{{ $entrega->cod_entrega }}', comentario); comentario = ''; submitting = false;">
                         Enviar
                     </button>
                 </div>

@@ -44,6 +44,7 @@ class AgendarRelatorio extends Component
         ]);
 
         $this->showModal = false;
+        $this->dispatch('agendamentoCriado');
         $this->dispatch('notify', [
             'type' => 'success',
             'message' => 'Relatório agendado com sucesso!'
