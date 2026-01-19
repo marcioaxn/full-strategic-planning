@@ -23,8 +23,14 @@ class ListarRelatorios extends Component
     public $perspectivas = [];
     public $perspectivaSelecionada = '';
 
+    // Dados de Identidade (Disponíveis para a View)
+    public $identidade;
+    public $valores = [];
+    public $objetivosEstrategicos = [];
+
     public $peiAtivo;
     public $aiEnabled = false;
+    public $includeAi = true; // Opção do usuário
     public $aiInsight = '';
 
     protected $listeners = [
@@ -41,6 +47,7 @@ class ListarRelatorios extends Component
     public function mount()
     {
         $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
+        $this->includeAi = $this->aiEnabled; // Padrão segue configuração do sistema
         $this->organizacoes = Organization::orderBy('nom_organizacao')->get();
 
         // Carregar Anos (baseado nos ciclos PEI ativos/recentes)
@@ -49,7 +56,7 @@ class ListarRelatorios extends Component
 
         // Carregar PEI
         $this->carregarPEI();
-        $this->carregarPerspectivas();
+        // Identidade é carregada dentro de carregarPEI agora
 
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
     }
@@ -58,6 +65,7 @@ class ListarRelatorios extends Component
     {
         $this->peiAtivo = PEI::find($id);
         $this->carregarPerspectivas();
+        $this->carregarIdentidade();
     }
 
     private function carregarPEI()
@@ -70,6 +78,31 @@ class ListarRelatorios extends Component
 
         if (!$this->peiAtivo) {
             $this->peiAtivo = PEI::ativos()->first();
+        }
+        
+        $this->carregarPerspectivas();
+        $this->carregarIdentidade();
+    }
+
+    private function carregarIdentidade()
+    {
+        if ($this->peiAtivo && $this->organizacaoId) {
+            $this->identidade = \App\Models\StrategicPlanning\MissaoVisaoValores::where('cod_pei', $this->peiAtivo->cod_pei)
+                ->where('cod_organizacao', $this->organizacaoId)
+                ->first();
+
+            $this->valores = \App\Models\StrategicPlanning\Valor::where('cod_pei', $this->peiAtivo->cod_pei)
+                ->where('cod_organizacao', $this->organizacaoId)
+                ->orderBy('nom_valor')
+                ->get();
+
+            $this->objetivosEstrategicos = \App\Models\StrategicPlanning\ObjetivoEstrategico::where('cod_pei', $this->peiAtivo->cod_pei)
+                ->where('cod_organizacao', $this->organizacaoId)
+                ->get();
+        } else {
+            $this->identidade = null;
+            $this->valores = [];
+            $this->objetivosEstrategicos = [];
         }
     }
 
@@ -86,6 +119,7 @@ class ListarRelatorios extends Component
     {
         $this->organizacaoId = $id;
         $this->organizacaoNome = $id ? Organization::find($id)?->nom_organizacao : null;
+        $this->carregarIdentidade(); // Recarregar identidade ao mudar organização
     }
 
     public function updatedOrganizacaoId($value)
@@ -106,7 +140,8 @@ class ListarRelatorios extends Component
             'ano' => $this->anoSelecionado,
             'periodo' => $this->periodoSelecionado,
             'perspectiva' => $this->perspectivaSelecionada,
-            'organizacao_id' => $this->organizacaoId
+            'organizacao_id' => $this->organizacaoId,
+            'include_ai' => $this->includeAi // Novo parâmetro
         ];
     }
 
@@ -148,8 +183,27 @@ class ListarRelatorios extends Component
         }
     }
 
+    public function download($id)
+    {
+        $relatorio = \App\Models\Reports\RelatorioGerado::findOrFail($id);
+        
+        if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($relatorio->dsc_caminho_arquivo)) {
+            session()->flash('error', 'Arquivo não encontrado.');
+            return;
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk('public')->download($relatorio->dsc_caminho_arquivo);
+    }
+
     public function render()
     {
-        return view('livewire.relatorio.listar-relatorios');
+        $recentReports = \App\Models\Reports\RelatorioGerado::where('user_id', \Illuminate\Support\Facades\Auth::id())
+            ->latest()
+            ->take(3)
+            ->get();
+
+        return view('livewire.relatorio.listar-relatorios', [
+            'recentReports' => $recentReports
+        ]);
     }
 }

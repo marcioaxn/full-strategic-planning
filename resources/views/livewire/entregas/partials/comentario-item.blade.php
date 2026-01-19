@@ -52,7 +52,7 @@
                             type="button" 
                             class="btn btn-sm btn-primary"
                             x-bind:disabled="!resposta.trim() || sub"
-                            @click="sub = true; $wire.dispatch('adicionar-comentario', { entregaId: '{{ $comentario->cod_entrega }}', conteudo: resposta, comentarioPaiId: '{{ $comentario->cod_comentario }}' }); resposta = ''; sub = false;"
+                            @click="sub = true; await $wire.adicionarComentario('{{ $comentario->cod_entrega }}', resposta, '{{ $comentario->cod_comentario }}'); resposta = ''; sub = false;"
                         >
                             Responder
                         </button>

@@ -288,7 +288,10 @@ class SessionTimer {
 
         try {
             // Make a request to the session ping endpoint to renew the session
-            const response = await fetch('/session/ping', {
+            // Use dynamic URL from meta tag to support subdirectories
+            const sessionPingUrl = document.querySelector('meta[name="route-session-ping"]')?.getAttribute('content') || '/session/ping';
+            
+            const response = await fetch(sessionPingUrl, {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',

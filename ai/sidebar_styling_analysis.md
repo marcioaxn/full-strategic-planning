@@ -1,134 +1,20 @@
-- **Date**: 2025-12-28
-- **Action**: Standardized Terminology: 'Objetivo Estratégico' -> 'Objetivo'.
-- **Change**:
-    - Performed global replacement of the phrase "objetivo estratégico" (and its case variations) with "objetivo" across all source code (`app/`, `resources/`, `routes/`, `database/`) and documentation (`ai/`, `*.md`).
-    - Careful literal replacement ensured that database columns (snake_case) and model names (CamelCase) like `ObjetivoEstrategico` were NOT affected, as they do not contain spaces.
-- **Reason**: User request to simplify and standardize the terminology used throughout the project.
+## [2026-01-15] Evolução de Relatório: Identidade -> Mapa Estratégico
 
-- **Date**: 2025-12-28
-- **Action**: Enhanced Visual Styling of Strategic Map.
-- **Change**:
-    - Modified `resources/views/livewire/pei/mapa-estrategico.blade.php` to lighten the perspective headers background by 55% using `color-mix`.
-- **Reason**: User request to improve visual hierarchy and aesthetics of the Strategic Map.
+### Objetivo
+Substituir o relatório estático de "Identidade" (Missão/Visão/Valores) por um **Mapa Estratégico Visual (Landscape)**, alinhado com o Dossiê Integrado, mas focado exclusivamente na visualização das perspectivas e objetivos.
 
-- **Date**: 2025-12-25
-- **Action**: Concluded Phase 7 - Audit & Refinements.
-- **Change**:
-    - Created `app/Livewire/Audit/ListarLogs.php` + view (System-wide Audit Trail).
-    - Implemented Visual Diff for audit records in modals.
-    - Updated `layouts/app.blade.php` to include permission-based sidebar filtering.
-    - Performed Query Review: Added Eager Loading to `ListarPerspectivas`.
-- **Reason**: Completion of Phase 7 as per roadmap.
+### Implementação
+1.  **Backend (`ReportGenerationService`)**:
+    -   Refatorado `generateIdentidade`. Agora carrega a árvore completa de Perspectivas > Objetivos > Indicadores.
+    -   Alterada orientação do PDF para `landscape` (Paisagem) para melhor acomodação das "raias" (swimlanes) do mapa.
+2.  **Frontend (`listar-relatorios.blade.php`)**:
+    -   Renomeado card para "Mapa Estratégico".
+    -   Ícone atualizado para `bi-diagram-3`.
+3.  **View (`identidade.blade.php`)**:
+    -   Reconstruída do zero.
+    -   **Layout**: Tabela de largura total com cabeçalhos de perspectiva verticais na esquerda (coloridos conforme nível hierárquico).
+    -   **Conteúdo**: Cards de objetivos distribuídos horizontalmente (4 por linha).
+    -   **Identidade**: Missão e Visão integradas discretamente no cabeçalho do documento para contexto.
 
-- **Date**: 2025-12-25
-- **Action**: Concluded Phase 6 - Risk Management.
-- **Change**:
-    - Created `app/Policies/RiscoPolicy.php`.
-    - Created `app/Livewire/Risco/ListarRiscos.php` + view (CRUD with automatic Matrix level calculation).
-    - Created `app/Livewire/Risco/GerenciarMitigacoes.php` + view (Mitigation plans management).
-    - Created `app/Livewire/Risco/RegistrarOcorrencias.php` + view (Risk materialization log with impact analysis).
-    - Created `app/Livewire/Risco/MatrizRiscos.php` + view (Visual 5x5 Heatmap).
-    - Integrated multi-objective association for risks.
-- **Reason**: Completion of Phase 6 as per roadmap.
-
-- **Date**: 2025-12-25
-- **Action**: Concluded Phase 5 - Dashboards & Reports.
-- **Change**:
-    - Installed `barryvdh/laravel-dompdf` and `maatwebsite/excel`.
-    - Updated `app/Livewire/Dashboard/Index.php` with real strategic metrics and Chart.js distribution.
-    - Created `app/Http/Controllers/RelatorioController.php` for binary responses.
-    - Created PDF views for Identity, Objectives, Indicators and Executive Consolidated report.
-    - Created Excel export classes for Objectives and Indicators.
-    - Added export buttons to all main strategic views.
-- **Reason**: Completion of Phase 5 as per roadmap.
-
-- **Date**: 2025-12-25
-- **Action**: Concluded Phase 4 - Indicators (KPIs).
-- **Change**:
-    - Created `app/Policies/IndicadorPolicy.php`.
-    - Created `app/Livewire/Indicador/ListarIndicadores.php` + view (CRUD with Goals and Base Line management via modals).
-    - Created `app/Livewire/Indicador/LancarEvolucao.php` + view (Results entry with file upload support).
-    - Created `app/Livewire/Indicador/DetalharIndicador.php` + view (Rich details view with Chart.js temporal evolution).
-    - Registered all routes in `web.php`.
-    - Implemented Performance Light (Farol) calculation logic.
-- **Reason**: Completion of Phase 4 as per roadmap.
-
-- **Date**: 2025-12-25
-- **Action**: Concluded Phase 3 - Action Plans.
-- **Change**:
-    - Created `app/Livewire/PlanoAcao/ListarPlanos.php` + view (Action Plans listing/CRUD).
-    - Created `app/Livewire/PlanoAcao/GerenciarEntregas.php` + view (Deliverables management with progress calculation).
-    - Created `app/Livewire/PlanoAcao/AtribuirResponsaveis.php` + view (Assigning managers via pivot table).
-    - Created `app/Livewire/PlanoAcao/DetalharPlano.php` + view (Rich details view with Audit Timeline).
-    - Registered all routes in `web.php`.
-    - Integrated Audit functionality in details view.
-- **Reason**: Completion of Phase 3 as per roadmap.
-
-- **Date**: 2025-12-25
-- **Action**: Started Phase 3 - Action Plans.
-- **Change**:
-    - Created `app/Policies/PlanoDeAcaoPolicy.php`.
-    - Created `app/Livewire/PlanoAcao/ListarPlanos.php` + view (CRUD Action Plans).
-    - Registered route `/planos` in `web.php`.
-- **Reason**: Implementation of Phase 3 tasks 3.1 and 3.2.
-
-- **Date**: 2025-12-25
-- **Action**: Concluded Phase 2 - Identity & BSC.
-- **Change**:
-    - Created `app/Livewire/PEI/MissaoVisao.php` + view (Strategic Identity).
-    - Created `app/Livewire/PEI/ListarValores.php` + view (Organizational Values CRUD).
-    - Created `app/Livewire/PEI/ListarPerspectivas.php` + view (BSC Perspectives).
-    - Created `app/Livewire/PEI/ListarObjetivos.php` + view (Strategic Objectives grouped by Perspective).
-    - Created `app/Livewire/PEI/GerenciarFuturoAlmejado.php` + view (Desired Future management).
-    - Created `app/Livewire/PEI/MapaEstrategico.php` + view (BSC Strategic Map visualization).
-    - Registered all routes in `web.php`.
-    - Updated sidebar navigation in `app.blade.php`.
-- **Reason**: Completion of Phase 2 as per roadmap.
-
-- **Date**: 2025-12-25
-- **Action**: Concluded Phase 1 - Global Organization Selector & Technical Fixes.
-- **Change**:
-    - Addressed review points: Updated `Organization.php`, `PerfilAcesso.php`, `User.php` and `ListarUsuarios.php` to use explicit `PUBLIC.` schema.
-    - Fixed validation in `ListarOrganizacoes.php` to use correct table name and schema.
-    - Created `app/Livewire/Shared/SeletorOrganizacao.php` and its view.
-    - Integrated `SeletorOrganizacao` into `navigation-menu.blade.php`.
-    - Implemented global filtering in `ListarOrganizacoes` and `ListarUsuarios` based on session context.
-- **Reason**: Completion of Phase 1 as per roadmap and addressing technical feedback from Claude review.
-
-- **Date**: 2025-12-25
-- **Action**: Started Phase 1 Implementation - Core CRUDs.
-- **Change**:
-    - Created `app/Policies/OrganizationPolicy.php` and `app/Policies/UserPolicy.php`.
-    - Created `app/Livewire/Organizacao/ListarOrganizacoes.php` + view (CRUD Organizations).
-    - Created `app/Livewire/Usuario/ListarUsuarios.php` + view (CRUD Users with Pivot Management).
-    - Updated `routes/web.php` to register new routes.
-- **Reason**: Implementation of the Core Basic phase tasks as per roadmap, adhering strictly to the UI/UX patterns defined in `LeadsTable`.
-
-- **Date**: 2026-01-03
-- **Action**: Improved UI/UX of PEI Help Section (`/pei/ciclos`).
-- **Change**:
-    - Modified `resources/views/livewire/p-e-i/listar-peis.blade.php`:
-        - Replaced transparent white cards with adaptive `bg-body` cards to ensure text contrast in both light and dark modes.
-        - Implemented a theme-adaptive background for the main help card: purple gradient in light mode, dark gray gradient in dark mode.
-        - Updated inner text colors from `text-white` to `text-body` (adaptive).
-        - Updated badges to `bg-primary text-white` for visibility on white cards.
-        - Fixed positioning of step-connector arrows to sit outside the cards on the purple gradient, ensuring visibility.
-- **Reason**: User request to fix low contrast (white text on white background) and ensure dark mode compatibility while preserving the overall aesthetic.
-
-- **Date**: 2026-01-03
-- **Action**: Advanced 'Strategic Mentor' (Locks and AI).
-- **Change**:
-    - Implemented logic-based redirects in `create()` methods of `ListarPerspectivas`, `ListarObjetivos`, and `ListarIndicadores` to enforce sequential PEI data entry.
-    - Created `app/Services/GeminiAiService.php` to integrate Google Gemini AI API.
-    - Added "Mentor de IA" functionality to `MissaoVisao` (Strategic Identity) with a new UI component and AI-powered suggestions.
-- **Reason**: Ensuring data integrity through sequential filling and providing intelligent assistance for strategic planning.
-
-- **Date**: 2026-01-03
-- **Action**: Global AI Configuration & System Settings.
-- **Change**:
-    - Created `system_settings` table and `SystemSetting` model with encryption for API keys.
-    - Created `ConfiguracaoSistema` component for dynamic management of IA (Enable/Disable, Provider, API Key).
-    - Integrated `ai_enabled` check across all AI-related views (Dashboard, Identity, Objectives, Indicators).
-    - Added "Configurações" link to the Administration sidebar.
-    - Dashboard checklist adapts its branding based on AI status ("Mentor Estratégico" vs "Monitor Estratégico").
-- **Reason**: Providing flexibility for different client profiles (90/5/5 scenario) and securing sensitive API credentials.
+### Status
+- ✅ Relatório transformado em ferramenta visual de gestão.

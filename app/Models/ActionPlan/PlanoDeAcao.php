@@ -220,4 +220,16 @@ class PlanoDeAcao extends Model implements Auditable
                      ->where('dte_fim', '>=', now())
                      ->where('bln_status', '!=', 'Concluído');
     }
+
+    /**
+     * Acessor: Responsáveis (Virtual)
+     * Retorna a lista de usuários responsáveis pelas entregas deste plano.
+     * Como não há responsável direto no plano, assume-se que são os responsáveis pelas entregas.
+     */
+    public function getResponsaveisAttribute()
+    {
+        return $this->entregas->flatMap(function ($entrega) {
+            return $entrega->responsaveis;
+        })->unique('id');
+    }
 }
