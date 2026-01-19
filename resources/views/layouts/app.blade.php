@@ -8,6 +8,7 @@
         <meta data-update-uri="{{ url('/livewire/update') }}">
         <meta name="route-login" content="{{ route('login') }}">
         <meta name="route-logout" content="{{ route('logout') }}">
+        <meta name="route-session-ping" content="{{ route('session.ping') }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
@@ -654,7 +655,7 @@
                  */
                 function refreshCsrfToken() {
                     // Usa originalFetch para evitar loop infinito
-                    originalFetch('/refresh-csrf', {
+                    originalFetch('{{ route('csrf.refresh') }}', {
                         method: 'GET',
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',

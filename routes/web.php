@@ -114,6 +114,9 @@ Route::middleware([
                                 // Relatórios de Riscos
                                 Route::get('/relatorios/riscos/pdf', [\App\Http\Controllers\Reports\RelatorioController::class, 'riscosPdf'])->name('relatorios.riscos.pdf');
                                 Route::get('/relatorios/riscos/excel', [\App\Http\Controllers\Reports\RelatorioController::class, 'riscosExcel'])->name('relatorios.riscos.excel');
+                                
+                                // Relatório Integrado
+                                Route::get('/relatorios/integrado/{organizacaoId?}', [\App\Http\Controllers\Reports\RelatorioController::class, 'integrado'])->name('relatorios.integrado');
 
     // Session ping endpoint for session renewal
     Route::post('/session/ping', function () {
