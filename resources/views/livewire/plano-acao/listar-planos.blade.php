@@ -769,7 +769,7 @@
                                                         </div>
                                                         <div class="list-group list-group-flush rounded-3 border">
                                                             @foreach($aiSuggestion as $sug)
-                                                                <button type="button" wire:click="aplicarSugestao('{{ $sug['nome'] }}')" class="list-group-item list-group-item-action py-2 px-3 hover-bg-primary-subtle transition-all">
+                                                                <button type="button" wire:click="aplicarSugestao(@js($sug['nome']), @js($sug['justificativa']))" class="list-group-item list-group-item-action py-2 px-3 hover-bg-primary-subtle transition-all">
                                                                     <div class="d-flex w-100 justify-content-between align-items-center">
                                                                         <h6 class="mb-1 fw-bold text-dark" style="font-size: 0.9rem;">{{ $sug['nome'] }}</h6>
                                                                         <small class="text-primary fw-bold" style="font-size: 0.7rem;"><i class="bi bi-plus-lg me-1"></i>Usar</small>
@@ -788,6 +788,13 @@
                                             <label class="form-label fw-bold small text-muted text-uppercase">2. Descrição da Ação <span class="text-danger">*</span></label>
                                             <textarea wire:model="dsc_plano_de_acao" class="form-control form-control-lg bg-white border-0 shadow-sm" rows="2" placeholder="Descreva o que será feito de forma clara..."></textarea>
                                             @error('dsc_plano_de_acao') <div class="text-danger small mt-1 ms-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div> @enderror
+                                        </div>
+
+                                        {{-- 3. Detalhamento / Justificativa --}}
+                                        <div class="mb-4">
+                                            <label class="form-label fw-bold small text-muted text-uppercase">3. Detalhamento / Justificativa <span class="text-muted fw-normal text-lowercase">(Opcional)</span></label>
+                                            <textarea wire:model="txt_detalhamento" class="form-control bg-white border-0 shadow-sm" rows="4" placeholder="Descreva os detalhes, metodologia ou justificativa para esta ação..."></textarea>
+                                            @error('txt_detalhamento') <div class="text-danger small mt-1 ms-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div> @enderror
                                         </div>
 
                                         <div class="row g-3">
@@ -1027,4 +1034,34 @@
             </x-danger-button>
         </x-slot>
     </x-confirmation-modal>
+
+    {{-- Success Modal Premium --}}
+    @if($showSuccessModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-success text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem;">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-3">Sucesso!</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        O <strong class="text-success">{{ $createdPlanType }}</strong><br>
+                        <span class="fst-italic text-dark">"{{ $createdPlanName }}"</span><br>
+                        foi gravado com sucesso.
+                    </p>
+                    <button wire:click="closeSuccessModal" class="btn btn-success gradient-theme-btn px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-check2-circle me-2"></i>Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        .scale-in-center { animation: scale-in-center 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; }
+        @keyframes scale-in-center { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
+    @endif
 </div>
