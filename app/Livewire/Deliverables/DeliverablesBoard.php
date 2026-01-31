@@ -106,6 +106,10 @@ class DeliverablesBoard extends Component
     public ?string $entregaParaExcluirId = null;
     public bool $isPermanentDelete = false;
 
+    // Success Modal Properties
+    public bool $showSuccessModal = false;
+    public string $createdDeliverableName = '';
+
     /** @var string|null ID do comentário que está sendo respondido */
     public ?string $respondendoComentarioId = null;
 
@@ -657,14 +661,13 @@ class DeliverablesBoard extends Component
             $message = 'Entrega criada com sucesso!';
         }
 
+        $this->createdDeliverableName = $this->editTitulo;
         $this->closeEditModal();
         $this->calcularProgresso();
         $this->dispatch('re-init-sortable');
 
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => $message
-        ]);
+        // Disparar modal de sucesso
+        $this->showSuccessModal = true;
     }
 
     // ========================================
@@ -1032,6 +1035,12 @@ class DeliverablesBoard extends Component
      * O Livewire executa este método e automaticamente re-renderiza o componente,
      * buscando os dados atualizados do banco no método render().
      */
+    public function closeSuccessModal(): void
+    {
+        $this->showSuccessModal = false;
+        $this->createdDeliverableName = '';
+    }
+
     public function poll(): void
     {
         // Apenas para manter o polling ativo e forçar o re-render
