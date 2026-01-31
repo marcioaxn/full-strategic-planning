@@ -1,17 +1,23 @@
 <div>
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
+    {{-- Cabeçalho Interno --}}
+    <div class="leads-header d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
                 <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1">
+                    <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Planos de Ação</li>
                     </ol>
                 </nav>
-                <h2 class="h4 fw-bold mb-0">Planos de Ação</h2>
             </div>
+            <div class="d-flex align-items-center gap-2">
+                <h1 class="h3 fw-bold mb-0">Planos de Ação</h1>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
             @if($organizacaoId)
-                <button wire:click.prevent="create" wire:loading.attr="disabled" class="btn btn-primary gradient-theme-btn">
+                <button wire:click.prevent="create" wire:loading.attr="disabled" class="btn btn-primary gradient-theme-btn shadow-sm">
                     <span wire:loading.remove wire:target="create">
                         <i class="bi bi-plus-lg me-2"></i>Novo Plano
                     </span>
@@ -21,7 +27,7 @@
                 </button>
             @endif
         </div>
-    </x-slot>
+    </div>
 
     {{-- Seção Educativa: O que são Planos de Ação --}}
     <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
