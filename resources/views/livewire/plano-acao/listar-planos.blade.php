@@ -661,142 +661,238 @@
     <!-- Modal Criar/Editar -->
     <div class="modal fade @if($showModal) show @endif" tabindex="-1" role="dialog" wire:key="modal-plano-acao"
          style="@if($showModal) display: block; background: rgba(0,0,0,0.5); z-index: 1055; @else display: none; @endif">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header gradient-theme text-white border-0">
-                    <h5 class="modal-title fw-bold">
-                        {{ $planoId ? 'Editar Plano de Ação' : 'Novo Plano de Ação' }}
-                    </h5>
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header gradient-theme-header text-white border-0 py-3 px-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="icon-circle-mini bg-white bg-opacity-25 text-white">
+                            <i class="bi bi-{{ $planoId ? 'pencil-square' : 'plus-circle' }}"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">{{ $planoId ? 'Editar Plano de Ação' : 'Novo Plano de Ação' }}</h5>
+                            <p class="mb-0 small text-white-50">Preencha os detalhes táticos e operacionais</p>
+                        </div>
+                    </div>
                     <button type="button" class="btn-close btn-close-white" wire:click="$set('showModal', false)"></button>
                 </div>
                 <form wire:submit.prevent="save">
-                    <div class="modal-body p-4">
-                        <!-- Linha 1: Descrição -->
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label class="form-label text-muted small text-uppercase fw-bold mb-0">Descrição do Plano</label>
-                                @if($aiEnabled)
-                                    <button type="button" wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="btn btn-xs btn-outline-magic py-0" style="font-size: 0.65rem;">
-                                        <i class="bi bi-robot me-1"></i> Sugerir com IA
+                    <div class="modal-body p-4 bg-body-tertiary">
+                        
+                        {{-- Mentor IA (Sempre visível no topo) --}}
+                        @if($aiEnabled)
+                            <div class="mb-4" x-data="{ expanded: false }">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label text-primary fw-bold small text-uppercase mb-0">
+                                        <i class="bi bi-robot me-1"></i>Inteligência Artificial
+                                    </label>
+                                    @if(!$aiSuggestion)
+                                    <button type="button" wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="btn btn-sm btn-outline-primary bg-white shadow-sm border-primary-subtle rounded-pill">
+                                        <span wire:loading.remove wire:target="pedirAjudaIA">
+                                            <i class="bi bi-stars me-1"></i>Sugerir Plano com IA
+                                        </span>
+                                        <span wire:loading wire:target="pedirAjudaIA">
+                                            <span class="spinner-border spinner-border-sm me-1"></span>Analisando...
+                                        </span>
                                     </button>
-                                @endif
-                            </div>
-                            
-                            @if($aiSuggestion)
-                                <div class="alert alert-magic bg-primary bg-opacity-10 border-0 p-2 mb-3 animate-fade-in">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <small class="fw-bold text-primary"><i class="bi bi-robot me-1"></i>Sugestões IA:</small>
-                                        <button type="button" class="btn-close" style="font-size: 0.5rem;" wire:click="$set('aiSuggestion', '')"></button>
-                                    </div>
-                                    <div class="list-group list-group-flush rounded border">
-                                        @foreach($aiSuggestion as $sug)
-                                            <button type="button" wire:click="aplicarSugestao('{{ $sug['nome'] }}')" class="list-group-item list-group-item-action py-1 px-2 x-small">
-                                                <div class="fw-bold">{{ $sug['nome'] }}</div>
-                                                <div class="text-muted" style="font-size: 0.65rem;">{{ $sug['justificativa'] }}</div>
-                                            </button>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
-
-                            <textarea wire:model="dsc_plano_de_acao" class="form-control @error('dsc_plano_de_acao') is-invalid @enderror" rows="2" placeholder="Descreva o plano de ação..."></textarea>
-                            @error('dsc_plano_de_acao') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-
-                        <!-- Linha 2: Objetivo e Tipo -->
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-8">
-                                <label class="form-label text-muted small text-uppercase fw-bold">Objetivo</label>
-                                <select wire:model="cod_objetivo" class="form-select @error('cod_objetivo') is-invalid @enderror">
-                                    <option value="">Selecione...</option>
-                                    @foreach($objetivos as $obj)
-                                        <option value="{{ $obj->cod_objetivo }}">
-                                            {{ $obj->perspectiva->dsc_perspectiva }} > {{ Str::limit($obj->nom_objetivo, 80) }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('cod_objetivo') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-muted small text-uppercase fw-bold">Tipo de Execução</label>
-                                <select wire:model="cod_tipo_execucao" class="form-select @error('cod_tipo_execucao') is-invalid @enderror">
-                                    <option value="">Selecione...</option>
-                                    @foreach($tiposExecucao as $tipo)
-                                        <option value="{{ $tipo->cod_tipo_execucao }}">{{ $tipo->dsc_tipo_execucao }}</option>
-                                    @endforeach
-                                </select>
-                                @error('cod_tipo_execucao') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                        </div>
-
-                        <!-- Linha 3: Datas e Status -->
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label text-muted small text-uppercase fw-bold">Data Início</label>
-                                <input type="date" wire:model.live="dte_inicio" class="form-control @error('dte_inicio') is-invalid @enderror">
-                                @error('dte_inicio') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-muted small text-uppercase fw-bold">Data Fim</label>
-                                <input type="date" wire:model.live="dte_fim" class="form-control @error('dte_fim') is-invalid @enderror">
-                                @error('dte_fim') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-muted small text-uppercase fw-bold">Status</label>
-                                <select wire:model="bln_status" class="form-select @error('bln_status') is-invalid @enderror">
-                                    @foreach($statusOptions as $st)
-                                        <option value="{{ $st }}">{{ $st }}</option>
-                                    @endforeach
-                                </select>
-                                @error('bln_status') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-
-                            {{-- Alertas Educativos de Data --}}
-                            @if($dte_inicio && $dte_fim)
-                                <div class="col-12 mt-1">
-                                    @php
-                                        $start = \Carbon\Carbon::parse($dte_inicio);
-                                        $end = \Carbon\Carbon::parse($dte_fim);
-                                        $diff = $start->diffInDays($end, false);
-                                    @endphp
-
-                                    @if($diff < 0)
-                                        <div class="alert alert-danger py-1 px-2 small mb-0">
-                                            <i class="bi bi-exclamation-octagon me-1"></i>
-                                            A data de término deve ser posterior à data de início.
-                                        </div>
-                                    @elseif($diff < 30)
-                                        <div class="alert alert-warning py-1 px-2 small mb-0">
-                                            <i class="bi bi-info-circle me-1"></i>
-                                            <strong>Dica:</strong> Um prazo de apenas {{ $diff }} dias pode ser curto para um plano estratégico. Considere se não é apenas uma "Entrega".
-                                        </div>
                                     @endif
                                 </div>
-                            @endif
-                        </div>
 
-                        <!-- Linha 4: Orçamento e Códigos -->
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label text-muted small text-uppercase fw-bold">Orçamento Previsto (R$)</label>
-                                <input type="number" step="0.01" wire:model="vlr_orcamento_previsto" class="form-control @error('vlr_orcamento_previsto') is-invalid @enderror">
-                                @error('vlr_orcamento_previsto') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @if($aiSuggestion)
+                                    <div class="alert alert-light border-primary border-opacity-25 shadow-sm rounded-3 p-3 animate-fade-in">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="spinner-grow spinner-grow-sm text-primary" role="status" wire:loading wire:target="pedirAjudaIA"></div>
+                                                <span class="fw-bold text-primary">Sugestões Geradas:</span>
+                                            </div>
+                                            <button type="button" class="btn-close small" wire:click="$set('aiSuggestion', '')"></button>
+                                        </div>
+                                        <div class="list-group list-group-flush rounded-3 border">
+                                            @foreach($aiSuggestion as $sug)
+                                                <button type="button" wire:click="aplicarSugestao('{{ $sug['nome'] }}')" class="list-group-item list-group-item-action py-2 px-3 hover-bg-primary-subtle transition-all">
+                                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                                        <h6 class="mb-1 fw-bold text-dark">{{ $sug['nome'] }}</h6>
+                                                        <small class="text-primary fw-bold"><i class="bi bi-check2 me-1"></i>Aplicar</small>
+                                                    </div>
+                                                    <p class="mb-1 small text-muted lh-sm">{{ $sug['justificativa'] }}</p>
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-muted small text-uppercase fw-bold">Cód. PPA</label>
-                                <input type="text" wire:model="cod_ppa" class="form-control @error('cod_ppa') is-invalid @enderror" placeholder="Opcional">
-                                @error('cod_ppa') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        @endif
+
+                        <div class="row g-4">
+                            {{-- Coluna Principal --}}
+                            <div class="col-lg-8">
+                                <div class="card border-0 shadow-sm rounded-4 h-100">
+                                    <div class="card-body p-4">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Dados Principais</h6>
+                                        
+                                        {{-- Descrição --}}
+                                        <div class="mb-4">
+                                            <label class="form-label fw-bold small text-muted text-uppercase">O que será feito? (Título do Plano) <span class="text-danger">*</span></label>
+                                            <textarea wire:model="dsc_plano_de_acao" class="form-control form-control-lg bg-light border-0" rows="2" placeholder="Ex: Implementar novo sistema de atendimento ao cidadão..."></textarea>
+                                            @error('dsc_plano_de_acao') <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div> @enderror
+                                        </div>
+
+                                        <div class="row g-3">
+                                            {{-- Objetivo (Grouped) --}}
+                                            <div class="col-12">
+                                                <label class="form-label fw-bold small text-muted text-uppercase">Objetivo Estratégico Vinculado <span class="text-danger">*</span></label>
+                                                <select wire:model="cod_objetivo" class="form-select bg-light border-0 py-2">
+                                                    <option value="">Selecione um objetivo...</option>
+                                                    @foreach($objetivos as $perspectiva => $listaObjetivos)
+                                                        <optgroup label="{{ $perspectiva }}" class="fw-bold text-primary">
+                                                            @foreach($listaObjetivos as $obj)
+                                                                <option value="{{ $obj['cod_objetivo'] }}" class="text-dark fw-normal">
+                                                                    &nbsp;&nbsp;{{ $obj['nom_objetivo'] }}
+                                                                </option>
+                                                            @endforeach
+                                                        </optgroup>
+                                                    @endforeach
+                                                </select>
+                                                @error('cod_objetivo') <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div> @enderror
+                                            </div>
+
+                                            {{-- Tipo de Execução --}}
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold small text-muted text-uppercase">Tipo de Execução <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-white border-0"><i class="bi bi-gear"></i></span>
+                                                    <select wire:model="cod_tipo_execucao" class="form-select bg-light border-0">
+                                                        <option value="">Selecione...</option>
+                                                        @foreach($tiposExecucao as $tipo)
+                                                            <option value="{{ $tipo->cod_tipo_execucao }}">{{ $tipo->dsc_tipo_execucao }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                @error('cod_tipo_execucao') <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div> @enderror
+                                            </div>
+
+                                            {{-- Status Colorido --}}
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold small text-muted text-uppercase">Status Atual</label>
+                                                <div class="input-group" x-data="{ status: @entangle('bln_status') }">
+                                                    <span class="input-group-text border-0 text-white" 
+                                                          :class="{
+                                                              'bg-secondary': status == 'Não Iniciado' || status == 'Suspenso' || status == 'Cancelado',
+                                                              'bg-primary': status == 'Em Andamento',
+                                                              'bg-success': status == 'Concluído',
+                                                              'bg-danger': status == 'Atrasado'
+                                                          }">
+                                                        <i class="bi bi-flag-fill"></i>
+                                                    </span>
+                                                    <select wire:model.live="bln_status" class="form-select bg-light border-0 fw-bold">
+                                                        @foreach($statusOptions as $st)
+                                                            <option value="{{ $st }}" 
+                                                                class="{{ match($st) { 
+                                                                    'Concluído' => 'text-success fw-bold', 
+                                                                    'Atrasado' => 'text-danger fw-bold', 
+                                                                    'Em Andamento' => 'text-primary fw-bold', 
+                                                                    default => 'text-muted' 
+                                                                } }}">
+                                                                {{ $st }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                @error('bln_status') <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div> @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-muted small text-uppercase fw-bold">Cód. LOA</label>
-                                <input type="text" wire:model="cod_loa" class="form-control @error('cod_loa') is-invalid @enderror" placeholder="Opcional">
-                                @error('cod_loa') <div class="invalid-feedback">{{ $message }}</div> @enderror
+
+                            {{-- Coluna Lateral --}}
+                            <div class="col-lg-4">
+                                {{-- Card Vigência --}}
+                                <div class="card border-0 shadow-sm rounded-4 mb-3">
+                                    <div class="card-body p-4">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-calendar-range me-2 text-primary"></i>Vigência</h6>
+                                        
+                                        <div class="bg-light rounded-3 p-3 border border-light">
+                                            <div class="mb-3">
+                                                <label class="small text-muted fw-bold d-block mb-1">Início</label>
+                                                <input type="date" wire:model.live="dte_inicio" class="form-control border-0 shadow-sm">
+                                                @error('dte_inicio') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                            </div>
+                                            
+                                            <div class="text-center text-muted mb-3"><i class="bi bi-arrow-down"></i></div>
+                                            
+                                            <div>
+                                                <label class="small text-muted fw-bold d-block mb-1">Término</label>
+                                                <input type="date" wire:model.live="dte_fim" class="form-control border-0 shadow-sm">
+                                                @error('dte_fim') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                            </div>
+                                        </div>
+
+                                        @if($dte_inicio && $dte_fim)
+                                            @php
+                                                $start = \Carbon\Carbon::parse($dte_inicio);
+                                                $end = \Carbon\Carbon::parse($dte_fim);
+                                                $diff = $start->diffInDays($end, false);
+                                            @endphp
+                                            <div class="mt-3 text-center">
+                                                <span class="badge {{ $diff > 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border rounded-pill">
+                                                    Duração: {{ abs($diff) }} dias
+                                                </span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                {{-- Card Orçamento --}}
+                                <div class="card border-0 shadow-sm rounded-4">
+                                    <div class="card-body p-4">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-cash-coin me-2 text-success"></i>Orçamento</h6>
+                                        
+                                        <label class="form-label fw-bold small text-muted text-uppercase">Valor Previsto</label>
+                                        <div class="input-group input-group-lg shadow-sm" x-data>
+                                            <span class="input-group-text bg-success text-white border-0">R$</span>
+                                            <input type="text" 
+                                                   wire:model="vlr_orcamento_previsto"
+                                                   x-mask:money="{ decimal: ',', thousands: '.', precision: 2 }"
+                                                   class="form-control border-0 bg-white text-end fw-bold text-dark" 
+                                                   placeholder="0,00">
+                                        </div>
+                                        <div class="form-text text-end x-small">Digite apenas números.</div>
+                                        @error('vlr_orcamento_previsto') <div class="text-danger small mt-1 text-end">{{ $message }}</div> @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Seção Governamental (Colapsável) --}}
+                            <div class="col-12">
+                                <div class="card border-0 bg-light rounded-4">
+                                    <button class="btn btn-link text-decoration-none w-100 text-start p-3 d-flex justify-content-between align-items-center text-muted" 
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#govFields">
+                                        <span class="small fw-bold text-uppercase"><i class="bi bi-bank me-2"></i>Informações Orçamentárias (Governo)</span>
+                                        <i class="bi bi-chevron-down"></i>
+                                    </button>
+                                    <div class="collapse {{ $cod_ppa || $cod_loa ? 'show' : '' }}" id="govFields">
+                                        <div class="card-body px-4 pb-4 pt-0">
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label small text-muted">Cód. PPA</label>
+                                                    <input type="text" wire:model="cod_ppa" class="form-control border-0 shadow-sm" placeholder="Opcional">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label small text-muted">Cód. LOA</label>
+                                                    <input type="text" wire:model="cod_loa" class="form-control border-0 shadow-sm" placeholder="Opcional">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer border-0 p-4 pt-0">
-                        <button type="button" class="btn btn-light px-4" wire:click="$set('showModal', false)">Cancelar</button>
-                        <button type="submit" class="btn btn-primary gradient-theme-btn px-4">Salvar Plano</button>
+                    <div class="modal-footer border-0 p-4 bg-white rounded-bottom-4">
+                        <button type="button" class="btn btn-light px-4 rounded-pill fw-bold" wire:click="$set('showModal', false)">Cancelar</button>
+                        <button type="submit" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow-sm hover-scale">
+                            <i class="bi bi-check-lg me-2"></i>Salvar Plano
+                        </button>
                     </div>
                 </form>
             </div>

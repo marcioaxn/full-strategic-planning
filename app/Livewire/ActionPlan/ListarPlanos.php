@@ -162,57 +162,26 @@ class ListarPlanos extends Component
         $this->grausSatisfacao = \App\Models\StrategicPlanning\GrauSatisfacao::orderBy('vlr_minimo')->get();
 
         if ($this->peiAtivo) {
-            $this->objetivos = Objetivo::whereHas('perspectiva', function($query) {
+            // Carrega objetivos e agrupa por nome da perspectiva
+            $lista = Objetivo::whereHas('perspectiva', function($query) {
                 $query->where('cod_pei', $this->peiAtivo->cod_pei);
             })->with('perspectiva')->orderBy('nom_objetivo')->get();
+            
+            $this->objetivos = $lista->groupBy('perspectiva.dsc_perspectiva')->toArray();
         }
-    }
-
-    public function updatingSearch()
-    {
-        $this->resetPage();
-    }
-
-    public function create()
-    {
-        try {
-            $this->authorize('create', PlanoDeAcao::class);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            $this->dispatch('notify', message: 'Você não tem permissão para criar planos.', style: 'danger');
-            return;
-        }
-
-        $this->resetForm();
-        
-        if (!$this->organizacaoId) {
-            $this->dispatch('notify', message: 'Selecione uma organização no menu superior.', style: 'warning');
-            return;
-        }
-
-        $this->showModal = true;
-    }
-
-    public function edit($id)
-    {
-        $plano = PlanoDeAcao::findOrFail($id);
-        $this->authorize('update', $plano);
-
-        $this->planoId = $id;
-        $this->dsc_plano_de_acao = $plano->dsc_plano_de_acao;
-        $this->cod_objetivo = $plano->cod_objetivo;
-        $this->cod_tipo_execucao = $plano->cod_tipo_execucao;
-        $this->dte_inicio = $plano->dte_inicio?->format('Y-m-d');
-        $this->dte_fim = $plano->dte_fim?->format('Y-m-d');
-        $this->vlr_orcamento_previsto = $plano->vlr_orcamento_previsto;
-        $this->bln_status = $plano->bln_status;
-        $this->cod_ppa = $plano->cod_ppa;
-        $this->cod_loa = $plano->cod_loa;
-
-        $this->showModal = true;
     }
 
     public function save()
     {
+        $messages = [
+            'dsc_plano_de_acao.required' => 'A descrição do plano é obrigatória.',
+            'cod_objetivo.required' => 'Vincule o plano a um objetivo estratégico.',
+            'cod_tipo_execucao.required' => 'Defina o tipo de execução (Projeto, Atividade, etc).',
+            'dte_inicio.required' => 'A data de início é obrigatória.',
+            'dte_fim.required' => 'A data de término é obrigatória.',
+            'dte_fim.after_or_equal' => 'A data final não pode ser anterior à data inicial.',
+        ];
+
         $this->validate([
             'dsc_plano_de_acao' => 'required|string|max:255',
             'cod_objetivo' => 'required|exists:tab_objetivo,cod_objetivo',
@@ -220,7 +189,8 @@ class ListarPlanos extends Component
             'dte_inicio' => 'required|date',
             'dte_fim' => 'required|date|after_or_equal:dte_inicio',
             'vlr_orcamento_previsto' => 'nullable|numeric|min:0',
-        ]);
+        ], $messages);
+
 
         $data = [
             'dsc_plano_de_acao' => $this->dsc_plano_de_acao,
