@@ -529,19 +529,21 @@
                                     @error('editResponsaveis') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                                 </div>
 
-                                {{-- Tipo --}}
-                                <div class="col-12">
-                                    <label class="form-label text-muted small text-uppercase fw-bold">Tipo de Bloco</label>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        @foreach(\App\Models\ActionPlan\Entrega::TIPO_OPTIONS as $key => $info)
-                                            <label class="notion-type-option {{ $editTipo === $key ? 'active' : '' }}">
-                                                <input type="radio" wire:model="editTipo" value="{{ $key }}" class="d-none">
-                                                <i class="bi bi-{{ $info['icon'] }} me-1"></i>
-                                                {{ $info['label'] }}
-                                            </label>
-                                        @endforeach
+                                {{-- Tipo (Omitido na criação conforme solicitação) --}}
+                                @if($editEntregaId)
+                                    <div class="col-12">
+                                        <label class="form-label text-muted small text-uppercase fw-bold">Tipo de Bloco</label>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            @foreach(\App\Models\ActionPlan\Entrega::TIPO_OPTIONS as $key => $info)
+                                                <label class="notion-type-option {{ $editTipo === $key ? 'active' : '' }}">
+                                                    <input type="radio" wire:model="editTipo" value="{{ $key }}" class="d-none">
+                                                    <i class="bi bi-{{ $info['icon'] }} me-1"></i>
+                                                    {{ $info['label'] }}
+                                                </label>
+                                            @endforeach
+                                        </div>
                                     </div>
-                                </div>
+                                @endif
                             </div>
                         </div>
                         <div class="modal-footer border-0 p-4 pt-0">
