@@ -1,32 +1,37 @@
 <div class="notion-board" wire:poll.5s="poll">
-    {{-- Header --}}
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <div>
+    {{-- Header Interno --}}
+    <div class="leads-header d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
                 <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1">
+                    <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('planos.index') }}" class="text-decoration-none">Planos de Ação</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Entregas</li>
                     </ol>
                 </nav>
+            </div>
+            <div class="d-flex align-items-center gap-2">
                 <h2 class="h4 fw-bold mb-0 d-flex align-items-center gap-2">
                     <span class="notion-icon">📋</span>
                     {{ $plano->dsc_plano_de_acao }}
                 </h2>
-                <div class="d-flex align-items-center gap-2 mt-1">
-                    <span class="text-muted small fw-medium">
-                        <i class="bi bi-building me-1"></i>{{ $plano->organizacao?->nom_organizacao }}
-                    </span>
-                </div>
             </div>
+            <div class="d-flex align-items-center gap-2 mt-1">
+                <span class="text-muted small fw-medium">
+                    <i class="bi bi-building me-1"></i>{{ $plano->organizacao?->nom_organizacao }}
+                </span>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
             @can('update', $plano)
                 <button wire:click="openEditModal" class="btn btn-primary gradient-theme-btn">
                     <i class="bi bi-plus-lg me-2"></i>Nova Entrega
                 </button>
             @endcan
         </div>
-    </x-slot>
+    </div>
 
     {{-- Seção Educativa: O que são Entregas/Marcos --}}
     <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
@@ -437,118 +442,189 @@
         </div>
     @endif
 
-    {{-- Modal de Edição Completa --}}
+    {{-- Modal Premium de Nova/Editar Entrega --}}
     @if($showEditModal)
-        <div class="modal fade show" tabindex="-1" style="display: block; background: rgba(0,0,0,0.5);" wire:click.self="closeEditModal">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg notion-modal">
-                    <div class="modal-header gradient-theme text-white border-0">
-                        <h5 class="modal-title fw-bold">
-                            {{ $editEntregaId ? 'Editar Entrega' : 'Nova Entrega' }}
-                        </h5>
+        <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.5); z-index: 1055;" wire:click.self="closeEditModal">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                    
+                    {{-- Header Premium --}}
+                    <div class="modal-header gradient-theme-header text-white border-0 py-3 px-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="icon-circle-mini bg-white bg-opacity-25 text-white">
+                                <i class="bi bi-{{ $editEntregaId ? 'pencil-square' : 'plus-circle' }}"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0">{{ $editEntregaId ? 'Editar Entrega' : 'Nova Entrega' }}</h5>
+                                <p class="mb-0 small text-white-50">Gerenciamento operacional do plano</p>
+                            </div>
+                        </div>
                         <button type="button" class="btn-close btn-close-white" wire:click="closeEditModal"></button>
                     </div>
+
                     <form wire:submit.prevent="salvarEntrega">
-                        <div class="modal-body p-4">
-                            {{-- Título --}}
-                            <div class="mb-4">
-                                <label class="form-label text-muted small text-uppercase fw-bold">Título da Entrega</label>
-                                <textarea 
-                                    wire:model="editTitulo" 
-                                    class="form-control @error('editTitulo') is-invalid @enderror" 
-                                    rows="2"
-                                    placeholder="Descreva a entrega..."
-                                ></textarea>
-                                @error('editTitulo') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
+                        <div class="modal-body p-4 bg-white">
+                            <div class="row g-4">
+                                
+                                {{-- Coluna Principal: Definição --}}
+                                <div class="col-lg-8">
+                                    <div class="card border-0 bg-light rounded-4 h-100">
+                                        <div class="card-body p-4">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">O que será entregue?</h6>
+                                            
+                                            {{-- Título --}}
+                                            <div class="mb-4">
+                                                <label class="form-label text-muted small text-uppercase fw-bold">Descrição da Entrega <span class="text-danger">*</span></label>
+                                                <textarea 
+                                                    wire:model="editTitulo" 
+                                                    class="form-control form-control-lg bg-white border-0 shadow-sm @error('editTitulo') is-invalid @enderror" 
+                                                    rows="3"
+                                                    placeholder="Descreva a atividade ou marco de entrega..."
+                                                ></textarea>
+                                                @error('editTitulo') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                            </div>
 
-                            <div class="row g-3">
-                                {{-- Status --}}
-                                <div class="col-md-6">
-                                    <label class="form-label text-muted small text-uppercase fw-bold">Status</label>
-                                    <select wire:model="editStatus" class="form-select @error('editStatus') is-invalid @enderror">
-                                        @foreach(\App\Models\ActionPlan\Entrega::STATUS_OPTIONS as $status)
-                                            <option value="{{ $status }}">{{ $status }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('editStatus') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
+                                            <div class="row g-3">
+                                                {{-- Status --}}
+                                                <div class="col-md-6">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Status Atual</label>
+                                                    <div class="input-group shadow-sm" x-data="{ status: @entangle('editStatus') }">
+                                                        <span class="input-group-text border-0 text-white" 
+                                                              :class="{
+                                                                  'bg-secondary': ['Não Iniciado', 'Suspenso', 'Cancelado'].includes(status),
+                                                                  'bg-primary': status == 'Em Andamento',
+                                                                  'bg-success': status == 'Concluído',
+                                                                  'bg-danger': status == 'Atrasado'
+                                                              }">
+                                                            <i class="bi bi-activity"></i>
+                                                        </span>
+                                                        <select wire:model.live="editStatus" class="form-select bg-white border-0 fw-bold">
+                                                            @foreach(\App\Models\ActionPlan\Entrega::STATUS_OPTIONS as $status)
+                                                                <option value="{{ $status }}">{{ $status }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                </div>
 
-                                {{-- Prioridade --}}
-                                <div class="col-md-6">
-                                    <label class="form-label text-muted small text-uppercase fw-bold">Prioridade</label>
-                                    <select wire:model="editPrioridade" class="form-select @error('editPrioridade') is-invalid @enderror">
-                                        @foreach(\App\Models\ActionPlan\Entrega::PRIORIDADE_OPTIONS as $key => $info)
-                                            <option value="{{ $key }}">{{ $info['label'] }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('editPrioridade') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
+                                                {{-- Prioridade --}}
+                                                <div class="col-md-6">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Prioridade</label>
+                                                    <div class="input-group shadow-sm">
+                                                        <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-flag"></i></span>
+                                                        <select wire:model="editPrioridade" class="form-select bg-white border-0 fw-bold">
+                                                            @foreach(\App\Models\ActionPlan\Entrega::PRIORIDADE_OPTIONS as $key => $info)
+                                                                <option value="{{ $key }}">{{ $info['label'] }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                </div>
 
-                                {{-- Prazo --}}
-                                <div class="col-md-6">
-                                    <label class="form-label text-muted small text-uppercase fw-bold">Prazo</label>
-                                    <input 
-                                        type="date" 
-                                        wire:model="editPrazo" 
-                                        class="form-control @error('editPrazo') is-invalid @enderror"
-                                    >
-                                    @error('editPrazo') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-
-                                {{-- Responsáveis (Múltiplo) --}}
-                                <div class="col-12">
-                                    <label class="form-label text-muted small text-uppercase fw-bold">Responsáveis</label>
-                                    <div class="card bg-light border-0">
-                                        <div class="card-body p-2" style="max-height: 150px; overflow-y: auto;">
-                                            <div class="row g-2">
-                                                @foreach($usuarios as $usuario)
-                                                    <div class="col-md-4 col-sm-6">
-                                                        <div class="form-check">
-                                                            <input 
-                                                                class="form-check-input" 
-                                                                type="checkbox" 
-                                                                value="{{ $usuario->id }}" 
-                                                                id="user-{{ $usuario->id }}"
-                                                                wire:model="editResponsaveis"
-                                                            >
-                                                            <label class="form-check-label small text-truncate w-100" for="user-{{ $usuario->id }}">
-                                                                {{ $usuario->name }}
-                                                            </label>
+                                                {{-- Tipo (Apenas Edição) --}}
+                                                @if($editEntregaId)
+                                                    <div class="col-12 mt-3">
+                                                        <label class="form-label text-muted small text-uppercase fw-bold">Tipo de Bloco</label>
+                                                        <div class="d-flex flex-wrap gap-2">
+                                                            @foreach(\App\Models\ActionPlan\Entrega::TIPO_OPTIONS as $key => $info)
+                                                                <label class="notion-type-option border-0 shadow-sm {{ $editTipo === $key ? 'active shadow-lg' : 'bg-white' }}" style="cursor: pointer; padding: 5px 10px; border-radius: 8px;">
+                                                                    <input type="radio" wire:model="editTipo" value="{{ $key }}" class="d-none">
+                                                                    <i class="bi bi-{{ $info['icon'] }} me-1"></i>
+                                                                    {{ $info['label'] }}
+                                                                </label>
+                                                            @endforeach
                                                         </div>
                                                     </div>
-                                                @endforeach
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
-                                    @error('editResponsaveis') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                                 </div>
 
-                                {{-- Tipo --}}
-                                <div class="col-12">
-                                    <label class="form-label text-muted small text-uppercase fw-bold">Tipo de Bloco</label>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        @foreach(\App\Models\ActionPlan\Entrega::TIPO_OPTIONS as $key => $info)
-                                            <label class="notion-type-option {{ $editTipo === $key ? 'active' : '' }}">
-                                                <input type="radio" wire:model="editTipo" value="{{ $key }}" class="d-none">
-                                                <i class="bi bi-{{ $info['icon'] }} me-1"></i>
-                                                {{ $info['label'] }}
-                                            </label>
-                                        @endforeach
+                                {{-- Coluna Lateral: Prazo e Responsáveis --}}
+                                <div class="col-lg-4">
+                                    {{-- Card Prazo --}}
+                                    <div class="card border-0 bg-light rounded-4 mb-3">
+                                        <div class="card-body p-4">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-calendar-event me-2 text-primary"></i>Cronograma</h6>
+                                            
+                                            <label class="form-label small text-muted fw-bold text-uppercase">Data Limite (Prazo)</label>
+                                            <div class="input-group shadow-sm">
+                                                <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-clock"></i></span>
+                                                <input type="date" wire:model="editPrazo" class="form-control bg-white border-0 fw-bold text-dark">
+                                            </div>
+                                            @error('editPrazo') <div class="text-danger x-small mt-1 text-end">{{ $message }}</div> @enderror
+                                        </div>
+                                    </div>
+
+                                    {{-- Card Responsáveis --}}
+                                    <div class="card border-0 bg-light rounded-4">
+                                        <div class="card-body p-4">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-people me-2 text-primary"></i>Equipe</h6>
+                                            
+                                            <label class="form-label small text-muted fw-bold text-uppercase">Atribuir a:</label>
+                                            <div class="bg-white rounded-3 shadow-sm p-3" style="max-height: 250px; overflow-y: auto;">
+                                                @foreach($usuarios as $usuario)
+                                                    <div class="form-check mb-2">
+                                                        <input 
+                                                            class="form-check-input" 
+                                                            type="checkbox" 
+                                                            value="{{ $usuario->id }}" 
+                                                            id="user-{{ $usuario->id }}"
+                                                            wire:model="editResponsaveis"
+                                                        >
+                                                        <label class="form-check-label small text-dark fw-medium" for="user-{{ $usuario->id }}">
+                                                            {{ $usuario->name }}
+                                                        </label>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                            @error('editResponsaveis') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="modal-footer border-0 p-4 pt-0">
-                            <button type="button" class="btn btn-light px-4" wire:click="closeEditModal">Cancelar</button>
-                            <button type="submit" class="btn btn-primary gradient-theme-btn px-4">
-                                <i class="bi bi-check-lg me-1"></i> Salvar
+
+                        {{-- Footer Premium --}}
+                        <div class="modal-footer border-0 p-4 bg-white rounded-bottom-4 shadow-top-sm">
+                            <button type="button" class="btn btn-light px-4 rounded-pill fw-bold text-muted" wire:click="closeEditModal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow-sm hover-scale">
+                                <i class="bi bi-check-lg me-2"></i>Salvar Entrega
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
+    @endif
+
+    {{-- Success Modal Premium --}}
+    @if($showSuccessModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-primary text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem; background: linear-gradient(135deg, #1B408E 0%, #4361EE 100%) !important;">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-3">Entrega Registrada!</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        A entrega <strong class="text-primary">"{{ $createdDeliverableName }}"</strong><br>
+                        foi vinculada com sucesso ao plano:<br>
+                        <span class="fst-italic text-dark fw-bold">"{{ $plano->dsc_plano_de_acao }}"</span>
+                    </p>
+                    <button wire:click="closeSuccessModal" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-check2-circle me-2"></i>Continuar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        .scale-in-center { animation: scale-in-center 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; }
+        @keyframes scale-in-center { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
     @endif
 
     {{-- Modal de Detalhes (Side Panel) --}}
