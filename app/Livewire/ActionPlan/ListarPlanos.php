@@ -171,6 +171,44 @@ class ListarPlanos extends Component
         }
     }
 
+    public function create()
+    {
+        try {
+            $this->authorize('create', PlanoDeAcao::class);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            $this->dispatch('notify', message: 'Você não tem permissão para criar planos.', style: 'danger');
+            return;
+        }
+
+        $this->resetForm();
+        
+        if (!$this->organizacaoId) {
+            $this->dispatch('notify', message: 'Selecione uma organização no menu superior.', style: 'warning');
+            return;
+        }
+
+        $this->showModal = true;
+    }
+
+    public function edit($id)
+    {
+        $plano = PlanoDeAcao::findOrFail($id);
+        $this->authorize('update', $plano);
+
+        $this->planoId = $id;
+        $this->dsc_plano_de_acao = $plano->dsc_plano_de_acao;
+        $this->cod_objetivo = $plano->cod_objetivo;
+        $this->cod_tipo_execucao = $plano->cod_tipo_execucao;
+        $this->dte_inicio = $plano->dte_inicio?->format('Y-m-d');
+        $this->dte_fim = $plano->dte_fim?->format('Y-m-d');
+        $this->vlr_orcamento_previsto = $plano->vlr_orcamento_previsto;
+        $this->bln_status = $plano->bln_status;
+        $this->cod_ppa = $plano->cod_ppa;
+        $this->cod_loa = $plano->cod_loa;
+
+        $this->showModal = true;
+    }
+
     public function save()
     {
         $messages = [
