@@ -82,20 +82,20 @@
                     </div>
                 </div>
 
-                {{-- Card de Objetivos Estratégicos --}}
+                {{-- Card de Temas Norteadores --}}
                 <div class="col-12">
                     <div class="identity-box shadow-sm border h-100 text-center">
                         <div class="d-flex align-items-center justify-content-center mb-3">
                             <div class="icon-circle-mini bg-warning bg-opacity-10 text-warning me-2"><i class="bi bi-shield-check"></i></div>
-                            <label class="identity-label mb-0">Objetivos Estratégicos Institucionais</label>
+                            <label class="identity-label mb-0">Temas Norteadores Institucionais</label>
                         </div>
                         <div class="d-flex flex-wrap gap-3 mt-2 justify-content-center">
-                            @forelse($objetivosEstrategicos as $obj)
+                            @forelse($temasNorteadores as $obj)
                                 <span class="value-tag-modern shadow-sm border-warning border-opacity-50 py-2 px-4" style="background: rgba(var(--bs-warning-rgb), 0.05); font-size: 1.1rem;">
-                                    <i class="bi bi-check2-circle text-warning me-2"></i> {{ $obj->nom_objetivo_estrategico }}
+                                    <i class="bi bi-check2-circle text-warning me-2"></i> {{ $obj->nom_tema_norteador }}
                                 </span>
                             @empty
-                                <span class="text-muted small italic opacity-50">Objetivos estratégicos não definidos para esta unidade.</span>
+                                <span class="text-muted small italic opacity-50">Temas norteadores não definidos para esta unidade.</span>
                             @endforelse
                         </div>
                     </div>

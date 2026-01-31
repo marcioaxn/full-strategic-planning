@@ -26,7 +26,7 @@ class ListarRelatorios extends Component
     // Dados de Identidade (Disponíveis para a View)
     public $identidade;
     public $valores = [];
-    public $objetivosEstrategicos = [];
+    public $temasNorteadores = [];
 
     public $peiAtivo;
     public $aiEnabled = false;
@@ -96,13 +96,13 @@ class ListarRelatorios extends Component
                 ->orderBy('nom_valor')
                 ->get();
 
-            $this->objetivosEstrategicos = \App\Models\StrategicPlanning\ObjetivoEstrategico::where('cod_pei', $this->peiAtivo->cod_pei)
+            $this->temasNorteadores = \App\Models\StrategicPlanning\TemaNorteador::where('cod_pei', $this->peiAtivo->cod_pei)
                 ->where('cod_organizacao', $this->organizacaoId)
                 ->get();
         } else {
             $this->identidade = null;
             $this->valores = [];
-            $this->objetivosEstrategicos = [];
+            $this->temasNorteadores = [];
         }
     }
 

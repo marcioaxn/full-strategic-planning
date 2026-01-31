@@ -147,12 +147,12 @@
         </div>
 
         <div style="margin-top: 10px;">
-            <strong class="text-primary" style="font-size: 9px; text-transform: uppercase;">Objetivos Estratégicos:</strong>
+            <strong class="text-primary" style="font-size: 9px; text-transform: uppercase;">Temas Norteadores:</strong>
             <div class="tag-container">
-                @forelse($objetivosEstrategicos as $obj)
-                    <span class="tag tag-warning">{{ $obj->nom_objetivo_estrategico }}</span>
+                @forelse($temasNorteadores as $obj)
+                    <span class="tag tag-warning">{{ $obj->nom_tema_norteador }}</span>
                 @empty
-                    <span style="font-style: italic; color: #999; font-size: 9px;">Nenhum objetivo estratégico cadastrado para esta unidade.</span>
+                    <span style="font-style: italic; color: #999; font-size: 9px;">Nenhum tema norteador cadastrado para esta unidade.</span>
                 @endforelse
             </div>
         </div>

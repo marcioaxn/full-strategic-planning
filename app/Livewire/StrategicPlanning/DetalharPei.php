@@ -5,7 +5,7 @@ namespace App\Livewire\StrategicPlanning;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\StrategicPlanning\Objetivo;
-use App\Models\StrategicPlanning\ObjetivoEstrategico;
+use App\Models\StrategicPlanning\TemaNorteador;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -29,13 +29,13 @@ class DetalharPei extends Component
         // Contagem de Objetivos BSC (vinculados a perspectivas)
         $objetivosBscCount = Objetivo::whereIn('cod_perspectiva', $perspectivasIds)->count();
 
-        // Contagem de Objetivos Estratégicos (vinculados diretamente ao PEI)
-        $objetivosEstrategicosCount = ObjetivoEstrategico::where('cod_pei', $this->pei->cod_pei)->count();
+        // Contagem de Temas Norteadores (vinculados diretamente ao PEI)
+        $temasNorteadoresCount = TemaNorteador::where('cod_pei', $this->pei->cod_pei)->count();
         
         $this->estatisticas = [
             'qtd_perspectivas' => $perspectivasIds->count(),
             'qtd_objetivos_bsc' => $objetivosBscCount,
-            'qtd_objetivos_estrategicos' => $objetivosEstrategicosCount,
+            'qtd_temas_norteadores' => $temasNorteadoresCount,
             'qtd_valores' => $this->pei->valores->count(),
         ];
     }
