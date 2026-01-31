@@ -3,7 +3,7 @@
 namespace App\Livewire\StrategicPlanning;
 
 use App\Models\StrategicPlanning\PEI;
-use App\Models\StrategicPlanning\ObjetivoEstrategico;
+use App\Models\StrategicPlanning\TemaNorteador;
 use App\Models\Organization;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -11,7 +11,7 @@ use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Session;
 
 #[Layout('layouts.app')]
-class GerenciarObjetivosEstrategicos extends Component
+class GerenciarTemasNorteadores extends Component
 {
     use WithPagination;
 
@@ -22,8 +22,8 @@ class GerenciarObjetivosEstrategicos extends Component
     // Campos do Modal
     public $showModal = false;
     public bool $showDeleteModal = false;
-    public $objetivoId;
-    public $nom_objetivo_estrategico;
+    public $temaId;
+    public $nom_tema_norteador;
     public $cod_organizacao;
     public bool $aiEnabled = false;
     public $aiSuggestion = '';
@@ -56,7 +56,7 @@ class GerenciarObjetivosEstrategicos extends Component
         $org = Organization::find($this->organizacaoId);
         $this->aiSuggestion = 'Pensando...';
         
-        $prompt = "Sugerir 3 grandes Objetivos Estratégicos de alto nível para a organização: '{$org->nom_organizacao}'. 
+        $prompt = "Sugerir 3 Temas Norteadores (Objetivos Estratégicos de alto nível) para a organização: '{$org->nom_organizacao}'. 
         Responda OBRIGATORIAMENTE em formato JSON puro, contendo um array de objetos com o campo 'nome'.";
         
         $response = $aiService->suggest($prompt);
@@ -72,7 +72,7 @@ class GerenciarObjetivosEstrategicos extends Component
 
     public function aplicarSugestao($nome)
     {
-        $this->nom_objetivo_estrategico = $nome;
+        $this->nom_tema_norteador = $nome;
         $this->save();
         
         // Remove da lista
@@ -121,9 +121,9 @@ class GerenciarObjetivosEstrategicos extends Component
 
     public function edit($id)
     {
-        $obj = ObjetivoEstrategico::findOrFail($id);
-        $this->objetivoId = $id;
-        $this->nom_objetivo_estrategico = $obj->nom_objetivo_estrategico;
+        $obj = TemaNorteador::findOrFail($id);
+        $this->temaId = $id;
+        $this->nom_tema_norteador = $obj->nom_tema_norteador;
         $this->cod_organizacao = $obj->cod_organizacao;
         $this->showModal = true;
     }
@@ -131,7 +131,7 @@ class GerenciarObjetivosEstrategicos extends Component
     public function save()
     {
         $this->validate([
-            'nom_objetivo_estrategico' => 'required|string|min:5|max:1000',
+            'nom_tema_norteador' => 'required|string|min:5|max:1000',
             'cod_organizacao' => 'required|exists:tab_organizacoes,cod_organizacao',
         ]);
 
@@ -140,18 +140,18 @@ class GerenciarObjetivosEstrategicos extends Component
             return;
         }
 
-        ObjetivoEstrategico::updateOrCreate(
-            ['cod_objetivo_estrategico' => $this->objetivoId],
+        TemaNorteador::updateOrCreate(
+            ['cod_tema_norteador' => $this->temaId],
             [
-                'nom_objetivo_estrategico' => $this->nom_objetivo_estrategico,
+                'nom_tema_norteador' => $this->nom_tema_norteador,
                 'cod_pei' => $this->peiAtivo->cod_pei,
                 'cod_organizacao' => $this->cod_organizacao,
             ]
         );
 
         $alert = \App\Services\NotificationService::sendMentorAlert(
-            $this->objetivoId ? 'Objetivo Atualizado!' : 'Objetivo Criado!',
-            'A meta institucional foi registrada com sucesso.',
+            $this->temaId ? 'Tema Norteador Atualizado!' : 'Tema Norteador Criado!',
+            'O tema norteador foi registrado com sucesso.',
             'bi-shield-check'
         );
         $this->dispatch('mentor-notification', ...$alert);
@@ -162,19 +162,19 @@ class GerenciarObjetivosEstrategicos extends Component
 
     public function confirmDelete($id)
     {
-        $this->objetivoId = $id;
+        $this->temaId = $id;
         $this->showDeleteModal = true;
     }
 
     public function delete()
     {
-        if ($this->objetivoId) {
-            ObjetivoEstrategico::findOrFail($this->objetivoId)->delete();
-            $this->objetivoId = null;
+        if ($this->temaId) {
+            TemaNorteador::findOrFail($this->temaId)->delete();
+            $this->temaId = null;
             $this->showDeleteModal = false;
             
             $alert = \App\Services\NotificationService::sendMentorAlert(
-                'Objetivo Removido',
+                'Tema Norteador Removido',
                 'O item foi excluído do planejamento institucional.',
                 'bi-trash',
                 'warning'
@@ -185,8 +185,8 @@ class GerenciarObjetivosEstrategicos extends Component
 
     public function resetForm()
     {
-        $this->objetivoId = null;
-        $this->nom_objetivo_estrategico = '';
+        $this->temaId = null;
+        $this->nom_tema_norteador = '';
         $this->cod_organizacao = $this->organizacaoId;
         $this->showModal = false;
         $this->showDeleteModal = false;
@@ -195,10 +195,10 @@ class GerenciarObjetivosEstrategicos extends Component
 
     public function render()
     {
-        $query = ObjetivoEstrategico::query()
+        $query = TemaNorteador::query()
             ->with(['organizacao', 'pei'])
             ->when($this->search, function($q) {
-                $q->where('nom_objetivo_estrategico', 'ilike', '%' . $this->search . '%');
+                $q->where('nom_tema_norteador', 'ilike', '%' . $this->search . '%');
             })
             ->when($this->organizacaoId, function($q) {
                 $q->where('cod_organizacao', $this->organizacaoId);
@@ -207,8 +207,8 @@ class GerenciarObjetivosEstrategicos extends Component
                 $q->where('cod_pei', $this->peiAtivo->cod_pei);
             });
 
-        return view('livewire.p-e-i.gerenciar-objetivos-estrategicos', [
-            'objetivos' => $query->latest()->paginate(10),
+        return view('livewire.p-e-i.gerenciar-temas-norteadores', [
+            'temas' => $query->latest()->paginate(10),
             'organizacoes' => Organization::all()
         ]);
     }

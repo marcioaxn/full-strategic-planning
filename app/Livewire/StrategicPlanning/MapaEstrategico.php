@@ -7,7 +7,7 @@ use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\StrategicPlanning\MissaoVisaoValores;
 use App\Models\StrategicPlanning\Valor;
 use App\Models\StrategicPlanning\Objetivo;
-use App\Models\StrategicPlanning\ObjetivoEstrategico;
+use App\Models\StrategicPlanning\TemaNorteador;
 use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\Organization;
 use Livewire\Attributes\Layout;
@@ -23,7 +23,7 @@ class MapaEstrategico extends Component
     public $organizacaoNome;
     public $missaoVisao;
     public $valores = [];
-    public $objetivosEstrategicos = [];
+    public $temasNorteadores = [];
     public $grausSatisfacao = [];
 
     // Propriedades para Modal de Memória de Cálculo
@@ -199,25 +199,16 @@ class MapaEstrategico extends Component
             ->where('cod_organizacao', $this->organizacaoId)
             ->first();
 
-                $this->valores = Valor::where('cod_pei', $this->peiAtivo->cod_pei)
+        $this->valores = Valor::where('cod_pei', $this->peiAtivo->cod_pei)
+            ->where('cod_organizacao', $this->organizacaoId)
+            ->orderBy('nom_valor')
+            ->get();
 
-                    ->where('cod_organizacao', $this->organizacaoId)
-
-                    ->orderBy('nom_valor')
-
-                    ->get();
-
-        
-
-                $this->objetivosEstrategicos = ObjetivoEstrategico::where('cod_pei', $this->peiAtivo->cod_pei)
-
-                    ->where('cod_organizacao', $this->organizacaoId)
-
-                    ->orderBy('created_at', 'asc')
-
-                    ->get();
-
-            }
+        $this->temasNorteadores = TemaNorteador::where('cod_pei', $this->peiAtivo->cod_pei)
+            ->where('cod_organizacao', $this->organizacaoId)
+            ->orderBy('created_at', 'asc')
+            ->get();
+    }
 
     public function getCorPorPercentual($percentual): string
     {

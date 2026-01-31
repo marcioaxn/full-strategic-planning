@@ -210,8 +210,8 @@
                             'icon' => 'bullseye'
                         ],
                         [
-                            'label' => __('Objetivos Estratégicos'),
-                            'route' => 'objetivos-estrategicos.index',
+                            'label' => __('Temas Norteadores'),
+                            'route' => 'temas-norteadores.index',
                             'icon' => 'shield-check'
                         ],
                         [

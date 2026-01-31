@@ -90,7 +90,7 @@
             </div>
         </div>
 
-        <!-- Card Objetivos Estratégicos -->
+        <!-- Card Temas Norteadores -->
         <div class="col-md-6 col-lg">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-3">
@@ -99,11 +99,11 @@
                             <i class="bi bi-shield-check text-danger fs-5"></i>
                         </div>
                         <div>
-                            <h6 class="card-subtitle text-muted mb-1 small">Objetivos PEI</h6>
-                            <h4 class="card-title mb-0 fw-bold">{{ $estatisticas['qtd_objetivos_estrategicos'] ?? 0 }}</h4>
+                            <h6 class="card-subtitle text-muted mb-1 small">Temas Norteadores</h6>
+                            <h4 class="card-title mb-0 fw-bold">{{ $estatisticas['qtd_temas_norteadores'] ?? 0 }}</h4>
                         </div>
                     </div>
-                    <p class="text-muted mt-2 mb-0" style="font-size: 0.7rem;">Metas institucionais</p>
+                    <p class="text-muted mt-2 mb-0" style="font-size: 0.7rem;">Diretrizes institucionais</p>
                 </div>
             </div>
         </div>

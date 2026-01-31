@@ -138,7 +138,7 @@
                             'type' => 'identidade' // Mantemos o ID interno por compatibilidade de rota, mas o conceito muda
                         ],
                         [
-                            'title' => 'Objetivos Estratégicos',
+                            'title' => 'Objetivos Táticos (BSC)',
                             'desc' => 'Status por perspectiva.',
                             'icon' => 'bi-bullseye',
                             'color' => 'info',

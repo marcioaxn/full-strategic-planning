@@ -46,7 +46,7 @@ Route::middleware([
     Route::get('/pei/mapa', \App\Livewire\StrategicPlanning\MapaEstrategico::class)->name('pei.mapa');
     Route::get('/objetivos', \App\Livewire\StrategicPlanning\ListarObjetivos::class)->name('objetivos.index');
     Route::get('/objetivos/{id}/detalhes', \App\Livewire\StrategicPlanning\DetalharObjetivo::class)->name('objetivos.detalhes');
-    Route::get('/objetivos-estrategicos', \App\Livewire\StrategicPlanning\GerenciarObjetivosEstrategicos::class)->name('objetivos-estrategicos.index');
+    Route::get('/temas-norteadores', \App\Livewire\StrategicPlanning\GerenciarTemasNorteadores::class)->name('temas-norteadores.index');
     Route::get('/objetivos/{objetivoId}/futuro', \App\Livewire\StrategicPlanning\GerenciarFuturoAlmejado::class)->name('objetivos.futuro');
     
     // Entregas (Board Style)
