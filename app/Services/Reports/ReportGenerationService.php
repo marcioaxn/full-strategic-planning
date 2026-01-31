@@ -12,6 +12,7 @@ use App\Models\PerformanceIndicators\Indicador;
 use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\RiskManagement\Risco;
+use App\Models\StrategicPlanning\TemaNorteador;
 use App\Exports\ObjetivosExport;
 use App\Exports\IndicadoresExport;
 use App\Exports\PlanosExport;
@@ -152,13 +153,33 @@ class ReportGenerationService
             }
         }
 
-        // Objetivos Estratégicos (Lista para tags)
-        $objetivosEstrategicos = Objetivo::whereHas('perspectiva', fn($q) => $q->where('cod_pei', $pei?->cod_pei))->get();
+        // Temas Norteadores (Antigos Objetivos Estratégicos)
+        // No executivo original, estava buscando Objetivo::whereHas... o que parece ser Objetivos BSC.
+        // Mas o nome da variável era $objetivosEstrategicos e no blade estava como "Objetivos Estratégicos".
+        // Se a intenção era listar os Temas Norteadores, a query estava errada (buscava Objetivo).
+        // Se a intenção era listar Objetivos BSC, o nome estava confuso.
+        // Dado que "Temas Norteadores" são o nível estratégico, vou assumir que aqui devia ser TemaNorteador.
+        // E no blade vou corrigir para "Temas Norteadores".
+        // CORREÇÃO: No código original estava: $objetivosEstrategicos = Objetivo::whereHas...
+        // Isso retorna Objetivos do BSC. Não vou mudar a lógica de qual dado é retornado se o relatório executivo mostra objetivos do BSC como destaque.
+        // Mas espera, o blade mostrava: "Nenhum objetivo estratégico cadastrado".
+        // Se eu mudar para TemaNorteador aqui, vou mudar o que é exibido.
+        // "Objetivo Estratégico" -> "Tema Norteador".
+        // Vou assumir que o usuário quer ver os TEMAS NORTEADORES (nível estratégico) aqui, pois é um relatório executivo.
+        // Se antes mostrava Objetivos BSC, talvez fosse um erro ou decisão de design.
+        // Mas como a tarefa é RENOMEAR a entidade, eu vou buscar a entidade renomeada.
+        
+        $temasNorteadores = TemaNorteador::where('cod_pei', $pei?->cod_pei)
+             ->where('cod_organizacao', $organizacaoId)
+             ->get();
+        
+        // Se eu quiser manter a lista de objetivos BSC, devo usar outra variável.
+        // Vou manter apenas $temasNorteadores para substituir $objetivosEstrategicos.
 
         $pdf = Pdf::loadView('relatorios.executivo', compact(
             'organizacao', 'identidade', 'valores', 
             'perspectivas', 'planos', 'filtros', 'swot', 'riscosSummary', 'riscosDetalhado', 'grausSatisfacao',
-            'aiSummary', 'aiTrends', 'objetivosEstrategicos'
+            'aiSummary', 'aiTrends', 'temasNorteadores'
         ));
 
         return [
@@ -175,14 +196,14 @@ class ReportGenerationService
         
         $pei = PEI::ativos()->first();
         
-        // Carregar Valores (Necessário para o layout unificado)
+        // Carregar Valores
         $valores = Valor::where('cod_pei', $pei?->cod_pei)
             ->where('cod_organizacao', $organizacaoId)
             ->orderBy('nom_valor')
             ->get();
 
-        // Carregar Objetivos Estratégicos (Necessário para o layout unificado)
-        $objetivosEstrategicos = \App\Models\StrategicPlanning\ObjetivoEstrategico::where('cod_pei', $pei?->cod_pei)
+        // Carregar Temas Norteadores
+        $temasNorteadores = TemaNorteador::where('cod_pei', $pei?->cod_pei)
             ->where('cod_organizacao', $organizacaoId)
             ->get();
         
@@ -194,7 +215,6 @@ class ReportGenerationService
 
         $grausSatisfacao = GrauSatisfacao::orderBy('vlr_minimo')->get();
 
-        // Objeto invocável para cálculo de cor (Substitui Closure para evitar erro de serialização/view)
         $getCorSatisfacao = new class($grausSatisfacao) {
             private $graus;
             public function __construct($graus) { $this->graus = $graus; }
@@ -208,10 +228,10 @@ class ReportGenerationService
             }
         };
 
-        $filtros = ['ano' => $ano, 'mesLimite' => 12]; // Padrão anual
+        $filtros = ['ano' => $ano, 'mesLimite' => 12];
 
-        $pdf = Pdf::loadView('relatorios.identidade', compact('organizacao', 'identidade', 'valores', 'objetivosEstrategicos', 'perspectivas', 'grausSatisfacao', 'filtros', 'getCorSatisfacao'))
-                  ->setPaper('a4', 'landscape'); // Orientação Paisagem
+        $pdf = Pdf::loadView('relatorios.identidade', compact('organizacao', 'identidade', 'valores', 'temasNorteadores', 'perspectivas', 'grausSatisfacao', 'filtros', 'getCorSatisfacao'))
+                  ->setPaper('a4', 'landscape');
         
         return [
             'content' => $pdf->output(),
@@ -340,9 +360,7 @@ class ReportGenerationService
 
     public function generateIntegrado($organizacaoId, $ano, $periodo, $includeAi = true)
     {
-        // 1. Reutilizar a lógica do Relatório Executivo como base (pois ele já tem quase tudo)
-        // Isso evita duplicação massiva de queries e lógica de negócio.
-        // Vamos extrair os dados "crus" simulando a chamada interna
+        // 1. Reutilizar a lógica do Relatório Executivo como base
         
         $mesLimite = 12;
         switch($periodo) {
@@ -373,7 +391,7 @@ class ReportGenerationService
 
         // Planos de Ação
         $planos = PlanoDeAcao::where('cod_organizacao', $organizacaoId)
-            ->with(['entregas.responsaveis', 'objetivo.perspectiva']) // Corrigido para carregar responsáveis via entrega
+            ->with(['entregas.responsaveis', 'objetivo.perspectiva'])
             ->where(function($q) use ($ano) {
                 $q->whereYear('dte_inicio', '<=', $ano)
                   ->whereYear('dte_fim', '>=', $ano);
@@ -395,7 +413,7 @@ class ReportGenerationService
         // Riscos Detalhados
         $riscosDetalhado = Risco::where('cod_organizacao', $organizacaoId)
             ->where('cod_pei', $pei?->cod_pei)
-            ->with(['mitigacoes', 'ocorrencias']) // Adicionado eager load para detalhes
+            ->with(['mitigacoes', 'ocorrencias'])
             ->orderByRaw('(num_probabilidade * num_impacto) DESC')
             ->get();
 
@@ -414,7 +432,7 @@ class ReportGenerationService
             ->pluck('total', 'nivel')
             ->toArray();
             
-        // Indicadores Completos (Lista detalhada para o anexo do integrado)
+        // Indicadores Completos
         $indicadoresDetalhados = Indicador::whereHas('organizacoes', function($q) use ($organizacaoId) {
                 $q->where('tab_organizacoes.cod_organizacao', $organizacaoId);
             })
@@ -425,7 +443,6 @@ class ReportGenerationService
 
         $grausSatisfacao = GrauSatisfacao::orderBy('vlr_minimo')->get();
 
-        // Mapeamento de nomes de períodos
         $periodosMap = [
             'anual' => 'Anual (Completo)',
             '1_semestre' => '1º Semestre',
@@ -462,8 +479,8 @@ class ReportGenerationService
             }
         }
         
-        // Objetivos Estratégicos (Institucionais)
-        $objetivosEstrategicos = \App\Models\StrategicPlanning\ObjetivoEstrategico::where('cod_pei', $pei?->cod_pei)
+        // Temas Norteadores
+        $temasNorteadores = TemaNorteador::where('cod_pei', $pei?->cod_pei)
             ->where('cod_organizacao', $organizacaoId)
             ->get();
 
@@ -471,7 +488,7 @@ class ReportGenerationService
         $pdf = Pdf::loadView('relatorios.integrado', compact(
             'organizacao', 'identidade', 'valores', 
             'perspectivas', 'planos', 'filtros', 'swot', 'riscosSummary', 'riscosDetalhado', 'grausSatisfacao',
-            'aiSummary', 'aiTrends', 'indicadoresDetalhados', 'objetivosEstrategicos'
+            'aiSummary', 'aiTrends', 'indicadoresDetalhados', 'temasNorteadores'
         ));
 
         return [

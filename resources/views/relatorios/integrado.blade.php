@@ -181,16 +181,16 @@
         </tr>
     </table>
 
-    <!-- Objetivos Estratégicos (Card Dedicado - Arredondado) -->
-    @if($objetivosEstrategicos->isNotEmpty())
+    <!-- Temas Norteadores (Card Dedicado - Arredondado) -->
+    @if($temasNorteadores->isNotEmpty())
         <table style="width: 100%; margin-bottom: 25px; border-collapse: separate; border-spacing: 0; border: none;" border="0" cellpadding="0" cellspacing="0">
             <tr>
                 <td style="background: #ffffff; border-left: 4px solid #1B408E; border-top: 1px solid #eeeeee; border-right: 1px solid #eeeeee; border-bottom: 1px solid #eeeeee; border-radius: 6px; padding: 15px; vertical-align: top; text-align: center;">
-                    <strong style="color: #1B408E; margin-bottom: 25px; padding-bottom: 5px; display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">OBJETIVOS ESTRATÉGICOS</strong>
+                    <strong style="color: #1B408E; margin-bottom: 25px; padding-bottom: 5px; display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">TEMAS NORTEADORES</strong>
                     <div style="line-height: 2.2; text-align: center; margin-top: 10px;">
-                        @foreach($objetivosEstrategicos as $objEst)
+                        @foreach($temasNorteadores as $objEst)
                             <span class="badge" style="background: #fff; color: #1B408E; margin: 4px 8px; font-weight: bold; border: 1px solid #1B408E; padding: 5px 12px; font-size: 9px;">
-                                {{ $objEst->nom_objetivo_estrategico }}
+                                {{ $objEst->nom_tema_norteador }}
                             </span>
                         @endforeach
                     </div>

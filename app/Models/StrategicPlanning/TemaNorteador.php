@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable;
 
-class ObjetivoEstrategico extends Model implements Auditable
+class TemaNorteador extends Model implements Auditable
 {
     use HasFactory, HasUuids, SoftDeletes;
     use \OwenIt\Auditing\Auditable;
@@ -18,12 +18,12 @@ class ObjetivoEstrategico extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_objetivo_estrategico';
+    protected $table = 'strategic_planning.tab_tema_norteador';
 
     /**
      * Chave primária
      */
-    protected $primaryKey = 'cod_objetivo_estrategico';
+    protected $primaryKey = 'cod_tema_norteador';
 
     /**
      * Tipo da chave primária
@@ -39,7 +39,7 @@ class ObjetivoEstrategico extends Model implements Auditable
      * Atributos mass assignable
      */
     protected $fillable = [
-        'nom_objetivo_estrategico',
+        'nom_tema_norteador',
         'cod_pei',
         'cod_organizacao',
     ];
