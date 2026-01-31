@@ -1034,4 +1034,34 @@
             </x-danger-button>
         </x-slot>
     </x-confirmation-modal>
+
+    {{-- Success Modal Premium --}}
+    @if($showSuccessModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-success text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem;">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-3">Sucesso!</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        O <strong class="text-success">{{ $createdPlanType }}</strong><br>
+                        <span class="fst-italic text-dark">"{{ $createdPlanName }}"</span><br>
+                        foi gravado com sucesso.
+                    </p>
+                    <button wire:click="closeSuccessModal" class="btn btn-success gradient-theme-btn px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-check2-circle me-2"></i>Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        .scale-in-center { animation: scale-in-center 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; }
+        @keyframes scale-in-center { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
+    @endif
 </div>

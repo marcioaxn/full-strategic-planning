@@ -46,6 +46,11 @@ class ListarPlanos extends Component
     public bool $aiEnabled = false;
     public $aiSuggestion = '';
 
+    // Success Modal Properties
+    public bool $showSuccessModal = false;
+    public $createdPlanName = '';
+    public $createdPlanType = '';
+
     // Listas auxiliares
     public $objetivos = [];
     public $tiposExecucao = [];
@@ -76,6 +81,13 @@ class ListarPlanos extends Component
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
         $this->tiposExecucao = TipoExecucao::orderBy('dsc_tipo_execucao')->get();
         $this->filtroAno = Session::get('ano_selecionado', now()->year);
+    }
+
+    public function closeSuccessModal()
+    {
+        $this->showSuccessModal = false;
+        $this->createdPlanName = '';
+        $this->createdPlanType = '';
     }
 
     public function pedirAjudaIA()
@@ -254,16 +266,20 @@ class ListarPlanos extends Component
 
         if ($this->planoId) {
             PlanoDeAcao::findOrFail($this->planoId)->update($data);
-            $msg = 'Plano de ação atualizado com sucesso!';
         } else {
             PlanoDeAcao::create($data);
-            $msg = 'Plano de ação criado com sucesso!';
         }
 
+        // Capture details for success modal before resetting
+        $tipo = TipoExecucao::find($this->cod_tipo_execucao)->dsc_tipo_execucao ?? 'Item';
+        $this->createdPlanType = $tipo;
+        $this->createdPlanName = $this->dsc_plano_de_acao;
+        
         $this->showModal = false;
         $this->resetForm();
-        session()->flash('message', $msg);
-        session()->flash('style', 'success');
+        
+        // Show success modal instead of flash message
+        $this->showSuccessModal = true;
     }
 
     public function confirmDelete($id)
