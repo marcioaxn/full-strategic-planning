@@ -369,7 +369,9 @@
                 removeNotification(id) {
                     this.notifications = this.notifications.filter(n => n.id !== id);
                 }
-            }" @mentor-notification.window="addNotification($event.detail)">
+            }" 
+            @mentor-notification.window="addNotification($event.detail)"
+            @notify.window="addNotification({ title: 'Aviso', message: $event.detail.message, type: $event.detail.style, icon: 'bi-info-circle' })">
                 <template x-for="n in notifications" :key="n.id">
                     <div class="mentor-toast" 
                          :class="n.type || 'success'" 
