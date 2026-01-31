@@ -19,6 +19,7 @@ class ListarLogs extends Component
     public $filtroEvento = '';
     public $filtroUsuario = '';
     public $filtroModel = '';
+    public $filtroId = '';
     public $dataInicio;
     public $dataFim;
 
@@ -29,6 +30,7 @@ class ListarLogs extends Component
         'filtroEvento' => ['except' => ''],
         'filtroUsuario' => ['except' => ''],
         'filtroModel' => ['except' => ''],
+        'filtroId' => ['except' => ''],
         'page' => ['except' => 1],
     ];
 
@@ -37,13 +39,20 @@ class ListarLogs extends Component
         if (!auth()->user()->isSuperAdmin()) {
             abort(403);
         }
-        $this->dataInicio = now()->subDays(7)->format('Y-m-d');
-        $this->dataFim = now()->format('Y-m-d');
+
+        // Se estiver filtrando por um ID específico (ex: histórico de um plano), limpamos datas padrão
+        if ($this->filtroId) {
+            $this->dataInicio = null;
+            $this->dataFim = null;
+        } else {
+            $this->dataInicio = now()->subDays(7)->format('Y-m-d');
+            $this->dataFim = now()->format('Y-m-d');
+        }
     }
 
     public function updated($propertyName)
     {
-        if (in_array($propertyName, ['search', 'filtroEvento', 'filtroUsuario', 'filtroModel', 'dataInicio', 'dataFim'])) {
+        if (in_array($propertyName, ['search', 'filtroEvento', 'filtroUsuario', 'filtroModel', 'filtroId', 'dataInicio', 'dataFim'])) {
             $this->resetPage();
         }
     }
@@ -68,6 +77,10 @@ class ListarLogs extends Component
 
         if ($this->filtroModel) {
             $query->where('auditable_type', 'like', '%' . $this->filtroModel . '%');
+        }
+
+        if ($this->filtroId) {
+            $query->where('auditable_id', $this->filtroId);
         }
 
         if ($this->dataInicio) {

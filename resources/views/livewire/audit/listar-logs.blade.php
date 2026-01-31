@@ -21,6 +21,12 @@
     <!-- Filtros Avançados -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4 bg-light rounded-3">
+            @if($filtroId)
+                <div class="alert alert-info d-flex justify-content-between align-items-center mb-3">
+                    <span><i class="bi bi-funnel-fill me-2"></i>Filtrando histórico por ID específico: <strong>{{ $filtroId }}</strong></span>
+                    <button wire:click="$set('filtroId', '')" class="btn btn-sm btn-outline-info rounded-pill">Limpar Filtro de ID</button>
+                </div>
+            @endif
             <div class="row g-3">
                 <div class="col-md-3">
                     <label class="form-label small fw-bold text-muted text-uppercase">Usuário</label>

@@ -196,7 +196,11 @@
                     </div>
                     @if($auditoria->isNotEmpty())
                         <div class="text-center mt-3">
-                            <button class="btn btn-link btn-sm text-decoration-none">Ver histórico completo</button>
+                            <a href="{{ route('audit.index', ['filtroModel' => 'PlanoDeAcao', 'filtroId' => $plano->cod_plano_de_acao]) }}" 
+                               wire:navigate 
+                               class="btn btn-link btn-sm text-decoration-none">
+                                <i class="bi bi-clock-history me-1"></i>Ver histórico completo
+                            </a>
                         </div>
                     @endif
                 </div>
