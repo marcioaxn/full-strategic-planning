@@ -527,142 +527,169 @@
         </div>
     </div>
 
-    <!-- Modal de Criacao/Edicao -->
+    <!-- Modal de Criacao/Edicao Premium -->
     @if($showModal)
-        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title fw-bold">
-                            <i class="bi bi-{{ $isEditing ? 'pencil' : 'plus-circle' }} me-2"></i>
-                            {{ $isEditing ? 'Editar' : 'Novo' }} Grau de Satisfacao
-                        </h5>
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,0.5); z-index: 1055;" wire:click.self="closeModal">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                    
+                    {{-- Header Premium --}}
+                    <div class="modal-header gradient-theme-header text-white border-0 py-3 px-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="icon-circle-mini bg-white bg-opacity-25 text-white">
+                                <i class="bi bi-{{ $isEditing ? 'pencil-square' : 'plus-circle' }}"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0">{{ $isEditing ? 'Editar Grau de Satisfação' : 'Novo Grau de Satisfação' }}</h5>
+                                <p class="mb-0 small text-white-50">Configuração de faixas de atingimento do farol</p>
+                            </div>
+                        </div>
                         <button type="button" class="btn-close btn-close-white" wire:click="closeModal"></button>
                     </div>
+
                     <form wire:submit="save">
-                        <div class="modal-body bg-body p-4">
-                            <!-- Contexto: PEI e Ano (Thresholds de Maturidade) -->
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-8">
-                                    <label class="form-label fw-bold small text-muted text-uppercase">Ciclo PEI</label>
-                                    <select wire:model="cod_pei" class="form-select border-primary border-opacity-25">
-                                        <option value="">{{ __('Escala Global (Padrão)') }}</option>
-                                        @foreach($availablePeis as $p)
-                                            <option value="{{ $p->cod_pei }}">{{ $p->dsc_pei }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold small text-muted text-uppercase">Ano (Maturidade)</label>
-                                    <select wire:model="num_ano" class="form-select">
-                                        <option value="">{{ __('Todo o Ciclo') }}</option>
-                                        @if($cod_pei)
-                                            @php $selectedPei = $availablePeis->firstWhere('cod_pei', $cod_pei); @endphp
-                                            @if($selectedPei)
-                                                @foreach(range($selectedPei->num_ano_inicio_pei, $selectedPei->num_ano_fim_pei) as $ano)
-                                                    <option value="{{ $ano }}">{{ $ano }}</option>
-                                                @endforeach
-                                            @endif
-                                        @endif
-                                    </select>
-                                </div>
-                            </div>
+                        <div class="modal-body p-4 bg-white">
+                            <div class="row g-4">
+                                
+                                {{-- Coluna Principal: Definição --}}
+                                <div class="col-lg-7">
+                                    <div class="card border-0 bg-light rounded-4 h-100">
+                                        <div class="card-body p-4">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Definição do Grau</h6>
+                                            
+                                            {{-- Descrição --}}
+                                            <div class="mb-4">
+                                                <label class="form-label text-muted small text-uppercase fw-bold">Descrição do Grau <span class="text-danger">*</span></label>
+                                                <input type="text"
+                                                       class="form-control form-control-lg bg-white border-0 shadow-sm @error('dsc_grau_satisfacao') is-invalid @enderror"
+                                                       wire:model="dsc_grau_satisfacao"
+                                                       placeholder="Ex: Excelente, Bom, Regular, Crítico...">
+                                                @error('dsc_grau_satisfacao') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                            </div>
 
-                            <!-- Descricao -->
-                            <div class="mb-3">
-                                <label for="dsc_grau_satisfacao" class="form-label fw-semibold">
-                                    Descricao <span class="text-danger">*</span>
-                                </label>
-                                <input type="text"
-                                       class="form-control @error('dsc_grau_satisfacao') is-invalid @enderror"
-                                       id="dsc_grau_satisfacao"
-                                       wire:model="dsc_grau_satisfacao"
-                                       placeholder="Ex: Excelente, Bom, Regular, Critico...">
-                                @error('dsc_grau_satisfacao')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
+                                            <div class="row g-3">
+                                                {{-- Cor --}}
+                                                <div class="col-md-12">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Cor Representativa <span class="text-danger">*</span></label>
+                                                    <div class="input-group shadow-sm">
+                                                        <span class="input-group-text bg-white border-0">
+                                                            <input type="color" class="form-control form-control-color border-0 p-0" style="width: 30px; height: 30px;" wire:model.live="cor">
+                                                        </span>
+                                                        <input type="text" class="form-control bg-white border-0 fw-bold @error('cor') is-invalid @enderror" wire:model.live="cor" placeholder="#000000">
+                                                    </div>
+                                                    <small class="text-muted x-small mt-1 d-block">A cor que aparecerá no farol de desempenho</small>
+                                                    @error('cor') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                                </div>
 
-                            <!-- Cor -->
-                            <div class="mb-3">
-                                <label for="cor" class="form-label fw-semibold">
-                                    Cor <span class="text-danger">*</span>
-                                </label>
-                                <div class="input-group">
-                                    <input type="color"
-                                           class="form-control form-control-color @error('cor') is-invalid @enderror"
-                                           id="cor"
-                                           wire:model.live="cor"
-                                           value="{{ $cor ?: '#FF0000' }}"
-                                           title="Selecione uma cor">
-                                    <input type="text"
-                                           class="form-control @error('cor') is-invalid @enderror"
-                                           wire:model.live="cor"
-                                           placeholder="#FF0000"
-                                           style="max-width: 120px;">
-                                    @error('cor')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <small class="text-muted">Clique no seletor para escolher uma cor ou digite o codigo hexadecimal</small>
-                            </div>
-
-                            <div class="row">
-                                <!-- Valor Minimo -->
-                                <div class="col-md-6 mb-3">
-                                    <label for="vlr_minimo" class="form-label fw-semibold">
-                                        Percentual Minimo <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group">
-                                        <input type="number"
-                                               step="0.01"
-                                               min="0"
-                                               max="999.99"
-                                               class="form-control @error('vlr_minimo') is-invalid @enderror"
-                                               id="vlr_minimo"
-                                               wire:model="vlr_minimo"
-                                               placeholder="0.00">
-                                        <span class="input-group-text">%</span>
-                                        @error('vlr_minimo')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                                {{-- Contexto PEI e Ano --}}
+                                                <div class="col-md-7">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Ciclo PEI</label>
+                                                    <select wire:model="cod_pei" class="form-select bg-white border-0 shadow-sm fw-bold">
+                                                        <option value="">Escala Global (Padrão)</option>
+                                                        @foreach($availablePeis as $p)
+                                                            <option value="{{ $p->cod_pei }}">{{ $p->dsc_pei }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-5">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Ano Específico</label>
+                                                    <select wire:model="num_ano" class="form-select bg-white border-0 shadow-sm fw-bold">
+                                                        <option value="">Todo o Ciclo</option>
+                                                        @if($cod_pei)
+                                                            @php $selectedPei = $availablePeis->firstWhere('cod_pei', $cod_pei); @endphp
+                                                            @if($selectedPei)
+                                                                @foreach(range($selectedPei->num_ano_inicio_pei, $selectedPei->num_ano_fim_pei) as $ano)
+                                                                    <option value="{{ $ano }}">{{ $ano }}</option>
+                                                                @endforeach
+                                                            @endif
+                                                        @endif
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Valor Maximo -->
-                                <div class="col-md-6 mb-3">
-                                    <label for="vlr_maximo" class="form-label fw-semibold">
-                                        Percentual Maximo <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group">
-                                        <input type="number"
-                                               step="0.01"
-                                               min="0"
-                                               max="999.99"
-                                               class="form-control @error('vlr_maximo') is-invalid @enderror"
-                                               id="vlr_maximo"
-                                               wire:model="vlr_maximo"
-                                               placeholder="100.00">
-                                        <span class="input-group-text">%</span>
-                                        @error('vlr_maximo')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                {{-- Coluna Lateral: Intervalos --}}
+                                <div class="col-lg-5">
+                                    <div class="card border-0 bg-light rounded-4 h-100">
+                                        <div class="card-body p-4 text-center">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-4">Intervalo de Atingimento</h6>
+                                            
+                                            <div class="mb-4">
+                                                <label class="form-label small text-muted fw-bold text-uppercase">Percentual Mínimo <span class="text-danger">*</span></label>
+                                                <div class="input-group input-group-lg shadow-sm">
+                                                    <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-chevron-bar-down"></i></span>
+                                                    <input type="number" step="0.01" wire:model="vlr_minimo" class="form-control bg-white border-0 fw-bold text-center @error('vlr_minimo') is-invalid @enderror" placeholder="0.00">
+                                                    <span class="input-group-text bg-white border-0 fw-bold">%</span>
+                                                </div>
+                                                @error('vlr_minimo') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                            </div>
+
+                                            <div class="mb-4">
+                                                <label class="form-label small text-muted fw-bold text-uppercase">Percentual Máximo <span class="text-danger">*</span></label>
+                                                <div class="input-group input-group-lg shadow-sm">
+                                                    <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-chevron-bar-up"></i></span>
+                                                    <input type="number" step="0.01" wire:model="vlr_maximo" class="form-control bg-white border-0 fw-bold text-center @error('vlr_maximo') is-invalid @enderror" placeholder="100.00">
+                                                    <span class="input-group-text bg-white border-0 fw-bold">%</span>
+                                                </div>
+                                                @error('vlr_maximo') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                            </div>
+
+                                            {{-- Dica Visual --}}
+                                            <div class="p-3 bg-white rounded-3 border shadow-sm mt-auto">
+                                                <p class="small text-muted mb-2">Representação no Mapa:</p>
+                                                <div class="d-flex align-items-center justify-content-center gap-2 py-2 rounded" style="background-color: {{ $cor ?: '#e9ecef' }}; color: {{ $cor ? '#fff' : '#6c757d' }}; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+                                                    <i class="bi bi-circle-fill"></i>
+                                                    <span class="fw-bold">{{ $dsc_grau_satisfacao ?: 'Aguardando...' }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="modal-footer bg-light border-0">
-                            <button type="button" class="btn btn-secondary px-4" wire:click="closeModal">
-                                <i class="bi bi-x-circle me-1"></i> Cancelar
-                            </button>
-                            <button type="submit" class="btn btn-primary gradient-theme-btn px-4">
-                                <i class="bi bi-check-circle me-1"></i> {{ $isEditing ? 'Atualizar' : 'Salvar' }}
+
+                        {{-- Footer Premium --}}
+                        <div class="modal-footer border-0 p-4 bg-white rounded-bottom-4 shadow-top-sm">
+                            <button type="button" class="btn btn-light px-4 rounded-pill fw-bold text-muted" wire:click="closeModal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow-sm hover-scale">
+                                <i class="bi bi-check-lg me-2"></i>{{ $isEditing ? 'Atualizar Grau' : 'Salvar Grau' }}
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
+    @endif
+
+    {{-- Success Modal Premium --}}
+    @if($showSuccessModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-primary text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem; background: linear-gradient(135deg, #1B408E 0%, #4361EE 100%) !important;">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-3">Grau de Satisfação Salvo!</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        A faixa de atingimento <strong class="text-primary">"{{ $createdGrauName }}"</strong><br>
+                        foi configurada com sucesso no sistema.
+                    </p>
+                    <button wire:click="closeSuccessModal" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-check2-circle me-2"></i>Continuar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        .scale-in-center { animation: scale-in-center 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; }
+        @keyframes scale-in-center { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
     @endif
 
     {{-- Modal de Exclusão --}}

@@ -33,11 +33,21 @@ class ListarGrausSatisfacao extends Component
     public bool $aiEnabled = false;
     public $aiSuggestion = '';
 
+    // Success Modal Properties
+    public bool $showSuccessModal = false;
+    public $createdGrauName = '';
+
     protected $paginationTheme = 'bootstrap';
 
     public function mount()
     {
         $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
+    }
+
+    public function closeSuccessModal()
+    {
+        $this->showSuccessModal = false;
+        $this->createdGrauName = '';
     }
 
     public function pedirAjudaIA()
@@ -158,14 +168,9 @@ class ListarGrausSatisfacao extends Component
             $title = 'Grau de Satisfação Criado!';
         }
 
-        $alert = \App\Services\NotificationService::sendMentorAlert(
-            $title,
-            "A faixa <strong>{$this->dsc_grau_satisfacao}</strong> ({$this->vlr_minimo}% - {$this->vlr_maximo}%) foi salva.",
-            'bi-palette'
-        );
-        $this->dispatch('mentor-notification', ...$alert);
-
+        $this->createdGrauName = $this->dsc_grau_satisfacao;
         $this->closeModal();
+        $this->showSuccessModal = true;
     }
 
     public function edit($id)
