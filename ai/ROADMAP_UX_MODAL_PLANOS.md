@@ -29,6 +29,9 @@ Melhorar em 95% a usabilidade e estética do modal de cadastro de planos, focand
 - [x] Adicionar mensagens de erro (`@error`) abaixo de *todos* os campos.
 - [x] Melhorar mensagem de sucesso/erro ao salvar.
 
+### Fase 5: Correção e Estabilização
+- [x] Restaurar métodos `create` e `edit` removidos acidentalmente durante refatoração.
+
 ## Status de Execução
 - [x] Concluído
 
@@ -40,6 +43,7 @@ Melhorar em 95% a usabilidade e estética do modal de cadastro de planos, focand
 - Indicadores visuais de cor para o Status.
 - Seção colapsável para dados governamentais (PPA/LOA).
 - Feedback visual aprimorado para validação e ações da IA.
+- Métodos de CRUD restaurados e estabilizados.
 
 ## Arquivos Alterados
 - `resources/views/livewire/plano-acao/listar-planos.blade.php`
