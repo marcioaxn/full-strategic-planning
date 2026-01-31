@@ -1,32 +1,37 @@
 <div class="notion-board" wire:poll.5s="poll">
-    {{-- Header --}}
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <div>
+    {{-- Header Interno --}}
+    <div class="leads-header d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
                 <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1">
+                    <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('planos.index') }}" class="text-decoration-none">Planos de Ação</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Entregas</li>
                     </ol>
                 </nav>
+            </div>
+            <div class="d-flex align-items-center gap-2">
                 <h2 class="h4 fw-bold mb-0 d-flex align-items-center gap-2">
                     <span class="notion-icon">📋</span>
                     {{ $plano->dsc_plano_de_acao }}
                 </h2>
-                <div class="d-flex align-items-center gap-2 mt-1">
-                    <span class="text-muted small fw-medium">
-                        <i class="bi bi-building me-1"></i>{{ $plano->organizacao?->nom_organizacao }}
-                    </span>
-                </div>
             </div>
+            <div class="d-flex align-items-center gap-2 mt-1">
+                <span class="text-muted small fw-medium">
+                    <i class="bi bi-building me-1"></i>{{ $plano->organizacao?->nom_organizacao }}
+                </span>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
             @can('update', $plano)
                 <button wire:click="openEditModal" class="btn btn-primary gradient-theme-btn">
                     <i class="bi bi-plus-lg me-2"></i>Nova Entrega
                 </button>
             @endcan
         </div>
-    </x-slot>
+    </div>
 
     {{-- Seção Educativa: O que são Entregas/Marcos --}}
     <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
