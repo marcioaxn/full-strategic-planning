@@ -769,7 +769,7 @@
                                                         </div>
                                                         <div class="list-group list-group-flush rounded-3 border">
                                                             @foreach($aiSuggestion as $sug)
-                                                                <button type="button" wire:click="aplicarSugestao('{{ $sug['nome'] }}')" class="list-group-item list-group-item-action py-2 px-3 hover-bg-primary-subtle transition-all">
+                                                                <button type="button" wire:click="aplicarSugestao('{{ $sug['nome'] }}', '{{ $sug['justificativa'] }}')" class="list-group-item list-group-item-action py-2 px-3 hover-bg-primary-subtle transition-all">
                                                                     <div class="d-flex w-100 justify-content-between align-items-center">
                                                                         <h6 class="mb-1 fw-bold text-dark" style="font-size: 0.9rem;">{{ $sug['nome'] }}</h6>
                                                                         <small class="text-primary fw-bold" style="font-size: 0.7rem;"><i class="bi bi-plus-lg me-1"></i>Usar</small>
@@ -788,6 +788,13 @@
                                             <label class="form-label fw-bold small text-muted text-uppercase">2. Descrição da Ação <span class="text-danger">*</span></label>
                                             <textarea wire:model="dsc_plano_de_acao" class="form-control form-control-lg bg-white border-0 shadow-sm" rows="2" placeholder="Descreva o que será feito de forma clara..."></textarea>
                                             @error('dsc_plano_de_acao') <div class="text-danger small mt-1 ms-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div> @enderror
+                                        </div>
+
+                                        {{-- 3. Detalhamento / Justificativa --}}
+                                        <div class="mb-4">
+                                            <label class="form-label fw-bold small text-muted text-uppercase">3. Detalhamento / Justificativa <span class="text-muted fw-normal text-lowercase">(Opcional)</span></label>
+                                            <textarea wire:model="txt_detalhamento" class="form-control bg-white border-0 shadow-sm" rows="4" placeholder="Descreva os detalhes, metodologia ou justificativa para esta ação..."></textarea>
+                                            @error('txt_detalhamento') <div class="text-danger small mt-1 ms-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div> @enderror
                                         </div>
 
                                         <div class="row g-3">
