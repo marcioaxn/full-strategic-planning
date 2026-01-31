@@ -175,7 +175,13 @@ class ListarPlanos extends Component
 
     public function create()
     {
-        $this->authorize('create', PlanoDeAcao::class);
+        try {
+            $this->authorize('create', PlanoDeAcao::class);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            $this->dispatch('notify', message: 'Você não tem permissão para criar planos.', style: 'danger');
+            return;
+        }
+
         $this->resetForm();
         
         if (!$this->organizacaoId) {

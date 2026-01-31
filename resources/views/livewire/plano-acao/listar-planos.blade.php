@@ -11,8 +11,13 @@
                 <h2 class="h4 fw-bold mb-0">Planos de Ação</h2>
             </div>
             @if($organizacaoId)
-                <button wire:click="create" class="btn btn-primary gradient-theme-btn">
-                    <i class="bi bi-plus-lg me-2"></i>Novo Plano
+                <button wire:click.prevent="create" wire:loading.attr="disabled" class="btn btn-primary gradient-theme-btn">
+                    <span wire:loading.remove wire:target="create">
+                        <i class="bi bi-plus-lg me-2"></i>Novo Plano
+                    </span>
+                    <span wire:loading wire:target="create">
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>Carregando...
+                    </span>
                 </button>
             @endif
         </div>
@@ -648,7 +653,8 @@
     @endif
 
     <!-- Modal Criar/Editar -->
-    <div class="modal fade @if($showModal) show @endif" tabindex="-1" style="@if($showModal) display: block; background: rgba(0,0,0,0.5); @else display: none; @endif">
+    <div class="modal fade @if($showModal) show @endif" tabindex="-1" role="dialog" wire:key="modal-plano-acao"
+         style="@if($showModal) display: block; background: rgba(0,0,0,0.5); z-index: 1055; @else display: none; @endif">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header gradient-theme text-white border-0">
