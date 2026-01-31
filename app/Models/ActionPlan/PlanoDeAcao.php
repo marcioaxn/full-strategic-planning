@@ -47,6 +47,7 @@ class PlanoDeAcao extends Model implements Auditable
         'cod_organizacao',
         'num_nivel_hierarquico_apresentacao',
         'dsc_plano_de_acao',
+        'txt_detalhamento',
         'dte_inicio',
         'dte_fim',
         'vlr_orcamento_previsto',

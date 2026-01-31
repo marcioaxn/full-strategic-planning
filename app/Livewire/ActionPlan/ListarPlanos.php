@@ -33,6 +33,7 @@ class ListarPlanos extends Component
 
     // Campos do Formulário
     public $dsc_plano_de_acao;
+    public $txt_detalhamento;
     public $cod_objetivo;
     public $cod_tipo_execucao;
     public $dte_inicio;
@@ -100,7 +101,8 @@ class ListarPlanos extends Component
             
             $prompt = "Sugira 3 planos de ação (iniciativas) para alcançar o objetivo estratégico: '{$objetivo->nom_objetivo}'.
             Leve em conta que a organização é: {$this->organizacaoNome}.
-            Responda OBRIGATORIAMENTE em formato JSON puro, contendo um array de objetos com os campos 'nome' e 'justificativa'.";
+            Responda OBRIGATORIAMENTE em formato JSON puro, contendo um array de objetos com os campos 'nome' e 'justificativa'.
+            O campo 'justificativa' deve ser detalhado e explicar como o plano ajuda a alcançar o objetivo.";
             
             $response = $aiService->suggest($prompt);
             $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
@@ -117,9 +119,12 @@ class ListarPlanos extends Component
         }
     }
 
-    public function aplicarSugestao($nome)
+    public function aplicarSugestao($nome, $justificativa = null)
     {
         $this->dsc_plano_de_acao = $nome;
+        if ($justificativa) {
+            $this->txt_detalhamento = $justificativa;
+        }
         $this->aiSuggestion = '';
     }
 
@@ -197,6 +202,7 @@ class ListarPlanos extends Component
 
         $this->planoId = $id;
         $this->dsc_plano_de_acao = $plano->dsc_plano_de_acao;
+        $this->txt_detalhamento = $plano->txt_detalhamento;
         $this->cod_objetivo = $plano->cod_objetivo;
         $this->cod_tipo_execucao = $plano->cod_tipo_execucao;
         $this->dte_inicio = $plano->dte_inicio?->format('Y-m-d');
@@ -222,6 +228,7 @@ class ListarPlanos extends Component
 
         $this->validate([
             'dsc_plano_de_acao' => 'required|string|max:255',
+            'txt_detalhamento' => 'nullable|string',
             'cod_objetivo' => 'required|exists:tab_objetivo,cod_objetivo',
             'cod_tipo_execucao' => 'required|exists:tab_tipo_execucao,cod_tipo_execucao',
             'dte_inicio' => 'required|date',
@@ -232,6 +239,7 @@ class ListarPlanos extends Component
 
         $data = [
             'dsc_plano_de_acao' => $this->dsc_plano_de_acao,
+            'txt_detalhamento' => $this->txt_detalhamento,
             'cod_objetivo' => $this->cod_objetivo,
             'cod_tipo_execucao' => $this->cod_tipo_execucao,
             'dte_inicio' => $this->dte_inicio,
@@ -284,6 +292,7 @@ class ListarPlanos extends Component
     {
         $this->planoId = null;
         $this->dsc_plano_de_acao = '';
+        $this->txt_detalhamento = '';
         $this->cod_objetivo = '';
         $this->cod_tipo_execucao = '';
         $this->dte_inicio = null;
