@@ -769,7 +769,7 @@
                                                         </div>
                                                         <div class="list-group list-group-flush rounded-3 border">
                                                             @foreach($aiSuggestion as $sug)
-                                                                <button type="button" wire:click="aplicarSugestao('{{ $sug['nome'] }}', '{{ $sug['justificativa'] }}')" class="list-group-item list-group-item-action py-2 px-3 hover-bg-primary-subtle transition-all">
+                                                                <button type="button" wire:click="aplicarSugestao(@js($sug['nome']), @js($sug['justificativa']))" class="list-group-item list-group-item-action py-2 px-3 hover-bg-primary-subtle transition-all">
                                                                     <div class="d-flex w-100 justify-content-between align-items-center">
                                                                         <h6 class="mb-1 fw-bold text-dark" style="font-size: 0.9rem;">{{ $sug['nome'] }}</h6>
                                                                         <small class="text-primary fw-bold" style="font-size: 0.7rem;"><i class="bi bi-plus-lg me-1"></i>Usar</small>
