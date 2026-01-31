@@ -36,6 +36,15 @@
                 <div class="card-body p-4">
                     <h3 class="fw-bold mb-3">{{ $plano->dsc_plano_de_acao }}</h3>
                     
+                    @if($plano->txt_detalhamento)
+                        <div class="mb-4 p-3 bg-light rounded border-start border-4 border-info shadow-sm">
+                            <label class="text-muted small text-uppercase fw-bold d-block mb-2">
+                                <i class="bi bi-justify-left me-1"></i>Detalhamento / Justificativa
+                            </label>
+                            <div class="text-dark lh-base" style="white-space: pre-line;">{{ $plano->txt_detalhamento }}</div>
+                        </div>
+                    @endif
+
                     <div class="row g-4 mb-4">
                         <div class="col-md-6">
                             <label class="text-muted small text-uppercase fw-bold d-block">Objetivo</label>
