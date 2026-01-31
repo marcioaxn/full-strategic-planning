@@ -658,11 +658,19 @@
         </div>
     @endif
 
+    <!-- Flatpickr CDN (Travel Style DatePicker) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+
     <!-- Modal Criar/Editar -->
     <div class="modal fade @if($showModal) show @endif" tabindex="-1" role="dialog" wire:key="modal-plano-acao"
          style="@if($showModal) display: block; background: rgba(0,0,0,0.5); z-index: 1055; @else display: none; @endif">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                
+                {{-- Header --}}
                 <div class="modal-header gradient-theme-header text-white border-0 py-3 px-4">
                     <div class="d-flex align-items-center gap-3">
                         <div class="icon-circle-mini bg-white bg-opacity-25 text-white">
@@ -670,134 +678,150 @@
                         </div>
                         <div>
                             <h5 class="modal-title fw-bold mb-0">{{ $planoId ? 'Editar Plano de Ação' : 'Novo Plano de Ação' }}</h5>
-                            <p class="mb-0 small text-white-50">Preencha os detalhes táticos e operacionais</p>
+                            <p class="mb-0 small text-white-50">Planejamento Tático e Operacional</p>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" wire:click="$set('showModal', false)"></button>
                 </div>
+
                 <form wire:submit.prevent="save">
-                    <div class="modal-body p-4 bg-body-tertiary">
+                    {{-- Modal Body: BG White --}}
+                    <div class="modal-body p-4 bg-white" x-data="{
+                        init() {
+                            // Re-init tooltips/components if needed
+                        },
+                        formatBRL(value) {
+                            // Remove tudo que não é dígito
+                            value = value.replace(/\D/g, '');
+                            // Converte para float e divide por 100
+                            let amount = parseFloat(value) / 100;
+                            // Formata
+                            return amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        }
+                    }">
                         
-                        {{-- Mentor IA (Sempre visível no topo) --}}
-                        @if($aiEnabled)
-                            <div class="mb-4" x-data="{ expanded: false }">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="form-label text-primary fw-bold small text-uppercase mb-0">
-                                        <i class="bi bi-robot me-1"></i>Inteligência Artificial
-                                    </label>
-                                    @if(!$aiSuggestion)
-                                    <button type="button" wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="btn btn-sm btn-outline-primary bg-white shadow-sm border-primary-subtle rounded-pill">
-                                        <span wire:loading.remove wire:target="pedirAjudaIA">
-                                            <i class="bi bi-stars me-1"></i>Sugerir Plano com IA
-                                        </span>
-                                        <span wire:loading wire:target="pedirAjudaIA">
-                                            <span class="spinner-border spinner-border-sm me-1"></span>Analisando...
-                                        </span>
-                                    </button>
-                                    @endif
-                                </div>
-
-                                @if($aiSuggestion)
-                                    <div class="alert alert-light border-primary border-opacity-25 shadow-sm rounded-3 p-3 animate-fade-in">
-                                        <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <div class="d-flex align-items-center gap-2">
-                                                <div class="spinner-grow spinner-grow-sm text-primary" role="status" wire:loading wire:target="pedirAjudaIA"></div>
-                                                <span class="fw-bold text-primary">Sugestões Geradas:</span>
-                                            </div>
-                                            <button type="button" class="btn-close small" wire:click="$set('aiSuggestion', '')"></button>
-                                        </div>
-                                        <div class="list-group list-group-flush rounded-3 border">
-                                            @foreach($aiSuggestion as $sug)
-                                                <button type="button" wire:click="aplicarSugestao('{{ $sug['nome'] }}')" class="list-group-item list-group-item-action py-2 px-3 hover-bg-primary-subtle transition-all">
-                                                    <div class="d-flex w-100 justify-content-between align-items-center">
-                                                        <h6 class="mb-1 fw-bold text-dark">{{ $sug['nome'] }}</h6>
-                                                        <small class="text-primary fw-bold"><i class="bi bi-check2 me-1"></i>Aplicar</small>
-                                                    </div>
-                                                    <p class="mb-1 small text-muted lh-sm">{{ $sug['justificativa'] }}</p>
-                                                </button>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                        @endif
-
                         <div class="row g-4">
                             {{-- Coluna Principal --}}
                             <div class="col-lg-8">
-                                <div class="card border-0 shadow-sm rounded-4 h-100">
+                                <div class="card border-0 bg-light rounded-4 h-100">
                                     <div class="card-body p-4">
-                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Dados Principais</h6>
-                                        
-                                        {{-- Descrição --}}
-                                        <div class="mb-4">
-                                            <label class="form-label fw-bold small text-muted text-uppercase">O que será feito? (Título do Plano) <span class="text-danger">*</span></label>
-                                            <textarea wire:model="dsc_plano_de_acao" class="form-control form-control-lg bg-light border-0" rows="2" placeholder="Ex: Implementar novo sistema de atendimento ao cidadão..."></textarea>
-                                            @error('dsc_plano_de_acao') <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div> @enderror
-                                        </div>
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Definição Estratégica</h6>
 
-                                        <div class="row g-3">
-                                            {{-- Objetivo (Grouped) --}}
-                                            <div class="col-12">
-                                                <label class="form-label fw-bold small text-muted text-uppercase">Objetivo Estratégico Vinculado <span class="text-danger">*</span></label>
-                                                <select wire:model="cod_objetivo" class="form-select bg-light border-0 py-2">
-                                                    <option value="">Selecione um objetivo...</option>
+                                        {{-- 1. Objetivo (Primeiro Item) --}}
+                                        <div class="mb-4">
+                                            <label class="form-label fw-bold small text-muted text-uppercase">1. Objetivo Estratégico Vinculado <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-bullseye"></i></span>
+                                                <select wire:model.live="cod_objetivo" class="form-select bg-white border-0 py-2 shadow-sm">
+                                                    <option value="">Selecione o objetivo estratégico...</option>
                                                     @foreach($objetivos as $perspectiva => $listaObjetivos)
-                                                        <optgroup label="{{ $perspectiva }}" class="fw-bold text-primary">
+                                                        <optgroup label="{{ $perspectiva }}">
                                                             @foreach($listaObjetivos as $obj)
-                                                                <option value="{{ $obj['cod_objetivo'] }}" class="text-dark fw-normal">
-                                                                    &nbsp;&nbsp;{{ $obj['nom_objetivo'] }}
+                                                                <option value="{{ $obj['cod_objetivo'] }}">
+                                                                    {{ $obj['nom_objetivo'] }}
                                                                 </option>
                                                             @endforeach
                                                         </optgroup>
                                                     @endforeach
                                                 </select>
-                                                @error('cod_objetivo') <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div> @enderror
                                             </div>
+                                            @error('cod_objetivo') <div class="text-danger small mt-1 ms-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div> @enderror
+                                        </div>
 
+                                        {{-- Mentor IA (Contextual ao Objetivo) --}}
+                                        @if($aiEnabled)
+                                            <div class="mb-4 p-3 bg-white rounded-3 border border-dashed border-primary border-opacity-50">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <i class="bi bi-stars text-primary fs-5"></i>
+                                                        <div>
+                                                            <h6 class="fw-bold text-primary mb-0 small text-uppercase">Assistente de Planejamento</h6>
+                                                            <p class="mb-0 x-small text-muted">
+                                                                @if($cod_objetivo)
+                                                                    IA pronta para sugerir ações para este objetivo.
+                                                                @else
+                                                                    Selecione um objetivo acima para ativar a IA.
+                                                                @endif
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    @if(!$aiSuggestion)
+                                                        <button type="button" 
+                                                                wire:click="pedirAjudaIA" 
+                                                                @if(!$cod_objetivo) disabled @endif
+                                                                class="btn btn-sm btn-outline-primary rounded-pill shadow-sm {{ !$cod_objetivo ? 'opacity-50' : '' }}">
+                                                            <span wire:loading.remove wire:target="pedirAjudaIA">
+                                                                Gerar Ideias
+                                                            </span>
+                                                            <span wire:loading wire:target="pedirAjudaIA">
+                                                                <span class="spinner-border spinner-border-sm me-1"></span>Pensando...
+                                                            </span>
+                                                        </button>
+                                                    @endif
+                                                </div>
+
+                                                @if($aiSuggestion)
+                                                    <div class="mt-3 animate-fade-in border-top pt-3">
+                                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                                            <small class="fw-bold text-dark">Sugestões Encontradas:</small>
+                                                            <button type="button" class="btn-close small" wire:click="$set('aiSuggestion', '')"></button>
+                                                        </div>
+                                                        <div class="list-group list-group-flush rounded-3 border">
+                                                            @foreach($aiSuggestion as $sug)
+                                                                <button type="button" wire:click="aplicarSugestao('{{ $sug['nome'] }}')" class="list-group-item list-group-item-action py-2 px-3 hover-bg-primary-subtle transition-all">
+                                                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                                                        <h6 class="mb-1 fw-bold text-dark" style="font-size: 0.9rem;">{{ $sug['nome'] }}</h6>
+                                                                        <small class="text-primary fw-bold" style="font-size: 0.7rem;"><i class="bi bi-plus-lg me-1"></i>Usar</small>
+                                                                    </div>
+                                                                    <p class="mb-1 x-small text-muted lh-sm">{{ $sug['justificativa'] }}</p>
+                                                                </button>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endif
+                                        
+                                        {{-- 2. Descrição --}}
+                                        <div class="mb-4">
+                                            <label class="form-label fw-bold small text-muted text-uppercase">2. Descrição da Ação <span class="text-danger">*</span></label>
+                                            <textarea wire:model="dsc_plano_de_acao" class="form-control form-control-lg bg-white border-0 shadow-sm" rows="2" placeholder="Descreva o que será feito de forma clara..."></textarea>
+                                            @error('dsc_plano_de_acao') <div class="text-danger small mt-1 ms-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div> @enderror
+                                        </div>
+
+                                        <div class="row g-3">
                                             {{-- Tipo de Execução --}}
                                             <div class="col-md-6">
-                                                <label class="form-label fw-bold small text-muted text-uppercase">Tipo de Execução <span class="text-danger">*</span></label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text bg-white border-0"><i class="bi bi-gear"></i></span>
-                                                    <select wire:model="cod_tipo_execucao" class="form-select bg-light border-0">
-                                                        <option value="">Selecione...</option>
-                                                        @foreach($tiposExecucao as $tipo)
-                                                            <option value="{{ $tipo->cod_tipo_execucao }}">{{ $tipo->dsc_tipo_execucao }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                                @error('cod_tipo_execucao') <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div> @enderror
+                                                <label class="form-label fw-bold small text-muted text-uppercase">Tipo <span class="text-danger">*</span></label>
+                                                <select wire:model="cod_tipo_execucao" class="form-select bg-white border-0 shadow-sm">
+                                                    <option value="">Selecione...</option>
+                                                    @foreach($tiposExecucao as $tipo)
+                                                        <option value="{{ $tipo->cod_tipo_execucao }}">{{ $tipo->dsc_tipo_execucao }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('cod_tipo_execucao') <div class="text-danger small mt-1 ms-1">{{ $message }}</div> @enderror
                                             </div>
 
-                                            {{-- Status Colorido --}}
+                                            {{-- Status --}}
                                             <div class="col-md-6">
-                                                <label class="form-label fw-bold small text-muted text-uppercase">Status Atual</label>
-                                                <div class="input-group" x-data="{ status: @entangle('bln_status') }">
+                                                <label class="form-label fw-bold small text-muted text-uppercase">Status</label>
+                                                <div class="input-group shadow-sm" x-data="{ status: @entangle('bln_status') }">
                                                     <span class="input-group-text border-0 text-white" 
                                                           :class="{
-                                                              'bg-secondary': status == 'Não Iniciado' || status == 'Suspenso' || status == 'Cancelado',
+                                                              'bg-secondary': ['Não Iniciado', 'Suspenso', 'Cancelado'].includes(status),
                                                               'bg-primary': status == 'Em Andamento',
                                                               'bg-success': status == 'Concluído',
                                                               'bg-danger': status == 'Atrasado'
                                                           }">
-                                                        <i class="bi bi-flag-fill"></i>
+                                                        <i class="bi bi-activity"></i>
                                                     </span>
-                                                    <select wire:model.live="bln_status" class="form-select bg-light border-0 fw-bold">
+                                                    <select wire:model.live="bln_status" class="form-select bg-white border-0 fw-bold">
                                                         @foreach($statusOptions as $st)
-                                                            <option value="{{ $st }}" 
-                                                                class="{{ match($st) { 
-                                                                    'Concluído' => 'text-success fw-bold', 
-                                                                    'Atrasado' => 'text-danger fw-bold', 
-                                                                    'Em Andamento' => 'text-primary fw-bold', 
-                                                                    default => 'text-muted' 
-                                                                } }}">
-                                                                {{ $st }}
-                                                            </option>
+                                                            <option value="{{ $st }}">{{ $st }}</option>
                                                         @endforeach
                                                     </select>
                                                 </div>
-                                                @error('bln_status') <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div> @enderror
                                             </div>
                                         </div>
                                     </div>
@@ -806,26 +830,50 @@
 
                             {{-- Coluna Lateral --}}
                             <div class="col-lg-4">
-                                {{-- Card Vigência --}}
-                                <div class="card border-0 shadow-sm rounded-4 mb-3">
+                                {{-- Card Vigência (Travel Style) --}}
+                                <div class="card border-0 bg-light rounded-4 mb-3 h-auto">
                                     <div class="card-body p-4">
-                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-calendar-range me-2 text-primary"></i>Vigência</h6>
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-calendar-check me-2 text-primary"></i>Vigência</h6>
                                         
-                                        <div class="bg-light rounded-3 p-3 border border-light">
-                                            <div class="mb-3">
-                                                <label class="small text-muted fw-bold d-block mb-1">Início</label>
-                                                <input type="date" wire:model.live="dte_inicio" class="form-control border-0 shadow-sm">
-                                                @error('dte_inicio') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                        {{-- Flatpickr Range Wrapper --}}
+                                        <div x-data="{
+                                            dateRange: '',
+                                            picker: null,
+                                            init() {
+                                                let start = @entangle('dte_inicio');
+                                                let end = @entangle('dte_fim');
+                                                
+                                                // Pre-fill if exists
+                                                if(start && end) {
+                                                    this.dateRange = start + ' a ' + end;
+                                                }
+
+                                                this.picker = flatpickr(this.$refs.dateInput, {
+                                                    mode: 'range',
+                                                    dateFormat: 'Y-m-d',
+                                                    altInput: true,
+                                                    altFormat: 'd/m/Y', // Formato visual brasileiro
+                                                    locale: 'pt',
+                                                    minDate: 'today',
+                                                    onClose: (selectedDates, dateStr, instance) => {
+                                                        if (selectedDates.length === 2) {
+                                                            @this.set('dte_inicio', instance.formatDate(selectedDates[0], 'Y-m-d'));
+                                                            @this.set('dte_fim', instance.formatDate(selectedDates[1], 'Y-m-d'));
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        }" wire:ignore>
+                                            <label class="form-label small text-muted fw-bold text-uppercase">Período (Início e Fim)</label>
+                                            <div class="input-group shadow-sm">
+                                                <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-airplane"></i></span>
+                                                <input x-ref="dateInput" type="text" class="form-control bg-white border-0 fw-bold text-dark" placeholder="Selecione o período..." readonly>
                                             </div>
-                                            
-                                            <div class="text-center text-muted mb-3"><i class="bi bi-arrow-down"></i></div>
-                                            
-                                            <div>
-                                                <label class="small text-muted fw-bold d-block mb-1">Término</label>
-                                                <input type="date" wire:model.live="dte_fim" class="form-control border-0 shadow-sm">
-                                                @error('dte_fim') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
-                                            </div>
+                                            <div class="form-text x-small text-end mt-1 text-muted">Selecione a data de ida (início) e volta (fim).</div>
                                         </div>
+
+                                        @error('dte_inicio') <div class="text-danger x-small mt-2 text-end">{{ $message }}</div> @enderror
+                                        @error('dte_fim') <div class="text-danger x-small mt-1 text-end">{{ $message }}</div> @enderror
 
                                         @if($dte_inicio && $dte_fim)
                                             @php
@@ -833,41 +881,79 @@
                                                 $end = \Carbon\Carbon::parse($dte_fim);
                                                 $diff = $start->diffInDays($end, false);
                                             @endphp
-                                            <div class="mt-3 text-center">
-                                                <span class="badge {{ $diff > 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border rounded-pill">
-                                                    Duração: {{ abs($diff) }} dias
-                                                </span>
+                                            <div class="mt-3 p-3 bg-white rounded-3 border border-light text-center shadow-sm">
+                                                <div class="d-flex justify-content-around">
+                                                    <div>
+                                                        <small class="d-block text-muted x-small text-uppercase">Início</small>
+                                                        <span class="fw-bold text-dark">{{ $start->format('d/m') }}</span>
+                                                    </div>
+                                                    <div class="align-self-center text-muted"><i class="bi bi-arrow-right"></i></div>
+                                                    <div>
+                                                        <small class="d-block text-muted x-small text-uppercase">Fim</small>
+                                                        <span class="fw-bold text-dark">{{ $end->format('d/m') }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2 border-top pt-2">
+                                                    <span class="badge {{ $diff > 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border rounded-pill">
+                                                        <i class="bi bi-clock-history me-1"></i>{{ abs($diff) }} dias de duração
+                                                    </span>
+                                                </div>
                                             </div>
                                         @endif
                                     </div>
                                 </div>
 
-                                {{-- Card Orçamento --}}
-                                <div class="card border-0 shadow-sm rounded-4">
+                                {{-- Card Orçamento (Fixed Mask) --}}
+                                <div class="card border-0 bg-light rounded-4">
                                     <div class="card-body p-4">
-                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-cash-coin me-2 text-success"></i>Orçamento</h6>
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-wallet2 me-2 text-success"></i>Orçamento</h6>
                                         
-                                        <label class="form-label fw-bold small text-muted text-uppercase">Valor Previsto</label>
-                                        <div class="input-group input-group-lg shadow-sm" x-data>
-                                            <span class="input-group-text bg-success text-white border-0">R$</span>
+                                        <label class="form-label fw-bold small text-muted text-uppercase">Investimento Previsto</label>
+                                        <div class="input-group input-group-lg shadow-sm" x-data="{ 
+                                            value: @entangle('vlr_orcamento_previsto'),
+                                            display: '',
+                                            init() {
+                                                this.formatDisplay();
+                                                this.$watch('value', () => this.formatDisplay());
+                                            },
+                                            input(e) {
+                                                let val = e.target.value.replace(/\D/g, '');
+                                                // Previne valores vazios
+                                                if (val === '') val = '0';
+                                                
+                                                // Converte para formato float (ex: 1234 -> 12.34)
+                                                let floatVal = parseFloat(val) / 100;
+                                                
+                                                // Atualiza o modelo Livewire (o valor real float)
+                                                this.value = floatVal;
+                                                
+                                                // A formatação visual será acionada pelo watcher ou aqui mesmo
+                                                // Mas para input suave, é melhor deixar o formatador lidar apenas com display
+                                            },
+                                            formatDisplay() {
+                                                // Formata o valor float atual para BRL string
+                                                if (this.value === null || this.value === '') this.value = 0;
+                                                this.display = parseFloat(this.value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            }
+                                        }">
+                                            <span class="input-group-text bg-success text-white border-0 fw-bold">R$</span>
                                             <input type="text" 
-                                                   wire:model="vlr_orcamento_previsto"
-                                                   x-mask:money="{ decimal: ',', thousands: '.', precision: 2 }"
+                                                   x-model="display"
+                                                   @input="input($event)"
                                                    class="form-control border-0 bg-white text-end fw-bold text-dark" 
                                                    placeholder="0,00">
                                         </div>
-                                        <div class="form-text text-end x-small">Digite apenas números.</div>
                                         @error('vlr_orcamento_previsto') <div class="text-danger small mt-1 text-end">{{ $message }}</div> @enderror
                                     </div>
                                 </div>
                             </div>
 
-                            {{-- Seção Governamental (Colapsável) --}}
+                            {{-- Seção Governamental --}}
                             <div class="col-12">
                                 <div class="card border-0 bg-light rounded-4">
                                     <button class="btn btn-link text-decoration-none w-100 text-start p-3 d-flex justify-content-between align-items-center text-muted" 
                                             type="button" data-bs-toggle="collapse" data-bs-target="#govFields">
-                                        <span class="small fw-bold text-uppercase"><i class="bi bi-bank me-2"></i>Informações Orçamentárias (Governo)</span>
+                                        <span class="small fw-bold text-uppercase"><i class="bi bi-bank me-2"></i>Códigos Orçamentários (PPA/LOA)</span>
                                         <i class="bi bi-chevron-down"></i>
                                     </button>
                                     <div class="collapse {{ $cod_ppa || $cod_loa ? 'show' : '' }}" id="govFields">
@@ -875,11 +961,11 @@
                                             <div class="row g-3">
                                                 <div class="col-md-6">
                                                     <label class="form-label small text-muted">Cód. PPA</label>
-                                                    <input type="text" wire:model="cod_ppa" class="form-control border-0 shadow-sm" placeholder="Opcional">
+                                                    <input type="text" wire:model="cod_ppa" class="form-control border-0 shadow-sm bg-white" placeholder="Opcional">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="form-label small text-muted">Cód. LOA</label>
-                                                    <input type="text" wire:model="cod_loa" class="form-control border-0 shadow-sm" placeholder="Opcional">
+                                                    <input type="text" wire:model="cod_loa" class="form-control border-0 shadow-sm bg-white" placeholder="Opcional">
                                                 </div>
                                             </div>
                                         </div>
@@ -888,8 +974,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer border-0 p-4 bg-white rounded-bottom-4">
-                        <button type="button" class="btn btn-light px-4 rounded-pill fw-bold" wire:click="$set('showModal', false)">Cancelar</button>
+                    <div class="modal-footer border-0 p-4 bg-white rounded-bottom-4 shadow-top-sm">
+                        <button type="button" class="btn btn-light px-4 rounded-pill fw-bold text-muted" wire:click="$set('showModal', false)">Cancelar</button>
                         <button type="submit" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow-sm hover-scale">
                             <i class="bi bi-check-lg me-2"></i>Salvar Plano
                         </button>
