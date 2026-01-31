@@ -162,20 +162,24 @@ class ListarPlanos extends Component
         $this->grausSatisfacao = \App\Models\StrategicPlanning\GrauSatisfacao::orderBy('vlr_minimo')->get();
 
         if ($this->peiAtivo) {
-            $this->objetivos = Objetivo::whereHas('perspectiva', function($query) {
+            // Carrega objetivos e agrupa por nome da perspectiva
+            $lista = Objetivo::whereHas('perspectiva', function($query) {
                 $query->where('cod_pei', $this->peiAtivo->cod_pei);
             })->with('perspectiva')->orderBy('nom_objetivo')->get();
+            
+            $this->objetivos = $lista->groupBy('perspectiva.dsc_perspectiva')->toArray();
         }
-    }
-
-    public function updatingSearch()
-    {
-        $this->resetPage();
     }
 
     public function create()
     {
-        $this->authorize('create', PlanoDeAcao::class);
+        try {
+            $this->authorize('create', PlanoDeAcao::class);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            $this->dispatch('notify', message: 'Você não tem permissão para criar planos.', style: 'danger');
+            return;
+        }
+
         $this->resetForm();
         
         if (!$this->organizacaoId) {
@@ -207,6 +211,15 @@ class ListarPlanos extends Component
 
     public function save()
     {
+        $messages = [
+            'dsc_plano_de_acao.required' => 'A descrição do plano é obrigatória.',
+            'cod_objetivo.required' => 'Vincule o plano a um objetivo estratégico.',
+            'cod_tipo_execucao.required' => 'Defina o tipo de execução (Projeto, Atividade, etc).',
+            'dte_inicio.required' => 'A data de início é obrigatória.',
+            'dte_fim.required' => 'A data de término é obrigatória.',
+            'dte_fim.after_or_equal' => 'A data final não pode ser anterior à data inicial.',
+        ];
+
         $this->validate([
             'dsc_plano_de_acao' => 'required|string|max:255',
             'cod_objetivo' => 'required|exists:tab_objetivo,cod_objetivo',
@@ -214,7 +227,8 @@ class ListarPlanos extends Component
             'dte_inicio' => 'required|date',
             'dte_fim' => 'required|date|after_or_equal:dte_inicio',
             'vlr_orcamento_previsto' => 'nullable|numeric|min:0',
-        ]);
+        ], $messages);
+
 
         $data = [
             'dsc_plano_de_acao' => $this->dsc_plano_de_acao,
@@ -227,6 +241,7 @@ class ListarPlanos extends Component
             'cod_ppa' => $this->cod_ppa,
             'cod_loa' => $this->cod_loa,
             'cod_organizacao' => $this->organizacaoId,
+            'num_nivel_hierarquico_apresentacao' => 3, // Padrão: 3 (Nível Operacional/Ação)
         ];
 
         if ($this->planoId) {

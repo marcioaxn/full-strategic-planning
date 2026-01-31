@@ -29,130 +29,7 @@
         <!-- Global Theme Gradient Classes -->
         <style>
             /* ========== GLOBAL THEME GRADIENT CLASSES ========== */
-            /* These classes use CSS variables defined by the theme system */
-
-            /* Primary gradient for buttons, icons, and main elements */
-            .gradient-theme {
-                background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-light)) !important;
-            }
-
-            /* Gradient for active navigation items */
-            .gradient-theme-nav {
-                background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-light)) !important;
-                color: white !important;
-                box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.25);
-                border: none !important;
-            }
-
-            .gradient-theme-nav:hover {
-                box-shadow: 0 6px 16px rgba(var(--theme-primary-rgb), 0.35);
-                color: white !important;
-            }
-
-            .gradient-theme-nav:hover i {
-                color: white !important;
-            }
-
-            /* Premium Button Standard */
-            .gradient-theme-btn {
-                background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-light) 100%) !important;
-                border: none !important;
-                color: white !important;
-                font-weight: 600 !important;
-                padding: 0.5rem 1.25rem;
-                border-radius: 50px !important;
-                box-shadow: 0 4px 15px rgba(var(--theme-primary-rgb), 0.3);
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-            }
-
-            .gradient-theme-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 25px rgba(var(--theme-primary-rgb), 0.4);
-                filter: brightness(1.1);
-                color: white !important;
-            }
-
-            .gradient-theme-btn:active {
-                transform: translateY(0);
-            }
-
-            /* Gradient for icons and badges */
-            .gradient-theme-icon {
-                background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-light)) !important;
-                color: white !important;
-                box-shadow: 0 2px 10px rgba(var(--theme-primary-rgb), 0.2);
-            }
-
-            /* Gradient for large header sections */
-            .gradient-theme-header {
-                background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-light) 100%);
-                box-shadow: 0 8px 32px rgba(var(--theme-primary-rgb), 0.2);
-            }
-
-            /* Dark mode - same gradients work for both modes */
-            [data-bs-theme="dark"] .gradient-theme,
-            [data-bs-theme="dark"] .gradient-theme-nav,
-            [data-bs-theme="dark"] .gradient-theme-btn,
-            [data-bs-theme="dark"] .gradient-theme-icon,
-            [data-bs-theme="dark"] .gradient-theme-header {
-                /* Variables already adapt to dark mode, no changes needed */
-            }
-
-            [data-bs-theme="dark"] .gradient-theme-header {
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            }
-
-            /* ========== SESSION TIMER STYLES ========== */
-            .session-timer-wrapper {
-                padding: 0.375rem 0.75rem;
-                background: rgba(var(--bs-body-color-rgb), 0.05);
-                border-radius: 8px;
-                transition: all 0.3s ease;
-            }
-
-            [data-bs-theme="dark"] .session-timer-wrapper {
-                background: rgba(255, 255, 255, 0.05);
-            }
-
-            .session-timer-display {
-                font-family: 'Courier New', Courier, monospace;
-                font-size: 0.875rem;
-                letter-spacing: 0.05em;
-                min-width: 65px;
-                text-align: center;
-                transition: all 0.3s ease;
-            }
-
-            .session-timer-display.text-warning {
-                color: var(--bs-warning) !important;
-                font-weight: 600 !important;
-            }
-
-            .session-timer-display.text-danger {
-                color: var(--bs-danger) !important;
-                font-weight: 700 !important;
-                animation: pulse-danger 1.5s ease-in-out infinite;
-            }
-
-            @keyframes pulse-danger {
-                0%, 100% {
-                    opacity: 1;
-                }
-                50% {
-                    opacity: 0.6;
-                }
-            }
-
-            .session-timer-wrapper:hover {
-                background: rgba(var(--bs-primary-rgb), 0.1);
-            }
-
-            [data-bs-theme="dark"] .session-timer-wrapper:hover {
-                background: rgba(var(--bs-primary-rgb), 0.15);
-            }
+            /* Moved to app.scss */
         </style>
     </head>
     <body class="app-body bg-body-tertiary"
@@ -369,7 +246,9 @@
                 removeNotification(id) {
                     this.notifications = this.notifications.filter(n => n.id !== id);
                 }
-            }" @mentor-notification.window="addNotification($event.detail)">
+            }" 
+            @mentor-notification.window="addNotification($event.detail)"
+            @notify.window="addNotification({ title: 'Aviso', message: $event.detail.message, type: $event.detail.style, icon: 'bi-info-circle' })">
                 <template x-for="n in notifications" :key="n.id">
                     <div class="mentor-toast" 
                          :class="n.type || 'success'" 
