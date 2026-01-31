@@ -616,21 +616,69 @@
                                         <div class="card-body p-4 text-center">
                                             <h6 class="fw-bold text-dark border-bottom pb-2 mb-4">Intervalo de Atingimento</h6>
                                             
-                                            <div class="mb-4">
+                                            <div class="mb-4" x-data="{ 
+                                                display: '',
+                                                value: @entangle('vlr_minimo'),
+                                                mask() {
+                                                    let val = this.display.replace(/\D/g, '');
+                                                    if (val === '') {
+                                                        this.value = '';
+                                                        return;
+                                                    }
+                                                    let floatVal = (parseFloat(val) / 100);
+                                                    this.value = floatVal.toFixed(2);
+                                                    this.display = floatVal.toLocaleString('pt-BR', {
+                                                        minimumFractionDigits: 2,
+                                                        maximumFractionDigits: 2
+                                                    });
+                                                },
+                                                init() {
+                                                    if (this.value) {
+                                                        this.display = parseFloat(this.value).toLocaleString('pt-BR', {
+                                                            minimumFractionDigits: 2,
+                                                            maximumFractionDigits: 2
+                                                        });
+                                                    }
+                                                }
+                                            }">
                                                 <label class="form-label small text-muted fw-bold text-uppercase">Percentual Mínimo <span class="text-danger">*</span></label>
                                                 <div class="input-group input-group-lg shadow-sm">
                                                     <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-chevron-bar-down"></i></span>
-                                                    <input type="number" step="0.01" wire:model="vlr_minimo" class="form-control bg-white border-0 fw-bold text-center @error('vlr_minimo') is-invalid @enderror" placeholder="0.00">
+                                                    <input type="text" x-model="display" @input="mask()" class="form-control bg-white border-0 fw-bold text-center @error('vlr_minimo') is-invalid @enderror" placeholder="0,00">
                                                     <span class="input-group-text bg-white border-0 fw-bold">%</span>
                                                 </div>
                                                 @error('vlr_minimo') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
                                             </div>
 
-                                            <div class="mb-4">
+                                            <div class="mb-4" x-data="{ 
+                                                display: '',
+                                                value: @entangle('vlr_maximo'),
+                                                mask() {
+                                                    let val = this.display.replace(/\D/g, '');
+                                                    if (val === '') {
+                                                        this.value = '';
+                                                        return;
+                                                    }
+                                                    let floatVal = (parseFloat(val) / 100);
+                                                    this.value = floatVal.toFixed(2);
+                                                    this.display = floatVal.toLocaleString('pt-BR', {
+                                                        minimumFractionDigits: 2,
+                                                        maximumFractionDigits: 2
+                                                    });
+                                                },
+                                                init() {
+                                                    if (this.value) {
+                                                        this.display = parseFloat(this.value).toLocaleString('pt-BR', {
+                                                            minimumFractionDigits: 2,
+                                                            maximumFractionDigits: 2
+                                                        });
+                                                    }
+                                                }
+                                            }">
                                                 <label class="form-label small text-muted fw-bold text-uppercase">Percentual Máximo <span class="text-danger">*</span></label>
                                                 <div class="input-group input-group-lg shadow-sm">
                                                     <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-chevron-bar-up"></i></span>
-                                                    <input type="number" step="0.01" wire:model="vlr_maximo" class="form-control bg-white border-0 fw-bold text-center @error('vlr_maximo') is-invalid @enderror" placeholder="100.00">
+                                                    <input type="text" x-model="display" @input="mask()" class="form-control bg-white border-0 fw-bold text-center @error('vlr_maximo') is-invalid @enderror" placeholder="100,00">
                                                     <span class="input-group-text bg-white border-0 fw-bold">%</span>
                                                 </div>
                                                 @error('vlr_maximo') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
