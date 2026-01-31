@@ -625,6 +625,10 @@
                                                         this.value = '';
                                                         return;
                                                     }
+                                                    // Limita a 5 dígitos (máximo 999,99)
+                                                    if (val.length > 5) {
+                                                        val = val.substring(0, 5);
+                                                    }
                                                     let floatVal = (parseFloat(val) / 100);
                                                     this.value = floatVal.toFixed(2);
                                                     this.display = floatVal.toLocaleString('pt-BR', {
@@ -658,6 +662,10 @@
                                                     if (val === '') {
                                                         this.value = '';
                                                         return;
+                                                    }
+                                                    // Limita a 5 dígitos (máximo 999,99)
+                                                    if (val.length > 5) {
+                                                        val = val.substring(0, 5);
                                                     }
                                                     let floatVal = (parseFloat(val) / 100);
                                                     this.value = floatVal.toFixed(2);
