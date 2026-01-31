@@ -674,10 +674,10 @@
                             <i class="bi bi-check-lg"></i>
                         </div>
                     </div>
-                    <h3 class="fw-bold text-dark mb-3">Grau de Satisfação Salvo!</h3>
+                    <h3 class="fw-bold text-dark mb-3">Operação Concluída!</h3>
                     <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
-                        A faixa de atingimento <strong class="text-primary">"{{ $createdGrauName }}"</strong><br>
-                        foi configurada com sucesso no sistema.
+                        <strong class="text-primary d-block mb-2">"{{ $createdGrauName }}"</strong>
+                        {{ $successMessage }}
                     </p>
                     <button wire:click="closeSuccessModal" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow hover-scale">
                         <i class="bi bi-check2-circle me-2"></i>Continuar
@@ -686,11 +686,36 @@
             </div>
         </div>
     </div>
+    @endif
+
+    {{-- Error Modal Premium --}}
+    @if($showErrorModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-danger text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem; background: linear-gradient(135deg, #e63946 0%, #d62828 100%) !important;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-3">Não foi possível salvar</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        {{ $errorMessage }}
+                    </p>
+                    <button wire:click="closeErrorModal" class="btn btn-danger px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Tentar Novamente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <style>
         .scale-in-center { animation: scale-in-center 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; }
         @keyframes scale-in-center { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
     </style>
-    @endif
 
     {{-- Modal de Exclusão --}}
     <x-confirmation-modal wire:model.live="showDeleteModal">
