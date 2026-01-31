@@ -388,21 +388,4 @@
             </x-danger-button>
         </x-slot>
     </x-confirmation-modal>
-
-    <style>
-        .header-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        .loading-opacity {
-        .btn-icon:hover { transform: scale(1.1); }
-        .modal-content { animation: fadeInUp 0.2s ease-out; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
 </div>

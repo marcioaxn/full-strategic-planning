@@ -241,6 +241,7 @@ class ListarPlanos extends Component
             'cod_ppa' => $this->cod_ppa,
             'cod_loa' => $this->cod_loa,
             'cod_organizacao' => $this->organizacaoId,
+            'num_nivel_hierarquico_apresentacao' => 3, // Padrão: 3 (Nível Operacional/Ação)
         ];
 
         if ($this->planoId) {
