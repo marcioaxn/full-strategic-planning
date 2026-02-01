@@ -41,7 +41,12 @@
             <div class="auth-form-card animate-fade-in-right">
                 
                 <div class="mb-5 text-start">
-                    <h2 class="fw-800 text-dark mb-2">Entrar no Sistema</h2>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h2 class="fw-800 text-dark mb-0">Entrar no Sistema</h2>
+                        <a href="/" class="btn btn-sm btn-light rounded-pill px-3 border shadow-sm">
+                            <i class="bi bi-arrow-left me-1"></i> Voltar ao Início
+                        </a>
+                    </div>
                     <p class="text-muted">Acesse sua conta para gerenciar a estratégia institucional.</p>
                 </div>
 
