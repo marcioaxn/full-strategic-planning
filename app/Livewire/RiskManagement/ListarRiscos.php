@@ -157,7 +157,7 @@ class ListarRiscos extends Component
 
             $this->objetivos = $objetivosBrutos->groupBy(function($item) {
                 return $item->perspectiva->dsc_perspectiva ?? 'Outras Dimensões';
-            });
+            })->toArray();
         }
 
         if ($this->organizacaoId) {
