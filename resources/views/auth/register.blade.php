@@ -90,7 +90,10 @@
                         <label class="form-label-premium">Confirmar Senha</label>
                         <div class="input-group-premium">
                             <i class="bi bi-shield-lock"></i>
-                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" placeholder="Repita sua senha" required autocomplete="new-password">
+                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" style="padding-right: 3rem;" placeholder="Repita sua senha" required autocomplete="new-password">
+                            <button type="button" class="btn-password-toggle" onclick="togglePassword('password_confirmation')" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); z-index: 10;">
+                                <i class="bi bi-eye" style="position: static; opacity: 1;"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -200,14 +203,15 @@
 
         /* Password Toggle */
         .btn-password-toggle {
-            position: absolute;
-            right: 1rem;
             background: none;
             border: none;
             color: var(--bs-secondary);
             cursor: pointer;
             padding: 0.25rem;
+            transition: all 0.2s;
         }
+        
+        .btn-password-toggle:hover { color: var(--bs-primary); transform: scale(1.1); }
 
         /* Meter de Senha */
         .password-strength-meter { height: 4px; width: 100%; }
@@ -227,8 +231,17 @@
 
     <script>
         function togglePassword(id) {
-            const el = document.getElementById(id);
-            el.type = el.type === 'password' ? 'text' : 'password';
+            const input = document.getElementById(id);
+            const btn = input.nextElementSibling;
+            const icon = btn.querySelector('i');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
         }
 
         // Simples detector de força de senha
