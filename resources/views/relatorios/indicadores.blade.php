@@ -32,6 +32,7 @@
             <tr>
                 <th>Indicador</th>
                 <th>Unidade</th>
+                <th>Polaridade</th>
                 <th>Vínculo</th>
                 <th style="text-align: center;">Meta</th>
                 <th style="text-align: center;">Ating.</th>
@@ -43,13 +44,20 @@
                 <tr>
                     <td style="font-weight: bold;">{{ $ind->nom_indicador }}</td>
                     <td>{{ $ind->dsc_unidade_medida }}</td>
+                    <td style="font-size: 9px;">{{ $ind->dsc_polaridade ?? 'Positiva' }}</td>
                     <td style="font-size: 9px;">
                         {{ $ind->cod_objetivo ? 'OBJ: '.$ind->objetivo->nom_objetivo : 'PLAN: '.$ind->planoDeAcao->dsc_plano_de_acao }}
                     </td>
                     <td style="text-align: center;">{{ $ind->dsc_meta }}</td>
-                    <td style="text-align: center; font-weight: bold;">@brazil_percent($ind->calcularAtingimento(), 1)</td>
+                    <td style="text-align: center; font-weight: bold;">
+                        @if($ind->dsc_polaridade === 'Não Aplicável')
+                            --
+                        @else
+                            @brazil_percent($ind->calcularAtingimento(), 1)
+                        @endif
+                    </td>
                     <td style="text-align: center;">
-                        <div class="farol" style="background-color: {{ $ind->getCorFarol() ?: '#eee' }}"></div>
+                        <div class="farol" style="background-color: {{ $ind->dsc_polaridade === 'Não Aplicável' ? '#999' : ($ind->getCorFarol() ?: '#eee') }}"></div>
                     </td>
                 </tr>
             @endforeach

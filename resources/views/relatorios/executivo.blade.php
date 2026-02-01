@@ -247,13 +247,18 @@
         
         {{-- Legenda de Indicadores --}}
         <div class="legend-box" style="margin-bottom: 10px;">
-            <strong style="font-size: 8px; color: #1B408E; text-transform: uppercase;">Legenda de Desempenho (Indicadores):</strong><br>
-            @foreach($grausSatisfacao as $grau)
-                <div class="legend-item">
-                    <span class="legend-dot" style="background-color: {{ $grau->cor }};"></span>
-                    {{ $grau->dsc_grau_satisfcao }} ({{ number_format($grau->vlr_minimo, 0) }}% a {{ number_format($grau->vlr_maximo, 0) }}%)
-                </div>
-            @endforeach
+            <div style="margin-bottom: 5px;">
+                <strong style="font-size: 8px; color: #1B408E; text-transform: uppercase;">Legenda de Desempenho (Indicadores):</strong><br>
+                @foreach($grausSatisfacao as $grau)
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background-color: {{ $grau->cor }};"></span>
+                        {{ $grau->dsc_grau_satisfcao }} ({{ number_format($grau->vlr_minimo, 0) }}% a {{ number_format($grau->vlr_maximo, 0) }}%)
+                    </div>
+                @endforeach
+            </div>
+            <div style="border-top: 1px dashed #eee; padding-top: 5px; margin-top: 5px; font-size: 7px; color: #666; font-style: italic;">
+                * O cálculo de atingimento considera a <strong>polaridade</strong> de cada indicador (Ex: Menor é melhor para custos/atrasos). Indicadores puramente informativos (Não Aplicáveis) são desconsiderados na média global.
+            </div>
         </div>
 
         @foreach($perspectivas as $p)

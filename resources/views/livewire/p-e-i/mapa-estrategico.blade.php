@@ -247,6 +247,7 @@
                                     <tr class="small text-muted text-uppercase fw-bold">
                                         <th class="border-0 px-3">Objetivo</th>
                                         <th class="border-0">Indicador</th>
+                                        <th class="border-0 text-center">Polaridade</th>
                                         <th class="border-0 text-end px-3">Atingimento</th>
                                     </tr>
                                 </thead>
@@ -255,6 +256,17 @@
                                         <tr>
                                             <td class="small fw-bold px-3">{{ $item['objetivo'] }}</td>
                                             <td class="small opacity-75">{{ $item['indicador'] }}</td>
+                                            <td class="text-center">
+                                                @php
+                                                    $polIcon = [
+                                                        'Positiva' => 'bi-arrow-up-circle-fill text-success',
+                                                        'Negativa' => 'bi-arrow-down-circle-fill text-danger',
+                                                        'Estabilidade' => 'bi-dash-circle-fill text-warning',
+                                                        'Não Aplicável' => 'bi-info-circle-fill text-muted'
+                                                    ][$item['polaridade']] ?? 'bi-question-circle';
+                                                @endphp
+                                                <i class="bi {{ $polIcon }}" title="{{ $item['polaridade'] }}"></i>
+                                            </td>
                                             <td class="text-end fw-800 px-3" style="color: {{ $item['cor'] }};">@brazil_percent($item['atingimento'], 1)</td>
                                         </tr>
                                     @endforeach

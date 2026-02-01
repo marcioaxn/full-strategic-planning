@@ -257,13 +257,18 @@
     <!-- Legenda Semáforo (Indicadores) -->
     <div class="legend-container">
         <div class="legend-title">Parâmetros de Análise (Grau de Satisfação):</div>
-        @foreach($grausSatisfacao as $grau)
-            <div class="legend-item">
-                <span class="legend-dot" style="background-color: {{ $grau->cor }};"></span>
-                <strong>{{ $grau->dsc_grau_satisfcao }}</strong>
-                <span style="color: #777;">({{ number_format($grau->vlr_minimo, 2, ',', '.') }}% a {{ number_format($grau->vlr_maximo, 2, ',', '.') }}%)</span>
-            </div>
-        @endforeach
+        <div style="margin-bottom: 8px;">
+            @foreach($grausSatisfacao as $grau)
+                <div class="legend-item">
+                    <span class="legend-dot" style="background-color: {{ $grau->cor }};"></span>
+                    <strong>{{ $grau->dsc_grau_satisfcao }}</strong>
+                    <span style="color: #777;">({{ number_format($grau->vlr_minimo, 2, ',', '.') }}% a {{ number_format($grau->vlr_maximo, 2, ',', '.') }}%)</span>
+                </div>
+            @endforeach
+        </div>
+        <div style="border-top: 1px dashed #eee; padding-top: 5px; font-size: 7px; color: #666; font-style: italic;">
+            * O cálculo de atingimento considera a <strong>polaridade</strong> de cada indicador (Ex: Negativa para custos/atrasos). Indicadores puramente informativos (Não Aplicáveis) são desconsiderados na média global.
+        </div>
     </div>
     
     @foreach($perspectivas as $persp)
@@ -292,23 +297,31 @@
                     <tbody>
                         @foreach($obj->indicadores as $ind)
                             @php
-                                $realizadoTotal = $ind->evolucoes->where('num_ano', $filtros['ano'])->sum('vlr_realizado');
-                                $metaTotal = $ind->evolucoes->where('num_ano', $filtros['ano'])->sum('vlr_previsto');
-                                
-                                $perc = ($metaTotal > 0) ? ($realizadoTotal / $metaTotal) * 100 : 0;
-                                $cor = $getCorSatisfacao($perc);
+                                $perc = $ind->calcularAtingimento();
+                                $cor = $ind->getCorFarol();
                                 $textoCor = ($cor == '#F3C72B') ? '#000' : '#fff';
+                                $ultimaEv = $ind->getUltimaEvolucao();
                             @endphp
                             <tr>
                                 <td>{{ $ind->nom_indicador }}</td>
                                 <td class="text-center">{{ $ind->dsc_unidade_medida }}</td>
-                                <td class="text-right">{{ number_format($metaTotal, 2, ',', '.') }}</td>
-                                <td class="text-right">{{ number_format($realizadoTotal, 2, ',', '.') }}</td>
-                                <td class="text-right bold">{{ number_format($perc, 2, ',', '.') }}%</td>
-                                <td class="text-center">
-                                    <span class="badge" style="background: {{ $cor }}; color: {{ $textoCor }};">
+                                <td class="text-right">{{ $ind->dsc_meta }}</td>
+                                <td class="text-right">{{ $ultimaEv ? number_format($ultimaEv->vlr_realizado, 2, ',', '.') : '--' }}</td>
+                                <td class="text-right bold">
+                                    @if($ind->dsc_polaridade === 'Não Aplicável')
+                                        --
+                                    @else
                                         {{ number_format($perc, 2, ',', '.') }}%
-                                    </span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @if($ind->dsc_polaridade === 'Não Aplicável')
+                                        <span class="badge" style="background: #eee; color: #666; border: 1px solid #ccc;">INFO</span>
+                                    @else
+                                        <span class="badge" style="background: {{ $cor }}; color: {{ $textoCor }};">
+                                            {{ number_format($perc, 2, ',', '.') }}%
+                                        </span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

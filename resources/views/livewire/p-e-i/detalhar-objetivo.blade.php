@@ -137,32 +137,59 @@
                     <a href="{{ route('indicadores.index') }}" wire:navigate class="btn btn-sm btn-outline-primary">Gerenciar KPIs</a>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light text-muted text-uppercase" style="font-size: 0.7rem;">
                             <tr>
                                 <th class="ps-4">Indicador</th>
-                                <th>Meta</th>
-                                <th>Realizado</th>
-                                <th>Farol</th>
+                                <th class="text-center">Polaridade</th>
+                                <th class="text-end">Previsto</th>
+                                <th class="text-end">Realizado</th>
+                                <th class="text-end pe-4">Atingimento</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($objetivo->indicadores as $indicador)
+                                @php
+                                    $atingimento = $indicador->calcularAtingimento();
+                                    $corFarol = $indicador->getCorFarol();
+                                    $ultimaEv = $indicador->getUltimaEvolucao();
+                                    
+                                    $polaridadeIcon = [
+                                        'Positiva' => 'bi-arrow-up-circle-fill text-success',
+                                        'Negativa' => 'bi-arrow-down-circle-fill text-danger',
+                                        'Estabilidade' => 'bi-dash-circle-fill text-warning',
+                                        'Não Aplicável' => 'bi-info-circle-fill text-muted'
+                                    ][$indicador->dsc_polaridade ?? 'Positiva'] ?? 'bi-question-circle';
+                                @endphp
                                 <tr>
                                     <td class="ps-4">
-                                        <div class="fw-medium">{{ $indicador->nom_indicador }}</div>
-                                        <small class="text-muted">{{ $indicador->unidadeMedida->nom_unidade ?? '' }}</small>
+                                        <div class="fw-bold text-dark">{{ $indicador->nom_indicador }}</div>
+                                        <small class="text-muted">{{ $indicador->dsc_unidade_medida }}</small>
                                     </td>
-                                    <td>--</td>
-                                    <td>--</td>
-                                    <td>
-                                        <span class="badge bg-secondary">--</span>
+                                    <td class="text-center">
+                                        <i class="bi {{ $polaridadeIcon }} fs-5" title="{{ $indicador->dsc_polaridade ?? 'Positiva' }}"></i>
+                                    </td>
+                                    <td class="text-end">
+                                        {{ $ultimaEv ? number_format($ultimaEv->vlr_previsto, 2, ',', '.') : '--' }}
+                                    </td>
+                                    <td class="text-end fw-bold">
+                                        {{ $ultimaEv ? number_format($ultimaEv->vlr_realizado, 2, ',', '.') : '--' }}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        @if($indicador->dsc_polaridade === 'Não Aplicável')
+                                            <span class="badge bg-light text-muted border">Informativo</span>
+                                        @else
+                                            <div class="d-flex align-items-center justify-content-end gap-2">
+                                                <span class="fw-bold" style="color: {{ $corFarol ?? '#6c757d' }};">@brazil_percent($atingimento, 1)</span>
+                                                <div class="rounded-circle" style="width: 10px; height: 10px; background-color: {{ $corFarol ?? '#dee2e6' }};"></div>
+                                            </div>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center py-4 text-muted">
-                                        Nenhum indicador vinculado.
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        Nenhum indicador vinculado diretamente.
                                     </td>
                                 </tr>
                             @endforelse

@@ -144,6 +144,11 @@ class Objetivo extends Model implements Auditable
         $somaAtingimentoPonderado = 0;
 
         foreach ($todosIndicadores as $indicador) {
+            // Ignora indicadores informativos no cálculo da média consolidada
+            if ($indicador->dsc_polaridade === 'Não Aplicável') {
+                continue;
+            }
+
             $peso = $indicador->num_peso ?? 1;
             $atingimento = $indicador->calcularAtingimento($ano, $mes);
 
