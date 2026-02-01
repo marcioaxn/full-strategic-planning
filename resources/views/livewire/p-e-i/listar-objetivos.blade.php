@@ -8,6 +8,8 @@
                 </div>
                 <h1 class="h3 fw-bold mb-0">{{ __('Objetivos BSC') }}</h1>
                 <span class="badge-modern badge-count">
+                    {{ $perspectivas->sum(fn($p) => $p->objetivos->count()) }}
+                </span>
             </div>
             <p class="text-muted mb-0">
                 @if($peiAtivo)
@@ -20,14 +22,9 @@
 
         <div class="d-flex align-items-center gap-2">
             @if($peiAtivo)
-                <x-action-button
-                    variant="primary"
-                    icon="plus-lg"
-                    wire:click="create"
-                    class="btn-action-primary gradient-theme-btn px-4"
-                >
-                    {{ __('Novo Objetivo') }}
-                </x-action-button>
+                <button type="button" class="btn btn-primary gradient-theme-btn px-4 shadow-sm" wire:click="create">
+                    <i class="bi bi-plus-lg me-1"></i> {{ __('Novo Objetivo') }}
+                </button>
             @endif
         </div>
     </div>
@@ -557,85 +554,112 @@
         </div>
     @endforelse
     
-    {{-- Modal de Cadastro/Edição --}}
+    {{-- Modal de Cadastro/Edição Premium XL --}}
     @if($showModal)
-        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" role="dialog">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content border-0 shadow-lg">
-                    <div class="modal-header gradient-theme-header text-white border-0">
-                        <h5 class="modal-title fw-bold">
-                            <i class="bi bi-{{ $objetivoId ? 'pencil' : 'plus-circle' }} me-2"></i>
-                            {{ $objetivoId ? __('Editar Objetivo') : __('Novo Objetivo') }}
-                        </h5>
+        <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.5); z-index: 1055;" wire:click.self="$set('showModal', false)">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                    
+                    {{-- Header Premium --}}
+                    <div class="modal-header gradient-theme-header text-white border-0 py-3 px-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="icon-circle-mini bg-white bg-opacity-25 text-white">
+                                <i class="bi bi-{{ $objetivoId ? 'pencil-square' : 'plus-circle' }}"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0">{{ $objetivoId ? 'Editar Objetivo Estratégico' : 'Novo Objetivo Estratégico' }}</h5>
+                                <p class="mb-0 small text-white-50">Definição de metas e resultados de médio prazo</p>
+                            </div>
+                        </div>
                         <button type="button" class="btn-close btn-close-white" wire:click="$set('showModal', false)"></button>
                     </div>
-                    <form wire:submit="save">
-                        <div class="modal-body p-4">
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <div class="d-flex justify-content-between align-items-end mb-1">
-                                        <label class="form-label fw-bold small text-muted text-uppercase mb-0">{{ __('Título do Objetivo') }} <span class="text-danger">*</span></label>
-                                        <div wire:loading wire:target="nom_objetivo" class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                                    </div>
-                                    <input type="text" wire:model.live.debounce.2000ms="nom_objetivo" class="form-control @error('nom_objetivo') is-invalid @enderror" placeholder="{{ __('Ex: Aumentar a eficiência operacional') }}">
-                                    @error('nom_objetivo') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    
-                                    @if($smartFeedback)
-                                        <div class="mt-2 p-2 rounded bg-primary bg-opacity-10 border-start border-3 border-primary animate-fade-in position-relative">
-                                            <button type="button" class="btn-close small position-absolute top-0 end-0 m-1" style="font-size: 0.5rem;" wire:click="$set('smartFeedback', '')"></button>
-                                            <small class="text-primary fw-bold d-block mb-1"><i class="bi bi-info-circle me-1"></i>Feedback do Mentor SMART:</small>
-                                            <small class="text-dark d-block pe-3">{{ $smartFeedback }}</small>
+
+                    <form wire:submit.prevent="save">
+                        <div class="modal-body p-4 bg-white">
+                            <div class="row g-4">
+                                
+                                {{-- Coluna Principal: Definição --}}
+                                <div class="col-lg-7">
+                                    <div class="card border-0 bg-light rounded-4 h-100">
+                                        <div class="card-body p-4">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">O que se pretende alcançar?</h6>
+                                            
+                                            {{-- Título --}}
+                                            <div class="mb-4">
+                                                <div class="d-flex justify-content-between align-items-end mb-1">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold mb-0">Título do Objetivo <span class="text-danger">*</span></label>
+                                                    <div wire:loading wire:target="nom_objetivo" class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                                </div>
+                                                <input type="text" wire:model.live.debounce.2000ms="nom_objetivo" class="form-control form-control-lg bg-white border-0 shadow-sm @error('nom_objetivo') is-invalid @enderror" placeholder="Ex: Aumentar a eficiência operacional">
+                                                @error('nom_objetivo') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                                
+                                                @if($smartFeedback)
+                                                    <div class="mt-3 p-3 rounded-4 bg-white border-start border-4 border-primary shadow-sm animate-fade-in position-relative">
+                                                        <button type="button" class="btn-close small position-absolute top-0 end-0 m-2" style="font-size: 0.6rem;" wire:click="$set('smartFeedback', '')"></button>
+                                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                                            <i class="bi bi-robot text-primary"></i>
+                                                            <small class="text-primary fw-bold text-uppercase">Análise SMART:</small>
+                                                        </div>
+                                                        <small class="text-dark lh-sm d-block">{{ $smartFeedback }}</small>
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            <div class="mb-0">
+                                                <label class="form-label text-muted small text-uppercase fw-bold">Descrição Detalhada</label>
+                                                <textarea wire:model="dsc_objetivo" class="form-control bg-white border-0 shadow-sm @error('dsc_objetivo') is-invalid @enderror" rows="5" placeholder="Explique o que se pretende alcançar com este objetivo..."></textarea>
+                                                @error('dsc_objetivo') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                            </div>
                                         </div>
-                                    @endif
+                                    </div>
                                 </div>
 
-                                <div class="col-md-8">
-                                    <label class="form-label fw-bold small text-muted text-uppercase">{{ __('Perspectiva BSC') }} <span class="text-danger">*</span></label>
-                                    <select wire:model.live="cod_perspectiva" class="form-select @error('cod_perspectiva') is-invalid @enderror">
-                                        <option value="">{{ __('Selecione uma perspectiva...') }}</option>
-                                        @foreach($perspectivas as $p)
-                                            <option value="{{ $p->cod_perspectiva }}">{{ $p->dsc_perspectiva }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('cod_perspectiva') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
+                                {{-- Coluna Lateral: Vínculo e Hierarquia --}}
+                                <div class="col-lg-5">
+                                    <div class="card border-0 bg-light rounded-4 h-100">
+                                        <div class="card-body p-4 text-center">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-4">Contexto Estratégico</h6>
+                                            
+                                            {{-- Perspectiva --}}
+                                            <div class="mb-4 text-start">
+                                                <label class="form-label text-muted small text-uppercase fw-bold">Perspectiva BSC <span class="text-danger">*</span></label>
+                                                <select wire:model.live="cod_perspectiva" class="form-select bg-white border-0 shadow-sm fw-bold">
+                                                    <option value="">Selecione uma perspectiva...</option>
+                                                    @foreach($perspectivas as $p)
+                                                        <option value="{{ $p->cod_perspectiva }}">{{ $p->dsc_perspectiva }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('cod_perspectiva') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                            </div>
 
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold small text-muted text-uppercase">{{ __('Ordem de Apresentação') }} <span class="text-danger">*</span></label>
-                                    <input type="number" wire:model="num_nivel_hierarquico_apresentacao" class="form-control @error('num_nivel_hierarquico_apresentacao') is-invalid @enderror" min="1">
-                                    @error('num_nivel_hierarquico_apresentacao') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
+                                            {{-- Ordem --}}
+                                            <div class="mb-4 text-start">
+                                                <label class="form-label text-muted small text-uppercase fw-bold">Ordem de Apresentação <span class="text-danger">*</span></label>
+                                                <div class="input-group shadow-sm">
+                                                    <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-sort-numeric-down"></i></span>
+                                                    <input type="number" wire:model="num_nivel_hierarquico_apresentacao" class="form-control bg-white border-0 fw-bold" min="1">
+                                                </div>
+                                                @error('num_nivel_hierarquico_apresentacao') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                            </div>
 
-                                <div class="col-12">
-                                    <label class="form-label fw-bold small text-muted text-uppercase">{{ __('Descrição detalhada') }}</label>
-                                    <textarea wire:model="dsc_objetivo" class="form-control @error('dsc_objetivo') is-invalid @enderror" rows="4" placeholder="{{ __('Explique o que se pretende alcançar com este objetivo...') }}"></textarea>
-                                    @error('dsc_objetivo') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-
-                                <div class="col-12">
-                                    <div class="p-3 rounded bg-light border">
-                                        <h6 class="fw-bold small mb-2 text-primary"><i class="bi bi-info-circle me-2"></i>Dica: Use o critério SMART</h6>
-                                        <p class="x-small mb-0 text-muted">
-                                            <strong>S</strong>pecífico (O que?), 
-                                            <strong>M</strong>ensurável (Quanto?), 
-                                            <strong>A</strong>tingível (É possível?), 
-                                            <strong>R</strong>elevante (Faz sentido?) e 
-                                            <strong>T</strong>emporal (Até quando?).
-                                        </p>
+                                            {{-- Dica SMART --}}
+                                            <div class="p-3 bg-white rounded-4 border shadow-sm mt-auto text-start">
+                                                <h6 class="fw-bold small mb-2 text-primary"><i class="bi bi-stars me-2"></i>Dica SMART</h6>
+                                                <p class="x-small mb-0 text-muted lh-sm">
+                                                    Garanta que seu objetivo seja <strong>Específico</strong>, <strong>Mensurável</strong>, <strong>Atingível</strong>, <strong>Relevante</strong> e tenha um <strong>Prazo</strong> definido.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="modal-footer bg-light border-0 p-3">
-                            <button type="button" class="btn btn-secondary px-4" wire:click="$set('showModal', false)">{{ __('Cancelar') }}</button>
-                            <button type="submit" class="btn btn-primary px-4 gradient-theme-btn">
-                                <span wire:loading.remove wire:target="save">
-                                    <i class="bi bi-check-lg me-1"></i> {{ $objetivoId ? __('Atualizar') : __('Salvar') }}
-                                </span>
-                                <span wire:loading wire:target="save">
-                                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                                    {{ __('Processando...') }}
-                                </span>
+
+                        {{-- Footer Premium --}}
+                        <div class="modal-footer border-0 p-4 bg-white rounded-bottom-4 shadow-top-sm">
+                            <button type="button" class="btn btn-light px-4 rounded-pill fw-bold text-muted" wire:click="$set('showModal', false)">Cancelar</button>
+                            <button type="submit" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow-sm hover-scale">
+                                <i class="bi bi-check-lg me-2"></i>{{ $objetivoId ? 'Atualizar Objetivo' : 'Salvar Objetivo' }}
                             </button>
                         </div>
                     </form>
@@ -689,5 +713,57 @@
                 </span>
             </x-danger-button>
         </x-slot>
-    </x-confirmation-modal>
+        {{-- Success Modal Premium --}}
+    @if($showSuccessModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-primary text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem; background: linear-gradient(135deg, #1B408E 0%, #4361EE 100%) !important;">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-3">Operação Concluída!</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        <strong class="text-primary d-block mb-2">"{{ $createdObjetivoName }}"</strong>
+                        {{ $successMessage }}
+                    </p>
+                    <button wire:click="closeSuccessModal" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-check2-circle me-2"></i>Continuar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Error Modal Premium --}}
+    @if($showErrorModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-danger text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem; background: linear-gradient(135deg, #e63946 0%, #d62828 100%) !important;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-3">Não foi possível salvar</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        {{ $errorMessage }}
+                    </p>
+                    <button wire:click="closeErrorModal" class="btn btn-danger px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Tentar Novamente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <style>
+        .scale-in-center { animation: scale-in-center 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; }
+        @keyframes scale-in-center { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
 </div>
