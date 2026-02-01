@@ -30,7 +30,7 @@ class ListarRelatorios extends Component
 
     public $peiAtivo;
     public $aiEnabled = false;
-    public $includeAi = true; // Opção do usuário
+    public $includeAi = false; // Opção do usuário - Padrão desmarcado
     public $aiInsight = '';
 
     protected $listeners = [
@@ -47,7 +47,7 @@ class ListarRelatorios extends Component
     public function mount()
     {
         $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
-        $this->includeAi = $this->aiEnabled; // Padrão segue configuração do sistema
+        $this->includeAi = false; // Padrão agora é desmarcado
         $this->organizacoes = Organization::orderBy('nom_organizacao')->get();
 
         // Carregar Anos (baseado nos ciclos PEI ativos/recentes)
