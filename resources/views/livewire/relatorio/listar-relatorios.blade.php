@@ -116,7 +116,7 @@
                             'title' => 'Dossiê Estratégico Integrado',
                             'desc' => 'Relatório completo unificando todas as visões estratégicas.',
                             'icon' => 'bi-collection-play',
-                            'color' => 'indigo', // Cor diferenciada
+                            'color' => 'success', // Alterado para success para garantir visual Premium com opacidade
                             'route_pdf' => route('relatorios.integrado', ['organizacaoId' => $organizacaoId, 'ano' => $anoSelecionado, 'periodo' => $periodoSelecionado]) . "&include_ai=" . ($includeAi ? '1' : '0'),
                             'type' => 'integrado',
                             'featured' => true // Marcador visual
@@ -288,9 +288,7 @@
         .filter-group select { box-shadow: none; }
         .filter-group select:hover { background-color: #e9ecef!important; }
         .icon-box { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; }
-        .bg-indigo { background-color: #6610f2; }
-        .text-indigo { color: #6610f2; }
-        .hover-bg-indigo:hover { background-color: #6610f2 !important; color: white !important; }
+        
         /* Custom Scrollbar for dropdowns if needed */
         .dropdown-menu { max-height: 300px; overflow-y: auto; }
         
