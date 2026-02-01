@@ -660,155 +660,235 @@
         </div>
     @endif
 
-    <!-- Modal Criar/Editar -->
-    <div class="modal fade @if($showModal) show @endif" tabindex="-1" style="@if($showModal) display: block; background: rgba(0,0,0,0.5); @else display: none; @endif">
-        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header gradient-theme text-white border-0">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi bi-sliders me-2"></i> {{ $indicadorId ? 'Configurar Indicador' : 'Novo Indicador' }}
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" wire:click="$set('showModal', false)"></button>
-                </div>
-                <form wire:submit.prevent="save">
-                    <div class="modal-body p-4 bg-light bg-opacity-50">
-                        <div class="row g-4">
-                            <!-- Bloco 1: Identificação -->
-                            <div class="col-lg-7">
-                                <div class="card border-0 shadow-sm h-100">
-                                    <div class="card-body p-4">
-                                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Identificação Principal</h6>
-                                        <div class="mb-3">
-                                            <div class="d-flex justify-content-between align-items-end mb-1">
-                                                <label class="form-label text-muted small text-uppercase fw-bold mb-0">Nome do Indicador</label>
-                                                <div wire:loading wire:target="form.nom_indicador" class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                                            </div>
-                                            <input type="text" wire:model.live.debounce.2000ms="form.nom_indicador" class="form-control @error('form.nom_indicador') is-invalid @enderror" placeholder="Ex: Índice de Satisfação do Cidadão">
-                                            @error('form.nom_indicador') <div class="invalid-feedback">{{ $message }}</div> @enderror
+    <!-- Modal Premium Criar/Editar XL -->
+    @if($showModal)
+        <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.5); z-index: 1055;" wire:click.self="$set('showModal', false)">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                    
+                    {{-- Header Premium --}}
+                    <div class="modal-header gradient-theme-header text-white border-0 py-3 px-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="icon-circle-mini bg-white bg-opacity-25 text-white">
+                                <i class="bi bi-{{ $indicadorId ? 'sliders' : 'plus-circle' }}"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0">{{ $indicadorId ? 'Configurar Indicador' : 'Novo Indicador' }}</h5>
+                                <p class="mb-0 small text-white-50">Definição de métricas e parâmetros de desempenho</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" wire:click="$set('showModal', false)"></button>
+                    </div>
 
-                                            @if($smartFeedback)
-                                                <div class="mt-2 p-2 rounded bg-primary bg-opacity-10 border-start border-3 border-primary animate-fade-in position-relative">
-                                                    <button type="button" class="btn-close small position-absolute top-0 end-0 m-1" style="font-size: 0.5rem;" wire:click="$set('smartFeedback', '')"></button>
-                                                    <small class="text-primary fw-bold d-block mb-1"><i class="bi bi-info-circle me-1"></i>Feedback do Mentor SMART:</small>
-                                                    <small class="text-dark d-block pe-3">{{ $smartFeedback }}</small>
+                    <form wire:submit.prevent="save">
+                        <div class="modal-body p-4 bg-white">
+                            <div class="row g-4">
+                                
+                                {{-- Coluna Principal: Identificação --}}
+                                <div class="col-lg-7">
+                                    <div class="card border-0 bg-light rounded-4 h-100">
+                                        <div class="card-body p-4">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Identificação e Conceito</h6>
+                                            
+                                            <div class="mb-4">
+                                                <div class="d-flex justify-content-between align-items-end mb-1">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold mb-0">Nome do Indicador <span class="text-danger">*</span></label>
+                                                    <div wire:loading wire:target="form.nom_indicador" class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                                </div>
+                                                <input type="text" wire:model.live.debounce.2000ms="form.nom_indicador" class="form-control form-control-lg bg-white border-0 shadow-sm @error('form.nom_indicador') is-invalid @enderror" placeholder="Ex: Índice de Satisfação do Cidadão">
+                                                @error('form.nom_indicador') <div class="invalid-feedback">{{ $message }}</div> @enderror
+
+                                                @if($smartFeedback)
+                                                    <div class="mt-3 p-3 rounded-4 bg-white border-start border-4 border-primary shadow-sm animate-fade-in position-relative">
+                                                        <button type="button" class="btn-close small position-absolute top-0 end-0 m-2" style="font-size: 0.6rem;" wire:click="$set('smartFeedback', '')"></button>
+                                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                                            <i class="bi bi-robot text-primary"></i>
+                                                            <small class="text-primary fw-bold text-uppercase">Análise SMART:</small>
+                                                        </div>
+                                                        <small class="text-dark lh-sm d-block">{{ $smartFeedback }}</small>
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            <div class="mb-4">
+                                                <label class="form-label text-muted small text-uppercase fw-bold">Descrição / Conceito</label>
+                                                <textarea wire:model="form.dsc_indicador" class="form-control bg-white border-0 shadow-sm @error('form.dsc_indicador') is-invalid @enderror" rows="3" placeholder="O que este indicador mede exatamente?"></textarea>
+                                                @error('form.dsc_indicador') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                            </div>
+
+                                            <div class="mb-0">
+                                                <label class="form-label text-muted small text-uppercase fw-bold">Observações Técnicas</label>
+                                                <textarea wire:model="form.txt_observacao" class="form-control bg-white border-0 shadow-sm" rows="2" placeholder="Notas adicionais sobre a coleta ou restrições..."></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Coluna Lateral: Vínculo e Peso --}}
+                                <div class="col-lg-5">
+                                    <div class="card border-0 bg-light rounded-4 h-100">
+                                        <div class="card-body p-4">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Vínculo Estratégico</h6>
+                                            
+                                            <div class="mb-4">
+                                                <label class="form-label text-muted small text-uppercase fw-bold d-block">Origem do Indicador</label>
+                                                <div class="d-flex gap-2 p-1 bg-white rounded-pill shadow-sm">
+                                                    <input type="radio" class="btn-check" wire:model.live="form.dsc_tipo" value="Objetivo" id="v_obj" autocomplete="off">
+                                                    <label class="btn btn-outline-primary border-0 rounded-pill flex-grow-1 py-2 fw-bold" for="v_obj">
+                                                        <i class="bi bi-bullseye me-1"></i> Objetivo
+                                                    </label>
+
+                                                    <input type="radio" class="btn-check" wire:model.live="form.dsc_tipo" value="Plano" id="v_plan" autocomplete="off">
+                                                    <label class="btn btn-outline-info border-0 rounded-pill flex-grow-1 py-2 fw-bold" for="v_plan">
+                                                        <i class="bi bi-list-task me-1"></i> Plano
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            @if($form['dsc_tipo'] === 'Objetivo')
+                                                <div class="mb-4 animate-fade-in">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Selecionar Objetivo <span class="text-danger">*</span></label>
+                                                    <select wire:model="form.cod_objetivo" class="form-select bg-white border-0 shadow-sm fw-bold">
+                                                        <option value="">Escolha o objetivo...</option>
+                                                        @foreach($objetivos as $obj)
+                                                            <option value="{{ $obj->cod_objetivo }}">{{ $obj->nom_objetivo }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('form.cod_objetivo') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                                </div>
+                                            @else
+                                                <div class="mb-4 animate-fade-in">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Selecionar Plano <span class="text-danger">*</span></label>
+                                                    <select wire:model="form.cod_plano_de_acao" class="form-select bg-white border-0 shadow-sm fw-bold">
+                                                        <option value="">Escolha o plano...</option>
+                                                        @foreach($planos as $plano)
+                                                            <option value="{{ $plano->cod_plano_de_acao }}">{{ $plano->dsc_plano_de_acao }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('form.cod_plano_de_acao') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
                                                 </div>
                                             @endif
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label text-muted small text-uppercase fw-bold">Descrição / Conceito</label>
-                                            <textarea wire:model="form.dsc_indicador" class="form-control @error('form.dsc_indicador') is-invalid @enderror" rows="3" placeholder="O que este indicador mede exatamente?"></textarea>
-                                            @error('form.dsc_indicador') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                        </div>
-                                        <div class="mb-0">
-                                            <label class="form-label text-muted small text-uppercase fw-bold">Observações Técnicas</label>
-                                            <textarea wire:model="form.txt_observacao" class="form-control" rows="2"></textarea>
+                                            
+                                            <div class="mb-0">
+                                                <label class="form-label text-muted small text-uppercase fw-bold">Peso do KPI (1-100)</label>
+                                                <div class="input-group shadow-sm">
+                                                    <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-award"></i></span>
+                                                    <input type="number" wire:model="form.num_peso" class="form-control bg-white border-0 fw-bold" min="1" max="100">
+                                                </div>
+                                                <small class="text-muted x-small mt-1 d-block">Relevância no cálculo do desempenho global.</small>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Bloco 2: Vínculo Estratégico -->
-                            <div class="col-lg-5">
-                                <div class="card border-0 shadow-sm h-100">
-                                    <div class="card-body p-4">
-                                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Vínculo Estratégico</h6>
-                                        <div class="mb-4">
-                                            <label class="form-label text-muted small text-uppercase fw-bold d-block">Este indicador pertence a um:</label>
-                                            <div class="btn-group w-100" role="group">
-                                                <input type="radio" class="btn-check" wire:model.live="form.dsc_tipo" value="Objetivo" id="v_obj" autocomplete="off">
-                                                <label class="btn btn-outline-primary" for="v_obj"><i class="bi bi-bullseye me-1"></i> Objetivo</label>
-
-                                                <input type="radio" class="btn-check" wire:model.live="form.dsc_tipo" value="Plano" id="v_plan" autocomplete="off">
-                                                <label class="btn btn-outline-info" for="v_plan"><i class="bi bi-list-task me-1"></i> Plano de Ação</label>
-                                            </div>
-                                        </div>
-
-                                        @if($form['dsc_tipo'] === 'Objetivo')
-                                            <div class="mb-3 animate-fade-in">
-                                                <label class="form-label text-muted small text-uppercase fw-bold">Selecionar Objetivo</label>
-                                                <select wire:model="form.cod_objetivo" class="form-select @error('form.cod_objetivo') is-invalid @enderror">
-                                                    <option value="">Escolha o objetivo...</option>
-                                                    @foreach($objetivos as $obj)
-                                                        <option value="{{ $obj->cod_objetivo }}">{{ $obj->nom_objetivo }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @error('form.cod_objetivo') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                            </div>
-                                        @else
-                                            <div class="mb-3 animate-fade-in">
-                                                <label class="form-label text-muted small text-uppercase fw-bold">Selecionar Plano de Ação</label>
-                                                <select wire:model="form.cod_plano_de_acao" class="form-select @error('form.cod_plano_de_acao') is-invalid @enderror">
-                                                    <option value="">Escolha o plano...</option>
-                                                    @foreach($planos as $plano)
-                                                        <option value="{{ $plano->cod_plano_de_acao }}">{{ $plano->dsc_plano_de_acao }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @error('form.cod_plano_de_acao') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                            </div>
-                                        @endif
-                                        
-                                        <div class="mb-0">
-                                            <label class="form-label text-muted small text-uppercase fw-bold">Peso do Indicador</label>
-                                            <input type="number" wire:model="form.num_peso" class="form-control" min="1" max="100">
-                                            <small class="text-muted">Importância relativa para o cálculo do índice global.</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Bloco 3: Metodologia e Medição -->
-                            <div class="col-12">
-                                <div class="card border-0 shadow-sm">
-                                    <div class="card-body p-4">
-                                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Metodologia e Unidade de Medida</h6>
-                                        <div class="row g-3">
-                                            <div class="col-md-3">
-                                                <label class="form-label text-muted small text-uppercase fw-bold">Unidade de Medida</label>
-                                                <input type="text" wire:model="form.dsc_unidade_medida" class="form-control" placeholder="Ex: Percentual (%)">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label text-muted small text-uppercase fw-bold">Periodicidade</label>
-                                                <select wire:model="form.dsc_periodo_medicao" class="form-select">
-                                                    @foreach($periodosOptions as $per)
-                                                        <option value="{{ $per }}">{{ $per }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label text-muted small text-uppercase fw-bold">É Acumulado?</label>
-                                                <select wire:model="form.bln_acumulado" class="form-select">
-                                                    <option value="Sim">Sim</option>
-                                                    <option value="Não">Não</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label text-muted small text-uppercase fw-bold">Meta Descritiva</label>
-                                                <input type="text" wire:model="form.dsc_meta" class="form-control" placeholder="Ex: Atingir 90%">
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label text-muted small text-uppercase fw-bold">Fórmula de Cálculo</label>
-                                                <textarea wire:model="form.dsc_formula" class="form-control" rows="2" placeholder="Ex: (Total A / Total B) * 100"></textarea>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label text-muted small text-uppercase fw-bold">Fonte dos Dados</label>
-                                                <textarea wire:model="form.dsc_fonte" class="form-control" rows="2" placeholder="Ex: Relatórios do Sistema de Gestão X"></textarea>
+                                {{-- Bloco Inferior: Metodologia --}}
+                                <div class="col-12">
+                                    <div class="card border-0 bg-light rounded-4">
+                                        <div class="card-body p-4">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Parâmetros de Medição</h6>
+                                            <div class="row g-3">
+                                                <div class="col-md-3">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Unidade de Medida <span class="text-danger">*</span></label>
+                                                    <input type="text" wire:model="form.dsc_unidade_medida" class="form-control bg-white border-0 shadow-sm fw-bold" placeholder="Ex: % ou R$">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Periodicidade</label>
+                                                    <select wire:model="form.dsc_periodo_medicao" class="form-select bg-white border-0 shadow-sm fw-bold">
+                                                        @foreach($periodosOptions as $per)
+                                                            <option value="{{ $per }}">{{ $per }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">É Acumulado?</label>
+                                                    <select wire:model="form.bln_acumulado" class="form-select bg-white border-0 shadow-sm fw-bold">
+                                                        <option value="Sim">Sim (Soma mensal)</option>
+                                                        <option value="Não">Não (Valor pontual)</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Meta Global</label>
+                                                    <input type="text" wire:model="form.dsc_meta" class="form-control bg-white border-0 shadow-sm fw-bold" placeholder="Ex: Atingir 90%">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Fórmula de Cálculo</label>
+                                                    <textarea wire:model="form.dsc_formula" class="form-control bg-white border-0 shadow-sm" rows="2" placeholder="Ex: (Realizado / Previsto) * 100"></textarea>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Fonte dos Dados</label>
+                                                    <textarea wire:model="form.dsc_fonte" class="form-control bg-white border-0 shadow-sm" rows="2" placeholder="Ex: Sistema Financeiro ERP..."></textarea>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        <div class="modal-footer border-0 p-4 bg-white rounded-bottom-4 shadow-top-sm">
+                            <button type="button" class="btn btn-light px-4 rounded-pill fw-bold text-muted" wire:click="$set('showModal', false)">Cancelar</button>
+                            <button type="submit" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow-sm hover-scale">
+                                <i class="bi bi-check-lg me-2"></i>Salvar Indicador
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Success Modal Premium --}}
+    @if($showSuccessModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-primary text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem; background: linear-gradient(135deg, #1B408E 0%, #4361EE 100%) !important;">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
                     </div>
-                    <div class="modal-footer border-0 p-4 pt-0 bg-light bg-opacity-50">
-                        <button type="button" class="btn btn-light px-4" wire:click="$set('showModal', false)">Cancelar</button>
-                        <button type="submit" class="btn btn-primary gradient-theme-btn px-4 py-2 fw-bold">
-                            <i class="bi bi-save me-2"></i>Salvar Indicador
-                        </button>
-                    </div>
-                </form>
+                    <h3 class="fw-bold text-dark mb-3">KPI Registrado!</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        <strong class="text-primary d-block mb-2">"{{ $createdIndicadorName }}"</strong>
+                        {{ $successMessage }}
+                    </p>
+                    <button wire:click="closeSuccessModal" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-check2-circle me-2"></i>Continuar
+                    </button>
+                </div>
             </div>
         </div>
     </div>
+    @endif
+
+    {{-- Error Modal Premium --}}
+    @if($showErrorModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-danger text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem; background: linear-gradient(135deg, #e63946 0%, #d62828 100%) !important;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-3">Falha na Operação</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        {{ $errorMessage }}
+                    </p>
+                    <button wire:click="closeErrorModal" class="btn btn-danger px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Tentar Novamente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <style>
+        .scale-in-center { animation: scale-in-center 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; }
+        @keyframes scale-in-center { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
 
     {{-- Modal de Exclusão --}}
     <x-confirmation-modal wire:model.live="showDeleteModal">
