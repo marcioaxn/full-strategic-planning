@@ -713,7 +713,9 @@
                 </span>
             </x-danger-button>
         </x-slot>
-        {{-- Success Modal Premium --}}
+    </x-confirmation-modal>
+
+    {{-- Success Modal Premium --}}
     @if($showSuccessModal)
     <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
         <div class="modal-dialog modal-dialog-centered">
