@@ -426,108 +426,166 @@
         @endif
     </div>
 
-    {{-- Create/Edit Modal --}}
-    <x-dialog-modal wire:key="pei-form-modal" wire:model.live="showModal" maxWidth="lg">
-        <x-slot name="title">
-            <div class="modal-header-modern">
-                <div class="icon-circle-mini modal-icon-primary">
-                    <i class="bi bi-{{ $peiId ? 'pencil' : 'calendar-plus' }}"></i>
-                </div>
-                <div>
-                    <h5 class="mb-1 fw-bold">{{ $peiId ? __('Editar PEI') : __('Novo PEI') }}</h5>
-                    <p class="text-muted small mb-0">{{ __('Configure o ciclo de planejamento estratégico') }}</p>
-                </div>
-            </div>
-        </x-slot>
-
-        <x-slot name="content">
-            <div class="row g-4">
-                <div class="col-12">
-                    <label for="dsc_pei" class="form-label-modern">
-                        {{ __('Descrição do PEI') }} <span class="text-danger">*</span>
-                        <x-tooltip title="Nome do ciclo estratégico (ex: PEI 2025-2029)" />
-                    </label>
-                    <input
-                        id="dsc_pei"
-                        type="text"
-                        class="form-control form-control-modern @error('dsc_pei') is-invalid @enderror"
-                        placeholder="Ex: PEI 2024-2028"
-                        wire:model="dsc_pei"
-                        required
-                    >
-                    @error('dsc_pei')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="col-12 col-md-6">
-                    <label for="num_ano_inicio_pei" class="form-label-modern">
-                        {{ __('Ano de Início') }} <span class="text-danger">*</span>
-                        <x-tooltip title="Primeiro ano de vigência do planejamento" />
-                    </label>
-                    <input
-                        id="num_ano_inicio_pei"
-                        type="number"
-                        class="form-control form-control-modern @error('num_ano_inicio_pei') is-invalid @enderror"
-                        min="2000"
-                        max="2100"
-                        wire:model="num_ano_inicio_pei"
-                        required
-                    >
-                    @error('num_ano_inicio_pei')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="col-12 col-md-6">
-                    <label for="num_ano_fim_pei" class="form-label-modern">
-                        {{ __('Ano de Término') }} <span class="text-danger">*</span>
-                        <x-tooltip title="Último ano de vigência do planejamento" />
-                    </label>
-                    <input
-                        id="num_ano_fim_pei"
-                        type="number"
-                        class="form-control form-control-modern @error('num_ano_fim_pei') is-invalid @enderror"
-                        min="2000"
-                        max="2100"
-                        wire:model="num_ano_fim_pei"
-                        required
-                    >
-                    @error('num_ano_fim_pei')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="col-12">
-                    <div class="alert alert-info bg-info-subtle border-0">
-                        <i class="bi bi-info-circle me-2"></i>
-                        <strong>Dica:</strong> Um PEI típico tem duração de 4 a 5 anos. O PEI vigente é determinado automaticamente com base no ano atual.
+    {{-- Create/Edit Modal Premium XL --}}
+    @if($showModal)
+        <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.5); z-index: 1055;" wire:click.self="showModal = false">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                    
+                    {{-- Header Premium --}}
+                    <div class="modal-header gradient-theme-header text-white border-0 py-3 px-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="icon-circle-mini bg-white bg-opacity-25 text-white">
+                                <i class="bi bi-{{ $peiId ? 'pencil-square' : 'calendar-plus' }}"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0">{{ $peiId ? 'Editar Ciclo PEI' : 'Novo Ciclo PEI' }}</h5>
+                                <p class="mb-0 small text-white-50">Configuração do período de vigência estratégica</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" wire:click="$set('showModal', false)"></button>
                     </div>
+
+                    <form wire:submit.prevent="save">
+                        <div class="modal-body p-4 bg-white">
+                            <div class="row g-4">
+                                
+                                {{-- Coluna Principal: Definição --}}
+                                <div class="col-lg-7">
+                                    <div class="card border-0 bg-light rounded-4 h-100">
+                                        <div class="card-body p-4">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Identificação do Ciclo</h6>
+                                            
+                                            {{-- Descrição --}}
+                                            <div class="mb-4">
+                                                <label class="form-label text-muted small text-uppercase fw-bold">Descrição do PEI <span class="text-danger">*</span></label>
+                                                <input type="text"
+                                                       class="form-control form-control-lg bg-white border-0 shadow-sm @error('dsc_pei') is-invalid @enderror"
+                                                       wire:model="dsc_pei"
+                                                       placeholder="Ex: PEI 2024-2028">
+                                                @error('dsc_pei') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                            </div>
+
+                                            <div class="alert alert-info border-0 bg-white shadow-sm rounded-4 p-3 mb-0">
+                                                <div class="d-flex gap-3">
+                                                    <i class="bi bi-info-circle-fill text-primary fs-4"></i>
+                                                    <div class="small">
+                                                        <p class="fw-bold mb-1 text-dark">Dica de Gestão:</p>
+                                                        <p class="text-muted mb-0">Um ciclo estratégico institucional costuma durar de 4 a 5 anos. O nome do PEI deve refletir esse período para facilitar a identificação nos relatórios.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Coluna Lateral: Período --}}
+                                <div class="col-lg-5">
+                                    <div class="card border-0 bg-light rounded-4 h-100">
+                                        <div class="card-body p-4 text-center">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-4">Período de Vigência</h6>
+                                            
+                                            <div class="row g-3">
+                                                <div class="col-md-12 mb-3">
+                                                    <label class="form-label small text-muted fw-bold text-uppercase">Ano de Início <span class="text-danger">*</span></label>
+                                                    <div class="input-group input-group-lg shadow-sm">
+                                                        <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-calendar-event"></i></span>
+                                                        <input type="number" wire:model="num_ano_inicio_pei" class="form-control bg-white border-0 fw-bold text-center @error('num_ano_inicio_pei') is-invalid @enderror" min="2000" max="2100">
+                                                    </div>
+                                                    @error('num_ano_inicio_pei') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                                </div>
+
+                                                <div class="col-md-12 mb-4">
+                                                    <label class="form-label small text-muted fw-bold text-uppercase">Ano de Término <span class="text-danger">*</span></label>
+                                                    <div class="input-group input-group-lg shadow-sm">
+                                                        <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-calendar-check"></i></span>
+                                                        <input type="number" wire:model="num_ano_fim_pei" class="form-control bg-white border-0 fw-bold text-center @error('num_ano_fim_pei') is-invalid @enderror" min="2000" max="2100">
+                                                    </div>
+                                                    @error('num_ano_fim_pei') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                                </div>
+                                            </div>
+
+                                            <div class="p-3 bg-white rounded-3 border shadow-sm mt-auto" x-data="{ 
+                                                inicio: @entangle('num_ano_inicio_pei'), 
+                                                fim: @entangle('num_ano_fim_pei') 
+                                            }">
+                                                <p class="small text-muted mb-1">Duração Estimada:</p>
+                                                <div class="h4 fw-bold text-primary mb-0">
+                                                    <span x-text="fim - inicio + 1"></span> anos
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Footer Premium --}}
+                        <div class="modal-footer border-0 p-4 bg-white rounded-bottom-4 shadow-top-sm">
+                            <button type="button" class="btn btn-light px-4 rounded-pill fw-bold text-muted" wire:click="$set('showModal', false)">Cancelar</button>
+                            <button type="submit" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow-sm hover-scale">
+                                <i class="bi bi-check-lg me-2"></i>Salvar Ciclo PEI
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
-        </x-slot>
+        </div>
+    @endif
 
-        <x-slot name="footer">
-            <span class="text-muted small d-none d-sm-inline">
-                <span class="text-danger">*</span> {{ __('Campos obrigatórios') }}
-            </span>
-            <div class="d-flex gap-2">
-                <x-secondary-button wire:click="$set('showModal', false)" wire:loading.attr="disabled" class="btn-modern">
-                    {{ __('Cancelar') }}
-                </x-secondary-button>
-
-                <x-button type="button" wire:click="save" wire:loading.attr="disabled" class="btn-save-modern">
-                    <span wire:loading.remove wire:target="save">
-                        <i class="bi bi-check-lg me-1"></i>{{ __('Salvar PEI') }}
-                    </span>
-                    <span wire:loading wire:target="save">
-                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                        {{ __('Salvando...') }}
-                    </span>
-                </x-button>
+    {{-- Success Modal Premium --}}
+    @if($showSuccessModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-primary text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem; background: linear-gradient(135deg, #1B408E 0%, #4361EE 100%) !important;">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-3">Ciclo PEI Registrado!</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        <strong class="text-primary d-block mb-2">"{{ $createdPeiName }}"</strong>
+                        {{ $successMessage }}
+                    </p>
+                    <button wire:click="closeSuccessModal" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-check2-circle me-2"></i>Continuar
+                    </button>
+                </div>
             </div>
-        </x-slot>
-    </x-dialog-modal>
+        </div>
+    </div>
+    @endif
+
+    {{-- Error Modal Premium --}}
+    @if($showErrorModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-danger text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem; background: linear-gradient(135deg, #e63946 0%, #d62828 100%) !important;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-3">Não foi possível salvar</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        {{ $errorMessage }}
+                    </p>
+                    <button wire:click="closeErrorModal" class="btn btn-danger px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Tentar Novamente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <style>
+        .scale-in-center { animation: scale-in-center 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; }
+        @keyframes scale-in-center { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
 
     {{-- Delete Confirmation Modal --}}
     <x-confirmation-modal wire:key="pei-delete-modal" wire:model.live="showDeleteModal">
