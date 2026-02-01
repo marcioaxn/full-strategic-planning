@@ -722,18 +722,24 @@
 
                                             <div class="mb-0">
                                                 <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Vínculo Estratégico</h6>
-                                                <div class="bg-white rounded-4 shadow-sm p-3 overflow-auto" style="max-height: 200px;">
-                                                    @foreach($objetivos as $obj)
-                                                        <div class="form-check mb-2">
-                                                            <input class="form-check-input" type="checkbox" value="{{ $obj->cod_objetivo }}" 
-                                                                   wire:model="form.objetivos_vinculados" id="obj_{{ $obj->cod_objetivo }}">
-                                                            <label class="form-check-label small fw-medium text-dark" for="obj_{{ $obj->cod_objetivo }}">
-                                                                {{ $obj->nom_objetivo }}
-                                                            </label>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            </div>
+                                                                                            <div class="bg-white rounded-4 shadow-sm p-3 overflow-auto" style="max-height: 250px;">
+                                                                                                @foreach($objetivos as $perspectiva => $itens)
+                                                                                                    <div class="mb-3">
+                                                                                                        <div class="small fw-bold text-primary text-uppercase border-bottom pb-1 mb-2" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                                                                                                            <i class="bi bi-layers me-1"></i>{{ $perspectiva }}
+                                                                                                        </div>
+                                                                                                        @foreach($itens as $obj)
+                                                                                                            <div class="form-check mb-2">
+                                                                                                                <input class="form-check-input" type="checkbox" value="{{ $obj['cod_objetivo'] }}" 
+                                                                                                                       wire:model="form.objetivos_vinculados" id="obj_{{ $obj['cod_objetivo'] }}">
+                                                                                                                <label class="form-check-label small fw-medium text-dark" for="obj_{{ $obj['cod_objetivo'] }}">
+                                                                                                                    {{ $obj['nom_objetivo'] }}
+                                                                                                                </label>
+                                                                                                            </div>
+                                                                                                        @endforeach
+                                                                                                    </div>
+                                                                                                @endforeach
+                                                                                            </div>                                            </div>
                                         </div>
                                     </div>
                                 </div>
