@@ -8,6 +8,8 @@
                 </div>
                 <h1 class="h3 fw-bold mb-0">{{ __('Perspectivas BSC') }}</h1>
                 <span class="badge-modern badge-count">
+                    {{ count($perspectivas) }}
+                </span>
             </div>
             <p class="text-muted mb-0">
                 {{ __('Gerencie as 4 perspectivas fundamentais do Balanced Scorecard para o ciclo:') }} 
@@ -472,49 +474,105 @@
         </div>
 
     @if($peiAtivo)
-        <!-- Modal de Criação/Edição -->
+        <!-- Modal de Criacao/Edicao Premium XL -->
         @if($showModal)
-        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="bi bi-{{ $perspectivaId ? 'pencil' : 'plus-circle' }} me-2"></i>
-                            {{ $perspectivaId ? 'Editar' : 'Nova' }} Perspectiva
-                        </h5>
-                        <button type="button" class="btn-close" wire:click="$set('showModal', false)"></button>
-                    </div>
-                    <form wire:submit="save">
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="dsc_perspectiva" class="form-label">Nome da Perspectiva <span class="text-danger">*</span></label>
-                                <input type="text" wire:model="dsc_perspectiva" id="dsc_perspectiva" class="form-control @error('dsc_perspectiva') is-invalid @enderror" placeholder="Ex: Financeira, Clientes, Processos Internos..." required>
-                                @error('dsc_perspectiva')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+            <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.5); z-index: 1055;" wire:click.self="$set('showModal', false)">
+                <div class="modal-dialog modal-xl modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                        
+                        {{-- Header Premium --}}
+                        <div class="modal-header gradient-theme-header text-white border-0 py-3 px-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="icon-circle-mini bg-white bg-opacity-25 text-white">
+                                    <i class="bi bi-{{ $perspectivaId ? 'pencil-square' : 'plus-circle' }}"></i>
+                                </div>
+                                <div>
+                                    <h5 class="modal-title fw-bold mb-0">{{ $perspectivaId ? 'Editar Perspectiva' : 'Nova Perspectiva' }}</h5>
+                                    <p class="mb-0 small text-white-50">Dimensões estratégicas do Balanced Scorecard</p>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close btn-close-white" wire:click="$set('showModal', false)"></button>
+                        </div>
+
+                        <form wire:submit.prevent="save">
+                            <div class="modal-body p-4 bg-white">
+                                <div class="row g-4">
+                                    
+                                    {{-- Coluna Principal: Definição --}}
+                                    <div class="col-lg-7">
+                                        <div class="card border-0 bg-light rounded-4 h-100">
+                                            <div class="card-body p-4">
+                                                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Definição da Dimensão</h6>
+                                                
+                                                {{-- Nome --}}
+                                                <div class="mb-4">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Nome da Perspectiva <span class="text-danger">*</span></label>
+                                                    <input type="text"
+                                                           class="form-control form-control-lg bg-white border-0 shadow-sm @error('dsc_perspectiva') is-invalid @enderror"
+                                                           wire:model="dsc_perspectiva"
+                                                           placeholder="Ex: Financeira, Clientes, Processos Internos...">
+                                                    @error('dsc_perspectiva') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                                </div>
+
+                                                <div class="alert alert-info border-0 bg-white shadow-sm rounded-4 p-3 mb-0">
+                                                    <div class="d-flex gap-3">
+                                                        <i class="bi bi-info-circle-fill text-primary fs-4"></i>
+                                                        <div class="small">
+                                                            <p class="fw-bold mb-1 text-dark">Dica de Hierarquia:</p>
+                                                            <p class="text-muted mb-0">A ordem de apresentação define como as dimensões serão empilhadas no Mapa Estratégico. Normalmente, <strong>Aprendizado</strong> fica na base e <strong>Financeira/Resultados</strong> no topo.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Coluna Lateral: Ordem --}}
+                                    <div class="col-lg-5">
+                                        <div class="card border-0 bg-light rounded-4 h-100">
+                                            <div class="card-body p-4 text-center">
+                                                <h6 class="fw-bold text-dark border-bottom pb-2 mb-4">Hierarquia no Mapa</h6>
+                                                
+                                                <div class="mb-4">
+                                                    <label class="form-label small text-muted fw-bold text-uppercase">Ordem de Apresentação <span class="text-danger">*</span></label>
+                                                    <div class="input-group input-group-lg shadow-sm">
+                                                        <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-sort-numeric-down"></i></span>
+                                                        <input type="number" wire:model="num_nivel_hierarquico_apresentacao" class="form-control bg-white border-0 fw-bold text-center @error('num_nivel_hierarquico_apresentacao') is-invalid @enderror" min="1">
+                                                    </div>
+                                                    <small class="text-muted x-small mt-2 d-block">1 = Nível mais baixo (base do mapa)</small>
+                                                    @error('num_nivel_hierarquico_apresentacao') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                                </div>
+
+                                                {{-- Preview Visual --}}
+                                                <div class="p-3 bg-white rounded-3 border shadow-sm mt-auto">
+                                                    <p class="small text-muted mb-2">Visualização no Mapa:</p>
+                                                    <div class="d-flex flex-column gap-1 align-items-center">
+                                                        <div class="w-100 py-2 rounded bg-primary text-white small fw-bold shadow-sm" style="opacity: 0.3;">Topo do Mapa</div>
+                                                        <i class="bi bi-arrow-down text-muted"></i>
+                                                        <div class="w-100 py-2 rounded gradient-theme text-white small fw-bold shadow">
+                                                            {{ $dsc_perspectiva ?: 'Sua Perspectiva' }}
+                                                        </div>
+                                                        <i class="bi bi-arrow-down text-muted"></i>
+                                                        <div class="w-100 py-2 rounded bg-secondary text-white small fw-bold shadow-sm" style="opacity: 0.3;">Base do Mapa</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label for="num_nivel_hierarquico_apresentacao" class="form-label">Ordem de Apresentação <span class="text-danger">*</span></label>
-                                <input type="number" wire:model="num_nivel_hierarquico_apresentacao" id="num_nivel_hierarquico_apresentacao" class="form-control @error('num_nivel_hierarquico_apresentacao') is-invalid @enderror" min="1" required>
-                                <div class="form-text">Define a posição desta perspectiva no mapa estratégico (1 = topo)</div>
-                                @error('num_nivel_hierarquico_apresentacao')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                            {{-- Footer Premium --}}
+                            <div class="modal-footer border-0 p-4 bg-white rounded-bottom-4 shadow-top-sm">
+                                <button type="button" class="btn btn-light px-4 rounded-pill fw-bold text-muted" wire:click="$set('showModal', false)">Cancelar</button>
+                                <button type="submit" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow-sm hover-scale">
+                                    <i class="bi bi-check-lg me-2"></i>{{ $perspectivaId ? 'Atualizar Perspectiva' : 'Salvar Perspectiva' }}
+                                </button>
                             </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" wire:click="$set('showModal', false)">
-                                <i class="bi bi-x-lg me-1"></i> Cancelar
-                            </button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-lg me-1"></i> {{ $perspectivaId ? 'Atualizar' : 'Salvar' }}
-                            </button>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
         @endif
     @endif
     @endif
@@ -560,5 +618,58 @@
                 </span>
             </x-danger-button>
         </x-slot>
+    {{-- Success Modal Premium --}}
+    @if($showSuccessModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-primary text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem; background: linear-gradient(135deg, #1B408E 0%, #4361EE 100%) !important;">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-3">Operação Concluída!</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        <strong class="text-primary d-block mb-2">"{{ $createdPerspectivaName }}"</strong>
+                        {{ $successMessage }}
+                    </p>
+                    <button wire:click="closeSuccessModal" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-check2-circle me-2"></i>Continuar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Error Modal Premium --}}
+    @if($showErrorModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-danger text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem; background: linear-gradient(135deg, #e63946 0%, #d62828 100%) !important;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-3">Não foi possível salvar</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        {{ $errorMessage }}
+                    </p>
+                    <button wire:click="closeErrorModal" class="btn btn-danger px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Tentar Novamente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <style>
+        .scale-in-center { animation: scale-in-center 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; }
+        @keyframes scale-in-center { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
     </x-confirmation-modal>
 </div>
