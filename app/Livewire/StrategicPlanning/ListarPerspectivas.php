@@ -16,6 +16,12 @@ class ListarPerspectivas extends Component
 
     public bool $showModal = false;
     public bool $showDeleteModal = false;
+    public bool $showSuccessModal = false;
+    public bool $showErrorModal = false;
+    public string $successMessage = '';
+    public string $errorMessage = '';
+    public string $createdPerspectivaName = '';
+
     public $perspectivaId;
     public $dsc_perspectiva;
     public $num_nivel_hierarquico_apresentacao;
@@ -34,6 +40,19 @@ class ListarPerspectivas extends Component
         if ($this->peiAtivo) {
             $this->carregarPerspectivas();
         }
+    }
+
+    public function closeSuccessModal()
+    {
+        $this->showSuccessModal = false;
+        $this->successMessage = '';
+        $this->createdPerspectivaName = '';
+    }
+
+    public function closeErrorModal()
+    {
+        $this->showErrorModal = false;
+        $this->errorMessage = '';
     }
 
     public function pedirAjudaIA()
@@ -154,37 +173,37 @@ class ListarPerspectivas extends Component
     public function save()
     {
         $service = app(\App\Services\PeiGuidanceService::class);
-        $before = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
-
         $this->validate([
             'dsc_perspectiva' => 'required|string|max:255',
             'num_nivel_hierarquico_apresentacao' => 'required|integer|min:1',
         ]);
 
-        Perspectiva::updateOrCreate(
-            ['cod_perspectiva' => $this->perspectivaId],
-            [
-                'dsc_perspectiva' => $this->dsc_perspectiva,
-                'num_nivel_hierarquico_apresentacao' => $this->num_nivel_hierarquico_apresentacao,
-                'cod_pei' => $this->peiAtivo->cod_pei
-            ]
-        );
+        try {
+            Perspectiva::updateOrCreate(
+                ['cod_perspectiva' => $this->perspectivaId],
+                [
+                    'dsc_perspectiva' => $this->dsc_perspectiva,
+                    'num_nivel_hierarquico_apresentacao' => $this->num_nivel_hierarquico_apresentacao,
+                    'cod_pei' => $this->peiAtivo->cod_pei
+                ]
+            );
 
-        $after = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
-        $nextStepName = $after['next_step']['name'] ?? 'Monitoramento';
+            if ($this->perspectivaId) {
+                $this->successMessage = "A perspectiva do Balanced Scorecard foi atualizada com sucesso e já reflete as mudanças no seu mapa estratégico.";
+            } else {
+                $this->successMessage = "A nova perspectiva foi registrada. Agora você pode prosseguir vinculando objetivos estratégicos a esta dimensão.";
+            }
 
-        $alert = \App\Services\NotificationService::sendMentorAlert(
-            $this->perspectivaId ? 'Perspectiva Atualizada!' : 'Perspectiva Criada!',
-            $after['message'],
-            'bi-layers-fill'
-        );
+            $this->createdPerspectivaName = $this->dsc_perspectiva;
+            $this->showModal = false;
+            $this->resetForm();
+            $this->carregarPerspectivas();
+            $this->showSuccessModal = true;
 
-        $this->dispatch('mentor-notification', ...$alert);
-
-        $this->showModal = false;
-        $this->resetForm();
-        $this->carregarPerspectivas();
-        session()->flash('status', 'Perspectiva salva com sucesso!');
+        } catch (\Exception $e) {
+            $this->errorMessage = "Não foi possível processar a alteração na perspectiva. Por favor, revise as informações e tente novamente.";
+            $this->showErrorModal = true;
+        }
     }
 
     public function confirmDelete($id)
