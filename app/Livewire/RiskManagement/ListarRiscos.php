@@ -149,9 +149,15 @@ class ListarRiscos extends Component
     public function carregarListasAuxiliares()
     {
         if ($this->peiAtivo) {
-            $this->objetivos = Objetivo::whereHas('perspectiva', function($query) {
-                $query->where('cod_pei', $this->peiAtivo->cod_pei);
-            })->orderBy('nom_objetivo')->get();
+            $objetivosBrutos = Objetivo::with('perspectiva')
+                ->whereHas('perspectiva', function($query) {
+                    $query->where('cod_pei', $this->peiAtivo->cod_pei);
+                })
+                ->get();
+
+            $this->objetivos = $objetivosBrutos->groupBy(function($item) {
+                return $item->perspectiva->dsc_perspectiva ?? 'Outras Dimensões';
+            });
         }
 
         if ($this->organizacaoId) {
