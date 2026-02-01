@@ -161,12 +161,13 @@
             align-items: center;
         }
 
-        .input-group-premium i {
+        .input-group-premium i:not(.btn-password-toggle i) {
             position: absolute;
             left: 1rem;
             color: var(--bs-primary);
             font-size: 1.1rem;
             opacity: 0.7;
+            z-index: 5;
         }
 
         .input-group-premium .form-control {
@@ -176,6 +177,7 @@
             background-color: rgba(var(--bs-body-color-rgb), 0.03);
             font-weight: 500;
             transition: all 0.3s ease;
+            width: 100%;
         }
 
         .input-group-premium .form-control:focus {
@@ -191,12 +193,26 @@
         }
 
         .btn-password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
             background: none;
             border: none;
             color: var(--bs-secondary);
             cursor: pointer;
             padding: 0.25rem;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.2s;
+        }
+        
+        .btn-password-toggle i {
+            position: static !important;
+            opacity: 1 !important;
+            font-size: 1.25rem !important;
         }
         .btn-password-toggle:hover { color: var(--bs-primary); transform: scale(1.1); }
 
