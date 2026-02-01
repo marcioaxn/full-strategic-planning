@@ -283,7 +283,8 @@ class Indicador extends Model implements Auditable
         return match ($polaridade) {
             'Negativa' => $realizado > 0 ? ($previsto / $realizado) * 100 : 100,
             'Não Aplicável' => 0,
-            'Positiva', 'Estabilidade', default => ($realizado / $previsto) * 100,
+            'Positiva', 'Estabilidade' => ($realizado / $previsto) * 100,
+            default => ($realizado / $previsto) * 100,
         };
     }
 
