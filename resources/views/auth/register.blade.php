@@ -55,7 +55,7 @@
                         <label class="form-label-premium">Nome Completo</label>
                         <div class="input-group-premium">
                             <i class="bi bi-person"></i>
-                            <input type="text" name="name" class="form-control" value="{{ old('name') }}" placeholder="Ex: João Silva" required autofocus autocomplete="name">
+                            <input type="text" name="name" class="form-control" value="{{ old('name') }}" placeholder="Digite seu nome completo" required autofocus autocomplete="name">
                         </div>
                     </div>
 
@@ -73,9 +73,9 @@
                         <label class="form-label-premium">Senha de Acesso</label>
                         <div class="input-group-premium">
                             <i class="bi bi-lock"></i>
-                            <input type="password" name="password" id="password" class="form-control" placeholder="Mínimo 8 caracteres" required autocomplete="new-password">
-                            <button type="button" class="btn-password-toggle" onclick="togglePassword('password')">
-                                <i class="bi bi-eye"></i>
+                            <input type="password" name="password" id="password" class="form-control" style="padding-right: 3rem;" placeholder="Mínimo 8 caracteres" required autocomplete="new-password">
+                            <button type="button" class="btn-password-toggle" onclick="togglePassword('password')" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); z-index: 10;">
+                                <i class="bi bi-eye" style="position: static; opacity: 1;"></i>
                             </button>
                         </div>
                         {{-- Indicador de força da senha --}}
