@@ -1,35 +1,40 @@
 <div>
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
+    {{-- Header Interno para garantir escopo do Livewire --}}
+    <div class="leads-header d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
                 <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1">
+                    <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Indicadores (KPIs)</li>
                     </ol>
                 </nav>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <div class="icon-circle-header gradient-theme-icon">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
                 <h2 class="h4 fw-bold mb-0">Indicadores de Desempenho</h2>
             </div>
-            <div class="d-flex gap-2">
-                @if($organizacaoId)
-                    <div class="dropdown">
-                        <button class="btn btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-download me-1"></i> Exportar
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
-                            <li><a class="dropdown-item" href="{{ route('relatorios.indicadores.pdf') }}"><i class="bi bi-file-earmark-pdf text-danger me-2"></i> PDF</a></li>
-                            <li><a class="dropdown-item" href="{{ route('relatorios.indicadores.excel') }}"><i class="bi bi-file-earmark-excel text-success me-2"></i> Excel</a></li>
-                        </ul>
-                    </div>
-                @endif
-                @if($organizacaoId)
-                    <button wire:click="create" class="btn btn-primary gradient-theme-btn px-4">
-                        <i class="bi bi-plus-lg me-2"></i>Novo Indicador
-                    </button>
-                @endif
-            </div>
         </div>
-    </x-slot>
+
+        <div class="d-flex align-items-center gap-2">
+            @if($organizacaoId)
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-download me-1"></i> Exportar
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
+                        <li><a class="dropdown-item" href="{{ route('relatorios.indicadores.pdf') }}"><i class="bi bi-file-earmark-pdf text-danger me-2"></i> PDF</a></li>
+                        <li><a class="dropdown-item" href="{{ route('relatorios.indicadores.excel') }}"><i class="bi bi-file-earmark-excel text-success me-2"></i> Excel</a></li>
+                    </ul>
+                </div>
+                <button wire:click="create" class="btn btn-primary gradient-theme-btn px-4 shadow-sm">
+                    <i class="bi bi-plus-lg me-2"></i>Novo Indicador
+                </button>
+            @endif
+        </div>
+    </div>
 
     {{-- Seção Educativa: O que são Indicadores (KPIs) --}}
     <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
