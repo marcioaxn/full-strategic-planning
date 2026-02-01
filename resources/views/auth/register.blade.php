@@ -1,704 +1,255 @@
 <x-guest-layout>
-    <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
+    <div class="auth-full-page d-flex flex-column flex-lg-row">
+        
+        {{-- Coluna Esquerda: Visual & Inspiração --}}
+        <div class="auth-visual d-none d-lg-flex flex-column justify-content-between p-5 text-white">
+            <div class="auth-logo-wrapper animate-fade-in-down">
+                <a href="/" class="d-flex align-items-center text-decoration-none text-white">
+                    <div class="icon-circle bg-white bg-opacity-20 backdrop-blur me-3">
+                        <i class="bi bi-diagram-3 fs-3"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0 tracking-tight">SEAE</h4>
+                        <small class="opacity-75 text-uppercase letter-spacing-1" style="font-size: 0.65rem;">Sistema de Gestão Estratégica</small>
+                    </div>
+                </a>
+            </div>
 
-        <!-- Welcome Message -->
-        <div class="text-center mb-4">
-            <h1 class="h3 fw-bold mb-2">{{ __('Create your account') }}</h1>
-            <p class="text-muted mb-0">{{ __('Join us and start your journey') }}</p>
+            <div class="auth-quote animate-fade-in">
+                <h1 class="display-4 fw-bold mb-4">Transforme sua visão em <span class="text-warning">resultados</span> concretos.</h1>
+                <p class="lead opacity-75">Junte-se a centenas de gestores que utilizam o SEAE para governança de alto nível e monitoramento estratégico em tempo real.</p>
+                
+                <div class="mt-5 d-flex gap-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-check fs-4 text-warning"></i>
+                        <span class="small fw-medium">Segurança de Dados</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-lightning-charge fs-4 text-warning"></i>
+                        <span class="small fw-medium">Alta Performance</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="auth-footer-visual animate-fade-in-up">
+                <p class="small opacity-50 mb-0">&copy; {{ date('Y') }} Strategic Planning System. Todos os direitos reservados.</p>
+            </div>
         </div>
 
-        <x-validation-errors class="mb-4" />
-
-        <form method="POST" action="{{ route('register') }}" class="needs-validation" novalidate id="registerForm">
-            @csrf
-
-            <!-- Name Field -->
-            <div class="mb-3 form-group-modern">
-                <x-label for="name" value="{{ __('Name') }}" class="form-label-modern" />
-                <div class="icon-circle-mini input-icon-wrapper">
-                    <i class="bi bi-person input-icon"></i>
-                    <x-input id="name"
-                             type="text"
-                             name="name"
-                             :value="old('name')"
-                             required
-                             autofocus
-                             autocomplete="name"
-                             class="form-control-modern ps-5"
-                             placeholder="{{ __('Your full name') }}" />
+        {{-- Coluna Direita: Formulário --}}
+        <div class="auth-form-container d-flex align-items-center justify-content-center p-4 p-lg-5 bg-body">
+            <div class="auth-form-card animate-fade-in-right">
+                
+                <div class="mb-5">
+                    <h2 class="fw-800 text-dark mb-2">Criar sua conta</h2>
+                    <p class="text-muted">Preencha os dados abaixo para iniciar sua jornada estratégica.</p>
                 </div>
-                <x-input-error for="name" />
-            </div>
 
-            <!-- Email Field -->
-            <div class="mb-3 form-group-modern">
-                <x-label for="email" value="{{ __('Email') }}" class="form-label-modern" />
-                <div class="icon-circle-mini input-icon-wrapper">
-                    <i class="bi bi-envelope input-icon"></i>
-                    <x-input id="email"
-                             type="email"
-                             name="email"
-                             :value="old('email')"
-                             required
-                             autocomplete="username"
-                             class="form-control-modern ps-5"
-                             placeholder="your@email.com" />
-                </div>
-                <x-input-error for="email" />
-            </div>
+                <x-validation-errors class="mb-4 alert-modern" />
 
-            <!-- Password Field -->
-            <div class="mb-3 form-group-modern">
-                <x-label for="password" value="{{ __('Password') }}" class="form-label-modern" />
-                <div class="icon-circle-mini input-icon-wrapper position-relative">
-                    <i class="bi bi-lock input-icon"></i>
-                    <x-input id="password"
-                             type="password"
-                             name="password"
-                             required
-                             autocomplete="new-password"
-                             class="form-control-modern ps-5 pe-5"
-                             placeholder="••••••••••••"
-                             onkeyup="validatePassword()" />
-                    <button type="button"
-                            class="btn-password-toggle"
-                            onclick="togglePassword('password', 'togglePasswordIcon')"
-                            aria-label="{{ __('Toggle password visibility') }}">
-                        <i class="bi bi-eye" id="togglePasswordIcon"></i>
-                    </button>
-                </div>
-                <x-input-error for="password" />
+                <form method="POST" action="{{ route('register') }}" id="registerForm">
+                    @csrf
 
-                <!-- Password Strength Indicator -->
-                <div class="password-strength mt-2" id="passwordStrength" style="display: none;">
-                    <div class="strength-bar-container">
-                        <div class="strength-bar" id="strengthBar"></div>
+                    {{-- Nome --}}
+                    <div class="mb-4">
+                        <label class="form-label-premium">Nome Completo</label>
+                        <div class="input-group-premium">
+                            <i class="bi bi-person"></i>
+                            <input type="text" name="name" class="form-control" value="{{ old('name') }}" placeholder="Ex: João Silva" required autofocus autocomplete="name">
+                        </div>
                     </div>
-                    <div class="strength-text" id="strengthText"></div>
-                </div>
 
-                <!-- Password Requirements -->
-                <div class="password-requirements mt-3" id="passwordRequirements">
-                    <div class="requirement-title">{{ __('Password must contain:') }}</div>
-                    <div class="icon-circle-mini requirement-item" id="req-length">
-                        <i class="bi bi-circle"></i>
-                        <span>{{ __('At least 12 characters') }}</span>
+                    {{-- E-mail --}}
+                    <div class="mb-4">
+                        <label class="form-label-premium">E-mail Corporativo</label>
+                        <div class="input-group-premium">
+                            <i class="bi bi-envelope"></i>
+                            <input type="email" name="email" class="form-control" value="{{ old('email') }}" placeholder="joao@organizacao.com" required autocomplete="username">
+                        </div>
                     </div>
-                    <div class="icon-circle-mini requirement-item" id="req-uppercase">
-                        <i class="bi bi-circle"></i>
-                        <span>{{ __('At least 1 uppercase letter') }}</span>
+
+                    {{-- Senha --}}
+                    <div class="mb-4">
+                        <label class="form-label-premium">Senha de Acesso</label>
+                        <div class="input-group-premium">
+                            <i class="bi bi-lock"></i>
+                            <input type="password" name="password" id="password" class="form-control" placeholder="Mínimo 8 caracteres" required autocomplete="new-password">
+                            <button type="button" class="btn-password-toggle" onclick="togglePassword('password')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        {{-- Indicador de força da senha --}}
+                        <div class="password-strength-meter mt-2">
+                            <div class="meter-bar"><div class="meter-fill" id="strength-fill"></div></div>
+                            <small class="text-muted x-small" id="strength-text">Segurança da senha</small>
+                        </div>
                     </div>
-                    <div class="icon-circle-mini requirement-item" id="req-number">
-                        <i class="bi bi-circle"></i>
-                        <span>{{ __('At least 1 number') }}</span>
+
+                    {{-- Confirmar Senha --}}
+                    <div class="mb-4">
+                        <label class="form-label-premium">Confirmar Senha</label>
+                        <div class="input-group-premium">
+                            <i class="bi bi-shield-lock"></i>
+                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" placeholder="Repita sua senha" required autocomplete="new-password">
+                        </div>
                     </div>
-                    <div class="icon-circle-mini requirement-item" id="req-special">
-                        <i class="bi bi-circle"></i>
-                        <span>{{ __('At least 2 special characters') }}</span>
+
+                    {{-- Termos e Condições --}}
+                    @if (Laravel\Jetstream\Jetstream::hasTermsAndPrivacyPolicyFeature())
+                        <div class="mb-4">
+                            <div class="form-check form-check-premium">
+                                <input class="form-check-input" type="checkbox" name="terms" id="terms" required>
+                                <label class="form-check-label small text-muted" for="terms">
+                                    {!! __('Eu li e concordo com os :terms_of_service e :privacy_policy', [
+                                            'terms_of_service' => '<a target="_blank" href="'.route('terms.show').'" class="text-primary text-decoration-none fw-bold">Termos de Uso</a>',
+                                            'privacy_policy' => '<a target="_blank" href="'.route('policy.show').'" class="text-primary text-decoration-none fw-bold">Política de Privacidade</a>',
+                                    ]) !!}
+                                </label>
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="d-grid mb-4">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill gradient-theme-btn py-3 shadow-lg hover-scale">
+                            <i class="bi bi-person-plus-fill me-2"></i> {{ __('Finalizar Cadastro') }}
+                        </button>
                     </div>
-                </div>
+
+                    <div class="text-center">
+                        <span class="text-muted small">Já possui uma conta?</span>
+                        <a href="{{ route('login') }}" class="text-primary small fw-bold text-decoration-none ms-1 hover-underline">
+                            Fazer Login
+                        </a>
+                    </div>
+                </form>
             </div>
-
-            <!-- Confirm Password Field -->
-            <div class="mb-3 form-group-modern">
-                <x-label for="password_confirmation" value="{{ __('Confirm Password') }}" class="form-label-modern" />
-                <div class="icon-circle-mini input-icon-wrapper position-relative">
-                    <i class="bi bi-lock-fill input-icon"></i>
-                    <x-input id="password_confirmation"
-                             type="password"
-                             name="password_confirmation"
-                             required
-                             autocomplete="new-password"
-                             class="form-control-modern ps-5 pe-5"
-                             placeholder="••••••••••••"
-                             onkeyup="checkPasswordMatch()" />
-                    <button type="button"
-                            class="btn-password-toggle"
-                            onclick="togglePassword('password_confirmation', 'togglePasswordConfirmIcon')"
-                            aria-label="{{ __('Toggle password visibility') }}">
-                        <i class="bi bi-eye" id="togglePasswordConfirmIcon"></i>
-                    </button>
-                </div>
-                <div class="password-match mt-3" id="passwordMatch" style="display: none;"></div>
-            </div>
-
-            <!-- Terms and Privacy Policy -->
-            @if (Laravel\Jetstream\Jetstream::hasTermsAndPrivacyPolicyFeature())
-                <div class="form-check form-check-modern mb-4">
-                    <x-checkbox name="terms" id="terms" required class="form-check-input-modern" />
-                    <label class="form-check-label" for="terms">
-                        {!! __('I agree to the :terms_of_service and :privacy_policy', [
-                                'terms_of_service' => '<a target="_blank" href="'.route('terms.show').'" class="link-primary">'.__('Terms of Service').'</a>',
-                                'privacy_policy' => '<a target="_blank" href="'.route('policy.show').'" class="link-primary">'.__('Privacy Policy').'</a>',
-                        ]) !!}
-                    </label>
-                </div>
-            @endif
-
-            <!-- Submit Button -->
-            <div class="d-grid mb-4">
-                <button type="submit" class="btn btn-primary btn-register gradient-theme-btn" id="registerButton">
-                    <span class="btn-text">
-                        <i class="bi bi-person-plus me-2"></i>
-                        {{ __('Create account') }}
-                    </span>
-                    <span class="btn-loading d-none">
-                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        {{ __('Creating your account...') }}
-                    </span>
-                </button>
-            </div>
-
-            <!-- Login Link -->
-            <div class="text-center">
-                <p class="text-muted mb-0">
-                    {{ __('Already have an account?') }}
-                    <a href="{{ route('login') }}" class="link-register">
-                        {{ __('Sign in here') }}
-                    </a>
-                </p>
-            </div>
-        </form>
-
-        <!-- Security Badge -->
-        <div class="icon-circle security-badge text-center mt-4">
-            <i class="bi bi-shield-check text-success me-2"></i>
-            <span class="small text-muted">{{ __('Your data is protected with encryption') }}</span>
         </div>
-    </x-authentication-card>
+    </div>
 
-    <!-- Custom Styles -->
     <style>
-        /* Modern Form Elements */
-        .form-group-modern {
+        /* Layout Geral */
+        .auth-full-page { min-height: 100vh; overflow-x: hidden; }
+        
+        .auth-visual {
+            width: 45%;
+            background: linear-gradient(135deg, #1B408E 0%, #4361EE 100%), 
+                        url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-blend-mode: multiply;
+            background-size: cover;
+            background-position: center;
             position: relative;
         }
 
-        .form-label-modern {
-            font-weight: 600;
-            color: var(--bs-body-color);
+        .auth-form-container { width: 55%; flex-grow: 1; }
+        .auth-form-card { width: 100%; max-width: 480px; }
+
+        @media (max-width: 991.98px) {
+            .auth-form-container { width: 100%; }
+        }
+
+        /* Tipografia */
+        .fw-800 { font-weight: 800; }
+        .letter-spacing-1 { letter-spacing: 1px; }
+        .tracking-tight { letter-spacing: -1px; }
+
+        /* Estilos de Formulário Premium */
+        .form-label-premium {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--bs-secondary);
             margin-bottom: 0.5rem;
-            font-size: 0.875rem;
+            letter-spacing: 0.5px;
         }
 
-        .input-icon-wrapper {
+        .input-group-premium {
             position: relative;
+            display: flex;
+            align-items: center;
         }
 
-        .input-icon {
+        .input-group-premium i {
             position: absolute;
             left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--bs-secondary);
-            font-size: 1.125rem;
-            pointer-events: none;
-            z-index: 5;
+            color: var(--bs-primary);
+            font-size: 1.1rem;
+            opacity: 0.7;
         }
 
-        [data-bs-theme="dark"] .input-icon {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .form-control-modern {
-            height: 48px;
+        .input-group-premium .form-control {
+            padding: 0.8rem 1rem 0.8rem 3rem;
             border-radius: 12px;
-            border: 2px solid var(--bs-border-color);
-            font-size: 0.9375rem;
+            border: 2px solid rgba(0,0,0,0.05);
+            background-color: rgba(var(--bs-body-color-rgb), 0.03);
+            font-weight: 500;
             transition: all 0.3s ease;
-            background-color: var(--bs-body-bg);
-            color: var(--bs-body-color);
         }
 
-        .form-control-modern:focus {
+        .input-group-premium .form-control:focus {
             border-color: var(--bs-primary);
-            box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.15);
-            background-color: var(--bs-body-bg);
+            background-color: #fff;
+            box-shadow: 0 10px 20px rgba(var(--bs-primary-rgb), 0.08);
         }
 
-        .form-control-modern::placeholder {
-            color: var(--bs-secondary);
-            opacity: 0.6;
+        [data-bs-theme="dark"] .input-group-premium .form-control {
+            background-color: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.1);
+            color: #fff;
         }
 
-        [data-bs-theme="dark"] .form-control-modern {
-            background-color: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.15);
-            color: rgba(255, 255, 255, 0.95);
-        }
-
-        [data-bs-theme="dark"] .form-control-modern:focus {
-            background-color: rgba(255, 255, 255, 0.12);
-            border-color: var(--bs-primary);
-            box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
-        }
-
-        [data-bs-theme="dark"] .form-control-modern::placeholder {
-            color: rgba(255, 255, 255, 0.4);
-        }
-
-        /* Password Toggle Button */
+        /* Password Toggle */
         .btn-password-toggle {
             position: absolute;
             right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
             background: none;
             border: none;
             color: var(--bs-secondary);
-            font-size: 1.125rem;
             cursor: pointer;
             padding: 0.25rem;
-            z-index: 5;
-            transition: color 0.2s ease;
         }
 
-        .btn-password-toggle:hover {
-            color: var(--bs-primary);
-        }
+        /* Meter de Senha */
+        .password-strength-meter { height: 4px; width: 100%; }
+        .meter-bar { height: 4px; background: #eee; border-radius: 10px; overflow: hidden; }
+        .meter-fill { height: 100%; width: 0; transition: all 0.3s ease; }
 
-        [data-bs-theme="dark"] .btn-password-toggle {
-            color: rgba(255, 255, 255, 0.5);
-        }
+        /* Checkbox Premium */
+        .form-check-premium .form-check-input { width: 1.2rem; height: 1.2rem; margin-top: 0.1rem; cursor: pointer; }
 
-        [data-bs-theme="dark"] .btn-password-toggle:hover {
-            color: var(--bs-primary);
-        }
-
-        /* Password Strength Indicator */
-        .password-strength {
-            padding: 0.75rem;
-            background: rgba(var(--bs-secondary-rgb), 0.05);
-            border-radius: 8px;
-        }
-
-        [data-bs-theme="dark"] .password-strength {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .strength-bar-container {
-            height: 6px;
-            background: rgba(var(--bs-secondary-rgb), 0.2);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-bottom: 0.5rem;
-        }
-
-        [data-bs-theme="dark"] .strength-bar-container {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .strength-bar {
-            height: 100%;
-            transition: all 0.3s ease;
-            border-radius: 3px;
-        }
-
-        .strength-text {
-            font-size: 0.875rem;
-            font-weight: 600;
-            text-align: center;
-        }
-
-        /* Password Requirements */
-        .password-requirements {
-            padding: 1rem;
-            background: #ffffff;
-            border: 1px solid rgba(var(--bs-info-rgb), 0.3);
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        [data-bs-theme="dark"] .password-requirements {
-            background: rgba(13, 110, 253, 0.1);
-            border-color: rgba(13, 110, 253, 0.2);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .requirement-title {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--bs-body-color);
-            margin-bottom: 0.75rem;
-        }
-
-        [data-bs-theme="dark"] .requirement-title {
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .requirement-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            color: var(--bs-secondary);
-            margin-bottom: 0.5rem;
-            transition: all 0.2s ease;
-        }
-
-        .requirement-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .requirement-item i {
-            font-size: 0.625rem;
-        }
-
-        .requirement-item.valid {
-            color: var(--bs-success);
-        }
-
-        .requirement-item.valid i {
-            color: var(--bs-success);
-        }
-
-        .requirement-item.valid i::before {
-            content: "\f26b";
-        }
-
-        [data-bs-theme="dark"] .requirement-item {
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        [data-bs-theme="dark"] .requirement-item.valid {
-            color: #75b798;
-        }
-
-        /* Password Match Indicator */
-        .password-match {
-            margin-top: 0.75rem;
-            padding: 0.5rem 0.75rem;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .password-match.match {
-            background: rgba(var(--bs-success-rgb), 0.1);
-            border: 1px solid rgba(var(--bs-success-rgb), 0.3);
-            color: var(--bs-success);
-        }
-
-        .password-match.no-match {
-            background: rgba(var(--bs-danger-rgb), 0.1);
-            border: 1px solid rgba(var(--bs-danger-rgb), 0.3);
-            color: var(--bs-danger);
-        }
-
-        [data-bs-theme="dark"] .password-match.match {
-            background: rgba(25, 135, 84, 0.15);
-            border-color: rgba(25, 135, 84, 0.3);
-            color: #75b798;
-        }
-
-        [data-bs-theme="dark"] .password-match.no-match {
-            background: rgba(220, 53, 69, 0.15);
-            border-color: rgba(220, 53, 69, 0.3);
-            color: #ea868f;
-        }
-
-        /* Modern Checkbox */
-        .form-check-modern {
-            display: flex;
-            align-items: start;
-            gap: 0.75rem;
-        }
-
-        .form-check-input-modern {
-            width: 1.125rem;
-            height: 1.125rem;
-            cursor: pointer;
-            border: 2px solid var(--bs-border-color);
-            margin-top: 0.125rem;
-            flex-shrink: 0;
-        }
-
-        [data-bs-theme="dark"] .form-check-input-modern {
-            background-color: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        [data-bs-theme="dark"] .form-check-input-modern:checked {
-            background-color: var(--bs-primary);
-            border-color: var(--bs-primary);
-        }
-
-        .form-check-modern label {
-            font-size: 0.9375rem;
-            color: var(--bs-body-color);
-            cursor: pointer;
-            line-height: 1.5;
-        }
-
-        [data-bs-theme="dark"] .form-check-modern label {
-            color: rgba(255, 255, 255, 0.85);
-        }
-
-        .form-check-modern label a {
-            font-weight: 600;
-        }
-
-        /* Links */
-        .link-register {
-            color: var(--bs-primary);
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.2s ease;
-        }
-
-        .link-register:hover {
-            color: var(--bs-primary);
-            text-decoration: underline;
-        }
-
-        [data-bs-theme="dark"] .link-register {
-            color: #6ea8fe;
-        }
-
-        [data-bs-theme="dark"] .link-register:hover {
-            color: #9ec5fe;
-        }
-
-        /* Register Button - uses global .gradient-theme-btn class */
-        .btn-register {
-            height: 52px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 1rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-register:hover:not(:disabled) {
-            transform: translateY(-2px);
-        }
-
-        .btn-register:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
-        .btn-register:disabled {
-            opacity: 0.8;
-            cursor: not-allowed;
-        }
-
-        .btn-loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Security Badge */
-        .security-badge {
-            padding: 0.75rem;
-            background: rgba(var(--bs-success-rgb), 0.1);
-            border: 1px solid rgba(var(--bs-success-rgb), 0.2);
-            border-radius: 12px;
-        }
-
-        [data-bs-theme="dark"] .security-badge {
-            background: rgba(25, 135, 84, 0.15);
-            border-color: rgba(25, 135, 84, 0.3);
-        }
-
-        [data-bs-theme="dark"] .security-badge .text-success {
-            color: #75b798 !important;
-        }
-
-        [data-bs-theme="dark"] .security-badge .text-muted {
-            color: rgba(255, 255, 255, 0.6) !important;
-        }
-
-        /* Welcome Message */
-        h1 {
-            color: var(--bs-body-color);
-        }
-
-        [data-bs-theme="dark"] h1 {
-            color: rgba(255, 255, 255, 0.95);
-        }
-
-        [data-bs-theme="dark"] .text-muted {
-            color: rgba(255, 255, 255, 0.6) !important;
-        }
-
-        /* Responsive */
-        @media (max-width: 576px) {
-            .form-control-modern {
-                height: 46px;
-                font-size: 0.875rem;
-            }
-
-            .btn-register {
-                height: 48px;
-                font-size: 0.9375rem;
-            }
-
-            h1.h3 {
-                font-size: 1.5rem;
-            }
-        }
+        /* Animações */
+        .animate-fade-in-right { animation: fadeInRight 0.6s ease-out; }
+        @keyframes fadeInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        
+        .backdrop-blur { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        .hover-scale:hover { transform: scale(1.02); }
     </style>
 
-    <!-- JavaScript -->
     <script>
-        // Toggle password visibility
-        function togglePassword(fieldId, iconId) {
-            const passwordInput = document.getElementById(fieldId);
-            const toggleIcon = document.getElementById(iconId);
-
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                toggleIcon.classList.remove('bi-eye');
-                toggleIcon.classList.add('bi-eye-slash');
-            } else {
-                passwordInput.type = 'password';
-                toggleIcon.classList.remove('bi-eye-slash');
-                toggleIcon.classList.add('bi-eye');
-            }
+        function togglePassword(id) {
+            const el = document.getElementById(id);
+            el.type = el.type === 'password' ? 'text' : 'password';
         }
 
-        // Validate password strength in real-time
-        function validatePassword() {
-            const password = document.getElementById('password').value;
-            const strengthBar = document.getElementById('strengthBar');
-            const strengthText = document.getElementById('strengthText');
-            const strengthContainer = document.getElementById('passwordStrength');
-
-            // Show strength indicator
-            if (password.length > 0) {
-                strengthContainer.style.display = 'block';
-            } else {
-                strengthContainer.style.display = 'none';
-                return;
-            }
-
-            // Check requirements
-            const requirements = {
-                length: password.length >= 12,
-                uppercase: /[A-Z]/.test(password),
-                number: /\d/.test(password),
-                special: (password.match(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g) || []).length >= 2
-            };
-
-            // Update requirement items
-            updateRequirement('req-length', requirements.length);
-            updateRequirement('req-uppercase', requirements.uppercase);
-            updateRequirement('req-number', requirements.number);
-            updateRequirement('req-special', requirements.special);
-
-            // Calculate strength
-            const validRequirements = Object.values(requirements).filter(Boolean).length;
+        // Simples detector de força de senha
+        document.getElementById('password').addEventListener('input', function(e) {
+            const val = e.target.value;
+            const fill = document.getElementById('strength-fill');
+            const text = document.getElementById('strength-text');
+            
             let strength = 0;
-            let strengthLabel = '';
-            let strengthColor = '';
+            if(val.length > 5) strength += 25;
+            if(val.match(/[A-Z]/)) strength += 25;
+            if(val.match(/[0-9]/)) strength += 25;
+            if(val.match(/[^A-Za-z0-9]/)) strength += 25;
 
-            if (validRequirements === 0) {
-                strength = 0;
-                strengthLabel = 'Very Weak';
-                strengthColor = '#dc3545';
-            } else if (validRequirements === 1) {
-                strength = 25;
-                strengthLabel = 'Weak';
-                strengthColor = '#fd7e14';
-            } else if (validRequirements === 2) {
-                strength = 50;
-                strengthLabel = 'Fair';
-                strengthColor = '#ffc107';
-            } else if (validRequirements === 3) {
-                strength = 75;
-                strengthLabel = 'Good';
-                strengthColor = '#20c997';
-            } else {
-                strength = 100;
-                strengthLabel = 'Strong';
-                strengthColor = '#198754';
-            }
+            const colors = ['#dc3545', '#ffc107', '#0dcaf0', '#198754'];
+            const labels = ['Fraca', 'Média', 'Boa', 'Excelente'];
+            const idx = Math.max(0, Math.floor(strength/26));
 
-            strengthBar.style.width = strength + '%';
-            strengthBar.style.backgroundColor = strengthColor;
-            strengthText.textContent = strengthLabel;
-            strengthText.style.color = strengthColor;
-
-            // Check password match if confirmation field has value
-            checkPasswordMatch();
-        }
-
-        // Update requirement item status
-        function updateRequirement(elementId, isValid) {
-            const element = document.getElementById(elementId);
-            if (isValid) {
-                element.classList.add('valid');
-            } else {
-                element.classList.remove('valid');
-            }
-        }
-
-        // Check if passwords match
-        function checkPasswordMatch() {
-            const password = document.getElementById('password').value;
-            const confirmation = document.getElementById('password_confirmation').value;
-            const matchIndicator = document.getElementById('passwordMatch');
-
-            if (confirmation.length === 0) {
-                matchIndicator.style.display = 'none';
-                return;
-            }
-
-            matchIndicator.style.display = 'block';
-
-            if (password === confirmation) {
-                matchIndicator.className = 'password-match match';
-                matchIndicator.innerHTML = '<i class="bi bi-check-circle-fill"></i> Passwords match';
-            } else {
-                matchIndicator.className = 'password-match no-match';
-                matchIndicator.innerHTML = '<i class="bi bi-x-circle-fill"></i> Passwords do not match';
-            }
-        }
-
-        // Form submission handling
-        document.addEventListener('DOMContentLoaded', function() {
-            const registerForm = document.getElementById('registerForm');
-            const registerButton = document.getElementById('registerButton');
-
-            if (registerForm && registerButton) {
-                registerForm.addEventListener('submit', function(e) {
-                    // Check if form is valid
-                    if (registerForm.checkValidity()) {
-                        // Disable button
-                        registerButton.disabled = true;
-
-                        // Toggle text and loading state
-                        const btnText = registerButton.querySelector('.btn-text');
-                        const btnLoading = registerButton.querySelector('.btn-loading');
-
-                        if (btnText && btnLoading) {
-                            btnText.classList.add('d-none');
-                            btnLoading.classList.remove('d-none');
-                        }
-                    }
-                });
-            }
-
-            // Add floating label effect
-            const inputs = document.querySelectorAll('.form-control-modern');
-            inputs.forEach(input => {
-                input.addEventListener('focus', function() {
-                    this.parentElement.classList.add('focused');
-                });
-
-                input.addEventListener('blur', function() {
-                    if (!this.value) {
-                        this.parentElement.classList.remove('focused');
-                    }
-                });
-            });
+            fill.style.width = strength + '%';
+            fill.style.backgroundColor = colors[idx];
+            text.innerText = val.length > 0 ? 'Segurança: ' + labels[idx] : 'Segurança da senha';
         });
     </script>
 </x-guest-layout>
