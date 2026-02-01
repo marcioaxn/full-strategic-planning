@@ -90,7 +90,8 @@ class EvolucaoIndicador extends Model
         return match ($polaridade) {
             'Negativa' => $this->vlr_realizado > 0 ? ($this->vlr_previsto / $this->vlr_realizado) * 100 : 100,
             'Não Aplicável' => 0,
-            'Positiva', 'Estabilidade', default => ($this->vlr_realizado / $this->vlr_previsto) * 100,
+            'Positiva', 'Estabilidade' => ($this->vlr_realizado / $this->vlr_previsto) * 100,
+            default => ($this->vlr_realizado / $this->vlr_previsto) * 100,
         };
     }
 
