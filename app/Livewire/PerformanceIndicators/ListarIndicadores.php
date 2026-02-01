@@ -51,7 +51,8 @@ class ListarIndicadores extends Component
         'cod_plano_de_acao' => '',
         'txt_observacao' => '',
         'dsc_meta' => '',
-        'dsc_unidade_medida' => '',
+        'dsc_unidade_medida' => 'Percentual (%)',
+        'dsc_polaridade' => 'Positiva',
         'num_peso' => 1,
         'bln_acumulado' => 'Não',
         'dsc_formula' => '',
@@ -68,8 +69,10 @@ class ListarIndicadores extends Component
     public $linhaBaseValor;
 
     // Listas Auxiliares
-    public $objetivos = [];
-    public $planos = [];
+    public $objetivosAgrupados = [];
+    public $planosAgrupados = [];
+    public $unidadesMedida = [];
+    public $polaridades = [];
     public $periodosOptions = ['Mensal', 'Bimestral', 'Trimestral', 'Semestral', 'Anual'];
     public $grausSatisfacao = [];
 
@@ -217,15 +220,30 @@ class ListarIndicadores extends Component
     public function carregarListasAuxiliares()
     {
         $this->grausSatisfacao = \App\Models\StrategicPlanning\GrauSatisfacao::orderBy('vlr_minimo')->get();
+        $this->unidadesMedida = Indicador::UNIDADES_MEDIDA;
+        $this->polaridades = Indicador::POLARIDADES;
 
         if ($this->peiAtivo) {
-            $this->objetivos = Objetivo::whereHas('perspectiva', function($query) {
-                $query->where('cod_pei', $this->peiAtivo->cod_pei);
-            })->orderBy('nom_objetivo')->get();
+            $objetivosBrutos = Objetivo::with('perspectiva')
+                ->whereHas('perspectiva', function($query) {
+                    $query->where('cod_pei', $this->peiAtivo->cod_pei);
+                })
+                ->get();
+
+            $this->objetivosAgrupados = $objetivosBrutos->groupBy(function($item) {
+                return $item->perspectiva->dsc_perspectiva ?? 'Outros';
+            })->toArray();
         }
 
         if ($this->organizacaoId) {
-            $this->planos = PlanoDeAcao::where('cod_organizacao', $this->organizacaoId)->orderBy('dsc_plano_de_acao')->get();
+            $planosBrutos = PlanoDeAcao::with('objetivo')
+                ->where('cod_organizacao', $this->organizacaoId)
+                ->orderBy('dsc_plano_de_acao')
+                ->get();
+
+            $this->planosAgrupados = $planosBrutos->groupBy(function($item) {
+                return $item->objetivo->nom_objetivo ?? 'Sem Objetivo Vinculado';
+            })->toArray();
         }
     }
 
@@ -263,6 +281,7 @@ class ListarIndicadores extends Component
             'txt_observacao' => $indicador->txt_observacao,
             'dsc_meta' => $indicador->dsc_meta,
             'dsc_unidade_medida' => $indicador->dsc_unidade_medida,
+            'dsc_polaridade' => $indicador->dsc_polaridade ?? 'Positiva',
             'num_peso' => $indicador->num_peso,
             'bln_acumulado' => $indicador->bln_acumulado,
             'dsc_formula' => $indicador->dsc_formula,
@@ -404,7 +423,7 @@ class ListarIndicadores extends Component
         $this->form = [
             'nom_indicador' => '', 'dsc_indicador' => '', 'dsc_tipo' => 'Objetivo',
             'cod_objetivo' => '', 'cod_plano_de_acao' => '', 'txt_observacao' => '',
-            'dsc_meta' => '', 'dsc_unidade_medida' => '', 'num_peso' => 1, 'bln_acumulado' => 'Não',
+            'dsc_meta' => '', 'dsc_unidade_medida' => 'Percentual (%)', 'dsc_polaridade' => 'Positiva', 'num_peso' => 1, 'bln_acumulado' => 'Não',
             'dsc_formula' => '', 'dsc_fonte' => '', 'dsc_periodo_medicao' => 'Mensal',
             'dsc_referencial_comparativo' => '', 'dsc_atributos' => '',
         ];

@@ -573,7 +573,7 @@
                     @foreach($grausSatisfacao as $grau)
                         <div class="d-flex align-items-center">
                             <span class="farol-dot me-1" style="background-color: {{ $grau->cor }}; width: 10px; height: 10px;"></span>
-                            <small class="text-muted" style="font-size: 0.75rem;">{{ $grau->dsc_grau_satisfcao }} ({{ number_format($grau->vlr_minimo, 0) }}-{{ number_format($grau->vlr_maximo, 0) }}%)</small>
+                            <small class="text-muted" style="font-size: 0.75rem;">{{ $grau->dsc_grau_satisfacao }} ({{ number_format($grau->vlr_minimo, 0) }}-{{ number_format($grau->vlr_maximo, 0) }}%)</small>
                         </div>
                     @endforeach
                 </div>
@@ -589,6 +589,7 @@
                             <th class="ps-4">Indicador / Descrição</th>
                             <th>Vínculo</th>
                             <th>Período / Unidade</th>
+                            <th class="text-center">Polaridade</th>
                             <th>Performance</th>
                             <th class="text-end pe-4">Ações</th>
                         </tr>
@@ -605,12 +606,12 @@
                                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3">
                                             <i class="bi bi-bullseye me-1"></i> Objetivo
                                         </span>
-                                        <small class="d-block text-muted mt-1 small-vinculo">{{ Str::limit($ind->objetivo->nom_objetivo, 40) }}</small>
+                                        <small class="d-block text-muted mt-1 small-vinculo">{{ Str::limit($ind->objetivo->nom_objetivo ?? 'N/A', 40) }}</small>
                                     @else
                                         <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3">
                                             <i class="bi bi-list-task me-1"></i> Plano
                                         </span>
-                                        <small class="d-block text-muted mt-1 small-vinculo">{{ Str::limit($ind->planoDeAcao->dsc_plano_de_acao, 40) }}</small>
+                                        <small class="d-block text-muted mt-1 small-vinculo">{{ Str::limit($ind->planoDeAcao->dsc_plano_de_acao ?? 'N/A', 40) }}</small>
                                     @endif
                                 </td>
                                 <td>
@@ -618,6 +619,17 @@
                                         <small class="text-dark fw-semibold">{{ $ind->dsc_unidade_medida }}</small>
                                         <small class="text-muted">{{ $ind->dsc_periodo_medicao }}</small>
                                     </div>
+                                </td>
+                                <td class="text-center">
+                                    @php
+                                        $polaridadeIcon = [
+                                            'Positiva' => 'bi-arrow-up-circle-fill text-success',
+                                            'Negativa' => 'bi-arrow-down-circle-fill text-danger',
+                                            'Estabilidade' => 'bi-dash-circle-fill text-warning',
+                                            'Não Aplicável' => 'bi-info-circle-fill text-muted'
+                                        ][$ind->dsc_polaridade ?? 'Positiva'] ?? 'bi-question-circle';
+                                    @endphp
+                                    <i class="bi {{ $polaridadeIcon }} fs-5" data-bs-toggle="tooltip" title="{{ $ind->dsc_polaridade ?? 'Positiva' }}"></i>
                                 </td>
                                 <td>
                                     @php
@@ -755,8 +767,12 @@
                                                     <label class="form-label text-muted small text-uppercase fw-bold">Selecionar Objetivo <span class="text-danger">*</span></label>
                                                     <select wire:model="form.cod_objetivo" class="form-select bg-white border-0 shadow-sm fw-bold">
                                                         <option value="">Escolha o objetivo...</option>
-                                                        @foreach($objetivos as $obj)
-                                                            <option value="{{ $obj->cod_objetivo }}">{{ $obj->nom_objetivo }}</option>
+                                                        @foreach($objetivosAgrupados as $perspectiva => $objs)
+                                                            <optgroup label="Perspectiva: {{ $perspectiva }}">
+                                                                @foreach($objs as $obj)
+                                                                    <option value="{{ $obj['cod_objetivo'] }}">{{ $obj['nom_objetivo'] }}</option>
+                                                                @endforeach
+                                                            </optgroup>
                                                         @endforeach
                                                     </select>
                                                     @error('form.cod_objetivo') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
@@ -766,21 +782,56 @@
                                                     <label class="form-label text-muted small text-uppercase fw-bold">Selecionar Plano <span class="text-danger">*</span></label>
                                                     <select wire:model="form.cod_plano_de_acao" class="form-select bg-white border-0 shadow-sm fw-bold">
                                                         <option value="">Escolha o plano...</option>
-                                                        @foreach($planos as $plano)
-                                                            <option value="{{ $plano->cod_plano_de_acao }}">{{ $plano->dsc_plano_de_acao }}</option>
+                                                        @foreach($planosAgrupados as $objetivo => $plns)
+                                                            <optgroup label="Objetivo: {{ $objetivo }}">
+                                                                @foreach($plns as $plano)
+                                                                    <option value="{{ $plano['cod_plano_de_acao'] }}">{{ $plano['dsc_plano_de_acao'] }}</option>
+                                                                @endforeach
+                                                            </optgroup>
                                                         @endforeach
                                                     </select>
                                                     @error('form.cod_plano_de_acao') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
                                                 </div>
                                             @endif
                                             
-                                            <div class="mb-0">
-                                                <label class="form-label text-muted small text-uppercase fw-bold">Peso do KPI (1-100)</label>
-                                                <div class="input-group shadow-sm">
-                                                    <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-award"></i></span>
-                                                    <input type="number" wire:model="form.num_peso" class="form-control bg-white border-0 fw-bold" min="1" max="100">
+                                            <div class="row g-3">
+                                                <div class="col-md-12">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Polaridade do Indicador <span class="text-danger">*</span></label>
+                                                    <div class="input-group shadow-sm">
+                                                        <span class="input-group-text bg-white border-0 text-primary" x-data="{ 
+                                                            polaridade: @entangle('form.dsc_polaridade'),
+                                                            getIcon() {
+                                                                return {
+                                                                    'Positiva': 'bi-arrow-up-circle-fill text-success',
+                                                                    'Negativa': 'bi-arrow-down-circle-fill text-danger',
+                                                                    'Estabilidade': 'bi-dash-circle-fill text-warning',
+                                                                    'Não Aplicável': 'bi-info-circle-fill text-muted'
+                                                                }[this.polaridade] || 'bi-question-circle';
+                                                            }
+                                                        }">
+                                                            <i class="bi" :class="getIcon()"></i>
+                                                        </span>
+                                                        <select wire:model.live="form.dsc_polaridade" class="form-select bg-white border-0 fw-bold">
+                                                            @foreach($polaridades as $val => $label)
+                                                                <option value="{{ $val }}">{{ $label }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="mt-2 p-2 bg-white rounded border small text-muted lh-sm" x-data="{ polaridade: @entangle('form.dsc_polaridade') }">
+                                                        <template x-if="polaridade == 'Positiva'">
+                                                            <span><i class="bi bi-info-circle me-1"></i><strong>Quanto maior, melhor:</strong> Valores crescentes indicam melhoria no desempenho (Ex: Satisfação).</span>
+                                                        </template>
+                                                        <template x-if="polaridade == 'Negativa'">
+                                                            <span><i class="bi bi-info-circle me-1"></i><strong>Quanto menor, melhor:</strong> Valores decrescentes indicam melhoria no desempenho (Ex: Defeitos).</span>
+                                                        </template>
+                                                        <template x-if="polaridade == 'Estabilidade'">
+                                                            <span><i class="bi bi-info-circle me-1"></i><strong>Estabilidade:</strong> Busca-se um valor alvo. Desvios para cima ou baixo são ruins (Ex: Taxa Ocupação).</span>
+                                                        </template>
+                                                        <template x-if="polaridade == 'Não Aplicável'">
+                                                            <span><i class="bi bi-info-circle me-1"></i><strong>Informativo:</strong> Sem julgamento de valor, serve apenas para registro (Ex: Nº Colaboradores).</span>
+                                                        </template>
+                                                    </div>
                                                 </div>
-                                                <small class="text-muted x-small mt-1 d-block">Relevância no cálculo do desempenho global.</small>
                                             </div>
                                         </div>
                                     </div>
@@ -794,7 +845,11 @@
                                             <div class="row g-3">
                                                 <div class="col-md-3">
                                                     <label class="form-label text-muted small text-uppercase fw-bold">Unidade de Medida <span class="text-danger">*</span></label>
-                                                    <input type="text" wire:model="form.dsc_unidade_medida" class="form-control bg-white border-0 shadow-sm fw-bold" placeholder="Ex: % ou R$">
+                                                    <select wire:model="form.dsc_unidade_medida" class="form-select bg-white border-0 shadow-sm fw-bold">
+                                                        @foreach($unidadesMedida as $unidade)
+                                                            <option value="{{ $unidade }}">{{ $unidade }}</option>
+                                                        @endforeach
+                                                    </select>
                                                 </div>
                                                 <div class="col-md-3">
                                                     <label class="form-label text-muted small text-uppercase fw-bold">Periodicidade</label>
