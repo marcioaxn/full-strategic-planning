@@ -1,519 +1,228 @@
 <x-guest-layout>
-    <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
+    <div class="auth-full-page d-flex flex-column flex-lg-row">
+        
+        {{-- Coluna Esquerda: Visual & Inspiração --}}
+        <div class="auth-visual d-none d-lg-flex flex-column justify-content-between p-5 text-white">
+            <div class="auth-logo-wrapper animate-fade-in-down">
+                <a href="/" class="d-flex align-items-center text-decoration-none text-white">
+                    <div class="icon-circle bg-white bg-opacity-20 backdrop-blur me-3 shadow-sm">
+                        <i class="bi bi-diagram-3 fs-3"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0 tracking-tight">SEAE</h4>
+                        <small class="opacity-75 text-uppercase letter-spacing-1" style="font-size: 0.65rem;">Sistema de Gestão Estratégica</small>
+                    </div>
+                </a>
+            </div>
 
-        <!-- Welcome Message -->
-        <div class="text-center mb-4">
-            <h1 class="h3 fw-bold mb-2">{{ __('Welcome back!') }}</h1>
-            <p class="text-muted mb-0">{{ __('Enter your credentials to access your account') }}</p>
+            <div class="auth-quote animate-fade-in">
+                <h1 class="display-4 fw-bold mb-4">Bem-vindo à sua central de <span class="text-warning">governança</span>.</h1>
+                <p class="lead opacity-75">Gerencie ciclos PEI, monitore indicadores SMART e execute planos de ação com o rigor técnico que sua organização exige.</p>
+                
+                <div class="mt-5 d-flex gap-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle bg-white bg-opacity-10 p-2"><i class="bi bi-shield-lock text-warning"></i></div>
+                        <span class="small fw-medium">Ambiente Seguro</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle bg-white bg-opacity-10 p-2"><i class="bi bi-bar-chart-line text-warning"></i></div>
+                        <span class="small fw-medium">BI & Analytics</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="auth-footer-visual animate-fade-in-up">
+                <p class="small opacity-50 mb-0">&copy; {{ date('Y') }} Strategic Planning System. Todos os direitos reservados.</p>
+            </div>
         </div>
 
-        <x-validation-errors class="mb-4" />
-
-        @session('status')
-            <div class="alert alert-success alert-modern mb-4 d-flex align-items-center" role="alert">
-                <i class="bi bi-check-circle-fill me-2 fs-5"></i>
-                <span>{{ $value }}</span>
-            </div>
-        @endsession
-
-        <!-- Session Expired Alert -->
-        <div id="sessionExpiredAlert" class="alert alert-info alert-modern alert-dismissible fade mb-4 d-none" role="alert">
-            <div class="d-flex align-items-start">
-                <i class="bi bi-info-circle-fill me-2 fs-5 flex-shrink-0 mt-1"></i>
-                <div class="flex-grow-1">
-                    <strong class="d-block mb-1">Sessão expirada por segurança</strong>
-                    <p class="mb-0 small">Por segurança, sua sessão foi encerrada automaticamente. Por favor, faça login novamente para continuar.</p>
+        {{-- Coluna Direita: Formulário --}}
+        <div class="auth-form-container d-flex align-items-center justify-content-center p-4 p-lg-5 bg-body">
+            <div class="auth-form-card animate-fade-in-right">
+                
+                <div class="mb-5 text-start">
+                    <h2 class="fw-800 text-dark mb-2">Entrar no Sistema</h2>
+                    <p class="text-muted">Acesse sua conta para gerenciar a estratégia institucional.</p>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+                <x-validation-errors class="mb-4 alert-modern" />
+
+                @session('status')
+                    <div class="alert alert-success alert-modern mb-4 d-flex align-items-center rounded-4 shadow-sm border-0" role="alert">
+                        <i class="bi bi-check-circle-fill me-2 fs-5 text-success"></i>
+                        <span class="small fw-medium text-dark">{{ $value }}</span>
+                    </div>
+                @endsession
+
+                <form method="POST" action="{{ route('login') }}" id="loginForm">
+                    @csrf
+
+                    {{-- E-mail --}}
+                    <div class="mb-4">
+                        <label class="form-label-premium">E-mail Corporativo</label>
+                        <div class="input-group-premium">
+                            <i class="bi bi-envelope"></i>
+                            <input type="email" name="email" class="form-control" value="{{ old('email') }}" placeholder="seu@email.com" required autofocus autocomplete="username">
+                        </div>
+                    </div>
+
+                    {{-- Senha --}}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label-premium mb-0">Senha de Acesso</label>
+                            @if (Route::has('password.request'))
+                                <a class="text-primary small fw-bold text-decoration-none hover-underline" style="font-size: 0.7rem; text-transform: uppercase;" href="{{ route('password.request') }}">
+                                    Esqueceu a senha?
+                                </a>
+                            @endif
+                        </div>
+                        <div class="input-group-premium">
+                            <i class="bi bi-lock"></i>
+                            <input type="password" name="password" id="password" class="form-control" style="padding-right: 3rem;" placeholder="••••••••" required autocomplete="current-password">
+                            <button type="button" class="btn-password-toggle" onclick="togglePassword('password')" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); z-index: 10;">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Manter Conectado --}}
+                    <div class="mb-4">
+                        <div class="form-check form-check-premium d-flex align-items-center">
+                            <input class="form-check-input" type="checkbox" name="remember" id="remember_me">
+                            <label class="form-check-label small text-muted ms-2" for="remember_me">
+                                Manter conectado por 30 dias
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mb-4">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill gradient-theme-btn py-3 shadow-lg hover-scale">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> {{ __('Entrar no Painel') }}
+                        </button>
+                    </div>
+
+                    @if (Route::has('register'))
+                        <div class="text-center pt-2">
+                            <span class="text-muted small">Ainda não tem acesso?</span>
+                            <a href="{{ route('register') }}" class="text-primary small fw-bold text-decoration-none ms-1 hover-underline">
+                                Criar conta agora
+                            </a>
+                        </div>
+                    @endif
+                </form>
+
+                {{-- Security Badge --}}
+                <div class="mt-5 p-3 rounded-4 bg-light bg-opacity-50 border text-center d-flex align-items-center justify-content-center gap-2">
+                    <i class="bi bi-shield-check text-success"></i>
+                    <span class="x-small text-muted fw-medium">Conexão segura com criptografia ponta a ponta.</span>
+                </div>
             </div>
         </div>
+    </div>
 
-        <form method="POST" action="{{ route('login') }}" class="needs-validation" novalidate id="loginForm">
-            @csrf
-
-            <!-- Email Field -->
-            <div class="mb-3 form-group-modern">
-                <x-label for="email" value="{{ __('Email') }}" class="form-label-modern" />
-                <div class="input-icon-wrapper">
-                    <i class="bi bi-envelope input-icon"></i>
-                    <x-input id="email"
-                             type="email"
-                             name="email"
-                             :value="old('email')"
-                             required
-                             autofocus
-                             autocomplete="username"
-                             class="form-control-modern ps-5"
-                             placeholder="seu@email.com" />
-                </div>
-                <x-input-error for="email" />
-            </div>
-
-            <!-- Password Field -->
-            <div class="mb-3 form-group-modern">
-                <x-label for="password" value="{{ __('Password') }}" class="form-label-modern" />
-                <div class="input-icon-wrapper position-relative">
-                    <i class="bi bi-lock input-icon"></i>
-                    <x-input id="password"
-                             type="password"
-                             name="password"
-                             required
-                             autocomplete="current-password"
-                             class="form-control-modern ps-5 pe-5"
-                             placeholder="••••••••" />
-                    <button type="button"
-                            class="btn-password-toggle"
-                            onclick="togglePasswordVisibility()"
-                            aria-label="{{ __('Toggle password visibility') }}">
-                        <i class="bi bi-eye" id="togglePasswordIcon"></i>
-                    </button>
-                </div>
-                <x-input-error for="password" />
-            </div>
-
-            <!-- Remember Me & Forgot Password -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="form-check form-check-modern">
-                    <x-checkbox id="remember_me" name="remember" class="form-check-input-modern" />
-                    <label class="form-check-label" for="remember_me">
-                        &nbsp;&nbsp;{{ __('Remember me') }}
-                    </label>
-                </div>
-
-                @if (Route::has('password.request'))
-                    <a class="link-forgot" href="{{ route('password.request') }}">
-                        {{ __('Forgot password?') }}
-                    </a>
-                @endif
-            </div>
-
-            <!-- Submit Button -->
-            <div class="d-grid mb-4">
-                <button type="submit" class="btn btn-primary btn-login gradient-theme-btn" id="loginButton">
-                    <span class="btn-text">
-                        <i class="bi bi-box-arrow-in-right me-2"></i>
-                        {{ __('Sign in to your account') }}
-                    </span>
-                    <span class="btn-loading d-none">
-                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        {{ __('We validate your credentials...') }}
-                    </span>
-                </button>
-            </div>
-
-            <!-- Register Link -->
-            @if (Route::has('register'))
-                <div class="text-center">
-                    <p class="text-muted mb-0">
-                        {{ __("Don't have an account?") }}
-                        <a href="{{ route('register') }}" class="link-register">
-                            {{ __('Create one now') }}
-                        </a>
-                    </p>
-                </div>
-            @endif
-        </form>
-
-        <!-- Security Badge -->
-        <div class="security-badge text-center mt-4 d-flex align-items-center justify-content-center">
-            <i class="bi bi-shield-check text-success me-2"></i>
-            <span class="small text-muted">{{ __('Your data is protected with encryption') }}</span>
-        </div>
-    </x-authentication-card>
-
-    <!-- Custom Styles -->
     <style>
-        /* Modern Form Elements */
-        .form-group-modern {
+        /* Reutilização de estilos Premium da Register */
+        .auth-full-page { min-height: 100vh; overflow-x: hidden; }
+        
+        .auth-visual {
+            width: 45%;
+            background: linear-gradient(135deg, #1B408E 0%, #4361EE 100%), 
+                        url('https://images.unsplash.com/photo-1454165833767-027ffea9e778?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-blend-mode: multiply;
+            background-size: cover;
+            background-position: center;
             position: relative;
         }
 
-        .form-label-modern {
-            font-weight: 600;
-            color: var(--bs-body-color);
+        .auth-form-container { width: 55%; flex-grow: 1; }
+        .auth-form-card { width: 100%; max-width: 420px; }
+
+        @media (max-width: 991.98px) {
+            .auth-form-container { width: 100%; }
+        }
+
+        .fw-800 { font-weight: 800; }
+        .letter-spacing-1 { letter-spacing: 1px; }
+        .tracking-tight { letter-spacing: -1px; }
+
+        .form-label-premium {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--bs-secondary);
             margin-bottom: 0.5rem;
-            font-size: 0.875rem;
+            letter-spacing: 0.5px;
         }
 
-        .input-icon-wrapper {
+        .input-group-premium {
             position: relative;
+            display: flex;
+            align-items: center;
         }
 
-        .input-icon {
+        .input-group-premium i {
             position: absolute;
             left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--bs-secondary);
-            font-size: 1.125rem;
-            pointer-events: none;
-            z-index: 5;
+            color: var(--bs-primary);
+            font-size: 1.1rem;
+            opacity: 0.7;
         }
 
-        [data-bs-theme="dark"] .input-icon {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .form-control-modern {
-            height: 48px;
+        .input-group-premium .form-control {
+            padding: 0.8rem 1rem 0.8rem 3rem;
             border-radius: 12px;
-            border: 2px solid var(--bs-border-color);
-            font-size: 0.9375rem;
+            border: 2px solid rgba(0,0,0,0.05);
+            background-color: rgba(var(--bs-body-color-rgb), 0.03);
+            font-weight: 500;
             transition: all 0.3s ease;
-            background-color: var(--bs-body-bg);
-            color: var(--bs-body-color);
         }
 
-        .form-control-modern:focus {
+        .input-group-premium .form-control:focus {
             border-color: var(--bs-primary);
-            box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.15);
-            background-color: var(--bs-body-bg);
+            background-color: #fff;
+            box-shadow: 0 10px 20px rgba(var(--bs-primary-rgb), 0.08);
         }
 
-        .form-control-modern::placeholder {
-            color: var(--bs-secondary);
-            opacity: 0.6;
+        [data-bs-theme="dark"] .input-group-premium .form-control {
+            background-color: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.1);
+            color: #fff;
         }
 
-        [data-bs-theme="dark"] .form-control-modern {
-            background-color: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.15);
-            color: rgba(255, 255, 255, 0.95);
-        }
-
-        [data-bs-theme="dark"] .form-control-modern:focus {
-            background-color: rgba(255, 255, 255, 0.12);
-            border-color: var(--bs-primary);
-            box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
-        }
-
-        [data-bs-theme="dark"] .form-control-modern::placeholder {
-            color: rgba(255, 255, 255, 0.4);
-        }
-
-        /* Password Toggle Button */
         .btn-password-toggle {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
             background: none;
             border: none;
             color: var(--bs-secondary);
-            font-size: 1.125rem;
             cursor: pointer;
             padding: 0.25rem;
-            z-index: 5;
-            transition: color 0.2s ease;
+            transition: all 0.2s;
         }
+        .btn-password-toggle:hover { color: var(--bs-primary); transform: scale(1.1); }
 
-        .btn-password-toggle:hover {
-            color: var(--bs-primary);
-        }
+        .form-check-premium .form-check-input { width: 1.1rem; height: 1.1rem; cursor: pointer; }
 
-        [data-bs-theme="dark"] .btn-password-toggle {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        [data-bs-theme="dark"] .btn-password-toggle:hover {
-            color: var(--bs-primary);
-        }
-
-        /* Modern Checkbox */
-        .form-check-modern {
-            display: flex;
-            align-items: center;
-        }
-
-        .form-check-input-modern {
-            width: 1.125rem;
-            height: 1.125rem;
-            cursor: pointer;
-            border: 2px solid var(--bs-border-color);
-        }
-
-        [data-bs-theme="dark"] .form-check-input-modern {
-            background-color: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        [data-bs-theme="dark"] .form-check-input-modern:checked {
-            background-color: var(--bs-primary);
-            border-color: var(--bs-primary);
-        }
-
-        .form-check-modern label {
-            font-size: 0.9375rem;
-            color: var(--bs-body-color);
-            cursor: pointer;
-            margin-bottom: 0;
-        }
-
-        [data-bs-theme="dark"] .form-check-modern label {
-            color: rgba(255, 255, 255, 0.85);
-        }
-
-        /* Links */
-        .link-forgot {
-            color: var(--bs-primary);
-            text-decoration: none;
-            font-size: 0.9375rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .link-forgot:hover {
-            color: var(--bs-primary);
-            text-decoration: underline;
-        }
-
-        [data-bs-theme="dark"] .link-forgot {
-            color: #6ea8fe;
-        }
-
-        [data-bs-theme="dark"] .link-forgot:hover {
-            color: #9ec5fe;
-        }
-
-        .link-register {
-            color: var(--bs-primary);
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.2s ease;
-        }
-
-        .link-register:hover {
-            color: var(--bs-primary);
-            text-decoration: underline;
-        }
-
-        [data-bs-theme="dark"] .link-register {
-            color: #6ea8fe;
-        }
-
-        [data-bs-theme="dark"] .link-register:hover {
-            color: #9ec5fe;
-        }
-
-        /* Login Button - uses global .gradient-theme-btn class */
-        .btn-login {
-            height: 52px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 1rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-login:hover:not(:disabled) {
-            transform: translateY(-2px);
-        }
-
-        .btn-login:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
-        .btn-login:disabled {
-            opacity: 0.8;
-            cursor: not-allowed;
-        }
-
-        .btn-loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Alert Modern */
-        .alert-modern {
-            border-radius: 12px;
-            border: none;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-
-        [data-bs-theme="dark"] .alert-modern {
-            background-color: rgba(25, 135, 84, 0.15);
-            border: 1px solid rgba(25, 135, 84, 0.3);
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
-        }
-
-        [data-bs-theme="dark"] .alert-modern.alert-success {
-            color: #75b798;
-        }
-
-        [data-bs-theme="dark"] .alert-modern.alert-info {
-            background-color: rgba(13, 202, 240, 0.15);
-            border: 1px solid rgba(13, 202, 240, 0.3);
-            color: #9eeaf9;
-        }
-
-        .alert-modern.alert-info .bi-info-circle-fill {
-            color: var(--bs-info);
-        }
-
-        [data-bs-theme="dark"] .alert-modern.alert-info .bi-info-circle-fill {
-            color: #9eeaf9;
-        }
-
-        .alert-modern .btn-close {
-            font-size: 0.75rem;
-        }
-
-        [data-bs-theme="dark"] .alert-modern .btn-close {
-            filter: invert(1) grayscale(100%) brightness(200%);
-        }
-
-        /* Security Badge */
-        .security-badge {
-            padding: 0.75rem;
-            background: rgba(var(--bs-success-rgb), 0.1);
-            border: 1px solid rgba(var(--bs-success-rgb), 0.2);
-            border-radius: 12px;
-        }
-
-        [data-bs-theme="dark"] .security-badge {
-            background: rgba(25, 135, 84, 0.15);
-            border-color: rgba(25, 135, 84, 0.3);
-        }
-
-        [data-bs-theme="dark"] .security-badge .text-success {
-            color: #75b798 !important;
-        }
-
-        [data-bs-theme="dark"] .security-badge .text-muted {
-            color: rgba(255, 255, 255, 0.6) !important;
-        }
-
-        /* Welcome Message */
-        h1 {
-            color: var(--bs-body-color);
-        }
-
-        [data-bs-theme="dark"] h1 {
-            color: rgba(255, 255, 255, 0.95);
-        }
-
-        [data-bs-theme="dark"] .text-muted {
-            color: rgba(255, 255, 255, 0.6) !important;
-        }
-
-        /* Animations */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
-        .shake {
-            animation: shake 0.4s ease-in-out;
-        }
-
-        /* Responsive */
-        @media (max-width: 576px) {
-            .form-control-modern {
-                height: 46px;
-                font-size: 0.875rem;
-            }
-
-            .btn-login {
-                height: 48px;
-                font-size: 0.9375rem;
-            }
-
-            h1.h3 {
-                font-size: 1.5rem;
-            }
-        }
+        .animate-fade-in-right { animation: fadeInRight 0.6s ease-out; }
+        @keyframes fadeInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        
+        .backdrop-blur { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        .hover-scale:hover { transform: scale(1.02); }
+        .x-small { font-size: 0.7rem; }
     </style>
 
-    <!-- JavaScript -->
     <script>
-        // Toggle password visibility
-        function togglePasswordVisibility() {
-            const passwordInput = document.getElementById('password');
-            const toggleIcon = document.getElementById('togglePasswordIcon');
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            const btn = input.nextElementSibling;
+            const icon = btn.querySelector('i');
 
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                toggleIcon.classList.remove('bi-eye');
-                toggleIcon.classList.add('bi-eye-slash');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
             } else {
-                passwordInput.type = 'password';
-                toggleIcon.classList.remove('bi-eye-slash');
-                toggleIcon.classList.add('bi-eye');
+                input.type = 'password';
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
             }
         }
-
-        // Form submission handling
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check for expired session
-            const sessionExpired = localStorage.getItem('session_expired');
-            if (sessionExpired === 'true') {
-                const alert = document.getElementById('sessionExpiredAlert');
-                if (alert) {
-                    alert.classList.remove('d-none');
-                    alert.classList.add('show');
-
-                    // Clear the flag
-                    localStorage.removeItem('session_expired');
-
-                    // Auto-hide after 15 seconds
-                    setTimeout(() => {
-                        const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-                        bsAlert.close();
-                    }, 15000);
-                }
-            }
-
-            const loginForm = document.getElementById('loginForm');
-            const loginButton = document.getElementById('loginButton');
-
-            if (loginForm && loginButton) {
-                loginForm.addEventListener('submit', function(e) {
-                    // Check if form is valid
-                    if (loginForm.checkValidity()) {
-                        // Disable button
-                        loginButton.disabled = true;
-
-                        // Toggle text and loading state
-                        const btnText = loginButton.querySelector('.btn-text');
-                        const btnLoading = loginButton.querySelector('.btn-loading');
-
-                        if (btnText && btnLoading) {
-                            btnText.classList.add('d-none');
-                            btnLoading.classList.remove('d-none');
-                        }
-                    }
-                });
-            }
-
-            // Add floating label effect
-            const inputs = document.querySelectorAll('.form-control-modern');
-            inputs.forEach(input => {
-                input.addEventListener('focus', function() {
-                    this.parentElement.classList.add('focused');
-                });
-
-                input.addEventListener('blur', function() {
-                    if (!this.value) {
-                        this.parentElement.classList.remove('focused');
-                    }
-                });
-            });
-
-            // Check for validation errors and shake the form
-            @if ($errors->any())
-                const form = document.getElementById('loginForm');
-                if (form) {
-                    form.classList.add('shake');
-                    setTimeout(() => {
-                        form.classList.remove('shake');
-                    }, 400);
-                }
-            @endif
-        });
     </script>
 </x-guest-layout>
