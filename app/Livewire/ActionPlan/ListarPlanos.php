@@ -179,12 +179,12 @@ class ListarPlanos extends Component
         $this->grausSatisfacao = \App\Models\StrategicPlanning\GrauSatisfacao::orderBy('vlr_minimo')->get();
 
         if ($this->peiAtivo) {
-            // Carrega objetivos e agrupa por nome da perspectiva
-            $lista = Objetivo::whereHas('perspectiva', function($query) {
+            // Carrega objetivos e agrupa por nome da perspectiva, convertendo para array para estabilidade do Livewire
+            $this->objetivos = Objetivo::whereHas('perspectiva', function($query) {
                 $query->where('cod_pei', $this->peiAtivo->cod_pei);
-            })->with('perspectiva')->orderBy('nom_objetivo')->get();
-            
-            $this->objetivos = $lista->groupBy('perspectiva.dsc_perspectiva')->toArray();
+            })->with('perspectiva')->orderBy('nom_objetivo')->get()
+            ->groupBy('perspectiva.dsc_perspectiva')
+            ->toArray();
         }
     }
 
