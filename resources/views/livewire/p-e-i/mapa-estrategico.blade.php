@@ -117,7 +117,7 @@
                         <div class="card shadow-sm perspectiva-full-card" style="border: 2px solid var(--bs-{{ $corBordaRef }}) !important;">
                             <!-- Header da Perspectiva -->
                             <div class="perspectiva-header-modern px-4 py-3 d-flex justify-content-between align-items-center"
-                                 style="background-color: color-mix(in srgb, var(--bs-{{ $corBordaRef }}-bg-subtle), white 77%) !important; border-bottom: 2px solid var(--bs-{{ $corBordaRef }}) !important;">
+                                 style="--persp-base-bg: var(--bs-{{ $corBordaRef }}-bg-subtle); --persp-border-color: var(--bs-{{ $corBordaRef }});">
                                 <div class="persp-title-group">
                                     <h5 class="persp-name text-uppercase fw-800 mb-0">{{ $p['dsc_perspectiva'] }}</h5>
                                 </div>

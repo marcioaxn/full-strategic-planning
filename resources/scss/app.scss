@@ -1118,6 +1118,16 @@ body {
 /* ========== MAPA ESTRATÉGICO STYLES ========== */
 .mapa-canvas { background-color: var(--bs-body-bg); color: var(--bs-body-color); min-height: 100vh; }
 
+.perspectiva-header-modern {
+    --persp-mix-color: white;
+    background-color: color-mix(in srgb, var(--persp-base-bg), var(--persp-mix-color) 77%) !important;
+    border-bottom: 2px solid var(--persp-border-color) !important;
+}
+
+[data-bs-theme="dark"] .perspectiva-header-modern {
+    --persp-mix-color: #1e2227;
+}
+
 /* Utils */
 .fw-800 { font-weight: 800; }
 .letter-spacing-1 { letter-spacing: 1px; }
