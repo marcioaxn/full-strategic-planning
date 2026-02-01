@@ -56,6 +56,55 @@
                 </div>
             </div>
 
+            <!-- Memória de Cálculo e Polaridade -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-calculator-fill me-2 text-primary"></i>Memória de Cálculo</h5>
+                </div>
+                <div class="card-body p-4 pt-0">
+                    <div class="p-3 rounded-4 bg-light mb-3">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            @php
+                                $polaridadeInfo = [
+                                    'Positiva' => ['icon' => 'bi-arrow-up-circle-fill', 'color' => 'text-success', 'label' => 'Positiva (Maior é Melhor)', 'desc' => 'Valores crescentes indicam melhoria no desempenho.'],
+                                    'Negativa' => ['icon' => 'bi-arrow-down-circle-fill', 'color' => 'text-danger', 'label' => 'Negativa (Menor é Melhor)', 'desc' => 'Valores decrescentes indicam melhoria no desempenho.'],
+                                    'Estabilidade' => ['icon' => 'bi-dash-circle-fill', 'color' => 'text-warning', 'label' => 'Estabilidade', 'desc' => 'Busca-se um valor alvo. Desvios para cima ou baixo são indesejáveis.'],
+                                    'Não Aplicável' => ['icon' => 'bi-info-circle-fill', 'color' => 'text-muted', 'label' => 'Não Aplicável', 'desc' => 'Indicador informativo sem julgamento de valor.']
+                                ][$indicador->dsc_polaridade ?? 'Positiva'] ?? ['icon' => 'bi-question-circle', 'color' => 'text-muted', 'label' => 'Não Definida', 'desc' => 'Regra de polaridade não configurada.'];
+                            @endphp
+                            <i class="bi {{ $polaridadeInfo['icon'] }} {{ $polaridadeInfo['color'] }} fs-4"></i>
+                            <span class="fw-bold text-dark">{{ $polaridadeInfo['label'] }}</span>
+                        </div>
+                        <p class="x-small text-muted mb-0">{{ $polaridadeInfo['desc'] }}</p>
+                    </div>
+
+                    <div class="small">
+                        <label class="fw-bold text-muted text-uppercase x-small d-block mb-2">Regra de Cálculo:</label>
+                        @if(($indicador->dsc_polaridade ?? 'Positiva') === 'Negativa')
+                            <div class="alert alert-info border-0 py-2 px-3 mb-3">
+                                <code class="text-primary fw-bold" style="font-size: 0.85rem;">% Ating. = (Previsto / Realizado) × 100</code>
+                            </div>
+                            <p class="x-small text-muted">
+                                <strong>Exemplo:</strong> Se a meta de desperdício é <strong>10</strong> e o realizado foi <strong>8</strong>:<br>
+                                (10 / 8) × 100 = <strong>125%</strong> (Excelente!)
+                            </p>
+                        @elseif(($indicador->dsc_polaridade ?? 'Positiva') === 'Não Aplicável')
+                            <div class="alert alert-secondary border-0 py-2 px-3 mb-3">
+                                <span class="small fw-bold">Cálculo não realizado (Informativo)</span>
+                            </div>
+                        @else
+                            <div class="alert alert-info border-0 py-2 px-3 mb-3">
+                                <code class="text-primary fw-bold" style="font-size: 0.85rem;">% Ating. = (Realizado / Previsto) × 100</code>
+                            </div>
+                            <p class="x-small text-muted">
+                                <strong>Exemplo:</strong> Se a meta de vendas é <strong>100</strong> e o realizado foi <strong>85</strong>:<br>
+                                (85 / 100) × 100 = <strong>85%</strong>
+                            </p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
             <!-- Metas e Linha de Base -->
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white border-0 py-3">
