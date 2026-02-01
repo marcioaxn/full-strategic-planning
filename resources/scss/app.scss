@@ -1167,11 +1167,39 @@ body {
 .legenda-color-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
 
 /* Dark Mode Ajustes Finos */
-[data-bs-theme="dark"] .identity-box { background: rgba(255,255,255,0.02); }
-[data-bs-theme="dark"] .objetivo-card-modern { background: rgba(255,255,255,0.03); }
-[data-bs-theme="dark"] .perspectiva-full-card { border-color: rgba(255,255,255,0.1) !important; }
-[data-bs-theme="dark"] .connector-line-modern { background: white; opacity: 0.1; }
-[data-bs-theme="dark"] .connector-arrow-modern { color: white; opacity: 0.2; }
+[data-bs-theme="dark"] {
+    .mapa-canvas { background-color: #181b1f; }
+    
+    .identity-box { 
+        background: #1e2227; 
+        border-color: rgba(255, 255, 255, 0.05) !important;
+    }
+    
+    .objetivo-card-modern { 
+        background: #1e2227; 
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .perspectiva-full-card { 
+        background-color: #181b1f;
+        border-color: rgba(255, 255, 255, 0.1) !important; 
+    }
+
+    .legenda-wrapper > div {
+        background-color: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .bg-light-custom { background-color: rgba(255, 255, 255, 0.05); }
+    .connector-line-modern { background: white; opacity: 0.1; }
+    .connector-arrow-modern { color: white; opacity: 0.2; }
+    
+    .btn-info-calc {
+        background: #2d3238;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        i { color: #94a3b8 !important; }
+    }
+}
 
 /* ========== COMPONENT-SPECIFIC UTILITIES ========== */
 .header-icon {
@@ -1192,3 +1220,9 @@ body {
 .btn-icon:hover { transform: scale(1.1); }
 .modal-content { animation: fadeInUp 0.2s ease-out; }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+.premium-modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
