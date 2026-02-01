@@ -77,7 +77,7 @@ class EvolucaoIndicador extends Model
      */
 
     /**
-     * Calcular percentual de atingimento
+     * Calcular percentual de atingimento considerando a polaridade
      */
     public function calcularAtingimento(): float
     {
@@ -85,7 +85,14 @@ class EvolucaoIndicador extends Model
             return 0;
         }
 
-        return ($this->vlr_realizado / $this->vlr_previsto) * 100;
+        $polaridade = $this->indicador->dsc_polaridade ?? 'Positiva';
+
+        return match ($polaridade) {
+            'Negativa' => $this->vlr_realizado > 0 ? ($this->vlr_previsto / $this->vlr_realizado) * 100 : 100,
+            'Não Aplicável' => 0,
+            'Positiva', 'Estabilidade' => ($this->vlr_realizado / $this->vlr_previsto) * 100,
+            default => ($this->vlr_realizado / $this->vlr_previsto) * 100,
+        };
     }
 
     /**

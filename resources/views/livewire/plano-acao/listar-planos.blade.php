@@ -873,10 +873,10 @@
                                         }" wire:ignore>
                                             <label class="form-label small text-muted fw-bold text-uppercase">Período (Início e Fim)</label>
                                             <div class="input-group shadow-sm">
-                                                <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-airplane"></i></span>
+                                                <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-calendar-range"></i></span>
                                                 <input x-ref="dateInput" type="text" class="form-control bg-white border-0 fw-bold text-dark" placeholder="Selecione o período..." readonly>
                                             </div>
-                                            <div class="form-text x-small text-end mt-1 text-muted">Selecione a data de ida (início) e volta (fim).</div>
+                                            <div class="form-text x-small text-end mt-1 text-muted">Selecione a data de Início e de Fim.</div>
                                         </div>
 
                                         @error('dte_inicio') <div class="text-danger x-small mt-2 text-end">{{ $message }}</div> @enderror

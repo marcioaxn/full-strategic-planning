@@ -17,6 +17,12 @@ class ListarObjetivos extends Component
 
     public bool $showModal = false;
     public bool $showDeleteModal = false;
+    public bool $showSuccessModal = false;
+    public bool $showErrorModal = false;
+    public string $successMessage = '';
+    public string $errorMessage = '';
+    public string $createdObjetivoName = '';
+
     public $objetivoId;
     public $nom_objetivo;
     public $dsc_objetivo;
@@ -30,6 +36,19 @@ class ListarObjetivos extends Component
     protected $listeners = [
         'peiSelecionado' => 'atualizarPEI'
     ];
+
+    public function closeSuccessModal()
+    {
+        $this->showSuccessModal = false;
+        $this->successMessage = '';
+        $this->createdObjetivoName = '';
+    }
+
+    public function closeErrorModal()
+    {
+        $this->showErrorModal = false;
+        $this->errorMessage = '';
+    }
 
     /**
      * Hook do Livewire que dispara quando nom_objetivo é alterado.
@@ -191,38 +210,40 @@ class ListarObjetivos extends Component
     public function save()
     {
         $service = app(\App\Services\PeiGuidanceService::class);
-        $before = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
-
         $this->validate([
             'nom_objetivo' => 'required|string|max:255',
             'dsc_objetivo' => 'nullable|string|max:1000',
             'num_nivel_hierarquico_apresentacao' => 'required|integer|min:1',
-            'cod_perspectiva' => 'required|exists:tab_perspectiva,cod_perspectiva',
+            'cod_perspectiva' => 'required|exists:pei.tab_perspectiva,cod_perspectiva',
         ]);
 
-        Objetivo::updateOrCreate(
-            ['cod_objetivo' => $this->objetivoId],
-            [
-                'nom_objetivo' => $this->nom_objetivo,
-                'dsc_objetivo' => $this->dsc_objetivo,
-                'num_nivel_hierarquico_apresentacao' => $this->num_nivel_hierarquico_apresentacao,
-                'cod_perspectiva' => $this->cod_perspectiva,
-            ]
-        );
+        try {
+            Objetivo::updateOrCreate(
+                ['cod_objetivo' => $this->objetivoId],
+                [
+                    'nom_objetivo' => $this->nom_objetivo,
+                    'dsc_objetivo' => $this->dsc_objetivo,
+                    'num_nivel_hierarquico_apresentacao' => $this->num_nivel_hierarquico_apresentacao,
+                    'cod_perspectiva' => $this->cod_perspectiva,
+                ]
+            );
 
-        $after = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
+            if ($this->objetivoId) {
+                $this->successMessage = "As definições do objetivo estratégico foram atualizadas com sucesso e já estão refletidas no mapa estratégico.";
+            } else {
+                $this->successMessage = "O novo objetivo estratégico foi registrado. Agora você pode prosseguir vinculando indicadores e planos de ação a esta meta.";
+            }
 
-        $alert = \App\Services\NotificationService::sendMentorAlert(
-            $this->objetivoId ? 'Objetivo Atualizado!' : 'Objetivo Criado!',
-            $after['message'],
-            'bi-bullseye'
-        );
+            $this->createdObjetivoName = $this->nom_objetivo;
+            $this->showModal = false;
+            $this->resetForm();
+            $this->carregarPerspectivas();
+            $this->showSuccessModal = true;
 
-        $this->dispatch('mentor-notification', ...$alert);
-
-        $this->showModal = false;
-        $this->carregarPerspectivas();
-        session()->flash('status', 'Objetivo salvo com sucesso!');
+        } catch (\Exception $e) {
+            $this->errorMessage = "Não foi possível processar o registro do objetivo. Por favor, revise as informações e tente novamente.";
+            $this->showErrorModal = true;
+        }
     }
 
     public function confirmDelete($id)

@@ -17,8 +17,15 @@ class ListarPeis extends Component
     public $search = '';
     public $filtroStatus = '';
 
+    // Modais e Feedback
     public bool $showModal = false;
     public bool $showDeleteModal = false;
+    public bool $showSuccessModal = false;
+    public bool $showErrorModal = false;
+    public string $successMessage = '';
+    public string $errorMessage = '';
+    public string $createdPeiName = '';
+    
     public $peiId;
     public $impactoExclusao = [];
 
@@ -40,6 +47,19 @@ class ListarPeis extends Component
         }
         $this->num_ano_inicio_pei = now()->year;
         $this->num_ano_fim_pei = now()->year + 4;
+    }
+
+    public function closeSuccessModal()
+    {
+        $this->showSuccessModal = false;
+        $this->successMessage = '';
+        $this->createdPeiName = '';
+    }
+
+    public function closeErrorModal()
+    {
+        $this->showErrorModal = false;
+        $this->errorMessage = '';
     }
 
     public function updatingSearch()
@@ -80,23 +100,30 @@ class ListarPeis extends Component
             'num_ano_fim_pei.gte' => 'O ano de término deve ser maior ou igual ao ano de início.',
         ]);
 
-        $data = [
-            'dsc_pei' => $this->dsc_pei,
-            'num_ano_inicio_pei' => $this->num_ano_inicio_pei,
-            'num_ano_fim_pei' => $this->num_ano_fim_pei,
-        ];
+        try {
+            $data = [
+                'dsc_pei' => $this->dsc_pei,
+                'num_ano_inicio_pei' => $this->num_ano_inicio_pei,
+                'num_ano_fim_pei' => $this->num_ano_fim_pei,
+            ];
 
-        if ($this->peiId) {
-            PEI::findOrFail($this->peiId)->update($data);
-            $message = 'PEI atualizado com sucesso!';
-        } else {
-            PEI::create($data);
-            $message = 'PEI criado com sucesso!';
+            if ($this->peiId) {
+                PEI::findOrFail($this->peiId)->update($data);
+                $this->successMessage = "O ciclo de planejamento estratégico foi atualizado com sucesso e todos os vínculos foram preservados.";
+            } else {
+                PEI::create($data);
+                $this->successMessage = "O novo ciclo de planejamento estratégico foi registrado. Agora você pode prosseguir com a definição da Identidade e Perspectivas.";
+            }
+
+            $this->createdPeiName = $this->dsc_pei;
+            $this->showModal = false;
+            $this->resetForm();
+            $this->showSuccessModal = true;
+
+        } catch (\Exception $e) {
+            $this->errorMessage = "Ocorreu um erro técnico ao processar o registro do PEI. Por favor, tente novamente.";
+            $this->showErrorModal = true;
         }
-
-        $this->showModal = false;
-        $this->resetForm();
-        session()->flash('status', $message);
     }
 
     public function confirmDelete($id)

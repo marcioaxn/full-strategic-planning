@@ -117,7 +117,7 @@
                         <div class="card shadow-sm perspectiva-full-card" style="border: 2px solid var(--bs-{{ $corBordaRef }}) !important;">
                             <!-- Header da Perspectiva -->
                             <div class="perspectiva-header-modern px-4 py-3 d-flex justify-content-between align-items-center"
-                                 style="background-color: color-mix(in srgb, var(--bs-{{ $corBordaRef }}-bg-subtle), white 77%) !important; border-bottom: 2px solid var(--bs-{{ $corBordaRef }}) !important;">
+                                 style="--persp-base-bg: var(--bs-{{ $corBordaRef }}-bg-subtle); --persp-border-color: var(--bs-{{ $corBordaRef }});">
                                 <div class="persp-title-group">
                                     <h5 class="persp-name text-uppercase fw-800 mb-0">{{ $p['dsc_perspectiva'] }}</h5>
                                 </div>
@@ -196,7 +196,7 @@
 
             {{-- Legenda Refinada --}}
             <div class="legenda-wrapper mt-5 mb-4">
-                <div class="d-flex flex-column gap-3 px-4 py-3 bg-white bg-opacity-50 rounded-4 shadow-sm">
+                <div class="d-flex flex-column gap-3 px-4 py-3 rounded-4 shadow-sm">
                     <div class="d-flex align-items-center justify-content-center flex-wrap gap-4">
                         <span class="small fw-bold text-muted text-uppercase letter-spacing-1">Desempenho (Indicadores):</span>
                         @foreach($grausSatisfacao as $grau)
@@ -222,7 +222,7 @@
 
     {{-- Modal de Memória de Cálculo --}}
     @if($showCalcModal && $detalhesCalculo)
-        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.6); backdrop-filter: blur(8px);">
+        <div class="modal fade show d-block premium-modal-backdrop" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden bg-body">
                     <div class="modal-header border-0 pb-0 px-4 pt-4">
@@ -247,6 +247,7 @@
                                     <tr class="small text-muted text-uppercase fw-bold">
                                         <th class="border-0 px-3">Objetivo</th>
                                         <th class="border-0">Indicador</th>
+                                        <th class="border-0 text-center">Polaridade</th>
                                         <th class="border-0 text-end px-3">Atingimento</th>
                                     </tr>
                                 </thead>
@@ -255,6 +256,17 @@
                                         <tr>
                                             <td class="small fw-bold px-3">{{ $item['objetivo'] }}</td>
                                             <td class="small opacity-75">{{ $item['indicador'] }}</td>
+                                            <td class="text-center">
+                                                @php
+                                                    $polIcon = [
+                                                        'Positiva' => 'bi-arrow-up-circle-fill text-success',
+                                                        'Negativa' => 'bi-arrow-down-circle-fill text-danger',
+                                                        'Estabilidade' => 'bi-dash-circle-fill text-warning',
+                                                        'Não Aplicável' => 'bi-info-circle-fill text-muted'
+                                                    ][$item['polaridade']] ?? 'bi-question-circle';
+                                                @endphp
+                                                <i class="bi {{ $polIcon }}" title="{{ $item['polaridade'] }}"></i>
+                                            </td>
                                             <td class="text-end fw-800 px-3" style="color: {{ $item['cor'] }};">@brazil_percent($item['atingimento'], 1)</td>
                                         </tr>
                                     @endforeach

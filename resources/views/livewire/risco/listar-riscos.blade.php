@@ -1,27 +1,34 @@
 <div>
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
+    {{-- Header Interno para garantir escopo do Livewire --}}
+    <div class="leads-header d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
                 <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1">
+                    <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Gestão de Riscos</li>
                     </ol>
                 </nav>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <div class="icon-circle-header gradient-theme-icon">
+                    <i class="bi bi-shield-exclamation"></i>
+                </div>
                 <h2 class="h4 fw-bold mb-0">Riscos Estratégicos</h2>
             </div>
-            <div class="d-flex gap-2">
-                @if($organizacaoId)
-                    <a href="{{ route('riscos.matriz') }}" class="btn btn-outline-primary shadow-sm rounded-pill px-3">
-                        <i class="bi bi-grid-3x3-gap me-1"></i> Ver Matriz
-                    </a>
-                    <button wire:click="create" class="btn btn-primary gradient-theme-btn shadow-sm rounded-pill">
-                        <i class="bi bi-plus-lg me-2"></i>Identificar Risco
-                    </button>
-                @endif
-            </div>
         </div>
-    </x-slot>
+
+        <div class="d-flex align-items-center gap-2">
+            @if($organizacaoId)
+                <a href="{{ route('riscos.matriz') }}" class="btn btn-outline-primary shadow-sm rounded-pill px-3">
+                    <i class="bi bi-grid-3x3-gap me-1"></i> Ver Matriz
+                </a>
+                <button wire:click="create" class="btn btn-primary gradient-theme-btn shadow-sm rounded-pill px-4">
+                    <i class="bi bi-plus-lg me-2"></i>Identificar Risco
+                </button>
+            @endif
+        </div>
+    </div>
 
     {{-- Seção Educativa: O que são Riscos Estratégicos --}}
     <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
@@ -577,147 +584,233 @@
         </div>
     @endif
 
-    <!-- Modal Identificar/Editar Risco -->
-    <div class="modal fade @if($showModal) show @endif" tabindex="-1" style="@if($showModal) display: block; background: rgba(0,0,0,0.5); @else display: none; @endif">
-        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header gradient-theme text-white border-0">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi bi-shield-plus me-2"></i> {{ $riscoId ? 'Configurar Risco Estratégico' : 'Identificar Novo Risco' }}
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" wire:click="$set('showModal', false)"></button>
-                </div>
-                <form wire:submit.prevent="save">
-                    <div class="modal-body p-4 bg-light bg-opacity-50">
-                        <div class="row g-4">
-                            <!-- Bloco 1: Identificação -->
-                            <div class="col-lg-8">
-                                <div class="card border-0 shadow-sm mb-4">
-                                    <div class="card-body p-4">
-                                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Identificação do Risco</h6>
-                                        <div class="mb-3">
-                                            <label class="form-label text-muted small text-uppercase fw-bold">Título do Risco</label>
-                                            <input type="text" wire:model="form.dsc_titulo" class="form-control @error('form.dsc_titulo') is-invalid @enderror" placeholder="Ex: Perda de pessoal qualificado">
-                                            @error('form.dsc_titulo') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label text-muted small text-uppercase fw-bold">Descrição Detalhada</label>
-                                            <textarea wire:model="form.txt_descricao" class="form-control" rows="3" placeholder="Descreva o evento de risco..."></textarea>
-                                        </div>
-                                        <div class="row g-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label text-muted small text-uppercase fw-bold">Categoria</label>
-                                                <select wire:model="form.dsc_categoria" class="form-select">
-                                                    @foreach($categoriasOptions as $cat)
-                                                        <option value="{{ $cat }}">{{ $cat }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label text-muted small text-uppercase fw-bold">Status Atual</label>
-                                                <select wire:model="form.dsc_status" class="form-select">
-                                                    @foreach($statusOptions as $st)
-                                                        <option value="{{ $st }}">{{ $st }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="card border-0 shadow-sm">
-                                    <div class="card-body p-4">
-                                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Causas e Consequências</h6>
-                                        <div class="mb-3">
-                                            <label class="form-label text-muted small text-uppercase fw-bold">Causas (O que gera este risco?)</label>
-                                            <textarea wire:model="form.txt_causas" class="form-control" rows="2" placeholder="Ex: Salários abaixo do mercado, falta de plano de carreira..."></textarea>
-                                        </div>
-                                        <div class="mb-0">
-                                            <label class="form-label text-muted small text-uppercase fw-bold">Consequências (O que acontece se o risco materializar?)</label>
-                                            <textarea wire:model="form.txt_consequencias" class="form-control" rows="2" placeholder="Ex: Atraso nos projetos estratégicos, redução da qualidade..."></textarea>
-                                        </div>
-                                    </div>
-                                </div>
+    <!-- Modal Premium Criar/Editar XL -->
+    @if($showModal)
+        <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.5); z-index: 1055;" wire:click.self="$set('showModal', false)">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                    
+                    {{-- Header Premium --}}
+                    <div class="modal-header gradient-theme-header text-white border-0 py-3 px-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="icon-circle-mini bg-white bg-opacity-25 text-white">
+                                <i class="bi bi-{{ $riscoId ? 'sliders' : 'shield-plus' }}"></i>
                             </div>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0">{{ $riscoId ? 'Configurar Risco Estratégico' : 'Identificar Novo Risco' }}</h5>
+                                <p class="mb-0 small text-white-50">Avaliação de ameaças e oportunidades ao planejamento</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" wire:click="$set('showModal', false)"></button>
+                    </div>
 
-                            <!-- Bloco 2: Avaliação e Vínculos -->
-                            <div class="col-lg-4">
-                                <div class="card border-0 shadow-sm mb-4 overflow-hidden">
-                                    <div class="card-body p-4">
-                                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Avaliação (Matriz 5x5)</h6>
-                                        
-                                        <div class="mb-4">
-                                            <label class="form-label text-muted small text-uppercase fw-bold d-block">Probabilidade (1 a 5)</label>
-                                            <input type="range" class="form-range" min="1" max="5" step="1" wire:model.live="form.num_probabilidade">
-                                            <div class="d-flex justify-content-between px-1">
-                                                @foreach(['1','2','3','4','5'] as $v) <small class="text-muted" style="font-size: 0.6rem;">{{$v}}</small> @endforeach
+                    <form wire:submit.prevent="save">
+                        <div class="modal-body p-4 bg-white">
+                            <div class="row g-4">
+                                
+                                {{-- Coluna Principal: Identificação e Diagnóstico --}}
+                                <div class="col-lg-8">
+                                    <div class="card border-0 bg-light rounded-4 mb-4">
+                                        <div class="card-body p-4">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Identificação do Risco</h6>
+                                            
+                                            <div class="mb-4">
+                                                <label class="form-label text-muted small text-uppercase fw-bold">Título do Risco <span class="text-danger">*</span></label>
+                                                <input type="text" wire:model="form.dsc_titulo" class="form-control form-control-lg bg-white border-0 shadow-sm @error('form.dsc_titulo') is-invalid @enderror" placeholder="Ex: Contingenciamento orçamentário abrupto">
+                                                @error('form.dsc_titulo') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                             </div>
-                                            <div class="text-center fw-bold text-primary">{{ $form['num_probabilidade'] }}</div>
-                                        </div>
 
-                                        <div class="mb-4">
-                                            <label class="form-label text-muted small text-uppercase fw-bold d-block">Impacto (1 a 5)</label>
-                                            <input type="range" class="form-range" min="1" max="5" step="1" wire:model.live="form.num_impacto">
-                                            <div class="d-flex justify-content-between px-1">
-                                                @foreach(['1','2','3','4','5'] as $v) <small class="text-muted" style="font-size: 0.6rem;">{{$v}}</small> @endforeach
+                                            <div class="mb-4">
+                                                <label class="form-label text-muted small text-uppercase fw-bold">Descrição Detalhada</label>
+                                                <textarea wire:model="form.txt_descricao" class="form-control bg-white border-0 shadow-sm" rows="3" placeholder="Descreva o evento de risco e seu contexto..."></textarea>
                                             </div>
-                                            <div class="text-center fw-bold text-primary">{{ $form['num_impacto'] }}</div>
-                                        </div>
 
-                                        <div class="p-3 bg-light rounded-3 text-center border">
-                                            <small class="text-muted d-block text-uppercase fw-bold mb-1" style="font-size: 0.6rem;">Nível de Risco Calculado</small>
-                                            <h2 class="fw-bold mb-0 {{ ($form['num_probabilidade'] * $form['num_impacto']) >= 16 ? 'text-danger' : 'text-dark' }}">
-                                                {{ $form['num_probabilidade'] * $form['num_impacto'] }}
-                                            </h2>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="card border-0 shadow-sm mb-4">
-                                    <div class="card-body p-4">
-                                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Responsável</h6>
-                                        <div class="mb-0">
-                                            <label class="form-label text-muted small text-uppercase fw-bold">Monitorado por:</label>
-                                            <select wire:model="form.cod_responsavel_monitoramento" class="form-select @error('form.cod_responsavel_monitoramento') is-invalid @enderror">
-                                                <option value="">Selecione...</option>
-                                                @foreach($usuarios as $user)
-                                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            @error('form.cod_responsavel_monitoramento') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="card border-0 shadow-sm">
-                                    <div class="card-body p-4">
-                                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Vínculo Estratégico</h6>
-                                        <div class="mb-0 overflow-auto" style="max-height: 200px;">
-                                            @foreach($objetivos as $obj)
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="checkbox" value="{{ $obj->cod_objetivo }}" 
-                                                           wire:model="form.objetivos_vinculados" id="obj_{{ $obj->cod_objetivo }}">
-                                                    <label class="form-check-label small" for="obj_{{ $obj->cod_objetivo }}">
-                                                        {{ Str::limit($obj->nom_objetivo, 50) }}
-                                                    </label>
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Categoria</label>
+                                                    <select wire:model="form.dsc_categoria" class="form-select bg-white border-0 shadow-sm fw-bold">
+                                                        @foreach($categoriasOptions as $cat)
+                                                            <option value="{{ $cat }}">{{ $cat }}</option>
+                                                        @endforeach
+                                                    </select>
                                                 </div>
-                                            @endforeach
+                                                <div class="col-md-6">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Status Atual</label>
+                                                    <select wire:model="form.dsc_status" class="form-select bg-white border-0 shadow-sm fw-bold">
+                                                        @foreach($statusOptions as $st)
+                                                            <option value="{{ $st }}">{{ $st }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="card border-0 bg-light rounded-4">
+                                        <div class="card-body p-4">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Análise de Causa e Efeito</h6>
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Causas Raízes</label>
+                                                    <textarea wire:model="form.txt_causas" class="form-control bg-white border-0 shadow-sm" rows="3" placeholder="O que pode gerar este risco?"></textarea>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Consequências Esperadas</label>
+                                                    <textarea wire:model="form.txt_consequencias" class="form-control bg-white border-0 shadow-sm" rows="3" placeholder="O que acontece se o risco se materializar?"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Coluna Lateral: Avaliação e Vínculos --}}
+                                <div class="col-lg-4">
+                                    {{-- Card Matriz --}}
+                                    <div class="card border-0 bg-light rounded-4 mb-4">
+                                        <div class="card-body p-4">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Avaliação (Probabilidade x Impacto)</h6>
+                                            
+                                            <div class="mb-4">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <label class="form-label small text-muted fw-bold text-uppercase mb-0">Probabilidade</label>
+                                                    <span class="badge bg-primary rounded-pill">{{ $form['num_probabilidade'] }}</span>
+                                                </div>
+                                                <input type="range" class="form-range" min="1" max="5" step="1" wire:model.live="form.num_probabilidade">
+                                                <div class="d-flex justify-content-between px-1">
+                                                    <small class="x-small text-muted">Rara</small>
+                                                    <small class="x-small text-muted">Quase Certa</small>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-4">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <label class="form-label small text-muted fw-bold text-uppercase mb-0">Impacto</label>
+                                                    <span class="badge bg-primary rounded-pill">{{ $form['num_impacto'] }}</span>
+                                                </div>
+                                                <input type="range" class="form-range" min="1" max="5" step="1" wire:model.live="form.num_impacto">
+                                                <div class="d-flex justify-content-between px-1">
+                                                    <small class="x-small text-muted">Insignificante</small>
+                                                    <small class="x-small text-muted">Catastrófico</small>
+                                                </div>
+                                            </div>
+
+                                            @php $nivelCalculado = $form['num_probabilidade'] * $form['num_impacto']; @endphp
+                                            <div class="p-3 rounded-4 text-center border shadow-sm" 
+                                                 style="background-color: {{ $nivelCalculado >= 16 ? '#fff5f5' : ($nivelCalculado >= 8 ? '#fffcf0' : '#f0fff4') }};">
+                                                <small class="text-muted d-block text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Exposição ao Risco</small>
+                                                <h2 class="fw-800 mb-0 {{ $nivelCalculado >= 16 ? 'text-danger' : ($nivelCalculado >= 8 ? 'text-warning' : 'text-success') }}">
+                                                    {{ $nivelCalculado }}
+                                                </h2>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Responsável e Vínculos --}}
+                                    <div class="card border-0 bg-light rounded-4">
+                                        <div class="card-body p-4">
+                                            <div class="mb-4">
+                                                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Monitoramento</h6>
+                                                <label class="form-label text-muted small text-uppercase fw-bold">Responsável <span class="text-danger">*</span></label>
+                                                <select wire:model="form.cod_responsavel_monitoramento" class="form-select bg-white border-0 shadow-sm fw-bold @error('form.cod_responsavel_monitoramento') is-invalid @enderror">
+                                                    <option value="">Selecione...</option>
+                                                    @foreach($usuarios as $user)
+                                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('form.cod_responsavel_monitoramento') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                            </div>
+
+                                            <div class="mb-0">
+                                                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Vínculo Estratégico</h6>
+                                                                                            <div class="bg-white rounded-4 shadow-sm p-3 overflow-auto" style="max-height: 250px;">
+                                                                                                @foreach($objetivos as $perspectiva => $itens)
+                                                                                                    <div class="mb-3">
+                                                                                                        <div class="small fw-bold text-primary text-uppercase border-bottom pb-1 mb-2" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                                                                                                            <i class="bi bi-layers me-1"></i>{{ $perspectiva }}
+                                                                                                        </div>
+                                                                                                        @foreach($itens as $obj)
+                                                                                                            <div class="form-check mb-2">
+                                                                                                                <input class="form-check-input" type="checkbox" value="{{ $obj['cod_objetivo'] }}" 
+                                                                                                                       wire:model="form.objetivos_vinculados" id="obj_{{ $obj['cod_objetivo'] }}">
+                                                                                                                <label class="form-check-label small fw-medium text-dark" for="obj_{{ $obj['cod_objetivo'] }}">
+                                                                                                                    {{ $obj['nom_objetivo'] }}
+                                                                                                                </label>
+                                                                                                            </div>
+                                                                                                        @endforeach
+                                                                                                    </div>
+                                                                                                @endforeach
+                                                                                            </div>                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        <div class="modal-footer border-0 p-4 bg-white rounded-bottom-4 shadow-top-sm">
+                            <button type="button" class="btn btn-light px-4 rounded-pill fw-bold text-muted" wire:click="$set('showModal', false)">Cancelar</button>
+                            <button type="submit" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow-sm hover-scale">
+                                <i class="bi bi-check-lg me-2"></i>Salvar Risco
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Success Modal Premium --}}
+    @if($showSuccessModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-primary text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem; background: linear-gradient(135deg, #1B408E 0%, #4361EE 100%) !important;">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
                     </div>
-                    <div class="modal-footer border-0 p-4 pt-0 bg-light bg-opacity-50">
-                        <button type="button" class="btn btn-light px-4" wire:click="$set('showModal', false)">Cancelar</button>
-                        <button type="submit" class="btn btn-primary gradient-theme-btn px-4 py-2 fw-bold">
-                            <i class="bi bi-save me-2"></i>Salvar Risco
-                        </button>
-                    </div>
-                </form>
+                    <h3 class="fw-bold text-dark mb-3">Risco Registrado!</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        <strong class="text-primary d-block mb-2">"{{ $createdRiscoName }}"</strong>
+                        {{ $successMessage }}
+                    </p>
+                    <button wire:click="closeSuccessModal" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-check2-circle me-2"></i>Continuar
+                    </button>
+                </div>
             </div>
         </div>
     </div>
+    @endif
+
+    {{-- Error Modal Premium --}}
+    @if($showErrorModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-danger text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem; background: linear-gradient(135deg, #e63946 0%, #d62828 100%) !important;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-3">Falha na Operação</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        {{ $errorMessage }}
+                    </p>
+                    <button wire:click="closeErrorModal" class="btn btn-danger px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Tentar Novamente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <style>
+        .scale-in-center { animation: scale-in-center 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; }
+        @keyframes scale-in-center { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        .fw-800 { font-weight: 800; }
+    </style>
 
     {{-- Modal de Exclusão --}}
     <x-confirmation-modal wire:model.live="showDeleteModal">

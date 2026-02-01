@@ -901,21 +901,96 @@ body {
 
 // Dark mode specific adjustments
 [data-bs-theme='dark'] {
+    --app-surface-bg: #1e2227;
+    --app-surface-subtle-bg: #2d3238;
+    
+    .card:not(.educational-card-gradient) {
+        background-color: #1e2227;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .card.bg-light {
+        background-color: #2d3238 !important;
+    }
+
+    .modal-content {
+        background-color: #181b1f;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-body.bg-white, 
+    .modal-footer.bg-white {
+        background-color: #181b1f !important;
+    }
+
+    .form-control, .form-select {
+        background-color: #2d3238;
+        border-color: rgba(255, 255, 255, 0.15);
+        color: #e2e8f0;
+
+        &:focus {
+            background-color: #353a40;
+            border-color: var(--bs-primary);
+        }
+
+        &::placeholder {
+            color: #64748b;
+        }
+    }
+
+    .input-group-text {
+        background-color: #2d3238;
+        border-color: rgba(255, 255, 255, 0.15);
+        color: #94a3b8;
+    }
+
+    .bg-white {
+        background-color: #181b1f !important;
+    }
+
+    .bg-light {
+        background-color: #2d3238 !important;
+    }
+
+    .text-dark {
+        color: #f1f5f9 !important;
+    }
+
+    .text-muted {
+        color: #94a3b8 !important;
+    }
+
+    .border {
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
     .card-hover-lift:hover {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3) !important;
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.5) !important;
+        border-color: rgba(var(--bs-primary-rgb), 0.3) !important;
     }
 
-    .filter-chip {
-        background-color: var(--bs-primary);
+    .table-light {
+        --bs-table-bg: #2d3238;
+        --bs-table-color: #f1f5f9;
     }
 
-    .btn-primary-subtle {
-        color: #6ea8fe; // Lightened primary color for dark mode
+    .btn-light {
+        background-color: #2d3238;
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #f1f5f9;
+
+        &:hover {
+            background-color: #353a40;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
     }
 
-    .btn-secondary-subtle {
-        color: var(--bs-body-color);
-    }
+    // Ajuste de badges com opacidade
+    .bg-primary.bg-opacity-10 { background-color: rgba(var(--bs-primary-rgb), 0.2) !important; }
+    .bg-success.bg-opacity-10 { background-color: rgba(var(--bs-success-rgb), 0.2) !important; }
+    .bg-info.bg-opacity-10 { background-color: rgba(var(--bs-info-rgb), 0.2) !important; }
+    .bg-warning.bg-opacity-10 { background-color: rgba(var(--bs-warning-rgb), 0.2) !important; }
+    .bg-danger.bg-opacity-10 { background-color: rgba(var(--bs-danger-rgb), 0.2) !important; }
 }
 
 // ============================================================================
@@ -1043,6 +1118,16 @@ body {
 /* ========== MAPA ESTRATÉGICO STYLES ========== */
 .mapa-canvas { background-color: var(--bs-body-bg); color: var(--bs-body-color); min-height: 100vh; }
 
+.perspectiva-header-modern {
+    --persp-mix-color: white;
+    background-color: color-mix(in srgb, var(--persp-base-bg), var(--persp-mix-color) 77%) !important;
+    border-bottom: 2px solid var(--persp-border-color) !important;
+}
+
+[data-bs-theme="dark"] .perspectiva-header-modern {
+    --persp-mix-color: #1e2227;
+}
+
 /* Utils */
 .fw-800 { font-weight: 800; }
 .letter-spacing-1 { letter-spacing: 1px; }
@@ -1092,11 +1177,39 @@ body {
 .legenda-color-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
 
 /* Dark Mode Ajustes Finos */
-[data-bs-theme="dark"] .identity-box { background: rgba(255,255,255,0.02); }
-[data-bs-theme="dark"] .objetivo-card-modern { background: rgba(255,255,255,0.03); }
-[data-bs-theme="dark"] .perspectiva-full-card { border-color: rgba(255,255,255,0.1) !important; }
-[data-bs-theme="dark"] .connector-line-modern { background: white; opacity: 0.1; }
-[data-bs-theme="dark"] .connector-arrow-modern { color: white; opacity: 0.2; }
+[data-bs-theme="dark"] {
+    .mapa-canvas { background-color: #181b1f; }
+    
+    .identity-box { 
+        background: #1e2227; 
+        border-color: rgba(255, 255, 255, 0.05) !important;
+    }
+    
+    .objetivo-card-modern { 
+        background: #1e2227; 
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .perspectiva-full-card { 
+        background-color: #181b1f;
+        border-color: rgba(255, 255, 255, 0.1) !important; 
+    }
+
+    .legenda-wrapper > div {
+        background-color: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .bg-light-custom { background-color: rgba(255, 255, 255, 0.05); }
+    .connector-line-modern { background: white; opacity: 0.1; }
+    .connector-arrow-modern { color: white; opacity: 0.2; }
+    
+    .btn-info-calc {
+        background: #2d3238;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        i { color: #94a3b8 !important; }
+    }
+}
 
 /* ========== COMPONENT-SPECIFIC UTILITIES ========== */
 .header-icon {
@@ -1117,3 +1230,9 @@ body {
 .btn-icon:hover { transform: scale(1.1); }
 .modal-content { animation: fadeInUp 0.2s ease-out; }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+.premium-modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}

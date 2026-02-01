@@ -33,11 +33,31 @@ class ListarGrausSatisfacao extends Component
     public bool $aiEnabled = false;
     public $aiSuggestion = '';
 
+    // Success Modal Properties
+    public bool $showSuccessModal = false;
+    public bool $showErrorModal = false;
+    public string $successMessage = '';
+    public string $errorMessage = '';
+    public string $createdGrauName = '';
+
     protected $paginationTheme = 'bootstrap';
 
     public function mount()
     {
         $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
+    }
+
+    public function closeSuccessModal()
+    {
+        $this->showSuccessModal = false;
+        $this->successMessage = '';
+        $this->createdGrauName = '';
+    }
+
+    public function closeErrorModal()
+    {
+        $this->showErrorModal = false;
+        $this->errorMessage = '';
     }
 
     public function pedirAjudaIA()
@@ -138,34 +158,35 @@ class ListarGrausSatisfacao extends Component
     {
         $this->validate();
 
-        $data = [
-            'dsc_grau_satisfacao' => $this->dsc_grau_satisfacao,
-            'cor' => strtolower(trim($this->cor)),
-            'vlr_minimo' => $this->vlr_minimo,
-            'vlr_maximo' => $this->vlr_maximo,
-            'cod_pei' => $this->cod_pei ?? session('pei_selecionado_id'),
-            'num_ano' => $this->num_ano,
-        ];
+        try {
+            $data = [
+                'dsc_grau_satisfacao' => $this->dsc_grau_satisfacao,
+                'cor' => strtolower(trim($this->cor)),
+                'vlr_minimo' => $this->vlr_minimo,
+                'vlr_maximo' => $this->vlr_maximo,
+                'cod_pei' => $this->cod_pei ?? session('pei_selecionado_id'),
+                'num_ano' => $this->num_ano,
+            ];
 
-        if ($this->isEditing && $this->cod_grau_satisfacao) {
-            $grau = GrauSatisfacao::find($this->cod_grau_satisfacao);
-            if ($grau) {
-                $grau->update($data);
-                $title = 'Grau de Satisfação Atualizado!';
+            if ($this->isEditing && $this->cod_grau_satisfacao) {
+                $grau = GrauSatisfacao::find($this->cod_grau_satisfacao);
+                if ($grau) {
+                    $grau->update($data);
+                    $this->successMessage = "As alterações no grau de satisfação foram salvas com sucesso.";
+                }
+            } else {
+                GrauSatisfacao::create($data);
+                $this->successMessage = "O novo grau de satisfação foi registrado e já está disponível para uso no sistema.";
             }
-        } else {
-            GrauSatisfacao::create($data);
-            $title = 'Grau de Satisfação Criado!';
+
+            $this->createdGrauName = $this->dsc_grau_satisfacao;
+            $this->closeModal();
+            $this->showSuccessModal = true;
+
+        } catch (\Exception $e) {
+            $this->errorMessage = "Ocorreu um erro técnico ao processar sua solicitação. Por favor, verifique os dados e tente novamente.";
+            $this->showErrorModal = true;
         }
-
-        $alert = \App\Services\NotificationService::sendMentorAlert(
-            $title,
-            "A faixa <strong>{$this->dsc_grau_satisfacao}</strong> ({$this->vlr_minimo}% - {$this->vlr_maximo}%) foi salva.",
-            'bi-palette'
-        );
-        $this->dispatch('mentor-notification', ...$alert);
-
-        $this->closeModal();
     }
 
     public function edit($id)
