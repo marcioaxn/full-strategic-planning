@@ -188,11 +188,15 @@ class Index extends Component
         if (!$this->peiAtivo) return [];
         return Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
             ->orderBy('num_nivel_hierarquico_apresentacao')
-            ->get()->map(fn($p) => [
-                'label' => $p->dsc_perspectiva,
-                'count' => round($p->objetivos->map(fn($o) => $o->calcularAtingimentoConsolidado())->avg() ?? 0, 1),
-                'color' => $this->getCorAtingimento($p->objetivos->map(fn($o) => $o->calcularAtingimentoConsolidado())->avg() ?? 0)
-            ])->toArray();
+            ->get()->map(function($p) {
+                $atingimentos = $p->objetivos->map(fn($o) => $o->calcularAtingimentoConsolidado())->filter(fn($v) => $v > 0);
+                $media = $atingimentos->count() > 0 ? $atingimentos->avg() : 0;
+                return [
+                    'label' => $p->dsc_perspectiva,
+                    'count' => round($media, 1),
+                    'color' => $this->getCorAtingimento($media)
+                ];
+            })->toArray();
     }
 
     private function getChartRiscosNivel()

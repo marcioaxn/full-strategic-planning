@@ -41,6 +41,35 @@ class Indicador extends Model implements Auditable
     public $incrementing = false;
 
     /**
+     * Constantes de Mercado para Unidades de Medida
+     */
+    const UNIDADES_MEDIDA = [
+        'Percentual (%)',
+        'Monetário (R$)',
+        'Índice (0-1)',
+        'Quantidade (un)',
+        'Horas (h)',
+        'Dias',
+        'Proporção',
+        'Taxa',
+        'Nº de Ocorrências',
+        'Kilômetros (km)',
+        'Metros (m)',
+        'Toneladas (t)',
+        'Pontos',
+    ];
+
+    /**
+     * Opções de Polaridade
+     */
+    const POLARIDADES = [
+        'Positiva' => 'Positiva (Quanto maior, melhor)',
+        'Negativa' => 'Negativa (Quanto menor, melhor)',
+        'Estabilidade' => 'Estabilidade (Quanto mais próximo do alvo, melhor)',
+        'Não Aplicável' => 'Não Aplicável (Informativo)',
+    ];
+
+    /**
      * Atributos mass assignable
      */
     protected $fillable = [
@@ -54,6 +83,7 @@ class Indicador extends Model implements Auditable
         'dsc_atributos',
         'dsc_referencial_comparativo',
         'dsc_unidade_medida',
+        'dsc_polaridade',
         'num_peso',
         'bln_acumulado',
         'dsc_formula',
@@ -248,18 +278,14 @@ class Indicador extends Model implements Auditable
             return 0;
         }
 
-        // Por enquanto, todos os indicadores usam polaridade '+' (quanto maior, melhor)
-        // TODO: Adicionar campo dsc_polaridade para suportar polaridades diferentes
-        // $polaridade = $this->dsc_polaridade ?? '+';
+        $polaridade = $this->dsc_polaridade ?? 'Positiva';
 
-        // Cálculo padrão: (realizado / previsto) × 100
-        return ($realizado / $previsto) * 100;
-
-        // Implementação futura com suporte a polaridade:
-        // return match ($polaridade) {
-        //     '-' => $realizado > 0 ? ($previsto / $realizado) * 100 : 100,
-        //     '+', '=', default => ($realizado / $previsto) * 100,
-        // };
+        return match ($polaridade) {
+            'Negativa' => $realizado > 0 ? ($previsto / $realizado) * 100 : 100,
+            'Não Aplicável' => 0,
+            'Positiva', 'Estabilidade' => ($realizado / $previsto) * 100,
+            default => ($realizado / $previsto) * 100,
+        };
     }
 
     /**

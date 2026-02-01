@@ -35,6 +35,13 @@ class ListarIndicadores extends Component
     public $indicadorId;
     public $indicadorSelecionado;
 
+    // Success Modal Properties
+    public bool $showSuccessModal = false;
+    public bool $showErrorModal = false;
+    public string $successMessage = '';
+    public string $errorMessage = '';
+    public string $createdIndicadorName = '';
+
     // Form Indicador
     public $form = [
         'nom_indicador' => '',
@@ -44,7 +51,8 @@ class ListarIndicadores extends Component
         'cod_plano_de_acao' => '',
         'txt_observacao' => '',
         'dsc_meta' => '',
-        'dsc_unidade_medida' => '',
+        'dsc_unidade_medida' => 'Percentual (%)',
+        'dsc_polaridade' => 'Positiva',
         'num_peso' => 1,
         'bln_acumulado' => 'Não',
         'dsc_formula' => '',
@@ -61,8 +69,10 @@ class ListarIndicadores extends Component
     public $linhaBaseValor;
 
     // Listas Auxiliares
-    public $objetivos = [];
-    public $planos = [];
+    public $objetivosAgrupados = [];
+    public $planosAgrupados = [];
+    public $unidadesMedida = [];
+    public $polaridades = [];
     public $periodosOptions = ['Mensal', 'Bimestral', 'Trimestral', 'Semestral', 'Anual'];
     public $grausSatisfacao = [];
 
@@ -167,6 +177,19 @@ class ListarIndicadores extends Component
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
     }
 
+    public function closeSuccessModal()
+    {
+        $this->showSuccessModal = false;
+        $this->successMessage = '';
+        $this->createdIndicadorName = '';
+    }
+
+    public function closeErrorModal()
+    {
+        $this->showErrorModal = false;
+        $this->errorMessage = '';
+    }
+
     public function atualizarPEI($id)
     {
         $this->peiAtivo = PEI::find($id);
@@ -197,15 +220,30 @@ class ListarIndicadores extends Component
     public function carregarListasAuxiliares()
     {
         $this->grausSatisfacao = \App\Models\StrategicPlanning\GrauSatisfacao::orderBy('vlr_minimo')->get();
+        $this->unidadesMedida = Indicador::UNIDADES_MEDIDA;
+        $this->polaridades = Indicador::POLARIDADES;
 
         if ($this->peiAtivo) {
-            $this->objetivos = Objetivo::whereHas('perspectiva', function($query) {
-                $query->where('cod_pei', $this->peiAtivo->cod_pei);
-            })->orderBy('nom_objetivo')->get();
+            $objetivosBrutos = Objetivo::with('perspectiva')
+                ->whereHas('perspectiva', function($query) {
+                    $query->where('cod_pei', $this->peiAtivo->cod_pei);
+                })
+                ->get();
+
+            $this->objetivosAgrupados = $objetivosBrutos->groupBy(function($item) {
+                return $item->perspectiva->dsc_perspectiva ?? 'Outros';
+            })->toArray();
         }
 
         if ($this->organizacaoId) {
-            $this->planos = PlanoDeAcao::where('cod_organizacao', $this->organizacaoId)->orderBy('dsc_plano_de_acao')->get();
+            $planosBrutos = PlanoDeAcao::with('objetivo')
+                ->where('cod_organizacao', $this->organizacaoId)
+                ->orderBy('dsc_plano_de_acao')
+                ->get();
+
+            $this->planosAgrupados = $planosBrutos->groupBy(function($item) {
+                return $item->objetivo->nom_objetivo ?? 'Sem Objetivo Vinculado';
+            })->toArray();
         }
     }
 
@@ -243,6 +281,7 @@ class ListarIndicadores extends Component
             'txt_observacao' => $indicador->txt_observacao,
             'dsc_meta' => $indicador->dsc_meta,
             'dsc_unidade_medida' => $indicador->dsc_unidade_medida,
+            'dsc_polaridade' => $indicador->dsc_polaridade ?? 'Positiva',
             'num_peso' => $indicador->num_peso,
             'bln_acumulado' => $indicador->bln_acumulado,
             'dsc_formula' => $indicador->dsc_formula,
@@ -257,40 +296,42 @@ class ListarIndicadores extends Component
     public function save()
     {
         $service = app(\App\Services\PeiGuidanceService::class);
-        $before = $service->analyzeCompleteness($this->peiAtivo?->cod_pei);
-
         $this->validate([
             'form.nom_indicador' => 'required|string|max:255',
             'form.dsc_tipo' => 'required',
             'form.dsc_unidade_medida' => 'required',
         ]);
 
-        $data = $this->form;
-        if ($data['dsc_tipo'] === 'Objetivo') { $data['cod_plano_de_acao'] = null; } 
-        else { $data['cod_objetivo'] = null; }
+        try {
+            $data = $this->form;
+            if ($data['dsc_tipo'] === 'Objetivo') { 
+                $data['cod_plano_de_acao'] = null; 
+            } else { 
+                $data['cod_objetivo'] = null; 
+            }
 
-        if ($this->indicadorId) {
-            $indicador = Indicador::findOrFail($this->indicadorId);
-            $this->authorize('update', $indicador);
-            $indicador->update($data);
-        } else {
-            $this->authorize('create', Indicador::class);
-            $indicador = Indicador::create($data);
-            if ($this->organizacaoId) { $indicador->organizacoes()->attach($this->organizacaoId); }
+            if ($this->indicadorId) {
+                $indicador = Indicador::findOrFail($this->indicadorId);
+                $this->authorize('update', $indicador);
+                $indicador->update($data);
+                $this->successMessage = "As configurações do indicador foram atualizadas com sucesso e os cálculos de desempenho já refletem as mudanças.";
+            } else {
+                $this->authorize('create', Indicador::class);
+                $indicador = Indicador::create($data);
+                if ($this->organizacaoId) { 
+                    $indicador->organizacoes()->attach($this->organizacaoId); 
+                }
+                $this->successMessage = "O novo indicador foi registrado com sucesso e já está disponível para lançamentos de evolução e metas.";
+            }
+
+            $this->createdIndicadorName = $this->form['nom_indicador'];
+            $this->showModal = false;
+            $this->showSuccessModal = true;
+
+        } catch (\Exception $e) {
+            $this->errorMessage = "Não foi possível processar o registro do indicador. Por favor, revise as informações e tente novamente.";
+            $this->showErrorModal = true;
         }
-
-        $after = $service->analyzeCompleteness($this->peiAtivo?->cod_pei);
-
-        $alert = \App\Services\NotificationService::sendMentorAlert(
-            $this->indicadorId ? 'KPI Atualizado!' : 'KPI Registrado!',
-            $after['message'],
-            'bi-graph-up-arrow'
-        );
-
-        $this->dispatch('mentor-notification', ...$alert);
-
-        $this->showModal = false;
-        session()->flash('status', 'Sucesso!');
     }
 
     // --- Gestão de Metas ---
@@ -382,7 +423,7 @@ class ListarIndicadores extends Component
         $this->form = [
             'nom_indicador' => '', 'dsc_indicador' => '', 'dsc_tipo' => 'Objetivo',
             'cod_objetivo' => '', 'cod_plano_de_acao' => '', 'txt_observacao' => '',
-            'dsc_meta' => '', 'dsc_unidade_medida' => '', 'num_peso' => 1, 'bln_acumulado' => 'Não',
+            'dsc_meta' => '', 'dsc_unidade_medida' => 'Percentual (%)', 'dsc_polaridade' => 'Positiva', 'num_peso' => 1, 'bln_acumulado' => 'Não',
             'dsc_formula' => '', 'dsc_fonte' => '', 'dsc_periodo_medicao' => 'Mensal',
             'dsc_referencial_comparativo' => '', 'dsc_atributos' => '',
         ];

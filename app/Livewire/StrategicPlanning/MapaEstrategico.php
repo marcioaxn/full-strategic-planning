@@ -127,7 +127,8 @@ class MapaEstrategico extends Component
                             'objetivo' => $obj->nom_objetivo,
                             'indicador' => $ind->nom_indicador,
                             'atingimento' => round($ating, 1),
-                            'cor' => $this->getCorPorPercentual($ating)
+                            'cor' => $this->getCorPorPercentual($ating),
+                            'polaridade' => $ind->dsc_polaridade ?? 'Positiva'
                         ];
                     }
                     

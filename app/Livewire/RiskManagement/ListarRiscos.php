@@ -26,6 +26,12 @@ class ListarRiscos extends Component
 
     public bool $showModal = false;
     public bool $showDeleteModal = false;
+    public bool $showSuccessModal = false;
+    public bool $showErrorModal = false;
+    public string $successMessage = '';
+    public string $errorMessage = '';
+    public string $createdRiscoName = '';
+    
     public $riscoId;
     public bool $aiEnabled = false;
     public $aiSuggestion = '';
@@ -60,6 +66,19 @@ class ListarRiscos extends Component
         $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+    }
+
+    public function closeSuccessModal()
+    {
+        $this->showSuccessModal = false;
+        $this->successMessage = '';
+        $this->createdRiscoName = '';
+    }
+
+    public function closeErrorModal()
+    {
+        $this->showErrorModal = false;
+        $this->errorMessage = '';
     }
 
     public function pedirAjudaIA()
@@ -130,9 +149,15 @@ class ListarRiscos extends Component
     public function carregarListasAuxiliares()
     {
         if ($this->peiAtivo) {
-            $this->objetivos = Objetivo::whereHas('perspectiva', function($query) {
-                $query->where('cod_pei', $this->peiAtivo->cod_pei);
-            })->orderBy('nom_objetivo')->get();
+            $objetivosBrutos = Objetivo::with('perspectiva')
+                ->whereHas('perspectiva', function($query) {
+                    $query->where('cod_pei', $this->peiAtivo->cod_pei);
+                })
+                ->get();
+
+            $this->objetivos = $objetivosBrutos->groupBy(function($item) {
+                return $item->perspectiva->dsc_perspectiva ?? 'Outras Dimensões';
+            })->toArray();
         }
 
         if ($this->organizacaoId) {
@@ -187,32 +212,34 @@ class ListarRiscos extends Component
             'form.cod_responsavel_monitoramento' => 'required|exists:users,id',
         ]);
 
-        $data = $this->form;
-        unset($data['objetivos_vinculados']);
+        try {
+            $data = $this->form;
+            unset($data['objetivos_vinculados']);
 
-        if ($this->riscoId) {
-            $risco = Risco::findOrFail($this->riscoId);
-            $this->authorize('update', $risco);
-            $risco->update($data);
-        } else {
-            $this->authorize('create', Risco::class);
-            $data['cod_pei'] = $this->peiAtivo->cod_pei;
-            $data['cod_organizacao'] = $this->organizacaoId;
-            $risco = Risco::create($data);
+            if ($this->riscoId) {
+                $risco = Risco::findOrFail($this->riscoId);
+                $this->authorize('update', $risco);
+                $risco->update($data);
+                $this->successMessage = "As definições do risco foram atualizadas com sucesso e a matriz já reflete a nova avaliação.";
+            } else {
+                $this->authorize('create', Risco::class);
+                $data['cod_pei'] = $this->peiAtivo->cod_pei;
+                $data['cod_organizacao'] = $this->organizacaoId;
+                $risco = Risco::create($data);
+                $this->successMessage = "O novo risco foi identificado e registrado. Agora você pode prosseguir com os planos de mitigação.";
+            }
+
+            // Sincronizar objetivos
+            $risco->objetivos()->sync($this->form['objetivos_vinculados']);
+
+            $this->createdRiscoName = $this->form['dsc_titulo'];
+            $this->showModal = false;
+            $this->showSuccessModal = true;
+
+        } catch (\Exception $e) {
+            $this->errorMessage = "Não foi possível processar o registro do risco. Por favor, revise as informações e tente novamente.";
+            $this->showErrorModal = true;
         }
-
-        // Sincronizar objetivos
-        $risco->objetivos()->sync($this->form['objetivos_vinculados']);
-
-        $alert = \App\Services\NotificationService::sendMentorAlert(
-            $this->riscoId ? 'Risco Atualizado!' : 'Risco Identificado!',
-            'A matriz de riscos foi atualizada com sucesso.',
-            'bi-shield-plus'
-        );
-
-        $this->dispatch('mentor-notification', ...$alert);
-
-        $this->showModal = false;
     }
 
     public function confirmDelete($id)

@@ -383,9 +383,17 @@ class ReportGenerationService
             ->orderBy('nom_valor')
             ->get();
 
-        // Estratégia (BSC)
+        // Estratégia (BSC) com Eager Loading profundo para evitar N+1
         $perspectivas = Perspectiva::where('cod_pei', $pei?->cod_pei)
-            ->with(['objetivos.indicadores'])
+            ->with([
+                'objetivos.indicadores.evolucoes' => function($q) use ($ano) {
+                    $q->where('num_ano', $ano)->orderBy('num_mes');
+                },
+                'objetivos.indicadores.metasPorAno' => function($q) use ($ano) {
+                    $q->where('num_ano', $ano);
+                },
+                'objetivos.planosAcao'
+            ])
             ->ordenadoPorNivel()
             ->get();
 
