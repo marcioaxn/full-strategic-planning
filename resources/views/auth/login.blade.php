@@ -62,7 +62,7 @@
                         <label class="form-label-premium">E-mail Corporativo</label>
                         <div class="input-group-premium">
                             <i class="bi bi-envelope"></i>
-                            <input type="email" name="email" class="form-control" value="{{ old('email') }}" placeholder="seu@email.com" required autofocus autocomplete="username">
+                            <input type="email" name="email" id="email" class="form-control" value="{{ old('email') }}" placeholder="seu@email.com" required autofocus autocomplete="username">
                         </div>
                     </div>
 
@@ -89,15 +89,21 @@
                     <div class="mb-4">
                         <div class="form-check form-check-premium d-flex align-items-center">
                             <input class="form-check-input" type="checkbox" name="remember" id="remember_me">
-                            <label class="form-check-label small text-muted ms-2" for="remember_me">
+                            <label class="form-check-label small text-muted ms-2" for="remember_me" style="cursor: pointer;">
                                 Manter conectado por 30 dias
                             </label>
                         </div>
                     </div>
 
                     <div class="d-grid mb-4">
-                        <button type="submit" class="btn btn-primary btn-lg rounded-pill gradient-theme-btn py-3 shadow-lg hover-scale">
-                            <i class="bi bi-box-arrow-in-right me-2"></i> {{ __('Entrar no Painel') }}
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill gradient-theme-btn py-3 shadow-lg hover-scale" id="loginButton">
+                            <span class="btn-text">
+                                <i class="bi bi-box-arrow-in-right me-2"></i> {{ __('Entrar') }}
+                            </span>
+                            <span class="btn-loading d-none">
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                {{ __('Validando credenciais...') }}
+                            </span>
                         </button>
                     </div>
 
@@ -221,6 +227,14 @@
         .animate-fade-in-right { animation: fadeInRight 0.6s ease-out; }
         @keyframes fadeInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
         
+        /* Shake Animation para erros */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+        .shake { animation: shake 0.4s ease-in-out; }
+
         .backdrop-blur { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
         .hover-scale:hover { transform: scale(1.02); }
         .x-small { font-size: 0.7rem; }
@@ -240,5 +254,26 @@
                 icon.classList.replace('bi-eye-slash', 'bi-eye');
             }
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('loginForm');
+            const btn = document.getElementById('loginButton');
+
+            if (form) {
+                // Efeito shake se houver erros do Laravel
+                @if ($errors->any())
+                    form.classList.add('shake');
+                    setTimeout(() => form.classList.remove('shake'), 500);
+                @endif
+
+                form.addEventListener('submit', function() {
+                    if (form.checkValidity()) {
+                        btn.disabled = true;
+                        btn.querySelector('.btn-text').classList.add('d-none');
+                        btn.querySelector('.btn-loading').classList.remove('d-none');
+                    }
+                });
+            }
+        });
     </script>
 </x-guest-layout>
