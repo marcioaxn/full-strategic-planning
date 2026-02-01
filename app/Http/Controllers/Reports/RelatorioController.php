@@ -133,8 +133,9 @@ class RelatorioController extends Controller
         $periodo = $request->query('periodo') ?? 'anual';
         $includeAi = $request->query('include_ai') === '1';
 
-        // Aumentar timeout para geração de PDF pesado
-        set_time_limit(300); 
+        // Aumentar recursos para geração de PDF pesado (Dossiê Integrado)
+        ini_set('memory_limit', '512M');
+        set_time_limit(600); 
 
         $result = $this->reportService->generateIntegrado($organizacaoId, $ano, $periodo, $includeAi);
         
