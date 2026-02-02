@@ -14,6 +14,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
 
 class MapaEstrategico extends Component
 {
@@ -67,9 +68,48 @@ class MapaEstrategico extends Component
         $this->carregarPEI();
     }
 
+    public function atualizarAno($ano)
+    {
+        // Recarrega os dados do mapa para o novo ano
+        $this->carregarMapa();
+    }
+
+    public function atualizarOrganizacao($id)
+    {
+        $this->organizacaoId = $id;
+        $this->carregarMapa();
+        $this->carregarIdentidadeEstrategica();
+    }
+
+    public function atualizarPEI($id)
+    {
+        $this->peiAtivo = PEI::find($id);
+        $this->carregarMapa();
+        $this->carregarIdentidadeEstrategica();
+    }
+
+    private function carregarPEI()
+    {
+        $peiId = Session::get('pei_selecionado_id');
+
+        if ($peiId) {
+            $this->peiAtivo = PEI::find($peiId);
+        }
+
+        if (!$this->peiAtivo) {
+            $this->peiAtivo = PEI::ativos()->first();
+        }
+    }
+
     public function toggleViewMode()
     {
         $this->viewMode = $this->viewMode === 'grouped' ? 'individual' : 'grouped';
+        $this->carregarMapa();
+    }
+
+    public function carregarGrausSatisfacao()
+    {
+        $this->grausSatisfacao = GrauSatisfacao::orderBy('vlr_minimo')->get();
     }
 
     public function carregarMapa()
@@ -88,19 +128,16 @@ class MapaEstrategico extends Component
         $this->perspectivas = Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
             ->with(['objetivos' => function($query) use ($orgIds) {
                 $query->with(['indicadores' => function($qInd) use ($orgIds) {
-                    // Filtra indicadores pelas organizações do Roll-up via relacionamento many-to-many
                     $qInd->whereHas('organizacoes', function($qOrg) use ($orgIds) {
                         $qOrg->whereIn('organization.tab_organizacoes.cod_organizacao', $orgIds);
                     });
                 }, 'planosAcao' => function($qPlan) use ($orgIds) {
-                    // Filtra planos de ação pelas organizações do Roll-up
                     $qPlan->whereIn('cod_organizacao', $orgIds);
                 }])->ordenadoPorNivel();
             }])
             ->orderBy('num_nivel_hierarquico_apresentacao', 'desc')
             ->get()
             ->map(function($p) {
-                // ... lógica de mapeamento ...
                 $somaPersp = 0;
                 $contPersp = 0;
                 $listaIndicadoresMemoria = [];
@@ -137,13 +174,12 @@ class MapaEstrategico extends Component
                     $concluidos = $planos->where('bln_status', 'Concluído')->count();
                     $percentualPlanos = $totalPlanos > 0 ? ($concluidos / $totalPlanos) * 100 : 0;
                     
-                    // Determinar cor do plano baseado na nova regra
-                    $corPlano = '#475569'; // secondary
+                    $corPlano = '#475569';
                     if ($totalPlanos > 0) {
                         if ($concluidos == $totalPlanos) {
-                            $corPlano = '#429B22'; // success
+                            $corPlano = '#429B22';
                         } else if ($planos->whereIn('bln_status', ['Em Andamento', 'Atrasado'])->count() > 0) {
-                            $corPlano = '#F3C72B'; // warning
+                            $corPlano = '#F3C72B';
                         }
                     }
 
@@ -226,7 +262,6 @@ class MapaEstrategico extends Component
 
     public function render()
     {
-        // Re-executa o carregamento a cada requisição (incluindo poll)
         $this->carregarGrausSatisfacao();
         
         if ($this->organizacaoId) {
