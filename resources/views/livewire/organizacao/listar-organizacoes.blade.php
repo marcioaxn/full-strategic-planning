@@ -110,10 +110,14 @@
                 </thead>
                 <tbody wire:loading.class="loading-opacity" wire:target="search,resetFilters">
                     @forelse ($organizacoes as $org)
+                        @php $nivel = $org->getNivelHierarquico(); @endphp
                         <tr class="table-row-hover" wire:key="org-row-{{ $org->cod_organizacao }}">
                             <td class="ps-4">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="icon-circle-header avatar-modern">
+                                <div class="d-flex align-items-center gap-3" style="margin-left: {{ $nivel * 30 }}px;">
+                                    @if($nivel > 0)
+                                        <i class="bi bi-arrow-return-right text-muted opacity-50"></i>
+                                    @endif
+                                    <div class="icon-circle-header avatar-modern {{ $org->isRaiz() ? 'bg-primary text-white' : '' }}">
                                         {{ strtoupper(substr($org->sgl_organizacao, 0, 3)) }}
                                     </div>
                                     <div>
@@ -261,107 +265,106 @@
         @endif
     </div>
 
-    {{-- Create/Edit Modal --}}
-    <x-dialog-modal wire:key="org-form-modal" wire:model.live="showFormModal" maxWidth="2xl">
+    {{-- Create/Edit Modal Premium XL --}}
+    <x-dialog-modal wire:key="org-form-modal" wire:model.live="showFormModal" maxWidth="xl">
         <x-slot name="title">
             <div class="modal-header-modern">
                 <div class="icon-circle-mini modal-icon-primary">
-                    <i class="bi bi-{{ $editing ? 'pencil' : 'plus-lg' }}"></i>
+                    <i class="bi bi-{{ $editing ? 'pencil-square' : 'building-add' }}"></i>
                 </div>
                 <div>
-                    <h5 class="mb-1 fw-bold">{{ $editing ? __('Editar Organização') : __('Nova Organização') }}</h5>
-                    <p class="text-muted small mb-0">{{ $editing ? __('Atualize as informações da organização') : __('Preencha os detalhes para criar uma nova organização') }}</p>
+                    <h5 class="mb-1 fw-bold">{{ $editing ? __('Configurar Unidade Organizacional') : __('Nova Unidade Organizacional') }}</h5>
+                    <p class="text-muted small mb-0">{{ __('Definição de estrutura e vínculo hierárquico') }}</p>
                 </div>
             </div>
         </x-slot>
 
         <x-slot name="content">
-            <div class="row g-3">
-                <div class="col-12 col-lg-4">
-                    <label for="sgl_organizacao" class="form-label-modern">
-                        {{ __('Sigla') }} <span class="text-danger">*</span>
-                        <x-tooltip title="Abreviação da organização (ex: SEAE, DRH)" />
-                    </label>
-                    <div class="input-group input-group-modern">
-                        <span class="input-group-text"><i class="bi bi-tag"></i></span>
-                        <input
-                            id="sgl_organizacao"
-                            type="text"
-                            class="form-control @error('form.sgl_organizacao') is-invalid @enderror"
-                            placeholder="Ex: SEPLAN"
-                            wire:model="form.sgl_organizacao"
-                            required
-                        >
-                    </div>
-                    @error('form.sgl_organizacao')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="col-12 col-lg-8">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <label for="nom_organizacao" class="form-label-modern mb-0">
-                            {{ __('Nome da Organização') }} <span class="text-danger">*</span>
-                            <x-tooltip title="Nome completo da unidade organizacional" />
-                        </label>
-                        @if($aiEnabled)
-                            <button type="button" wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="btn btn-xs btn-outline-magic py-0" style="font-size: 0.65rem;">
-                                <i class="bi bi-robot me-1"></i> Sugerir com IA
-                            </button>
-                        @endif
-                    </div>
-                    
-                    @if($aiSuggestion)
-                        <div class="alert alert-magic bg-primary bg-opacity-10 border-0 p-3 mb-3 animate-fade-in rounded-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="fw-bold text-primary small mb-0"><i class="bi bi-stars me-1"></i>Insights do Mentor IA</h6>
-                                <button type="button" class="btn-close" style="font-size: 0.5rem;" wire:click="$set('aiSuggestion', '')"></button>
-                            </div>
+            <div class="row g-4">
+                {{-- Coluna Direita: Dados Básicos --}}
+                <div class="col-lg-7">
+                    <div class="card border-0 bg-light rounded-4 h-100">
+                        <div class="card-body p-4">
+                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Identificação e Marca</h6>
                             
-                            <div class="row g-2">
-                                <div class="col-12 mb-2">
-                                    <span class="x-small text-muted d-block mb-1">Sugestão de Sigla:</span>
-                                    <button type="button" wire:click="aplicarSugestaoSigla('{{ $aiSuggestion['sigla'] }}')" class="btn btn-sm btn-white border px-3">
-                                        <strong>{{ $aiSuggestion['sigla'] }}</strong> <i class="bi bi-arrow-down-short ms-1"></i>
-                                    </button>
-                                </div>
-                                <div class="col-12">
-                                    <span class="x-small text-muted d-block mb-1">Estrutura Sugerida:</span>
-                                    <div class="d-flex flex-wrap gap-1">
-                                        @foreach($aiSuggestion['subunidades'] as $sub)
-                                            <span class="badge bg-white text-dark border fw-normal">{{ $sub }}</span>
-                                        @endforeach
+                            <div class="row g-3">
+                                <div class="col-12 col-lg-4">
+                                    <label for="sgl_organizacao" class="form-label-modern">
+                                        {{ __('Sigla') }} <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group input-group-modern">
+                                        <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                                        <input id="sgl_organizacao" type="text" class="form-control @error('form.sgl_organizacao') is-invalid @enderror" placeholder="Ex: SEAE" wire:model="form.sgl_organizacao" required>
                                     </div>
+                                    @error('form.sgl_organizacao') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                </div>
+
+                                <div class="col-12 col-lg-8">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label for="nom_organizacao" class="form-label-modern mb-0">
+                                            {{ __('Nome da Organização') }} <span class="text-danger">*</span>
+                                        </label>
+                                        @if($aiEnabled)
+                                            <button type="button" wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="btn btn-xs btn-outline-magic py-0" style="font-size: 0.65rem;">
+                                                <i class="bi bi-robot me-1"></i> Sugerir com IA
+                                            </button>
+                                        @endif
+                                    </div>
+                                    
+                                    @if($aiSuggestion)
+                                        <div class="alert alert-magic bg-primary bg-opacity-10 border-0 p-3 mb-3 animate-fade-in rounded-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <h6 class="fw-bold text-primary small mb-0"><i class="bi bi-stars me-1"></i>Insights do Mentor IA</h6>
+                                                <button type="button" class="btn-close" style="font-size: 0.5rem;" wire:click="$set('aiSuggestion', '')"></button>
+                                            </div>
+                                            <button type="button" wire:click="aplicarSugestaoSigla('{{ $aiSuggestion['sigla'] }}')" class="btn btn-sm btn-white border px-3">
+                                                Sugestão de Sigla: <strong>{{ $aiSuggestion['sigla'] }}</strong> <i class="bi bi-arrow-down-short ms-1"></i>
+                                            </button>
+                                        </div>
+                                    @endif
+
+                                    <div class="input-group input-group-modern">
+                                        <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                        <input id="nom_organizacao" type="text" class="form-control @error('form.nom_organizacao') is-invalid @enderror" placeholder="Ex: Secretaria de Estado..." wire:model="form.nom_organizacao" required>
+                                    </div>
+                                    @error('form.nom_organizacao') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                                 </div>
                             </div>
                         </div>
-                    @endif
-
-                    <div class="input-group input-group-modern">
-                        <span class="input-group-text"><i class="bi bi-building"></i></span>
-                        <input
-                            id="nom_organizacao"
-                            type="text"
-                            class="form-control @error('form.nom_organizacao') is-invalid @enderror"
-                            placeholder="Ex: Secretaria de Planejamento"
-                            wire:model="form.nom_organizacao"
-                            required
-                        >
                     </div>
-                    @error('form.nom_organizacao')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
                 </div>
 
-                <div class="col-12">
-                    <div class="alert alert-info bg-info-subtle border-0">
-                        <div class="d-flex gap-3">
-                            <i class="bi bi-info-circle-fill fs-4"></i>
-                            <div>
-                                <h6 class="fw-bold mb-1">{{ __('Como funciona a Hierarquia?') }}</h6>
-                                <p class="small mb-0 opacity-75">
-                                    {{ __('O sistema organiza as unidades em árvore. Ex: Uma Secretaria (Pai) pode ter várias Diretorias (Filhas). Se você está criando a unidade principal da sua instituição, deixe o campo "Organização Pai" vazio.') }}
-                                </p>
+                {{-- Coluna Direita: Hierarquia --}}
+                <div class="col-lg-5">
+                    <div class="card border-0 bg-light rounded-4 h-100">
+                        <div class="card-body p-4">
+                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Vínculo Hierárquico</h6>
+                            
+                            <div class="mb-4">
+                                <label for="rel_cod_organizacao" class="form-label-modern">
+                                    {{ __('Unidade Superior (Pai)') }}
+                                    <x-tooltip title="Defina a unidade que está acima desta na árvore organizacional." />
+                                </label>
+                                <div class="input-group input-group-modern">
+                                    <span class="input-group-text"><i class="bi bi-diagram-2"></i></span>
+                                    <select id="rel_cod_organizacao" class="form-select @error('form.rel_cod_organizacao') is-invalid @enderror" wire:model="form.rel_cod_organizacao">
+                                        <option value="">{{ __('Sem Unidade Superior (Unidade Raiz)') }}</option>
+                                        @foreach($this->organizacoesPai as $org)
+                                            <option value="{{ $org['id'] }}">{!! $org['label'] !!}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @error('form.rel_cod_organizacao') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            </div>
+
+                            <div class="alert alert-info border-0 bg-white shadow-sm rounded-4 p-3 mb-0">
+                                <div class="d-flex gap-3">
+                                    <i class="bi bi-info-circle-fill text-primary fs-4"></i>
+                                    <div class="small">
+                                        <p class="fw-bold mb-1 text-dark">Dica de Estrutura:</p>
+                                        <p class="text-muted mb-0">Unidades raiz são o topo da instituição. Subunidades herdam diretrizes estratégicas da unidade pai.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -370,23 +373,14 @@
         </x-slot>
 
         <x-slot name="footer">
-            <span class="text-muted small d-none d-sm-inline">
-                <span class="text-danger">*</span> {{ __('Campos obrigatórios') }}
-            </span>
-            <div class="d-flex gap-2">
-                <x-secondary-button wire:click="closeFormModal" wire:loading.attr="disabled" class="btn-modern">
-                    {{ __('Cancelar') }}
-                </x-secondary-button>
-
-                <x-button type="button" wire:click="save" wire:loading.attr="disabled" class="btn-save-modern">
-                    <span wire:loading.remove wire:target="save">
-                        <i class="bi bi-check-lg me-1"></i>{{ __('Salvar') }}
-                    </span>
-                    <span wire:loading wire:target="save">
-                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                        {{ __('Salvando...') }}
-                    </span>
-                </x-button>
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <span class="text-muted small"><span class="text-danger">*</span> {{ __('Campos obrigatórios') }}</span>
+                <div class="d-flex gap-2">
+                    <button type="button" wire:click="closeFormModal" class="btn btn-light px-4 rounded-pill fw-bold text-muted">Cancelar</button>
+                    <button type="button" wire:click="save" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow-sm hover-scale">
+                        <i class="bi bi-check-lg me-2"></i>{{ __('Salvar Unidade') }}
+                    </button>
+                </div>
             </div>
         </x-slot>
     </x-dialog-modal>
@@ -432,4 +426,60 @@
             </x-danger-button>
         </x-slot>
     </x-confirmation-modal>
+
+    {{-- Success Modal Premium --}}
+    @if($showSuccessModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-primary text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem; background: linear-gradient(135deg, #1B408E 0%, #4361EE 100%) !important;">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-3">Sucesso!</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        A unidade <strong class="text-primary">"{{ $createdOrgName }}"</strong><br>
+                        foi processada com êxito na hierarquia organizacional.
+                    </p>
+                    <button wire:click="closeSuccessModal" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-check2-circle me-2"></i>Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Error Modal Premium --}}
+    @if($showErrorModal)
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-5 text-center bg-white">
+                    <div class="mb-4">
+                        <div class="icon-circle mx-auto bg-danger text-white shadow-lg scale-in-center" style="width: 80px; height: 80px; font-size: 2.5rem; background: linear-gradient(135deg, #e63946 0%, #d62828 100%) !important;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-3">Falha na Operação</h3>
+                    <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        Não foi possível salvar as alterações da organização.<br>
+                        <span class="small text-danger fw-bold">{{ $errorMessage }}</span>
+                    </p>
+                    <button wire:click="closeErrorModal" class="btn btn-danger px-5 rounded-pill shadow hover-scale">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Tentar Novamente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <style>
+        .scale-in-center { animation: scale-in-center 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; }
+        @keyframes scale-in-center { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        .hover-primary:hover { color: var(--bs-primary) !important; }
+    </style>
 </div>
