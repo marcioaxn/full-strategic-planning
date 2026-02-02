@@ -11,11 +11,10 @@ use App\Models\StrategicPlanning\TemaNorteador;
 use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\Organization;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
 
 class MapaEstrategico extends Component
 {
@@ -27,9 +26,9 @@ class MapaEstrategico extends Component
     public $valores = [];
     public $temasNorteadores = [];
     public $grausSatisfacao = [];
-
-    #[Url]
-    public string $viewMode = 'grouped'; // 'individual' ou 'grouped'
+    
+    // Estado simples sem #[Url] para garantir reatividade interna pura
+    public string $viewMode = 'grouped'; 
 
     public bool $showCalcModal = false;
     public $detalhesCalculo = null;
@@ -51,34 +50,16 @@ class MapaEstrategico extends Component
     public function mount()
     {
         $this->organizacaoId = Session::get('organizacao_selecionada_id');
-
         if (!$this->organizacaoId) {
             $orgRaiz = Organization::whereColumn('cod_organizacao', 'rel_cod_organizacao')->first() 
                        ?? Organization::orderBy('sgl_organizacao')->first();
             $this->organizacaoId = $orgRaiz?->cod_organizacao;
         }
-
         $this->carregarPEI();
     }
 
-    public function setViewMode(string $mode)
-    {
-        $this->viewMode = $mode;
-        // O $refresh ou carregarMapa aqui é essencial para resposta imediata
-        $this->carregarMapa();
-    }
-
-    public function atualizarOrganizacao($id)
-    {
-        $this->organizacaoId = $id;
-        $this->carregarMapa();
-    }
-
-    public function atualizarPEI($id)
-    {
-        $this->peiAtivo = PEI::find($id);
-        $this->carregarMapa();
-    }
+    public function atualizarOrganizacao($id) { $this->organizacaoId = $id; }
+    public function atualizarPEI($id) { $this->peiAtivo = PEI::find($id); }
 
     private function carregarPEI()
     {
@@ -90,6 +71,7 @@ class MapaEstrategico extends Component
     {
         if (!$this->peiAtivo || !$this->organizacaoId) return;
 
+        // Determinar IDs de organizações conforme o modo
         $orgIds = [$this->organizacaoId];
         if ($this->viewMode === 'grouped') {
             $org = Organization::find($this->organizacaoId);
@@ -104,11 +86,11 @@ class MapaEstrategico extends Component
             ->with(['objetivos' => function($query) use ($orgIds) {
                 $query->with(['indicadores' => function($qInd) use ($orgIds) {
                     $qInd->whereHas('organizacoes', function($q) use ($orgIds) {
-                        $q->whereIn('tab_organizacoes.cod_organizacao', $orgIds);
+                        $q->whereIn('cod_organizacao', $orgIds);
                     });
                 }, 'planosAcao' => function($qPlan) use ($orgIds) {
                     $qPlan->whereHas('organizacoes', function($q) use ($orgIds) {
-                        $q->whereIn('tab_organizacoes.cod_organizacao', $orgIds);
+                        $q->whereIn('cod_organizacao', $orgIds);
                     });
                 }])->ordenadoPorNivel();
             }])
@@ -149,7 +131,6 @@ class MapaEstrategico extends Component
                     $planos = $obj->planosAcao;
                     $totalPlanos = $planos->count();
                     $concluidos = $planos->where('bln_status', 'Concluído')->count();
-                    $percentualPlanos = $totalPlanos > 0 ? ($concluidos / $totalPlanos) * 100 : 0;
                     
                     $corPlano = '#475569';
                     if ($totalPlanos > 0) {
@@ -160,7 +141,7 @@ class MapaEstrategico extends Component
                     $obj->resumo_planos = [
                         'quantidade' => $totalPlanos,
                         'concluidos' => $concluidos,
-                        'percentual' => round($percentualPlanos, 1),
+                        'percentual' => $totalPlanos > 0 ? round(($concluidos / $totalPlanos) * 100, 1) : 0,
                         'cor' => $corPlano
                     ];
                 }
@@ -190,14 +171,10 @@ class MapaEstrategico extends Component
         return '#dc3545';
     }
 
-    public function getCoresPerspectiva($nivel): array
-    {
-        return $this->coresPerspectivas[$nivel] ?? $this->coresPerspectivas[1];
-    }
+    public function getCoresPerspectiva($nivel): array { return $this->coresPerspectivas[$nivel] ?? $this->coresPerspectivas[1]; }
 
     public function render()
     {
-        // Força o carregamento dos dados ANTES da renderização
         $this->carregarMapa();
         $this->carregarIdentidadeEstrategica();
 
