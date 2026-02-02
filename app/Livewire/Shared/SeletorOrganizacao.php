@@ -28,12 +28,20 @@ class SeletorOrganizacao extends Component
         $user = auth()->user();
 
         if ($user && $user->isSuperAdmin()) {
-            $this->organizacoes = Organization::orderBy('sgl_organizacao')->get();
+            // Admin vê toda a árvore hierárquica
+            $this->organizacoes = collect(Organization::getTreeForSelector());
         } elseif ($user) {
-            $this->organizacoes = $user->organizacoes()->orderBy('sgl_organizacao')->get();
+            // Usuário comum vê apenas suas organizações vinculadas (mas ainda em formato compatível)
+            $this->organizacoes = $user->organizacoes()
+                ->orderBy('sgl_organizacao')
+                ->get()
+                ->map(fn($org) => [
+                    'id' => $org->cod_organizacao,
+                    'label' => $org->sgl_organizacao . ' - ' . $org->nom_organizacao
+                ]);
         } else {
-            // Guest access: show all organizations for public map
-            $this->organizacoes = Organization::orderBy('sgl_organizacao')->get();
+            // Acesso público: árvore completa
+            $this->organizacoes = collect(Organization::getTreeForSelector());
         }
     }
 
@@ -47,11 +55,10 @@ class SeletorOrganizacao extends Component
             Session::put('organizacao_selecionada_nom', $org->nom_organizacao);
             Session::put('organizacao_selecionada_sgl', $org->sgl_organizacao);
             
-            // Emitir evento global para que outros componentes se atualizem
             $this->dispatch('organizacaoSelecionada', id: $id);
             
-            // Opcional: recarregar a página para garantir que tudo seja filtrado
-            // return redirect(request()->header('Referer'));
+            // Para garantir que o Roll-up e outros filtros globais sejam aplicados instantaneamente
+            return redirect(request()->header('Referer'));
         }
     }
 
