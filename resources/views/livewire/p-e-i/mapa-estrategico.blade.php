@@ -142,7 +142,7 @@
                                         @endphp
                                         <div class="col-md-4 col-lg-3">
                                             <div class="objetivo-card-modern shadow-sm border h-100" 
-                                                 @auth onclick="window.location.href='{{ route('objetivos.index') }}?search={{ urlencode($objetivo['nom_objetivo']) }}'" @endauth>
+                                                 @auth onclick="Livewire.navigate('{{ route('objetivos.index') }}?search={{ urlencode($objetivo['nom_objetivo']) }}')" @endauth style="cursor: pointer;">
                                                 <div class="obj-content p-3">
                                                     <p class="obj-title mb-3" title="{{ $objetivo['nom_objetivo'] }}">
                                                         {{ Str::limit($objetivo['nom_objetivo'], 70) }}
