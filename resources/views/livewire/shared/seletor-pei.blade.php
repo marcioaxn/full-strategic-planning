@@ -1,7 +1,10 @@
 <div class="nav-item dropdown ms-2">
     <a class="nav-link dropdown-toggle d-flex align-items-center bg-light-subtle rounded-3 px-3 py-2 border shadow-sm"
        href="#" id="navbarDropdownPEI" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="bi bi-calendar-range me-2 text-success"></i>
+        <i class="bi bi-calendar-range me-2 text-success" wire:loading.remove wire:target="selecionar"></i>
+        <div class="spinner-border spinner-border-sm text-success me-2" role="status" wire:loading wire:target="selecionar">
+            <span class="visually-hidden">Processando...</span>
+        </div>
         <div class="d-none d-lg-block">
             <small class="text-muted d-block" style="font-size: 0.7rem; line-height: 1;">Ciclo PEI</small>
             <span class="fw-bold text-dark">
