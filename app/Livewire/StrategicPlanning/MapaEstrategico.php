@@ -101,10 +101,12 @@ class MapaEstrategico extends Component
         }
     }
 
-    public function toggleViewMode()
+    public function setViewMode(string $mode)
     {
-        $this->viewMode = $this->viewMode === 'grouped' ? 'individual' : 'grouped';
-        $this->carregarMapa();
+        if (in_array($mode, ['grouped', 'individual'])) {
+            $this->viewMode = $mode;
+            $this->carregarMapa();
+        }
     }
 
     public function carregarGrausSatisfacao()
@@ -129,7 +131,7 @@ class MapaEstrategico extends Component
             ->with(['objetivos' => function($query) use ($orgIds) {
                 $query->with(['indicadores' => function($qInd) use ($orgIds) {
                     $qInd->whereHas('organizacoes', function($qOrg) use ($orgIds) {
-                        $qOrg->whereIn('organization.tab_organizacoes.cod_organizacao', $orgIds);
+                        $qOrg->whereIn('tab_organizacoes.cod_organizacao', $orgIds);
                     });
                 }, 'planosAcao' => function($qPlan) use ($orgIds) {
                     $qPlan->whereIn('cod_organizacao', $orgIds);
