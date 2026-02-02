@@ -11,10 +11,10 @@ use App\Models\StrategicPlanning\TemaNorteador;
 use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\Organization;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class MapaEstrategico extends Component
 {
@@ -27,7 +27,7 @@ class MapaEstrategico extends Component
     public $temasNorteadores = [];
     public $grausSatisfacao = [];
     
-    // Estado simples sem #[Url] para garantir reatividade interna pura
+    #[Url(keep: true)]
     public string $viewMode = 'grouped'; 
 
     public bool $showCalcModal = false;
@@ -56,6 +56,13 @@ class MapaEstrategico extends Component
             $this->organizacaoId = $orgRaiz?->cod_organizacao;
         }
         $this->carregarPEI();
+    }
+
+    public function switchViewMode($mode)
+    {
+        $this->viewMode = $mode;
+        // Não resetamos página nem nada, apenas forçamos o refresh do mapa
+        $this->carregarMapa();
     }
 
     public function atualizarOrganizacao($id) { $this->organizacaoId = $id; }
