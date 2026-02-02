@@ -27,7 +27,6 @@ class MapaEstrategico extends Component
     public $temasNorteadores = [];
     public $grausSatisfacao = [];
     
-    #[Url(keep: true)]
     public string $viewMode = 'grouped'; 
 
     public bool $showCalcModal = false;
@@ -50,6 +49,10 @@ class MapaEstrategico extends Component
     public function mount()
     {
         $this->organizacaoId = Session::get('organizacao_selecionada_id');
+        
+        // Recupera o modo de visualização da sessão ou padrão 'grouped'
+        $this->viewMode = Session::get('mapa_view_mode', 'grouped');
+
         if (!$this->organizacaoId) {
             $orgRaiz = Organization::whereColumn('cod_organizacao', 'rel_cod_organizacao')->first() 
                        ?? Organization::orderBy('sgl_organizacao')->first();
@@ -61,7 +64,7 @@ class MapaEstrategico extends Component
     public function switchViewMode($mode)
     {
         $this->viewMode = $mode;
-        // Não resetamos página nem nada, apenas forçamos o refresh do mapa
+        Session::put('mapa_view_mode', $mode);
         $this->carregarMapa();
     }
 

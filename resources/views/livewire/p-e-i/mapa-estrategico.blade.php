@@ -1,28 +1,5 @@
 <div class="mapa-canvas" wire:poll.30s wire:key="mapa-view-{{ $viewMode }}-{{ $organizacaoId }}">
     
-    <div style="margin-top: 100px;"></div>
-
-    @auth
-        <x-slot name="header">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-1">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none" wire:navigate>Dashboard</a></li>
-                            <li class="breadcrumb-item active opacity-75" aria-current="page">Mapa Estratégico</li>
-                        </ol>
-                    </nav>
-                    <h2 class="h4 fw-bold mb-0 text-body">Mapa Estratégico Institucional</h2>
-                </div>
-                <div class="text-end">
-                    <span class="badge bg-surface text-primary border shadow-sm px-3 py-2 rounded-pill">
-                        <i class="bi bi-calendar3 me-2"></i>Ciclo: {{ $peiAtivo?->dsc_pei ?? 'N/A' }}
-                    </span>
-                </div>
-            </div>
-        </x-slot>
-    @endauth
-
     <div class="container-fluid px-lg-5 py-3">
         <div class="d-flex justify-content-end mb-4 animate-fade-in">
             {{-- Seletor de Roll-up (Hierarquia) - Agora dentro do escopo reativo --}}
