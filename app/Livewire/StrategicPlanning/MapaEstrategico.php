@@ -60,6 +60,38 @@ class MapaEstrategico extends Component
         $this->carregarPEI();
     }
 
+    public function atualizarAno($ano)
+    {
+        $this->carregarMapa();
+    }
+
+    public function atualizarOrganizacao($id)
+    {
+        $this->organizacaoId = $id;
+        $this->carregarMapa();
+        $this->carregarIdentidadeEstrategica();
+    }
+
+    public function atualizarPEI($id)
+    {
+        $this->peiAtivo = PEI::find($id);
+        $this->carregarMapa();
+        $this->carregarIdentidadeEstrategica();
+    }
+
+    private function carregarPEI()
+    {
+        $peiId = Session::get('pei_selecionado_id');
+
+        if ($peiId) {
+            $this->peiAtivo = PEI::find($peiId);
+        }
+
+        if (!$this->peiAtivo) {
+            $this->peiAtivo = PEI::ativos()->first();
+        }
+    }
+
     public function switchViewMode($mode)
     {
         // Se vier do Alpine $dispatch, o $mode pode ser um array
