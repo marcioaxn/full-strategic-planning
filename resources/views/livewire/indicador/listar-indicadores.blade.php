@@ -648,8 +648,8 @@
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                                             <li><h6 class="dropdown-header small text-uppercase">Lançamentos</h6></li>
-                                            <li><a class="dropdown-item" href="{{ route('indicadores.detalhes', $ind->cod_indicador) }}"><i class="bi bi-eye me-2 text-primary"></i> Ficha Técnica</a></li>
-                                            <li><a class="dropdown-item" href="{{ route('indicadores.evolucao', $ind->cod_indicador) }}"><i class="bi bi-graph-up-arrow me-2 text-success"></i> Lançar Evolução</a></li>
+                                            <li><a class="dropdown-item" href="{{ route('indicadores.detalhes', $ind->cod_indicador) }}" wire:navigate><i class="bi bi-eye me-2 text-primary"></i> Ficha Técnica</a></li>
+                                            <li><a class="dropdown-item" href="{{ route('indicadores.evolucao', $ind->cod_indicador) }}" wire:navigate><i class="bi bi-graph-up-arrow me-2 text-success"></i> Lançar Evolução</a></li>
                                             <li><button class="dropdown-item" wire:click="abrirMetas('{{ $ind->cod_indicador }}')"><i class="bi bi-bullseye me-2 text-primary"></i> Gerenciar Metas</button></li>
                                             <li><button class="dropdown-item" wire:click="abrirLinhaBase('{{ $ind->cod_indicador }}')"><i class="bi bi-bar-chart-steps me-2 text-warning"></i> Linha de Base</button></li>
                                             <li><hr class="dropdown-divider"></li>

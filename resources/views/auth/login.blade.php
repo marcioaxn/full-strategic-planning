@@ -43,7 +43,7 @@
                 <div class="mb-5 text-start">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h2 class="fw-800 text-dark mb-0">Entrar no Sistema</h2>
-                        <a href="/" class="btn btn-sm btn-light rounded-pill px-3 border shadow-sm">
+                        <a href="{{ url('/') }}" class="btn btn-sm btn-light rounded-pill px-3 border shadow-sm">
                             <i class="bi bi-arrow-left me-1"></i> Voltar ao Início
                         </a>
                     </div>
