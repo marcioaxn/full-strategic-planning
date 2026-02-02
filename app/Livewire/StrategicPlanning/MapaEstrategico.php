@@ -138,7 +138,9 @@ class MapaEstrategico extends Component
                         $q->whereIn('tab_organizacoes.cod_organizacao', $orgIds);
                     });
                 }, 'planosAcao' => function($qPlan) use ($orgIds) {
-                    $qPlan->whereIn('cod_organizacao', $orgIds);
+                    $qPlan->whereHas('organizacoes', function($q) use ($orgIds) {
+                        $q->whereIn('tab_organizacoes.cod_organizacao', $orgIds);
+                    });
                 }])->ordenadoPorNivel();
             }])
             ->orderBy('num_nivel_hierarquico_apresentacao', 'desc')

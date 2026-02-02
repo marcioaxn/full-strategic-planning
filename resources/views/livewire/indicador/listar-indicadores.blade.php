@@ -733,6 +733,23 @@
                                                 @error('form.dsc_indicador') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                             </div>
 
+                                            <div class="mb-4">
+                                                <label class="form-label text-muted small text-uppercase fw-bold">Unidades Organizacionais Vinculadas <span class="text-danger">*</span></label>
+                                                <div class="bg-white rounded-4 shadow-sm p-3 overflow-auto" style="max-height: 200px; border: 1px solid rgba(0,0,0,0.05);">
+                                                    @foreach($organizacoesOptions as $org)
+                                                        <div class="form-check mb-2">
+                                                            <input class="form-check-input" type="checkbox" value="{{ $org['id'] }}" 
+                                                                   wire:model="form.organizacoes_ids" id="org_{{ $org['id'] }}">
+                                                            <label class="form-check-label small fw-medium text-dark" for="org_{{ $org['id'] }}">
+                                                                {!! $org['label'] !!}
+                                                            </label>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                                @error('form.organizacoes_ids') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                                <small class="text-muted mt-2 d-block lh-sm"><i class="bi bi-info-circle me-1"></i>O indicador aparecerá no mapa estratégico de todas as unidades selecionadas.</small>
+                                            </div>
+
                                             <div class="mb-0">
                                                 <label class="form-label text-muted small text-uppercase fw-bold">Observações Técnicas</label>
                                                 <textarea wire:model="form.txt_observacao" class="form-control bg-white border-0 shadow-sm" rows="2" placeholder="Notas adicionais sobre a coleta ou restrições..."></textarea>
