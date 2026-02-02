@@ -581,8 +581,8 @@
         </div>
 
         <!-- Tabela -->
-        <div class="card border-0 shadow-sm overflow-hidden">
-            <div class="table-responsive">
+        <div class="card border-0 shadow-sm">
+            <div class="table-responsive" style="min-height: 350px;">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light text-muted small text-uppercase">
                         <tr>
