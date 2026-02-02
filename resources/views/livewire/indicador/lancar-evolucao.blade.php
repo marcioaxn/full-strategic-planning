@@ -85,7 +85,7 @@
                                     <div class="list-group list-group-flush border rounded-3">
                                         @foreach($arquivosExistentes as $arq)
                                             <div class="list-group-item d-flex justify-content-between align-items-center py-2">
-                                                <small class="text-truncate" style="max-width: 80%;"><i class="bi bi-file-earmark-check me-2"></i>{{ $arq->dsc_arquivo }}</small>
+                                                <small class="text-truncate" style="max-width: 80%;"><i class="bi bi-file-earmark-check me-2"></i>{{ $arq->txt_assunto }}</small>
                                                 <button type="button" wire:click="excluirArquivo('{{ $arq->cod_arquivo }}')" class="btn btn-link text-danger p-0"><i class="bi bi-x-circle"></i></button>
                                             </div>
                                         @endforeach

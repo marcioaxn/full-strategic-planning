@@ -2,6 +2,7 @@
 
 namespace App\Models\PerformanceIndicators;
 
+use App\Models\StrategicPlanning\Arquivo;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
