@@ -1,4 +1,4 @@
-<div class="mapa-canvas" wire:poll.10s>
+<div class="mapa-canvas" wire:poll.30s wire:key="mapa-view-{{ $viewMode }}-{{ $organizacaoId }}">
     
     <div style="margin-top: 100px;"></div>
 
