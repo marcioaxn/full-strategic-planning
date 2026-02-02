@@ -1,9 +1,8 @@
-
 2026-02-02 11:30 - Fix: Corrigido erro "Attempt to read property 'cod_organizacao' on array" em SeletorOrganizacao.php.
 
 2026-02-02 11:45 - Fix: Correção Forense no Mapa Estratégico (Schemas SQL).
 
-2026-02-02 12:05 - UX (Revisado): Implementados estados de carregamento discretos.
-- Navbar: Spinners integrados aos ícones dos seletores de Organização, PEI e Ano.
-- Mapa Estratégico: Spinners internos nos botões de modo de visualização.
-- Nota: Removido overlay global do mapa por ser intrusivo e prejudicar a experiência. Os feedbacks agora são locais e específicos à ação do usuário.
+2026-02-02 12:05 - UX: Implementados estados de carregamento discretos no Navbar e botões de modo do Mapa.
+
+2026-02-02 12:20 - Feature: Adicionado componente Collapse no Mapa Estratégico.
+- Quando o modo "Agrupado" está ativo, um botão interativo permite visualizar a lista completa das organizações que compõem o cálculo consolidado (Roll-up), aumentando a transparência dos dados apresentados.
