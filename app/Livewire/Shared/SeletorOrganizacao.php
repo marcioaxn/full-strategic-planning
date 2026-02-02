@@ -19,7 +19,9 @@ class SeletorOrganizacao extends Component
         $this->selecionadaId = Session::get('organizacao_selecionada_id');
 
         if (!$this->selecionadaId && $this->organizacoes->isNotEmpty()) {
-            $this->selecionar($this->organizacoes->first()->cod_organizacao);
+            $first = $this->organizacoes->first();
+            $id = is_array($first) ? $first['id'] : $first->cod_organizacao;
+            $this->selecionar($id);
         }
     }
 
