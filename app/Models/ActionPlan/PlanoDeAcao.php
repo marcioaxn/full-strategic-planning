@@ -107,6 +107,21 @@ class PlanoDeAcao extends Model implements Auditable
     }
 
     /**
+     * Relacionamento: Organizações (muitos-para-muitos)
+     */
+    public function organizacoes(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            Organization::class,
+            'rel_plano_organizacao',
+            'cod_plano_de_acao',
+            'cod_organizacao',
+            'cod_plano_de_acao',
+            'cod_organizacao'
+        );
+    }
+
+    /**
      * Retorna a definição da legenda de status para os Planos de Ação (Fonte Única da Verdade)
      */
     public static function getStatusLegend(): array

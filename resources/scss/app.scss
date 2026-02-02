@@ -1128,6 +1128,47 @@ body {
     --persp-mix-color: #1e2227;
 }
 
+/* ========== PREMIUM FORM & MODAL COMPONENTS ========== */
+.modal-xl-custom { max-width: 1140px; }
+.modal-content-premium { border: none; border-radius: 1.25rem; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+
+.form-label-premium { 
+    font-size: 0.75rem; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    color: var(--bs-secondary); 
+    margin-bottom: 0.5rem; 
+    letter-spacing: 0.5px; 
+}
+
+.input-group-premium {
+    .form-control, .form-select {
+        border-radius: 12px !important;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        padding: 0.75rem 1.25rem;
+        font-weight: 500;
+        background-color: var(--bs-body-bg);
+        transition: all 0.2s ease;
+        
+        &:focus {
+            border-color: var(--bs-primary);
+            box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.1);
+            background-color: #fff;
+        }
+    }
+}
+
+.card-premium-inner {
+    background-color: var(--bs-tertiary-bg);
+    border: none;
+    border-radius: 1rem;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+}
+
+[data-bs-theme="dark"] .card-premium-inner {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
 /* Utils */
 .fw-800 { font-weight: 800; }
 .letter-spacing-1 { letter-spacing: 1px; }

@@ -43,6 +43,9 @@ class ListarPlanos extends Component
     public $cod_ppa;
     public $cod_loa;
 
+    public $organizacoes_ids = []; // Suporte a multivinculação
+    public $organizacoesOptions = []; // Lista em árvore
+
     public bool $aiEnabled = false;
     public $aiSuggestion = '';
 
@@ -81,6 +84,7 @@ class ListarPlanos extends Component
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
         $this->tiposExecucao = TipoExecucao::orderBy('dsc_tipo_execucao')->get();
         $this->filtroAno = Session::get('ano_selecionado', now()->year);
+        $this->organizacoesOptions = Organization::getTreeForSelector();
     }
 
     public function closeSuccessModal()
@@ -209,7 +213,7 @@ class ListarPlanos extends Component
 
     public function edit($id)
     {
-        $plano = PlanoDeAcao::findOrFail($id);
+        $plano = PlanoDeAcao::with('organizacoes')->findOrFail($id);
         $this->authorize('update', $plano);
 
         $this->planoId = $id;
@@ -223,6 +227,7 @@ class ListarPlanos extends Component
         $this->bln_status = $plano->bln_status;
         $this->cod_ppa = $plano->cod_ppa;
         $this->cod_loa = $plano->cod_loa;
+        $this->organizacoes_ids = $plano->organizacoes->pluck('cod_organizacao')->toArray();
 
         $this->showModal = true;
     }
@@ -246,6 +251,7 @@ class ListarPlanos extends Component
             'dte_inicio' => 'required|date',
             'dte_fim' => 'required|date|after_or_equal:dte_inicio',
             'vlr_orcamento_previsto' => 'nullable|numeric|min:0',
+            'organizacoes_ids' => 'required|array|min:1',
         ], $messages);
 
 
@@ -260,14 +266,17 @@ class ListarPlanos extends Component
             'bln_status' => $this->bln_status,
             'cod_ppa' => $this->cod_ppa,
             'cod_loa' => $this->cod_loa,
-            'cod_organizacao' => $this->organizacaoId,
+            'cod_organizacao' => $this->organizacoes_ids[0], // Mantém compatibilidade legada
             'num_nivel_hierarquico_apresentacao' => 3, // Padrão: 3 (Nível Operacional/Ação)
         ];
 
         if ($this->planoId) {
-            PlanoDeAcao::findOrFail($this->planoId)->update($data);
+            $plano = PlanoDeAcao::findOrFail($this->planoId);
+            $plano->update($data);
+            $plano->organizacoes()->sync($this->organizacoes_ids);
         } else {
-            PlanoDeAcao::create($data);
+            $plano = PlanoDeAcao::create($data);
+            $plano->organizacoes()->sync($this->organizacoes_ids);
         }
 
         // Capture details for success modal before resetting
@@ -317,18 +326,22 @@ class ListarPlanos extends Component
         $this->bln_status = 'Não Iniciado';
         $this->cod_ppa = '';
         $this->cod_loa = '';
+        $this->organizacoes_ids = $this->organizacaoId ? [$this->organizacaoId] : [];
         $this->aiSuggestion = '';
     }
 
     public function render()
     {
         $query = PlanoDeAcao::query()
-            ->with(['objetivo', 'tipoExecucao', 'organizacao']);
+            ->with(['objetivo', 'tipoExecucao', 'organizacoes']);
 
         if ($this->filtroObjetivo) {
             $query->where('cod_objetivo', $this->filtroObjetivo);
         } elseif ($this->organizacaoId) {
-            $query->where('cod_organizacao', $this->organizacaoId);
+            // Filtro por organização considerando multivinculação
+            $query->whereHas('organizacoes', function($sub) {
+                $sub->where('tab_organizacoes.cod_organizacao', $this->organizacaoId);
+            });
         }
 
         if ($this->search) {

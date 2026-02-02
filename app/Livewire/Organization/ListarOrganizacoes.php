@@ -20,9 +20,6 @@ class ListarOrganizacoes extends Component
 
     public string $search = '';
     
-    // Filtro para mostrar/esconder hierarquia visual (opcional futuramente)
-    // Por enquanto, listagem plana com coluna de "Pai"
-
     public array $form = [
         'sgl_organizacao' => '',
         'nom_organizacao' => '',
@@ -39,6 +36,13 @@ class ListarOrganizacoes extends Component
 
     public bool $aiEnabled = false;
     public $aiSuggestion = '';
+
+    // Propriedades de feedback premium
+    public bool $showSuccessModal = false;
+    public bool $showErrorModal = false;
+    public string $successMessage = '';
+    public string $errorMessage = '';
+    public string $createdOrgName = '';
 
     public function mount()
     {
@@ -72,7 +76,7 @@ class ListarOrganizacoes extends Component
                 throw new \Exception('Falha ao decodificar');
             }
         } catch (\Exception $e) {
-            \Log::error('Erro IA Org: ' . $e->getMessage());
+            Log::error('Erro IA Org: ' . $e->getMessage());
             $this->aiSuggestion = null;
             session()->flash('error', 'Não foi possível gerar sugestões.');
         }
@@ -115,47 +119,27 @@ class ListarOrganizacoes extends Component
         $this->resetPage();
     }
 
-    // Retorna lista de organizações para o select de "Pai"
     public function getOrganizacoesPaiProperty()
     {
-        return Organization::orderBy('nom_organizacao')
-            ->get()
-            ->map(function ($org) {
-                return [
-                    'id' => $org->cod_organizacao,
-                    'label' => $org->sgl_organizacao . ' - ' . $org->nom_organizacao
-                ];
-            });
+        return Organization::getTreeForSelector($this->editing?->cod_organizacao);
     }
 
     protected function baseQuery(): Builder
     {
-        $query = Organization::query()->with('pai'); // Eager loading
+        $query = Organization::query()->with('pai');
         $search = trim($this->search);
-
-        // Filtro por Organização Selecionada Globalmente
-        $orgId = session('organizacao_selecionada_id');
-        if ($orgId) {
-            // Se houver uma selecionada, mostramos ela e suas filhas (hierarquia descendente)
-            $query->where(function($q) use ($orgId) {
-                $q->where('cod_organizacao', $orgId)
-                  ->orWhere('rel_cod_organizacao', $orgId);
-            });
-            // Nota: Para hierarquia profunda, precisaríamos de uma query recursiva ou carregar todos e filtrar.
-            // Por enquanto, mostramos a selecionada e suas filhas diretas.
-        }
 
         if ($search !== '') {
             $this->applySearchFilter($query, $search);
+            return $query->orderBy('nom_organizacao');
         }
 
-        return $query;
+        return $query->orderByRaw("(CASE WHEN cod_organizacao = rel_cod_organizacao THEN '0' ELSE '1' END), nom_organizacao");
     }
 
     protected function paginatedOrganizacoes(): LengthAwarePaginator
     {
         return $this->baseQuery()
-            ->orderBy('sgl_organizacao')
             ->paginate(10);
     }
 
@@ -191,46 +175,38 @@ class ListarOrganizacoes extends Component
 
     public function save(): void
     {
-        $data = $this->validate()['form'];
+        try {
+            $data = $this->validate()['form'];
 
-        // Se pai não definido, define como null (ou auto-referência se for raiz, depende da regra)
-        // Por padrão no form, vazio = null.
-        // Se a regra for "Raiz aponta para si mesma", precisamos ajustar. 
-        // Lendo o Model, isRaiz() checa se cod == rel_cod. 
-        // Vamos assumir null ou valor selecionado. Se for raiz, o usuário deve selecionar a si mesma ou deixamos null e tratamos no backend?
-        // Vou manter simples: se null, é raiz (mas ajustando para o padrão do banco se necessário).
-        // Update: O model diz `scopeRaiz` whereColumn. 
-        // Vamos permitir null no form e se for null, no create, define como o próprio ID (padrão raiz) ou null?
-        // O model Organization tem `isRaiz` checking `cod_organizacao === rel_cod_organizacao`.
-        // Então ao criar, se rel_cod_organizacao for null, deve ser igual ao ID gerado.
-        
-        if ($this->editing) {
-            $this->authorize('update', $this->editing);
-            
-            // Evitar ciclo: não pode ser pai de si mesmo diretamente (simplificado)
-            if ($data['rel_cod_organizacao'] == $this->editing->cod_organizacao) {
-                // É raiz
+            if ($this->editing) {
+                $this->authorize('update', $this->editing);
+                $this->editing->update($data);
+                $this->successMessage = __('Unidade organizacional atualizada com sucesso.');
+                $this->createdOrgName = $this->editing->nom_organizacao;
+            } else {
+                $this->authorize('create', Organization::class);
+                $org = Organization::create($data);
+                
+                if (empty($data['rel_cod_organizacao'])) {
+                    $org->rel_cod_organizacao = $org->cod_organizacao;
+                    $org->save();
+                }
+                
+                $this->successMessage = __('Nova unidade cadastrada e integrada à hierarquia.');
+                $this->createdOrgName = $org->nom_organizacao;
             }
-            
-            $this->editing->update($data);
-            $message = __('Organização atualizada com sucesso.');
-        } else {
-            $this->authorize('create', Organization::class);
-            $org = Organization::create($data);
-            
-            // Se não veio pai, define como raiz (pai = ele mesmo)
-            if (empty($data['rel_cod_organizacao'])) {
-                $org->rel_cod_organizacao = $org->cod_organizacao;
-                $org->save();
-            }
-            
-            $message = __('Organização criada com sucesso.');
+
+            $this->showFormModal = false;
+            $this->showSuccessModal = true;
+            $this->resetForm();
+        } catch (\Exception $e) {
+            $this->errorMessage = $e->getMessage();
+            $this->showErrorModal = true;
         }
-
-        $this->notify($message);
-        $this->closeFormModal();
-        $this->resetPage();
     }
+
+    public function closeSuccessModal() { $this->showSuccessModal = false; $this->resetPage(); }
+    public function closeErrorModal() { $this->showErrorModal = false; }
 
     public function confirmDelete(string $id): void
     {
@@ -274,6 +250,7 @@ class ListarOrganizacoes extends Component
         ];
 
         $this->editing = null;
+        $this->aiSuggestion = '';
     }
 
     protected function notify(string $message, string $style = 'success'): void
@@ -306,7 +283,6 @@ class ListarOrganizacoes extends Component
             return;
         }
         
-        // Fallback
         $query->where(function ($q) use ($search) {
              $q->where('nom_organizacao', 'like', "%{$search}%")
                ->orWhere('sgl_organizacao', 'like', "%{$search}%");
