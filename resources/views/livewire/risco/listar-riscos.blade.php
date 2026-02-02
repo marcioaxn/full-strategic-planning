@@ -5,7 +5,7 @@
             <div class="d-flex align-items-center gap-2 mb-1">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Gestão de Riscos</li>
                     </ol>
                 </nav>
@@ -20,7 +20,7 @@
 
         <div class="d-flex align-items-center gap-2">
             @if($organizacaoId)
-                <a href="{{ route('riscos.matriz') }}" class="btn btn-outline-primary shadow-sm rounded-pill px-3">
+                <a href="{{ route('riscos.matriz') }}" wire:navigate class="btn btn-outline-primary shadow-sm rounded-pill px-3">
                     <i class="bi bi-grid-3x3-gap me-1"></i> Ver Matriz
                 </a>
                 <button wire:click="create" class="btn btn-primary gradient-theme-btn shadow-sm rounded-pill px-4">
@@ -557,10 +557,9 @@
                                             <i class="bi bi-three-dots-vertical"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                            <li><h6 class="dropdown-header small text-uppercase">Gestão</h6></li>
-                                            <li><a class="dropdown-item" href="{{ route('riscos.mitigacao', $risco->cod_risco) }}"><i class="bi bi-shield-check me-2 text-success"></i> Planos de Mitigação</a></li>
-                                            <li><a class="dropdown-item" href="{{ route('riscos.ocorrencias', $risco->cod_risco) }}"><i class="bi bi-exclamation-octagon me-2 text-danger"></i> Registrar Ocorrência</a></li>
-                                            <li><hr class="dropdown-divider"></li>
+                                                                                    <li><h6 class="dropdown-header small text-uppercase">Gestão</h6></li>
+                                                                                    <li><a class="dropdown-item" href="{{ route('riscos.mitigacao', $risco->cod_risco) }}" wire:navigate><i class="bi bi-shield-check me-2 text-success"></i> Planos de Mitigação</a></li>
+                                                                                    <li><a class="dropdown-item" href="{{ route('riscos.ocorrencias', $risco->cod_risco) }}" wire:navigate><i class="bi bi-exclamation-octagon me-2 text-danger"></i> Registrar Ocorrência</a></li>                                            <li><hr class="dropdown-divider"></li>
                                             <li><button class="dropdown-item" wire:click="edit('{{ $risco->cod_risco }}')"><i class="bi bi-pencil me-2"></i> Editar</button></li>
                                             <li><button class="dropdown-item text-danger" wire:click="confirmDelete('{{ $risco->cod_risco }}')"><i class="bi bi-trash me-2"></i> Excluir</button></li>
                                         </ul>

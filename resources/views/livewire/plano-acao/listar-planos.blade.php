@@ -5,7 +5,7 @@
             <div class="d-flex align-items-center gap-2 mb-2">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Planos de Ação</li>
                     </ol>
                 </nav>
@@ -609,17 +609,17 @@
                                                 <h6 class="dropdown-header small text-uppercase">Gestão</h6>
                                             </li>
                                             <li>
-                                                <a class="dropdown-item" href="{{ route('planos.detalhes', $plano->cod_plano_de_acao) }}">
+                                                <a class="dropdown-item" href="{{ route('planos.detalhes', $plano->cod_plano_de_acao) }}" wire:navigate>
                                                     <i class="bi bi-eye me-2 text-primary"></i> Detalhes
                                                 </a>
                                             </li>
                                             <li>
-                                                <a class="dropdown-item" href="{{ route('planos.entregas', $plano->cod_plano_de_acao) }}">
+                                                <a class="dropdown-item" href="{{ route('planos.entregas', $plano->cod_plano_de_acao) }}" wire:navigate>
                                                     <i class="bi bi-list-check me-2 text-info"></i> Entregas
                                                 </a>
                                             </li>
                                             <li>
-                                                <a class="dropdown-item" href="{{ route('planos.responsaveis', $plano->cod_plano_de_acao) }}">
+                                                <a class="dropdown-item" href="{{ route('planos.responsaveis', $plano->cod_plano_de_acao) }}" wire:navigate>
                                                     <i class="bi bi-people me-2 text-warning"></i> Responsáveis
                                                 </a>
                                             </li>
