@@ -125,10 +125,10 @@ class LancarEvolucao extends Component
             
             Arquivo::create([
                 'cod_evolucao_indicador' => $evolucao->cod_evolucao_indicador,
-                'dsc_arquivo' => $arquivo->getClientOriginalName(),
-                'txt_caminho_arquivo' => $path,
-                'dsc_extensao' => $arquivo->getClientOriginalExtension(),
-                'num_tamanho' => $arquivo->getSize(),
+                'txt_assunto' => $arquivo->getClientOriginalName(),
+                'data' => now()->format('Y-m-d'),
+                'dsc_nome_arquivo' => $path,
+                'dsc_tipo' => $arquivo->getClientOriginalExtension(),
             ]);
         }
 
@@ -140,7 +140,7 @@ class LancarEvolucao extends Component
     public function excluirArquivo($id)
     {
         $arquivo = Arquivo::findOrFail($id);
-        Storage::disk('public')->delete($arquivo->txt_caminho_arquivo);
+        Storage::disk('public')->delete($arquivo->dsc_nome_arquivo);
         $arquivo->delete();
         $this->carregarPeriodo();
     }

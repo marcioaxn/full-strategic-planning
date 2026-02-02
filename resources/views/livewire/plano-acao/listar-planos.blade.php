@@ -791,11 +791,27 @@
                                         </div>
 
                                         {{-- 3. Detalhamento / Justificativa --}}
-                                        <div class="mb-4">
-                                            <label class="form-label fw-bold small text-muted text-uppercase">3. Detalhamento / Justificativa <span class="text-muted fw-normal text-lowercase">(Opcional)</span></label>
-                                            <textarea wire:model="txt_detalhamento" class="form-control bg-white border-0 shadow-sm" rows="4" placeholder="Descreva os detalhes, metodologia ou justificativa para esta ação..."></textarea>
-                                            @error('txt_detalhamento') <div class="text-danger small mt-1 ms-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div> @enderror
-                                        </div>
+                                            <div class="mb-4">
+                                                <label class="form-label text-muted small text-uppercase fw-bold">Unidades Organizacionais Vinculadas <span class="text-danger">*</span></label>
+                                                <div class="bg-white rounded-4 shadow-sm p-3 overflow-auto" style="max-height: 200px; border: 1px solid rgba(0,0,0,0.05);">
+                                                    @foreach($organizacoesOptions as $org)
+                                                        <div class="form-check mb-2">
+                                                            <input class="form-check-input" type="checkbox" value="{{ $org['id'] }}" 
+                                                                   wire:model="organizacoes_ids" id="org_{{ $org['id'] }}">
+                                                            <label class="form-check-label small fw-medium text-dark" for="org_{{ $org['id'] }}">
+                                                                {!! $org['label'] !!}
+                                                            </label>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                                @error('organizacoes_ids') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                                <small class="text-muted mt-2 d-block lh-sm"><i class="bi bi-info-circle me-1"></i>O plano e suas entregas aparecerão para todas as unidades selecionadas.</small>
+                                            </div>
+
+                                            <div class="mb-0">
+                                                <label class="form-label text-muted small text-uppercase fw-bold">Detalhamento da Iniciativa</label>
+                                                <textarea wire:model="txt_detalhamento" class="form-control bg-white border-0 shadow-sm" rows="4" placeholder="Descreva os objetivos técnicos e resultados esperados desta iniciativa..."></textarea>
+                                            </div>
 
                                         <div class="row g-3">
                                             {{-- Tipo de Execução --}}

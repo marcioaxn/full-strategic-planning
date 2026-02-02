@@ -14,6 +14,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class MapaEstrategico extends Component
 {
@@ -25,12 +26,13 @@ class MapaEstrategico extends Component
     public $valores = [];
     public $temasNorteadores = [];
     public $grausSatisfacao = [];
+    public $qtdUnidadesConsolidadas = 1;
+    
+    public string $viewMode = 'grouped'; 
 
-    // Propriedades para Modal de Memória de Cálculo
     public bool $showCalcModal = false;
     public $detalhesCalculo = null;
 
-    // Cores das perspectivas por nível hierárquico
     public $coresPerspectivas = [
         1 => ['bg' => 'bg-slate', 'border' => 'border-secondary', 'text' => 'text-white', 'bg_light' => 'bg-secondary-subtle'],
         2 => ['bg' => 'bg-success', 'border' => 'border-success', 'text' => 'text-white', 'bg_light' => 'bg-success-subtle'],
@@ -42,130 +44,110 @@ class MapaEstrategico extends Component
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
         'peiSelecionado' => 'atualizarPEI',
-        'anoSelecionado' => 'atualizarAno'
+        'anoSelecionado' => '$refresh'
     ];
 
     public function mount()
     {
-        // Tenta obter da sessão primeiro (funciona para logados e visitantes)
         $this->organizacaoId = Session::get('organizacao_selecionada_id');
+        $this->viewMode = Session::get('mapa_view_mode', 'grouped');
 
-        // Se não houver na sessão, busca a primeira organização do banco como padrão
         if (!$this->organizacaoId) {
-            $primeiraOrg = Organization::orderBy('sgl_organizacao')->first();
-            $this->organizacaoId = $primeiraOrg?->cod_organizacao;
-            
-            if ($this->organizacaoId) {
-                Session::put('organizacao_selecionada_id', $this->organizacaoId);
-                Session::put('organizacao_selecionada_sgl', $primeiraOrg->sgl_organizacao);
-            }
+            $orgRaiz = Organization::whereColumn('cod_organizacao', 'rel_cod_organizacao')->first() 
+                       ?? Organization::orderBy('sgl_organizacao')->first();
+            $this->organizacaoId = $orgRaiz?->cod_organizacao;
         }
-
         $this->carregarPEI();
     }
 
-    public function atualizarAno($ano)
+    public function setViewMode($mode)
     {
-        // Recarrega os dados do mapa para o novo ano
+        $this->viewMode = $mode;
+        Session::put('mapa_view_mode', $mode);
+        // O carregarMapa() dentro do render garantirá o resto
     }
 
-    public function atualizarOrganizacao($id)
-    {
-        $this->organizacaoId = $id;
-    }
-
-    public function atualizarPEI($id)
-    {
-        $this->peiAtivo = PEI::find($id);
-    }
+    public function atualizarOrganizacao($id) { $this->organizacaoId = $id; }
+    public function atualizarPEI($id) { $this->peiAtivo = PEI::find($id); }
 
     private function carregarPEI()
     {
         $peiId = Session::get('pei_selecionado_id');
-
-        if ($peiId) {
-            $this->peiAtivo = PEI::find($peiId);
-        }
-
-        if (!$this->peiAtivo) {
-            $this->peiAtivo = PEI::ativos()->first();
-        }
-    }
-
-    public function carregarGrausSatisfacao()
-    {
-        $this->grausSatisfacao = GrauSatisfacao::orderBy('vlr_minimo')->get();
+        $this->peiAtivo = $peiId ? PEI::find($peiId) : PEI::ativos()->first();
     }
 
     public function carregarMapa()
     {
-        if (!$this->peiAtivo) return;
+        if (!$this->peiAtivo || !$this->organizacaoId) return;
 
+        // Recupera do estado atual
+        $this->viewMode = Session::get('mapa_view_mode', $this->viewMode);
+
+        // IDs para o Roll-up
+        $orgIds = [$this->organizacaoId];
+        if ($this->viewMode === 'grouped') {
+            $org = Organization::find($this->organizacaoId);
+            if ($org) {
+                $orgIds = $org->getDescendantsAndSelfIds();
+            }
+        }
+        $this->qtdUnidadesConsolidadas = count($orgIds);
+
+        $this->grausSatisfacao = GrauSatisfacao::orderBy('vlr_minimo')->get();
+
+        // Query direta via JOIN/Exists para máxima precisão e performance
         $this->perspectivas = Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
-            ->with(['objetivos' => function($query) {
-                $query->with(['indicadores', 'planosAcao'])->ordenadoPorNivel();
+            ->with(['objetivos' => function($query) use ($orgIds) {
+                $query->with(['indicadores' => function($qInd) use ($orgIds) {
+                    $qInd->whereIn('tab_indicador.cod_indicador', function($sub) use ($orgIds) {
+                        $sub->select('cod_indicador')
+                            ->from('rel_indicador_objetivo_organizacao')
+                            ->whereIn('cod_organizacao', $orgIds);
+                    });
+                }, 'planosAcao' => function($qPlan) use ($orgIds) {
+                    $qPlan->whereIn('tab_plano_de_acao.cod_plano_de_acao', function($sub) use ($orgIds) {
+                        $sub->select('cod_plano_de_acao')
+                            ->from('rel_plano_organizacao')
+                            ->whereIn('cod_organizacao', $orgIds);
+                    });
+                }])->ordenadoPorNivel();
             }])
             ->orderBy('num_nivel_hierarquico_apresentacao', 'desc')
             ->get()
             ->map(function($p) {
-                $somaPersp = 0;
-                $contPersp = 0;
-                $listaIndicadoresMemoria = [];
+                $somaPersp = 0; $contPersp = 0; $listaIndicadoresMemoria = [];
 
-                $p->objetivos->map(function($obj) use (&$somaPersp, &$contPersp, &$listaIndicadoresMemoria) {
+                foreach ($p->objetivos as $obj) {
                     $indicadores = $obj->indicadores;
                     $totalInd = $indicadores->count();
                     $somaAtingObj = 0;
                     
                     foreach ($indicadores as $ind) {
                         $ating = $ind->calcularAtingimento();
-                        $somaAtingObj += $ating;
-                        $somaPersp += $ating;
-                        $contPersp++;
-                        
+                        $somaAtingObj += $ating; $somaPersp += $ating; $contPersp++;
                         $listaIndicadoresMemoria[] = [
-                            'objetivo' => $obj->nom_objetivo,
-                            'indicador' => $ind->nom_indicador,
-                            'atingimento' => round($ating, 1),
-                            'cor' => $this->getCorPorPercentual($ating),
+                            'objetivo' => $obj->nom_objetivo, 'indicador' => $ind->nom_indicador,
+                            'atingimento' => round($ating, 1), 'cor' => $this->getCorPorPercentual($ating),
                             'polaridade' => $ind->dsc_polaridade ?? 'Positiva'
                         ];
                     }
                     
                     $mediaAtingObj = $totalInd > 0 ? round($somaAtingObj / $totalInd, 1) : 0;
-                    $obj->resumo_indicadores = [
-                        'quantidade' => $totalInd,
-                        'percentual' => $mediaAtingObj,
-                        'cor' => $this->getCorPorPercentual($mediaAtingObj)
-                    ];
+                    $obj->resumo_indicadores = ['quantidade' => $totalInd, 'percentual' => $mediaAtingObj, 'cor' => $this->getCorPorPercentual($mediaAtingObj)];
 
                     $planos = $obj->planosAcao;
                     $totalPlanos = $planos->count();
                     $concluidos = $planos->where('bln_status', 'Concluído')->count();
-                    $percentualPlanos = $totalPlanos > 0 ? ($concluidos / $totalPlanos) * 100 : 0;
                     
-                    // Determinar cor do plano baseado na nova regra
-                    $corPlano = '#475569'; // secondary
+                    $corPlano = '#475569';
                     if ($totalPlanos > 0) {
-                        if ($concluidos == $totalPlanos) {
-                            $corPlano = '#429B22'; // success
-                        } else if ($planos->whereIn('bln_status', ['Em Andamento', 'Atrasado'])->count() > 0) {
-                            $corPlano = '#F3C72B'; // warning
-                        }
+                        if ($concluidos == $totalPlanos) $corPlano = '#429B22';
+                        else if ($planos->whereIn('bln_status', ['Em Andamento', 'Atrasado'])->count() > 0) $corPlano = '#F3C72B';
                     }
-
-                    $obj->resumo_planos = [
-                        'quantidade' => $totalPlanos,
-                        'concluidos' => $concluidos,
-                        'percentual' => round($percentualPlanos, 1),
-                        'cor' => $corPlano
-                    ];
-
-                    return $obj;
-                });
+                    $obj->resumo_planos = ['quantidade' => $totalPlanos, 'concluidos' => $concluidos, 'percentual' => $totalPlanos > 0 ? round(($concluidos / $totalPlanos) * 100, 1) : 0, 'cor' => $corPlano];
+                }
                 
                 $atingimentoPersp = $contPersp > 0 ? round($somaPersp / $contPersp, 1) : 0;
-                
                 $p->atingimento_medio = $atingimentoPersp;
                 $p->cor_satisfacao = $this->getCorPorPercentual($atingimentoPersp);
                 $p->memoria_indicadores = $listaIndicadoresMemoria;
@@ -174,81 +156,42 @@ class MapaEstrategico extends Component
             })->toArray();
     }
 
+    public function carregarIdentidadeEstrategica() {
+        if (!$this->peiAtivo) return;
+        $this->missaoVisao = MissaoVisaoValores::where('cod_pei', $this->peiAtivo->cod_pei)->where('cod_organizacao', $this->organizacaoId)->first();
+        $this->valores = Valor::where('cod_pei', $this->peiAtivo->cod_pei)->where('cod_organizacao', $this->organizacaoId)->orderBy('nom_valor')->get();
+        $this->temasNorteadores = TemaNorteador::where('cod_pei', $this->peiAtivo->cod_pei)->where('cod_organizacao', $this->organizacaoId)->orderBy('created_at', 'asc')->get();
+    }
+
+    public function getCorPorPercentual($percentual): string {
+        foreach ($this->grausSatisfacao as $grau) {
+            if ($percentual >= $grau->vlr_minimo && $percentual <= $grau->vlr_maximo) return $grau->cor;
+        }
+        return '#dc3545';
+    }
+
+    public function getCoresPerspectiva($nivel): array { return $this->coresPerspectivas[$nivel] ?? $this->coresPerspectivas[1]; }
+
     public function abrirMemoriaCalculo($index)
     {
         $p = $this->perspectivas[$index];
         $this->detalhesCalculo = [
-            'titulo' => $p['dsc_perspectiva'],
-            'media' => $p['atingimento_medio'],
-            'cor' => $p['cor_satisfacao'],
-            'indicadores' => $p['memoria_indicadores']
+            'titulo' => $p['dsc_perspectiva'], 'media' => $p['atingimento_medio'],
+            'cor' => $p['cor_satisfacao'], 'indicadores' => $p['memoria_indicadores']
         ];
         $this->showCalcModal = true;
     }
 
-    public function fecharMemoriaCalculo()
-    {
-        $this->showCalcModal = false;
-        $this->detalhesCalculo = null;
-    }
-
-    public function carregarIdentidadeEstrategica()
-    {
-        if (!$this->peiAtivo) return;
-
-        $this->missaoVisao = MissaoVisaoValores::where('cod_pei', $this->peiAtivo->cod_pei)
-            ->where('cod_organizacao', $this->organizacaoId)
-            ->first();
-
-        $this->valores = Valor::where('cod_pei', $this->peiAtivo->cod_pei)
-            ->where('cod_organizacao', $this->organizacaoId)
-            ->orderBy('nom_valor')
-            ->get();
-
-        $this->temasNorteadores = TemaNorteador::where('cod_pei', $this->peiAtivo->cod_pei)
-            ->where('cod_organizacao', $this->organizacaoId)
-            ->orderBy('created_at', 'asc')
-            ->get();
-    }
-
-    public function getCorPorPercentual($percentual): string
-    {
-        foreach ($this->grausSatisfacao as $grau) {
-            if ($percentual >= $grau->vlr_minimo && $percentual <= $grau->vlr_maximo) {
-                return $grau->cor;
-            }
-        }
-
-        if ($percentual >= 100) return '#198754';
-        if ($percentual >= 80) return '#0d6efd';
-        if ($percentual >= 60) return '#0dcaf0';
-        if ($percentual >= 40) return '#ffc107';
-        return '#dc3545';
-    }
-
-    public function getCoresPerspectiva($nivel): array
-    {
-        return $this->coresPerspectivas[$nivel] ?? $this->coresPerspectivas[1];
-    }
+    public function fecharMemoriaCalculo() { $this->showCalcModal = false; }
 
     public function render()
     {
-        // Re-executa o carregamento a cada requisição (incluindo poll)
-        $this->carregarGrausSatisfacao();
-        
+        $this->carregarMapa();
+        $this->carregarIdentidadeEstrategica();
         if ($this->organizacaoId) {
             $org = Organization::find($this->organizacaoId);
-            $this->organizacaoNome = $org ? $org->nom_organizacao : 'Strategic Planning System';
+            $this->organizacaoNome = $org ? $org->nom_organizacao : 'SPS';
         }
-
-        if ($this->peiAtivo) {
-            $this->carregarMapa();
-            $this->carregarIdentidadeEstrategica();
-        }
-
-        $layout = Auth::check() ? 'layouts.app' : 'layouts.public';
-
-        return view('livewire.p-e-i.mapa-estrategico')
-            ->layout($layout);
+        return view('livewire.p-e-i.mapa-estrategico')->layout(Auth::check() ? 'layouts.app' : 'layouts.public');
     }
 }

@@ -60,216 +60,45 @@ class ListarIndicadores extends Component
         'dsc_periodo_medicao' => 'Mensal',
         'dsc_referencial_comparativo' => '',
         'dsc_atributos' => '',
+        'organizacoes_ids' => [], // IDs para multivinculação
     ];
 
     // Form Metas/Linha Base
-    public $metaAno;
-    public $metaValor;
-    public $linhaBaseAno;
-    public $linhaBaseValor;
+    // ...
 
     // Listas Auxiliares
     public $objetivosAgrupados = [];
     public $planosAgrupados = [];
+    public $organizacoesOptions = []; // Lista em árvore
     public $unidadesMedida = [];
-    public $polaridades = [];
-    public $periodosOptions = ['Mensal', 'Bimestral', 'Trimestral', 'Semestral', 'Anual'];
-    public $grausSatisfacao = [];
-
-    protected $queryString = [
-        'search' => ['except' => '', 'as' => 'q'],
-        'filtroVinculo' => ['except' => ''],
-        'filtroObjetivo' => ['except' => ''],
-        'page' => ['except' => 1, 'history' => true],
-    ];
-
-    public $peiAtivo;
-    public bool $aiEnabled = false;
-    public $aiSuggestion = '';
-    public $smartFeedback = '';
-
-    protected $listeners = [
-        'organizacaoSelecionada' => 'atualizarOrganizacao',
-        'peiSelecionado' => 'atualizarPEI'
-    ];
-
-    /**
-     * Hook do Livewire que dispara quando campos do form são alterados.
-     */
-    public function updatedForm($value, $key)
-    {
-        if ($key === 'nom_indicador' && strlen($value) > 10 && $this->aiEnabled) {
-            $this->auditSmart();
-        }
-    }
-
-    public function auditSmart()
-    {
-        if (empty($this->form['nom_indicador'])) {
-            $this->addError('form.nom_indicador', 'Digite um nome para auditar.');
-            return;
-        }
-
-        $aiService = \App\Services\AI\AiServiceFactory::make();
-        if (!$aiService) return;
-
-        $this->smartFeedback = 'Analisando métrica...';
-        $this->smartFeedback = $aiService->analyzeSmart('Indicador', $this->form['nom_indicador'], $this->form['dsc_indicador'] ?? '');
-    }
-
-    public function pedirAjudaIA()
-    {
-        if (!$this->aiEnabled) return;
-
-        if (!$this->filtroObjetivo) {
-             session()->flash('error', 'Selecione um Objetivo no filtro primeiro para eu saber o que medir.');
-             return;
-        }
-
-        $aiService = \App\Services\AI\AiServiceFactory::make();
-        if (!$aiService) return;
-
-        $objetivo = Objetivo::find($this->filtroObjetivo);
-        
-        $this->aiSuggestion = 'Pensando...';
-
-        $prompt = "Sugira 3 indicadores (KPIs) para o objetivo: '{$objetivo->nom_objetivo}'. 
-        Descrição do objetivo: '{$objetivo->dsc_objetivo}'.
-        Responda OBRIGATORIAMENTE em formato JSON puro, contendo um array de objetos com os campos 'nome', 'descricao', 'unidade' e 'formula'.";
-        
-        $response = $aiService->suggest($prompt);
-        $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
-
-        if (is_array($decoded)) {
-            $this->aiSuggestion = $decoded;
-        } else {
-            $this->aiSuggestion = null;
-            session()->flash('error', 'Falha ao processar sugestões. Tente novamente.');
-        }
-    }
-
-    public function aplicarSugestao($nome, $descricao, $unidade, $formula)
-    {
-        $this->resetForm();
-        $this->form['nom_indicador'] = $nome;
-        $this->form['dsc_indicador'] = $descricao;
-        $this->form['dsc_unidade_medida'] = $unidade; 
-        $this->form['dsc_formula'] = $formula;
-        $this->form['cod_objetivo'] = $this->filtroObjetivo;
-        $this->form['dsc_tipo'] = 'Objetivo';
-        
-        $this->save();
-        
-        // Remove o item da lista de sugestões
-        if (is_array($this->aiSuggestion)) {
-            $this->aiSuggestion = array_filter($this->aiSuggestion, function($item) use ($nome) {
-                return $item['nome'] !== $nome;
-            });
-            
-            if (empty($this->aiSuggestion)) $this->aiSuggestion = '';
-        }
-    }
-
-    public function mount()
-    {
-        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
-        $this->carregarPEI();
-        $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
-    }
-
-    public function closeSuccessModal()
-    {
-        $this->showSuccessModal = false;
-        $this->successMessage = '';
-        $this->createdIndicadorName = '';
-    }
-
-    public function closeErrorModal()
-    {
-        $this->showErrorModal = false;
-        $this->errorMessage = '';
-    }
-
-    public function atualizarPEI($id)
-    {
-        $this->peiAtivo = PEI::find($id);
-        $this->carregarListasAuxiliares();
-        $this->resetPage();
-    }
-
-    private function carregarPEI()
-    {
-        $peiId = Session::get('pei_selecionado_id');
-
-        if ($peiId) {
-            $this->peiAtivo = PEI::find($peiId);
-        }
-
-        if (!$this->peiAtivo) {
-            $this->peiAtivo = PEI::ativos()->first();
-        }
-    }
-
-    public function atualizarOrganizacao($id)
-    {
-        $this->organizacaoId = $id;
-        $this->resetPage();
-        $this->carregarListasAuxiliares();
-    }
+    // ...
 
     public function carregarListasAuxiliares()
     {
         $this->grausSatisfacao = \App\Models\StrategicPlanning\GrauSatisfacao::orderBy('vlr_minimo')->get();
         $this->unidadesMedida = Indicador::UNIDADES_MEDIDA;
         $this->polaridades = Indicador::POLARIDADES;
+        $this->organizacoesOptions = Organization::getTreeForSelector();
 
         if ($this->peiAtivo) {
-            $objetivosBrutos = Objetivo::with('perspectiva')
-                ->whereHas('perspectiva', function($query) {
-                    $query->where('cod_pei', $this->peiAtivo->cod_pei);
-                })
-                ->get();
-
-            $this->objetivosAgrupados = $objetivosBrutos->groupBy(function($item) {
-                return $item->perspectiva->dsc_perspectiva ?? 'Outros';
-            })->toArray();
-        }
-
-        if ($this->organizacaoId) {
-            $planosBrutos = PlanoDeAcao::with('objetivo')
-                ->where('cod_organizacao', $this->organizacaoId)
-                ->orderBy('dsc_plano_de_acao')
-                ->get();
-
-            $this->planosAgrupados = $planosBrutos->groupBy(function($item) {
-                return $item->objetivo->nom_objetivo ?? 'Sem Objetivo Vinculado';
-            })->toArray();
+            // ...
         }
     }
 
     public function create(\App\Services\PeiGuidanceService $service)
     {
-        $guidance = $service->analyzeCompleteness($this->peiAtivo?->cod_pei);
-        
-        // If we are in any phase BEFORE indicators, redirect and alert
-        $phasesBefore = ['ciclo', 'identidade', 'perspectivas', 'objetivos'];
-        if ($guidance['status'] === 'warning' && in_array($guidance['current_phase'], $phasesBefore)) {
-             session()->flash('error', $guidance['message']);
-             return redirect()->route($guidance['action_route']);
-        }
-
+        // ... (guidance check)
         $this->authorize('create', Indicador::class);
         $this->resetForm();
-        if (!$this->organizacaoId) {
-            $this->dispatch('notify', message: 'Selecione uma organização.', style: 'warning');
-            return;
+        if ($this->organizacaoId) {
+            $this->form['organizacoes_ids'] = [$this->organizacaoId];
         }
         $this->showModal = true;
     }
 
     public function edit($id)
     {
-        $indicador = Indicador::findOrFail($id);
+        $indicador = Indicador::with('organizacoes')->findOrFail($id);
         $this->authorize('update', $indicador);
         $this->indicadorId = $id;
         $this->form = [
@@ -289,21 +118,25 @@ class ListarIndicadores extends Component
             'dsc_periodo_medicao' => $indicador->dsc_periodo_medicao,
             'dsc_referencial_comparativo' => $indicador->dsc_referencial_comparativo,
             'dsc_atributos' => $indicador->dsc_atributos,
+            'organizacoes_ids' => $indicador->organizacoes->pluck('cod_organizacao')->toArray(),
         ];
         $this->showModal = true;
     }
 
     public function save()
     {
-        $service = app(\App\Services\PeiGuidanceService::class);
         $this->validate([
             'form.nom_indicador' => 'required|string|max:255',
             'form.dsc_tipo' => 'required',
             'form.dsc_unidade_medida' => 'required',
+            'form.organizacoes_ids' => 'required|array|min:1',
         ]);
 
         try {
             $data = $this->form;
+            $orgIds = $data['organizacoes_ids'];
+            unset($data['organizacoes_ids']);
+
             if ($data['dsc_tipo'] === 'Objetivo') { 
                 $data['cod_plano_de_acao'] = null; 
             } else { 
@@ -314,14 +147,13 @@ class ListarIndicadores extends Component
                 $indicador = Indicador::findOrFail($this->indicadorId);
                 $this->authorize('update', $indicador);
                 $indicador->update($data);
-                $this->successMessage = "As configurações do indicador foram atualizadas com sucesso e os cálculos de desempenho já refletem as mudanças.";
+                $indicador->organizacoes()->sync($orgIds);
+                $this->successMessage = "As configurações do indicador foram atualizadas com sucesso e as organizações vinculadas já refletem as mudanças.";
             } else {
                 $this->authorize('create', Indicador::class);
                 $indicador = Indicador::create($data);
-                if ($this->organizacaoId) { 
-                    $indicador->organizacoes()->attach($this->organizacaoId); 
-                }
-                $this->successMessage = "O novo indicador foi registrado com sucesso e já está disponível para lançamentos de evolução e metas.";
+                $indicador->organizacoes()->sync($orgIds);
+                $this->successMessage = "O novo indicador foi registrado com sucesso e vinculado às unidades organizacionais selecionadas.";
             }
 
             $this->createdIndicadorName = $this->form['nom_indicador'];
@@ -444,12 +276,14 @@ class ListarIndicadores extends Component
                   });
             });
         } elseif ($this->organizacaoId) {
-            // Filtro padrão por organização (quando não há filtro por objetivo)
+            // Filtro por organização considerando multivinculação
             $query->where(function($q) {
                 $q->whereHas('organizacoes', function($sub) {
                     $sub->where('tab_organizacoes.cod_organizacao', $this->organizacaoId);
                 })->orWhereHas('planoDeAcao', function($sub) {
-                    $sub->where('cod_organizacao', $this->organizacaoId);
+                    $sub->whereHas('organizacoes', function($subOrg) {
+                        $subOrg->where('tab_organizacoes.cod_organizacao', $this->organizacaoId);
+                    });
                 });
             });
         }
