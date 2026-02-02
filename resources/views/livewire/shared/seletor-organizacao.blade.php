@@ -1,7 +1,10 @@
 <div class="nav-item dropdown ms-3">
-    <a class="nav-link dropdown-toggle d-flex align-items-center bg-light-subtle rounded-3 px-3 py-2 border shadow-sm" 
+    <a class="nav-link dropdown-toggle d-flex align-items-center bg-light-subtle rounded-3 px-3 py-2 border shadow-sm position-relative" 
        href="#" id="navbarDropdownOrg" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="bi bi-building me-2 text-primary"></i>
+        <i class="bi bi-building me-2 text-primary" wire:loading.remove wire:target="selecionar"></i>
+        <div class="spinner-border spinner-border-sm text-primary me-2" role="status" wire:loading wire:target="selecionar">
+            <span class="visually-hidden">Processando...</span>
+        </div>
         <div class="d-none d-lg-block">
             <small class="text-muted d-block" style="font-size: 0.7rem; line-height: 1;">Organização Selecionada</small>
             <span class="fw-bold text-dark">
