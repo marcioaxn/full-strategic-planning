@@ -1,4 +1,4 @@
-<div class="mapa-canvas" wire:key="mapa-v11-{{ $viewMode }}-{{ $organizacaoId }}">
+<div class="mapa-canvas position-relative" wire:key="mapa-v11-{{ $viewMode }}-{{ $organizacaoId }}">
     {{-- Polling discreto --}}
     <div wire:poll.60s="carregarMapa"></div>
 
@@ -69,13 +69,17 @@
             <div class="d-flex justify-content-end mb-4">
                 <div class="view-mode-selector bg-surface border rounded-pill p-1 d-flex shadow-sm">
                     <button wire:click="setViewMode('grouped')" 
-                            class="btn btn-sm rounded-pill px-4 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'grouped' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}">
-                        <i class="bi bi-diagram-3-fill"></i>
+                            class="btn btn-sm rounded-pill px-4 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'grouped' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}"
+                            wire:loading.attr="disabled">
+                        <i class="bi bi-diagram-3-fill" wire:loading.remove wire:target="setViewMode('grouped')"></i>
+                        <div class="spinner-border spinner-border-sm" role="status" wire:loading wire:target="setViewMode('grouped')"></div>
                         <span class="fw-bold small">Agrupado</span>
                     </button>
                     <button wire:click="setViewMode('individual')" 
-                            class="btn btn-sm rounded-pill px-4 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'individual' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}">
-                        <i class="bi bi-geo-alt-fill"></i>
+                            class="btn btn-sm rounded-pill px-4 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'individual' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}"
+                            wire:loading.attr="disabled">
+                        <i class="bi bi-geo-alt-fill" wire:loading.remove wire:target="setViewMode('individual')"></i>
+                        <div class="spinner-border spinner-border-sm" role="status" wire:loading wire:target="setViewMode('individual')"></div>
                         <span class="fw-bold small">Individual</span>
                     </button>
                 </div>

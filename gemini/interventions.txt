@@ -1,8 +1,9 @@
 
-2026-02-02 11:30 - Fix: Corrigido erro "Attempt to read property 'cod_organizacao' on array" em SeletorOrganizacao.php. O método mount tentava acessar a propriedade de objeto em um item que era array. Adicionada verificação is_array para robustez.
+2026-02-02 11:30 - Fix: Corrigido erro "Attempt to read property 'cod_organizacao' on array" em SeletorOrganizacao.php.
 
-2026-02-02 11:45 - Fix: Correção Forense no Mapa Estratégico.
-Contexto: O usuário relatou que a troca de organização não alterava os cálculos do mapa.
-Diagnóstico: As subqueries SQL raw no método `carregarMapa` em `MapaEstrategico.php` não utilizavam os schemas corretos (`performance_indicators` e `action_plan`) para as tabelas de relacionamento. Isso falhava silenciosamente ou impedia a filtragem correta no PostgreSQL.
-Intervenção: Adicionados prefixos de schema nas tabelas `rel_indicador_objetivo_organizacao` e `rel_plano_organizacao`. Melhorada a lógica de fallback no `mount` para priorizar a organização do usuário logado.
-Resultado Esperado: O cálculo agora considera apenas os indicadores vinculados à organização selecionada (e suas filhas, se agrupado).
+2026-02-02 11:45 - Fix: Correção Forense no Mapa Estratégico (Schemas SQL).
+
+2026-02-02 12:05 - UX (Revisado): Implementados estados de carregamento discretos.
+- Navbar: Spinners integrados aos ícones dos seletores de Organização, PEI e Ano.
+- Mapa Estratégico: Spinners internos nos botões de modo de visualização.
+- Nota: Removido overlay global do mapa por ser intrusivo e prejudicar a experiência. Os feedbacks agora são locais e específicos à ação do usuário.
