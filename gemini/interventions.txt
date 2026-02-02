@@ -1,9 +1,2 @@
-O novo erro `View [livewire.partials.mapa-navbar-styles] not found` ocorreu porque a view do mapa estratégico (`mapa-estrategico.blade.php`) estava tentando incluir um arquivo de estilo de um caminho incorreto.
 
-**Análise e Correção:**
-
-1.  **Causa Raiz:** O arquivo `mapa-estrategico.blade.php` chamava `@include('livewire.partials.mapa-navbar-styles')`.
-2.  **Localização Correta:** O arquivo `mapa-navbar-styles.blade.php`, no entanto, está localizado no diretório `resources/views/livewire/pei/partials/`.
-3.  **Ação:** Corrigi o caminho no arquivo `resources/views/livewire/pei/mapa-estrategico.blade.php` para `@include('livewire.pei.partials.mapa-navbar-styles')`.
-
-Isso provavelmente ocorreu durante uma refatoração anterior, onde os arquivos foram movidos, mas este caminho específico não foi atualizado. O problema está resolvido. A página deve carregar sem erros agora.
+2026-02-02 11:30 - Fix: Corrigido erro "Attempt to read property 'cod_organizacao' on array" em SeletorOrganizacao.php. O método mount tentava acessar a propriedade de objeto em um item que era array. Adicionada verificação is_array para robustez.
