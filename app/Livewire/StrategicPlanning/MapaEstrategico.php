@@ -86,11 +86,11 @@ class MapaEstrategico extends Component
             ->with(['objetivos' => function($query) use ($orgIds) {
                 $query->with(['indicadores' => function($qInd) use ($orgIds) {
                     $qInd->whereHas('organizacoes', function($q) use ($orgIds) {
-                        $q->whereIn('cod_organizacao', $orgIds);
+                        $q->whereIn('tab_organizacoes.cod_organizacao', $orgIds);
                     });
                 }, 'planosAcao' => function($qPlan) use ($orgIds) {
                     $qPlan->whereHas('organizacoes', function($q) use ($orgIds) {
-                        $q->whereIn('cod_organizacao', $orgIds);
+                        $q->whereIn('tab_organizacoes.cod_organizacao', $orgIds);
                     });
                 }])->ordenadoPorNivel();
             }])
