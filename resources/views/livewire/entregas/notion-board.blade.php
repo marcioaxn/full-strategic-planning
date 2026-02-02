@@ -5,8 +5,8 @@
             <div class="d-flex align-items-center gap-2 mb-2">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('planos.index') }}" class="text-decoration-none">Planos de Ação</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('planos.index') }}" wire:navigate class="text-decoration-none">Planos de Ação</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Entregas</li>
                     </ol>
                 </nav>

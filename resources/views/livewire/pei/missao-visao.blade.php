@@ -4,7 +4,7 @@
             <div>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-1">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
                         <li class="breadcrumb-item active" aria-current="page">PEI</li>
                     </ol>
                 </nav>
@@ -121,7 +121,7 @@
                             </div>
                             <h4 class="mb-0 fw-bold">Valores Organizacionais</h4>
                         </div>
-                        <a href="{{ route('pei.valores') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                        <a href="{{ route('pei.valores') }}" wire:navigate class="btn btn-outline-secondary btn-sm rounded-pill px-3">
                             Gerenciar <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>
