@@ -155,7 +155,7 @@
                         <div class="text-center py-4">
                             <i class="bi bi-exclamation-circle text-muted fs-1 d-block mb-2"></i>
                             <p class="text-muted">Nenhuma identidade estratégica definida.</p>
-                            <a href="{{ route('pei.index') }}" class="btn btn-sm btn-outline-primary">Definir Missão e Visão</a>
+                            <a href="{{ route('pei.index') }}" wire:navigate class="btn btn-sm btn-outline-primary">Definir Missão e Visão</a>
                         </div>
                     @endforelse
                 </div>
@@ -190,7 +190,7 @@
                     @else
                         <div class="text-center py-4">
                             <p class="text-muted mb-0">Nenhum valor cadastrado.</p>
-                            <a href="{{ route('pei.valores') }}" class="btn btn-link btn-sm">Gerenciar Valores</a>
+                            <a href="{{ route('pei.valores') }}" wire:navigate class="btn btn-link btn-sm">Gerenciar Valores</a>
                         </div>
                     @endif
                 </div>
