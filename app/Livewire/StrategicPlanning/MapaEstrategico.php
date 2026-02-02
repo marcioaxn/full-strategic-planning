@@ -53,9 +53,15 @@ class MapaEstrategico extends Component
         $this->viewMode = Session::get('mapa_view_mode', 'grouped');
 
         if (!$this->organizacaoId) {
-            $orgRaiz = Organization::whereColumn('cod_organizacao', 'rel_cod_organizacao')->first() 
-                       ?? Organization::orderBy('sgl_organizacao')->first();
-            $this->organizacaoId = $orgRaiz?->cod_organizacao;
+            // Tenta obter a organização do usuário logado
+            if (Auth::check() && Auth::user()->cod_organizacao) {
+                $this->organizacaoId = Auth::user()->cod_organizacao;
+            } else {
+                // Fallback para raiz
+                $orgRaiz = Organization::whereColumn('cod_organizacao', 'rel_cod_organizacao')->first() 
+                           ?? Organization::orderBy('sgl_organizacao')->first();
+                $this->organizacaoId = $orgRaiz?->cod_organizacao;
+            }
         }
         $this->carregarPEI();
     }
@@ -101,13 +107,13 @@ class MapaEstrategico extends Component
                 $query->with(['indicadores' => function($qInd) use ($orgIds) {
                     $qInd->whereIn('tab_indicador.cod_indicador', function($sub) use ($orgIds) {
                         $sub->select('cod_indicador')
-                            ->from('rel_indicador_objetivo_organizacao')
+                            ->from('performance_indicators.rel_indicador_objetivo_organizacao')
                             ->whereIn('cod_organizacao', $orgIds);
                     });
                 }, 'planosAcao' => function($qPlan) use ($orgIds) {
                     $qPlan->whereIn('tab_plano_de_acao.cod_plano_de_acao', function($sub) use ($orgIds) {
                         $sub->select('cod_plano_de_acao')
-                            ->from('rel_plano_organizacao')
+                            ->from('action_plan.rel_plano_organizacao')
                             ->whereIn('cod_organizacao', $orgIds);
                     });
                 }])->ordenadoPorNivel();
