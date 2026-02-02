@@ -17,19 +17,25 @@
             {{ __('Unidades Organizacionais') }}
         </li>
         @forelse($organizacoes as $org)
+            @php 
+                $id = is_array($org) ? $org['id'] : $org->cod_organizacao;
+                $label = is_array($org) ? $org['label'] : $org->sgl_organizacao . ' - ' . $org->nom_organizacao;
+                $sgl = is_array($org) ? explode(' - ', $org['label'])[0] : $org->sgl_organizacao;
+                // Remove espaços de indentação para a sigla do avatar
+                $sglClean = trim(str_replace([' ', '↳'], '', $sgl));
+            @endphp
             <li>
                 <button type="button" 
-                        class="dropdown-item d-flex align-items-center py-2 {{ $selecionadaId === $org->cod_organizacao ? 'active' : '' }}" 
-                        wire:click="selecionar('{{ $org->cod_organizacao }}')">
-                    <div class="avatar-org-sm me-3 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.8rem;">
-                        {{ substr($org->sgl_organizacao, 0, 2) }}
+                        class="dropdown-item d-flex align-items-center py-2 {{ $selecionadaId === $id ? 'active' : '' }}" 
+                        wire:click="selecionar('{{ $id }}')">
+                    <div class="avatar-org-sm me-3 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.8rem; flex-shrink: 0;">
+                        {{ substr($sglClean, 0, 2) }}
                     </div>
-                    <div>
-                        <span class="d-block fw-semibold">{{ $org->sgl_organizacao }}</span>
-                        <small class="text-muted d-block text-truncate" style="max-width: 150px;">{{ $org->nom_organizacao }}</small>
+                    <div class="text-truncate">
+                        <span class="d-block fw-semibold text-truncate" style="max-width: 280px;">{!! $label !!}</span>
                     </div>
-                    @if($selecionadaId === $org->cod_organizacao)
-                        <i class="bi bi-check-lg ms-auto text-white"></i>
+                    @if($selecionadaId === $id)
+                        <i class="bi bi-check-lg ms-auto {{ $selecionadaId === $id ? 'text-white' : 'text-primary' }}"></i>
                     @endif
                 </button>
             </li>

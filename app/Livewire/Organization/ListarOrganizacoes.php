@@ -104,7 +104,7 @@ class ListarOrganizacoes extends Component
         return [
             'form.sgl_organizacao' => ['required', 'string', 'max:20'],
             'form.nom_organizacao' => ['required', 'string', 'max:255'],
-            'form.rel_cod_organizacao' => ['nullable', 'exists:organization.tab_organizacoes,cod_organizacao'],
+            'form.rel_cod_organizacao' => ['nullable', 'exists:tab_organizacoes,cod_organizacao'],
         ];
     }
 
