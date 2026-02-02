@@ -121,6 +121,40 @@ class Organization extends Model
     }
 
     /**
+     * Retorna a lista de organizações formatada para seletores, respeitando a hierarquia.
+     */
+    public static function getTreeForSelector(?string $excludeId = null, $parentId = null, $level = 0): array
+    {
+        $query = self::query();
+        
+        if ($parentId === null) {
+            // Inicia pelas raízes
+            $query->whereColumn('cod_organizacao', 'rel_cod_organizacao');
+        } else {
+            $query->where('rel_cod_organizacao', $parentId)
+                  ->where('cod_organizacao', '!=', $parentId);
+        }
+
+        if ($excludeId) {
+            $query->where('cod_organizacao', '!=', $excludeId);
+        }
+
+        $results = [];
+        foreach ($query->orderBy('nom_organizacao')->get() as $org) {
+            $results[] = [
+                'id' => $org->cod_organizacao,
+                'label' => str_repeat('   ', $level) . ($level > 0 ? '↳ ' : '') . $org->sgl_organizacao . ' - ' . $org->nom_organizacao,
+                'level' => $level
+            ];
+            
+            // Busca filhos recursivamente
+            $results = array_merge($results, self::getTreeForSelector($excludeId, $org->cod_organizacao, $level + 1));
+        }
+
+        return $results;
+    }
+
+    /**
      * Verifica se é organização raiz (auto-referenciada ou pai nulo)
      */
     public function isRaiz(): bool
