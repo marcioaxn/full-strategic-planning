@@ -6,22 +6,40 @@
         <x-slot name="header">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-1">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none" wire:navigate>Dashboard</a></li>
-                            <li class="breadcrumb-item active opacity-75" aria-current="page">Mapa Estratégico</li>
-                        </ol>
-                    </nav>
-                    <h2 class="h4 fw-bold mb-0 text-body">Mapa Estratégico Institucional</h2>
-                </div>
-                <div class="text-end">
-                    <span class="badge bg-surface text-primary border shadow-sm px-3 py-2 rounded-pill">
-                        <i class="bi bi-calendar3 me-2"></i>Ciclo: {{ $peiAtivo?->dsc_pei ?? 'N/A' }}
-                    </span>
-                </div>
-            </div>
-        </x-slot>
-    @endauth
+                                    <nav aria-label="breadcrumb">
+                                        <ol class="breadcrumb mb-1">
+                                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none" wire:navigate>Dashboard</a></li>
+                                            <li class="breadcrumb-item active opacity-75" aria-current="page">Mapa Estratégico</li>
+                                        </ol>
+                                    </nav>
+                                    <h2 class="h4 fw-bold mb-0 text-body">Mapa Estratégico Institucional</h2>
+                                </div>
+                                
+                                <div class="d-flex align-items-center gap-3">
+                                    {{-- Seletor de Roll-up (Hierarquia) --}}
+                                    <div class="view-mode-selector bg-surface border rounded-pill p-1 d-flex shadow-sm">
+                                        <button wire:click="toggleViewMode" 
+                                                class="btn btn-sm rounded-pill px-3 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'grouped' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}"
+                                                title="Consolidar dados da unidade e todos os seus descendentes">
+                                            <i class="bi bi-diagram-3-fill"></i>
+                                            <span class="d-none d-md-inline fw-bold small">Agrupado</span>
+                                        </button>
+                                        <button wire:click="toggleViewMode" 
+                                                class="btn btn-sm rounded-pill px-3 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'individual' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}"
+                                                title="Mostrar apenas dados exclusivos desta unidade">
+                                            <i class="bi bi-geo-alt-fill"></i>
+                                            <span class="d-none d-md-inline fw-bold small">Individual</span>
+                                        </button>
+                                    </div>
+                    
+                                    <div class="text-end border-start ps-3">
+                                        <span class="badge bg-surface text-primary border shadow-sm px-3 py-2 rounded-pill">
+                                            <i class="bi bi-calendar3 me-2"></i>Ciclo: {{ $peiAtivo?->dsc_pei ?? 'N/A' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </x-slot>    @endauth
 
     @if(!$peiAtivo)
         <div class="container py-5">
