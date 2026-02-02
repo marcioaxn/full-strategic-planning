@@ -1,9 +1,9 @@
-<div class="mapa-canvas" wire:key="mapa-view-{{ $viewMode }}-{{ $organizacaoId }}">
+<div class="mapa-canvas" wire:key="mapa-v11-{{ $viewMode }}-{{ $organizacaoId }}">
     {{-- Polling discreto --}}
     <div wire:poll.60s="carregarMapa"></div>
 
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center" x-data>
+        <div class="d-flex justify-content-between align-items-center">
             <div>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-1">
@@ -16,18 +16,17 @@
             </div>
 
             <div class="d-flex align-items-center gap-3">
-                {{-- Seletor de Roll-up - Usando dispatch para garantir comunicação entre slots --}}
-                <div class="view-mode-selector bg-body border rounded-pill p-1 d-flex shadow-sm">
-                    <button @click="$dispatch('triggerViewMode', { mode: 'grouped' })" 
-                            class="btn btn-sm rounded-pill px-3 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'grouped' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}">
-                        <i class="bi bi-diagram-3-fill"></i>
-                        <span class="d-none d-md-inline fw-bold small">Agrupado</span>
-                    </button>
-                    <button @click="$dispatch('triggerViewMode', { mode: 'individual' })" 
-                            class="btn btn-sm rounded-pill px-3 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'individual' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}">
-                        <i class="bi bi-geo-alt-fill"></i>
-                        <span class="d-none d-md-inline fw-bold small">Individual</span>
-                    </button>
+                {{-- STATUS DE CONSOLIDAÇÃO --}}
+                <div class="d-none d-lg-block">
+                    @if($viewMode === 'grouped')
+                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3 py-2">
+                            <i class="bi bi-diagram-3-fill me-1"></i> Consolidando {{ $qtdUnidadesConsolidadas }} unidades
+                        </span>
+                    @else
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-opacity-25 rounded-pill px-3 py-2">
+                            <i class="bi bi-geo-alt-fill me-1"></i> Apenas esta unidade
+                        </span>
+                    @endif
                 </div>
 
                 <div class="text-end border-start ps-3">
@@ -40,31 +39,46 @@
     </x-slot>
 
     @if(!$peiAtivo)
-        <div class="container py-5">
-            <div class="alert alert-modern alert-danger shadow-sm border-0 d-flex align-items-center p-4">
-                <i class="bi bi-exclamation-octagon fs-2 me-4 text-danger"></i>
-                <div>
-                    <h5 class="alert-heading fw-bold mb-1 text-danger">Nenhum PEI Ativo</h5>
-                    <p class="mb-0 text-body">Configure um ciclo ativo para visualizar o mapa.</p>
-                </div>
+        <div class="container py-5 text-center">
+            <div class="alert alert-modern alert-warning d-inline-block p-4 shadow-sm">
+                <i class="bi bi-exclamation-triangle fs-2 d-block mb-2"></i>
+                <h5 class="fw-bold">Nenhum PEI Ativo</h5>
+                <p class="mb-0">Selecione ou configure um ciclo estratégico para carregar o mapa.</p>
             </div>
         </div>
     @else
-        <div class="container-fluid px-lg-5 py-4 animate-fade-in" wire:loading.class="opacity-50">
-            {{-- Título Organizacional Central --}}
-            <div class="text-center mb-5 mt-2">
-                <h5 class="fw-bold text-uppercase letter-spacing-2 text-muted-custom mb-2">Estrutura Estratégica</h5>
+        <div class="container-fluid px-lg-5 py-4">
+            
+            {{-- Título Centralizado --}}
+            <div class="text-center mb-5 mt-2 animate-fade-in">
+                <h5 class="fw-bold text-uppercase letter-spacing-2 text-muted-custom mb-2">Mapa Estratégico</h5>
                 <h3 class="fw-bold text-body-emphasis letter-spacing-1">{{ $organizacaoNome }}</h3>
                 <div class="divider-center"></div>
                 @if($viewMode === 'grouped')
                     <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3 py-2 mt-2">
-                        <i class="bi bi-diagram-3 me-1"></i> Visualização Consolidada (Unidade + Descendentes)
+                        <i class="bi bi-diagram-3-fill me-1"></i> Visualização Consolidada (Unidade + Descendentes)
                     </span>
                 @else
                     <span class="badge bg-secondary bg-opacity-10 text-secondary border border-opacity-25 rounded-pill px-3 py-2 mt-2">
                         <i class="bi bi-geo-alt me-1"></i> Visualização Estrita (Apenas Unidade Selecionada)
                     </span>
                 @endif
+            </div>
+
+            {{-- TOOLBAR PREMIUM (FORA DO SLOT PARA FUNCIONAR O WIRE:CLICK) --}}
+            <div class="d-flex justify-content-end mb-4">
+                <div class="view-mode-selector bg-surface border rounded-pill p-1 d-flex shadow-sm">
+                    <button wire:click="setViewMode('grouped')" 
+                            class="btn btn-sm rounded-pill px-4 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'grouped' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}">
+                        <i class="bi bi-diagram-3-fill"></i>
+                        <span class="fw-bold small">Agrupado</span>
+                    </button>
+                    <button wire:click="setViewMode('individual')" 
+                            class="btn btn-sm rounded-pill px-4 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'individual' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <span class="fw-bold small">Individual</span>
+                    </button>
+                </div>
             </div>
 
             <!-- ========== IDENTIDADE ESTRATÉGICA ========== -->
@@ -169,8 +183,8 @@
                                                         <a wire:navigate href="{{ route('indicadores.index') }}?filtroObjetivo={{ $objetivo['cod_objetivo'] }}" 
                                                            class="text-decoration-none indicador-link" @auth onclick="event.stopPropagation();" @endauth>
                                                             <div class="d-flex justify-content-between mb-1 align-items-center">
-                                                                <span class="stat-label-modern">Indicadores</span>
-                                                                <span class="stat-value-modern" style="color: {{ $ind['cor'] }};">@brazil_percent($ind['percentual'], 1) ({{ $ind['quantidade'] }})</span>
+                                                                <span class="stat-label-modern">KPIs</span>
+                                                                <span class="stat-value-modern" style="color: {{ $ind['cor'] }};">@brazil_percent($ind['percentual'], 1)</span>
                                                             </div>
                                                             <div class="stat-progress-container bg-light-custom">
                                                                 <div class="stat-progress-fill" style="width: {{ min($ind['percentual'], 100) }}%; background-color: {{ $ind['cor'] }};"></div>
@@ -209,14 +223,14 @@
             </div>
 
             {{-- Legenda Refinada --}}
-            <div class="legenda-wrapper mt-5 mb-4">
-                <div class="d-flex flex-column gap-3 px-4 py-3 rounded-4 shadow-sm bg-body border">
+            <div class="legenda-wrapper mt-5 mb-4 text-center">
+                <div class="d-inline-flex flex-column gap-3 px-5 py-3 rounded-4 shadow-sm bg-body border">
                     <div class="d-flex align-items-center justify-content-center flex-wrap gap-4">
-                        <span class="small fw-bold text-muted text-uppercase letter-spacing-1">Desempenho (KPIs):</span>
+                        <span class="small fw-bold text-muted text-uppercase letter-spacing-1">Graus de Satisfação:</span>
                         @foreach($grausSatisfacao as $grau)
                             <div class="d-flex align-items-center">
                                 <span class="legenda-color-dot me-2 shadow-sm" style="background-color: {{ $grau->cor }};"></span>
-                                <small class="text-body fw-medium">{{ $grau->dsc_grau_satisfacao }} <span class="text-muted fw-normal" style="font-size: 0.9rem;">( @brazil_number($grau->vlr_minimo, 2) - @brazil_percent($grau->vlr_maximo, 2) )</span></small>
+                                <small class="text-body fw-medium">{{ $grau->dsc_grau_satisfacao }} <span class="text-muted fw-normal" style="font-size: 0.8rem;">({{ number_format($grau->vlr_minimo, 0) }}-{{ number_format($grau->vlr_maximo, 0) }}%)</span></small>
                             </div>
                         @endforeach
                     </div>
@@ -279,11 +293,15 @@
                             </table>
                         </div>
                     </div>
-                    <div class="modal-footer border-0 p-4 pt-0">
-                        <button type="button" class="btn btn-secondary px-4 rounded-pill fw-bold" wire:click="fecharMemoriaCalculo">Fechar</button>
+                    <div class="modal-footer border-0 p-4 pt-0 text-center">
+                        <button type="button" class="btn btn-secondary px-5 rounded-pill fw-bold" wire:click="fecharMemoriaCalculo">Fechar Memória</button>
                     </div>
                 </div>
             </div>
         </div>
     @endif
+
+    <style>
+        .divider-left { width: 40px; height: 4px; background: var(--bs-primary); margin-top: 8px; border-radius: 10px; opacity: 0.4; }
+    </style>
 </div>

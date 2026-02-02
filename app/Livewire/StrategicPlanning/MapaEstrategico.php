@@ -26,6 +26,7 @@ class MapaEstrategico extends Component
     public $valores = [];
     public $temasNorteadores = [];
     public $grausSatisfacao = [];
+    public $qtdUnidadesConsolidadas = 1;
     
     public string $viewMode = 'grouped'; 
 
@@ -43,8 +44,7 @@ class MapaEstrategico extends Component
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
         'peiSelecionado' => 'atualizarPEI',
-        'anoSelecionado' => '$refresh',
-        'triggerViewMode' => 'switchViewMode' // Ouvinte para cliques no header
+        'anoSelecionado' => '$refresh'
     ];
 
     public function mount()
@@ -60,51 +60,28 @@ class MapaEstrategico extends Component
         $this->carregarPEI();
     }
 
-    public function atualizarAno($ano)
+    public function setViewMode($mode)
     {
-        $this->carregarMapa();
+        $this->viewMode = $mode;
+        Session::put('mapa_view_mode', $mode);
+        // O carregarMapa() dentro do render garantirá o resto
     }
 
-    public function atualizarOrganizacao($id)
-    {
-        $this->organizacaoId = $id;
-        $this->carregarMapa();
-        $this->carregarIdentidadeEstrategica();
-    }
-
-    public function atualizarPEI($id)
-    {
-        $this->peiAtivo = PEI::find($id);
-        $this->carregarMapa();
-        $this->carregarIdentidadeEstrategica();
-    }
+    public function atualizarOrganizacao($id) { $this->organizacaoId = $id; }
+    public function atualizarPEI($id) { $this->peiAtivo = PEI::find($id); }
 
     private function carregarPEI()
     {
         $peiId = Session::get('pei_selecionado_id');
-
-        if ($peiId) {
-            $this->peiAtivo = PEI::find($peiId);
-        }
-
-        if (!$this->peiAtivo) {
-            $this->peiAtivo = PEI::ativos()->first();
-        }
-    }
-
-    public function switchViewMode($mode)
-    {
-        // Se vier do Alpine $dispatch, o $mode pode ser um array
-        $newMode = is_array($mode) ? ($mode['mode'] ?? $mode[0] ?? 'grouped') : $mode;
-        
-        $this->viewMode = $newMode;
-        Session::put('mapa_view_mode', $newMode);
-        $this->carregarMapa();
+        $this->peiAtivo = $peiId ? PEI::find($peiId) : PEI::ativos()->first();
     }
 
     public function carregarMapa()
     {
         if (!$this->peiAtivo || !$this->organizacaoId) return;
+
+        // Recupera do estado atual
+        $this->viewMode = Session::get('mapa_view_mode', $this->viewMode);
 
         // IDs para o Roll-up
         $orgIds = [$this->organizacaoId];
@@ -114,19 +91,24 @@ class MapaEstrategico extends Component
                 $orgIds = $org->getDescendantsAndSelfIds();
             }
         }
+        $this->qtdUnidadesConsolidadas = count($orgIds);
 
         $this->grausSatisfacao = GrauSatisfacao::orderBy('vlr_minimo')->get();
 
-        // Reversão para whereHas qualificado (Método anterior estável)
+        // Query direta via JOIN/Exists para máxima precisão e performance
         $this->perspectivas = Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
             ->with(['objetivos' => function($query) use ($orgIds) {
                 $query->with(['indicadores' => function($qInd) use ($orgIds) {
-                    $qInd->whereHas('organizacoes', function($q) use ($orgIds) {
-                        $q->whereIn('tab_organizacoes.cod_organizacao', $orgIds);
+                    $qInd->whereIn('tab_indicador.cod_indicador', function($sub) use ($orgIds) {
+                        $sub->select('cod_indicador')
+                            ->from('rel_indicador_objetivo_organizacao')
+                            ->whereIn('cod_organizacao', $orgIds);
                     });
                 }, 'planosAcao' => function($qPlan) use ($orgIds) {
-                    $qPlan->whereHas('organizacoes', function($q) use ($orgIds) {
-                        $q->whereIn('tab_organizacoes.cod_organizacao', $orgIds);
+                    $qPlan->whereIn('tab_plano_de_acao.cod_plano_de_acao', function($sub) use ($orgIds) {
+                        $sub->select('cod_plano_de_acao')
+                            ->from('rel_plano_organizacao')
+                            ->whereIn('cod_organizacao', $orgIds);
                     });
                 }])->ordenadoPorNivel();
             }])
@@ -189,6 +171,18 @@ class MapaEstrategico extends Component
     }
 
     public function getCoresPerspectiva($nivel): array { return $this->coresPerspectivas[$nivel] ?? $this->coresPerspectivas[1]; }
+
+    public function abrirMemoriaCalculo($index)
+    {
+        $p = $this->perspectivas[$index];
+        $this->detalhesCalculo = [
+            'titulo' => $p['dsc_perspectiva'], 'media' => $p['atingimento_medio'],
+            'cor' => $p['cor_satisfacao'], 'indicadores' => $p['memoria_indicadores']
+        ];
+        $this->showCalcModal = true;
+    }
+
+    public function fecharMemoriaCalculo() { $this->showCalcModal = false; }
 
     public function render()
     {
