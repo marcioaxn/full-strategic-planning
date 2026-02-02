@@ -25,6 +25,7 @@ class MapaEstrategico extends Component
     public $valores = [];
     public $temasNorteadores = [];
     public $grausSatisfacao = [];
+    public string $viewMode = 'grouped'; // 'individual' ou 'grouped'
 
     // Propriedades para Modal de Memória de Cálculo
     public bool $showCalcModal = false;
@@ -47,67 +48,59 @@ class MapaEstrategico extends Component
 
     public function mount()
     {
-        // Tenta obter da sessão primeiro (funciona para logados e visitantes)
+        // Tenta obter da sessão primeiro
         $this->organizacaoId = Session::get('organizacao_selecionada_id');
 
-        // Se não houver na sessão, busca a primeira organização do banco como padrão
+        // Se não houver na sessão, busca a organização RAIZ como padrão global
         if (!$this->organizacaoId) {
-            $primeiraOrg = Organization::orderBy('sgl_organizacao')->first();
-            $this->organizacaoId = $primeiraOrg?->cod_organizacao;
+            $orgRaiz = Organization::whereColumn('cod_organizacao', 'rel_cod_organizacao')->first() 
+                       ?? Organization::orderBy('sgl_organizacao')->first();
+            
+            $this->organizacaoId = $orgRaiz?->cod_organizacao;
             
             if ($this->organizacaoId) {
                 Session::put('organizacao_selecionada_id', $this->organizacaoId);
-                Session::put('organizacao_selecionada_sgl', $primeiraOrg->sgl_organizacao);
+                Session::put('organizacao_selecionada_sgl', $orgRaiz->sgl_organizacao);
             }
         }
 
         $this->carregarPEI();
     }
 
-    public function atualizarAno($ano)
+    public function toggleViewMode()
     {
-        // Recarrega os dados do mapa para o novo ano
-    }
-
-    public function atualizarOrganizacao($id)
-    {
-        $this->organizacaoId = $id;
-    }
-
-    public function atualizarPEI($id)
-    {
-        $this->peiAtivo = PEI::find($id);
-    }
-
-    private function carregarPEI()
-    {
-        $peiId = Session::get('pei_selecionado_id');
-
-        if ($peiId) {
-            $this->peiAtivo = PEI::find($peiId);
-        }
-
-        if (!$this->peiAtivo) {
-            $this->peiAtivo = PEI::ativos()->first();
-        }
-    }
-
-    public function carregarGrausSatisfacao()
-    {
-        $this->grausSatisfacao = GrauSatisfacao::orderBy('vlr_minimo')->get();
+        $this->viewMode = $this->viewMode === 'grouped' ? 'individual' : 'grouped';
     }
 
     public function carregarMapa()
     {
         if (!$this->peiAtivo) return;
 
+        // Obter lista de IDs de organizações para o filtro (Roll-up)
+        $orgIds = [$this->organizacaoId];
+        if ($this->viewMode === 'grouped' && $this->organizacaoId) {
+            $org = Organization::find($this->organizacaoId);
+            if ($org) {
+                $orgIds = $org->getDescendantsAndSelfIds();
+            }
+        }
+
         $this->perspectivas = Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
-            ->with(['objetivos' => function($query) {
-                $query->with(['indicadores', 'planosAcao'])->ordenadoPorNivel();
+            ->with(['objetivos' => function($query) use ($orgIds) {
+                $query->with(['indicadores' => function($qInd) use ($orgIds) {
+                    // Filtra indicadores pelas organizações do Roll-up via relacionamento many-to-many
+                    $qInd->whereHas('organizacoes', function($qOrg) use ($orgIds) {
+                        $qOrg->whereIn('organization.tab_organizacoes.cod_organizacao', $orgIds);
+                    });
+                }, 'planosAcao' => function($qPlan) use ($orgIds) {
+                    // Filtra planos de ação pelas organizações do Roll-up
+                    $qPlan->whereIn('cod_organizacao', $orgIds);
+                }])->ordenadoPorNivel();
             }])
             ->orderBy('num_nivel_hierarquico_apresentacao', 'desc')
             ->get()
             ->map(function($p) {
+                // ... lógica de mapeamento ...
                 $somaPersp = 0;
                 $contPersp = 0;
                 $listaIndicadoresMemoria = [];

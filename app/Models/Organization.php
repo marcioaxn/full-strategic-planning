@@ -106,17 +106,22 @@ class Organization extends Model
      */
 
     /**
-     * Obter toda a hierarquia (esta organização + filhas recursivamente)
+     * Obter IDs de toda a hierarquia (esta organização + descendentes recursivamente)
+     * Otimizado para evitar múltiplas queries usando recursão direta.
      */
-    public function obterHierarquia()
+    public function getDescendantsAndSelfIds(): array
     {
-        return collect([$this])->merge(
-            $this->filhas()->with('filhas')->get()->flatMap(fn($f) => $f->obterHierarquia())
-        );
+        $ids = [$this->cod_organizacao];
+        
+        foreach ($this->filhas()->where('cod_organizacao', '!=', $this->cod_organizacao)->get() as $filha) {
+            $ids = array_merge($ids, $filha->getDescendantsAndSelfIds());
+        }
+        
+        return array_unique($ids);
     }
 
     /**
-     * Verifica se é organização raiz (auto-referenciada)
+     * Verifica se é organização raiz (auto-referenciada ou pai nulo)
      */
     public function isRaiz(): bool
     {
