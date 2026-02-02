@@ -106,6 +106,10 @@ class MapaEstrategico extends Component
         if (in_array($mode, ['grouped', 'individual'])) {
             $this->viewMode = $mode;
             $this->carregarMapa();
+            $this->dispatch('notify', [
+                'message' => 'Modo de visualização: ' . ($mode === 'grouped' ? 'Agrupado' : 'Individual'),
+                'style' => 'info'
+            ]);
         }
     }
 
@@ -130,8 +134,8 @@ class MapaEstrategico extends Component
         $this->perspectivas = Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
             ->with(['objetivos' => function($query) use ($orgIds) {
                 $query->with(['indicadores' => function($qInd) use ($orgIds) {
-                    $qInd->whereHas('organizacoes', function($qOrg) use ($orgIds) {
-                        $qOrg->whereIn('tab_organizacoes.cod_organizacao', $orgIds);
+                    $qInd->whereHas('organizacoes', function($q) use ($orgIds) {
+                        $q->whereIn('tab_organizacoes.cod_organizacao', $orgIds);
                     });
                 }, 'planosAcao' => function($qPlan) use ($orgIds) {
                     $qPlan->whereIn('cod_organizacao', $orgIds);
@@ -144,7 +148,7 @@ class MapaEstrategico extends Component
                 $contPersp = 0;
                 $listaIndicadoresMemoria = [];
 
-                $p->objetivos->map(function($obj) use (&$somaPersp, &$contPersp, &$listaIndicadoresMemoria) {
+                foreach ($p->objetivos as $obj) {
                     $indicadores = $obj->indicadores;
                     $totalInd = $indicadores->count();
                     $somaAtingObj = 0;
@@ -191,9 +195,7 @@ class MapaEstrategico extends Component
                         'percentual' => round($percentualPlanos, 1),
                         'cor' => $corPlano
                     ];
-
-                    return $obj;
-                });
+                }
                 
                 $atingimentoPersp = $contPersp > 0 ? round($somaPersp / $contPersp, 1) : 0;
                 
