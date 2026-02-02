@@ -1,26 +1,43 @@
-<div class="mapa-canvas" wire:poll.30s wire:key="mapa-view-{{ $viewMode }}-{{ $organizacaoId }}">
-    
-    <div class="container-fluid px-lg-5 py-3">
-        <div class="d-flex justify-content-end mb-4 animate-fade-in">
-            {{-- Seletor de Roll-up (Hierarquia) - Agora dentro do escopo reativo --}}
-            <div class="view-mode-selector bg-surface border rounded-pill p-1 d-flex shadow-sm" wire:key="view-mode-selector-{{ $viewMode }}">
-                <button wire:click="switchViewMode('grouped')" 
-                        wire:loading.attr="disabled"
-                        class="btn btn-sm rounded-pill px-3 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'grouped' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}"
-                        title="Consolidar dados da unidade e todos os seus descendentes">
-                    <i class="bi bi-diagram-3-fill"></i>
-                    <span class="d-none d-md-inline fw-bold small">Agrupado</span>
-                </button>
-                <button wire:click="switchViewMode('individual')" 
-                        wire:loading.attr="disabled"
-                        class="btn btn-sm rounded-pill px-3 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'individual' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}"
-                        title="Mostrar apenas dados exclusivos desta unidade">
-                    <i class="bi bi-geo-alt-fill"></i>
-                    <span class="d-none d-md-inline fw-bold small">Individual</span>
-                </button>
+<div class="mapa-canvas" wire:key="mapa-view-{{ $viewMode }}-{{ $organizacaoId }}">
+    {{-- Polling discreto --}}
+    <div wire:poll.60s="carregarMapa"></div>
+
+    <x-slot name="header">
+        <div class="d-flex justify-content-between align-items-center" x-data>
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1">
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none" wire:navigate>Dashboard</a></li>
+                        <li class="breadcrumb-item active opacity-75" aria-current="page">Mapa Estratégico</li>
+                    </ol>
+                </nav>
+                <h2 class="h4 fw-bold mb-0 text-body">Mapa Estratégico Institucional</h2>
+                <p class="text-muted small mb-0"><i class="bi bi-building me-1"></i>{{ $organizacaoNome }}</p>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                {{-- Seletor de Roll-up - Usando dispatch para garantir comunicação entre slots --}}
+                <div class="view-mode-selector bg-body border rounded-pill p-1 d-flex shadow-sm">
+                    <button @click="$dispatch('triggerViewMode', { mode: 'grouped' })" 
+                            class="btn btn-sm rounded-pill px-3 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'grouped' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}">
+                        <i class="bi bi-diagram-3-fill"></i>
+                        <span class="d-none d-md-inline fw-bold small">Agrupado</span>
+                    </button>
+                    <button @click="$dispatch('triggerViewMode', { mode: 'individual' })" 
+                            class="btn btn-sm rounded-pill px-3 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'individual' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <span class="d-none d-md-inline fw-bold small">Individual</span>
+                    </button>
+                </div>
+
+                <div class="text-end border-start ps-3">
+                    <span class="badge bg-body text-primary border shadow-sm px-3 py-2 rounded-pill">
+                        <i class="bi bi-calendar3 me-2"></i>Ciclo: {{ $peiAtivo?->dsc_pei ?? 'N/A' }}
+                    </span>
+                </div>
             </div>
         </div>
-    </div>
+    </x-slot>
 
     @if(!$peiAtivo)
         <div class="container py-5">
@@ -28,25 +45,30 @@
                 <i class="bi bi-exclamation-octagon fs-2 me-4 text-danger"></i>
                 <div>
                     <h5 class="alert-heading fw-bold mb-1 text-danger">Nenhum PEI Ativo</h5>
-                    <p class="mb-0 text-body">Não foi possível carregar o mapa estratégico pois não há um ciclo ativo configurado.</p>
+                    <p class="mb-0 text-body">Configure um ciclo ativo para visualizar o mapa.</p>
                 </div>
             </div>
         </div>
     @else
-        <div class="container-fluid px-lg-5 py-3 mb-0 pb-0">
-            <!-- Título Organizacional -->
-            <div class="text-center mb-4 mt-2">
-                <h5 class="fw-bold text-uppercase letter-spacing-2 text-muted-custom mb-3">
-                    Mapa Estratégico
-                </h5>
-                <h5 class="fw-bold text-uppercase letter-spacing-2 text-muted-custom">
-                    <i class="bi bi-building me-2"></i>{{ $organizacaoNome }}
-                </h5>
+        <div class="container-fluid px-lg-5 py-4 animate-fade-in" wire:loading.class="opacity-50">
+            {{-- Título Organizacional Central --}}
+            <div class="text-center mb-5 mt-2">
+                <h5 class="fw-bold text-uppercase letter-spacing-2 text-muted-custom mb-2">Estrutura Estratégica</h5>
+                <h3 class="fw-bold text-body-emphasis letter-spacing-1">{{ $organizacaoNome }}</h3>
                 <div class="divider-center"></div>
+                @if($viewMode === 'grouped')
+                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3 py-2 mt-2">
+                        <i class="bi bi-diagram-3 me-1"></i> Visualização Consolidada (Unidade + Descendentes)
+                    </span>
+                @else
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-opacity-25 rounded-pill px-3 py-2 mt-2">
+                        <i class="bi bi-geo-alt me-1"></i> Visualização Estrita (Apenas Unidade Selecionada)
+                    </span>
+                @endif
             </div>
 
             <!-- ========== IDENTIDADE ESTRATÉGICA ========== -->
-            <div class="row g-4 mb-4">
+            <div class="row g-4 mb-5">
                 <div class="col-md-4">
                     <div class="identity-box shadow-sm border h-100">
                         <div class="d-flex align-items-center mb-3">
@@ -73,7 +95,7 @@
                         </div>
                         <div class="d-flex flex-wrap gap-2 mt-1">
                             @forelse($valores as $valor)
-                                <span class="value-tag-modern shadow-sm" title="{{ $valor->dsc_valor }}">{{ $valor->nom_valor }}</span>
+                                <span class="value-tag-modern shadow-sm">{{ $valor->nom_valor }}</span>
                             @empty
                                 <span class="text-muted small italic opacity-50">Valores não definidos.</span>
                             @endforelse
@@ -94,7 +116,7 @@
                                     <i class="bi bi-check2-circle text-warning me-2"></i> {{ $obj->nom_tema_norteador }}
                                 </span>
                             @empty
-                                <span class="text-muted small italic opacity-50">Temas norteadores não definidos para esta unidade.</span>
+                                <span class="text-muted small italic opacity-50">Temas norteadores não definidos.</span>
                             @endforelse
                         </div>
                     </div>
@@ -114,18 +136,15 @@
 
                     <div class="perspectiva-row mb-2">
                         <div class="card shadow-sm perspectiva-full-card" style="border: 2px solid var(--bs-{{ $corBordaRef }}) !important;">
-                            <!-- Header da Perspectiva -->
                             <div class="perspectiva-header-modern px-4 py-3 d-flex justify-content-between align-items-center"
                                  style="--persp-base-bg: var(--bs-{{ $corBordaRef }}-bg-subtle); --persp-border-color: var(--bs-{{ $corBordaRef }});">
                                 <div class="persp-title-group">
                                     <h5 class="persp-name text-uppercase fw-800 mb-0">{{ $p['dsc_perspectiva'] }}</h5>
                                 </div>
-                                
                                 <div class="d-flex align-items-center gap-3">
                                     <button class="btn-info-calc shadow-sm border" wire:click="abrirMemoriaCalculo({{ $index }})" title="Ver Memória de Cálculo">
                                         <i class="bi bi-info-circle text-muted"></i>
                                     </button>
-
                                     <div class="performance-badge-modern shadow-sm" style="background-color: {{ $corSatisfacao }};">
                                         <i class="bi bi-graph-up-arrow me-1"></i> @brazil_percent($p['atingimento_medio'], 1)
                                     </div>
@@ -146,27 +165,23 @@
                                                     <p class="obj-title mb-3" title="{{ $objetivo['nom_objetivo'] }}">
                                                         {{ Str::limit($objetivo['nom_objetivo'], 70) }}
                                                     </p>
-                                                    
-                                                    {{-- Indicadores --}}
                                                     <div class="obj-stat-box mb-2">
                                                         <a wire:navigate href="{{ route('indicadores.index') }}?filtroObjetivo={{ $objetivo['cod_objetivo'] }}" 
                                                            class="text-decoration-none indicador-link" @auth onclick="event.stopPropagation();" @endauth>
                                                             <div class="d-flex justify-content-between mb-1 align-items-center">
-                                                                <span class="stat-label-modern"><i class="bi bi-graph-up me-1"></i>Indicadores</span>
-                                                                <span class="stat-value-modern" style="color: {{ $ind['cor'] }};">@brazil_percent($ind['percentual'], 1)</span>
+                                                                <span class="stat-label-modern">Indicadores</span>
+                                                                <span class="stat-value-modern" style="color: {{ $ind['cor'] }};">@brazil_percent($ind['percentual'], 1) ({{ $ind['quantidade'] }})</span>
                                                             </div>
                                                             <div class="stat-progress-container bg-light-custom">
                                                                 <div class="stat-progress-fill" style="width: {{ min($ind['percentual'], 100) }}%; background-color: {{ $ind['cor'] }};"></div>
                                                             </div>
                                                         </a>
                                                     </div>
-
-                                                    {{-- Planos --}}
                                                     <div class="obj-stat-box">
                                                         <a wire:navigate href="{{ route('planos.index') }}?filtroObjetivo={{ $objetivo['cod_objetivo'] }}" 
                                                            class="text-decoration-none plano-link" @auth onclick="event.stopPropagation();" @endauth>
                                                             <div class="d-flex justify-content-between mb-1 align-items-center">
-                                                                <span class="stat-label-modern"><i class="bi bi-list-check me-1"></i>Planos</span>
+                                                                <span class="stat-label-modern">Planos</span>
                                                                 <span class="stat-value-modern" style="color: {{ $pln['cor'] }};">{{ $pln['concluidos'] }}/{{ $pln['quantidade'] }}</span>
                                                             </div>
                                                             <div class="stat-progress-container bg-light-custom">
@@ -195,22 +210,13 @@
 
             {{-- Legenda Refinada --}}
             <div class="legenda-wrapper mt-5 mb-4">
-                <div class="d-flex flex-column gap-3 px-4 py-3 rounded-4 shadow-sm">
+                <div class="d-flex flex-column gap-3 px-4 py-3 rounded-4 shadow-sm bg-body border">
                     <div class="d-flex align-items-center justify-content-center flex-wrap gap-4">
-                        <span class="small fw-bold text-muted text-uppercase letter-spacing-1">Desempenho (Indicadores):</span>
+                        <span class="small fw-bold text-muted text-uppercase letter-spacing-1">Desempenho (KPIs):</span>
                         @foreach($grausSatisfacao as $grau)
                             <div class="d-flex align-items-center">
                                 <span class="legenda-color-dot me-2 shadow-sm" style="background-color: {{ $grau->cor }};"></span>
                                 <small class="text-body fw-medium">{{ $grau->dsc_grau_satisfacao }} <span class="text-muted fw-normal" style="font-size: 0.9rem;">( @brazil_number($grau->vlr_minimo, 2) - @brazil_percent($grau->vlr_maximo, 2) )</span></small>
-                            </div>
-                        @endforeach
-                    </div>
-                    <div class="d-flex align-items-center justify-content-center flex-wrap gap-4 border-top pt-3">
-                        <span class="small fw-bold text-muted text-uppercase letter-spacing-1">Status (Planos de Ação):</span>
-                        @foreach(\App\Models\ActionPlan\PlanoDeAcao::getStatusLegend() as $item)
-                            <div class="d-flex align-items-center">
-                                <span class="legenda-color-dot me-2 shadow-sm" style="background-color: {{ $item['color'] }};"></span>
-                                <small class="text-body fw-medium">{{ $item['label'] }}</small>
                             </div>
                         @endforeach
                     </div>

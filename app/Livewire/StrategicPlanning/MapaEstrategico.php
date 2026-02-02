@@ -11,10 +11,10 @@ use App\Models\StrategicPlanning\TemaNorteador;
 use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\Organization;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class MapaEstrategico extends Component
 {
@@ -43,14 +43,13 @@ class MapaEstrategico extends Component
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
         'peiSelecionado' => 'atualizarPEI',
-        'anoSelecionado' => '$refresh'
+        'anoSelecionado' => '$refresh',
+        'triggerViewMode' => 'switchViewMode' // Ouvinte para cliques no header
     ];
 
     public function mount()
     {
         $this->organizacaoId = Session::get('organizacao_selecionada_id');
-        
-        // Recupera o modo de visualização da sessão ou padrão 'grouped'
         $this->viewMode = Session::get('mapa_view_mode', 'grouped');
 
         if (!$this->organizacaoId) {
@@ -63,25 +62,19 @@ class MapaEstrategico extends Component
 
     public function switchViewMode($mode)
     {
-        $this->viewMode = $mode;
-        Session::put('mapa_view_mode', $mode);
+        // Se vier do Alpine $dispatch, o $mode pode ser um array
+        $newMode = is_array($mode) ? ($mode['mode'] ?? $mode[0] ?? 'grouped') : $mode;
+        
+        $this->viewMode = $newMode;
+        Session::put('mapa_view_mode', $newMode);
         $this->carregarMapa();
-    }
-
-    public function atualizarOrganizacao($id) { $this->organizacaoId = $id; }
-    public function atualizarPEI($id) { $this->peiAtivo = PEI::find($id); }
-
-    private function carregarPEI()
-    {
-        $peiId = Session::get('pei_selecionado_id');
-        $this->peiAtivo = $peiId ? PEI::find($peiId) : PEI::ativos()->first();
     }
 
     public function carregarMapa()
     {
         if (!$this->peiAtivo || !$this->organizacaoId) return;
 
-        // Determinar IDs de organizações conforme o modo
+        // IDs para o Roll-up
         $orgIds = [$this->organizacaoId];
         if ($this->viewMode === 'grouped') {
             $org = Organization::find($this->organizacaoId);
@@ -92,6 +85,7 @@ class MapaEstrategico extends Component
 
         $this->grausSatisfacao = GrauSatisfacao::orderBy('vlr_minimo')->get();
 
+        // Reversão para whereHas qualificado (Método anterior estável)
         $this->perspectivas = Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
             ->with(['objetivos' => function($query) use ($orgIds) {
                 $query->with(['indicadores' => function($qInd) use ($orgIds) {
@@ -107,9 +101,7 @@ class MapaEstrategico extends Component
             ->orderBy('num_nivel_hierarquico_apresentacao', 'desc')
             ->get()
             ->map(function($p) {
-                $somaPersp = 0;
-                $contPersp = 0;
-                $listaIndicadoresMemoria = [];
+                $somaPersp = 0; $contPersp = 0; $listaIndicadoresMemoria = [];
 
                 foreach ($p->objetivos as $obj) {
                     $indicadores = $obj->indicadores;
@@ -118,25 +110,16 @@ class MapaEstrategico extends Component
                     
                     foreach ($indicadores as $ind) {
                         $ating = $ind->calcularAtingimento();
-                        $somaAtingObj += $ating;
-                        $somaPersp += $ating;
-                        $contPersp++;
-                        
+                        $somaAtingObj += $ating; $somaPersp += $ating; $contPersp++;
                         $listaIndicadoresMemoria[] = [
-                            'objetivo' => $obj->nom_objetivo,
-                            'indicador' => $ind->nom_indicador,
-                            'atingimento' => round($ating, 1),
-                            'cor' => $this->getCorPorPercentual($ating),
+                            'objetivo' => $obj->nom_objetivo, 'indicador' => $ind->nom_indicador,
+                            'atingimento' => round($ating, 1), 'cor' => $this->getCorPorPercentual($ating),
                             'polaridade' => $ind->dsc_polaridade ?? 'Positiva'
                         ];
                     }
                     
                     $mediaAtingObj = $totalInd > 0 ? round($somaAtingObj / $totalInd, 1) : 0;
-                    $obj->resumo_indicadores = [
-                        'quantidade' => $totalInd,
-                        'percentual' => $mediaAtingObj,
-                        'cor' => $this->getCorPorPercentual($mediaAtingObj)
-                    ];
+                    $obj->resumo_indicadores = ['quantidade' => $totalInd, 'percentual' => $mediaAtingObj, 'cor' => $this->getCorPorPercentual($mediaAtingObj)];
 
                     $planos = $obj->planosAcao;
                     $totalPlanos = $planos->count();
@@ -147,13 +130,7 @@ class MapaEstrategico extends Component
                         if ($concluidos == $totalPlanos) $corPlano = '#429B22';
                         else if ($planos->whereIn('bln_status', ['Em Andamento', 'Atrasado'])->count() > 0) $corPlano = '#F3C72B';
                     }
-
-                    $obj->resumo_planos = [
-                        'quantidade' => $totalPlanos,
-                        'concluidos' => $concluidos,
-                        'percentual' => $totalPlanos > 0 ? round(($concluidos / $totalPlanos) * 100, 1) : 0,
-                        'cor' => $corPlano
-                    ];
+                    $obj->resumo_planos = ['quantidade' => $totalPlanos, 'concluidos' => $concluidos, 'percentual' => $totalPlanos > 0 ? round(($concluidos / $totalPlanos) * 100, 1) : 0, 'cor' => $corPlano];
                 }
                 
                 $atingimentoPersp = $contPersp > 0 ? round($somaPersp / $contPersp, 1) : 0;
@@ -165,16 +142,14 @@ class MapaEstrategico extends Component
             })->toArray();
     }
 
-    public function carregarIdentidadeEstrategica()
-    {
+    public function carregarIdentidadeEstrategica() {
         if (!$this->peiAtivo) return;
         $this->missaoVisao = MissaoVisaoValores::where('cod_pei', $this->peiAtivo->cod_pei)->where('cod_organizacao', $this->organizacaoId)->first();
         $this->valores = Valor::where('cod_pei', $this->peiAtivo->cod_pei)->where('cod_organizacao', $this->organizacaoId)->orderBy('nom_valor')->get();
         $this->temasNorteadores = TemaNorteador::where('cod_pei', $this->peiAtivo->cod_pei)->where('cod_organizacao', $this->organizacaoId)->orderBy('created_at', 'asc')->get();
     }
 
-    public function getCorPorPercentual($percentual): string
-    {
+    public function getCorPorPercentual($percentual): string {
         foreach ($this->grausSatisfacao as $grau) {
             if ($percentual >= $grau->vlr_minimo && $percentual <= $grau->vlr_maximo) return $grau->cor;
         }
@@ -187,13 +162,10 @@ class MapaEstrategico extends Component
     {
         $this->carregarMapa();
         $this->carregarIdentidadeEstrategica();
-
         if ($this->organizacaoId) {
             $org = Organization::find($this->organizacaoId);
             $this->organizacaoNome = $org ? $org->nom_organizacao : 'SPS';
         }
-
-        $layout = Auth::check() ? 'layouts.app' : 'layouts.public';
-        return view('livewire.p-e-i.mapa-estrategico')->layout($layout);
+        return view('livewire.p-e-i.mapa-estrategico')->layout(Auth::check() ? 'layouts.app' : 'layouts.public');
     }
 }
