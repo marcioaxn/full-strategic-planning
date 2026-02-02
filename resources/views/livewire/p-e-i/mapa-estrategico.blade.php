@@ -16,22 +16,25 @@
                                 </div>
                                 
                                 <div class="d-flex align-items-center gap-3">
-                                    {{-- Seletor de Roll-up (Hierarquia) --}}
-                                    <div class="view-mode-selector bg-surface border rounded-pill p-1 d-flex shadow-sm">
-                                        <button wire:click="toggleViewMode" 
-                                                class="btn btn-sm rounded-pill px-3 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'grouped' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}"
-                                                title="Consolidar dados da unidade e todos os seus descendentes">
-                                            <i class="bi bi-diagram-3-fill"></i>
-                                            <span class="d-none d-md-inline fw-bold small">Agrupado</span>
-                                        </button>
-                                        <button wire:click="toggleViewMode" 
-                                                class="btn btn-sm rounded-pill px-3 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'individual' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}"
-                                                title="Mostrar apenas dados exclusivos desta unidade">
-                                            <i class="bi bi-geo-alt-fill"></i>
-                                            <span class="d-none d-md-inline fw-bold small">Individual</span>
-                                        </button>
-                                    </div>
-                    
+                                                    {{-- Seletor de Roll-up (Hierarquia) --}}
+                                                    <div class="view-mode-selector bg-surface border rounded-pill p-1 d-flex shadow-sm">
+                                                        <button wire:click="setViewMode('grouped')" 
+                                                                wire:loading.attr="disabled"
+                                                                class="btn btn-sm rounded-pill px-3 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'grouped' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}"
+                                                                title="Consolidar dados da unidade e todos os seus descendentes">
+                                                            <i class="bi bi-diagram-3-fill" wire:loading.remove wire:target="setViewMode('grouped')"></i>
+                                                            <span class="spinner-border spinner-border-sm" wire:loading wire:target="setViewMode('grouped')"></span>
+                                                            <span class="d-none d-md-inline fw-bold small">Agrupado</span>
+                                                        </button>
+                                                        <button wire:click="setViewMode('individual')" 
+                                                                wire:loading.attr="disabled"
+                                                                class="btn btn-sm rounded-pill px-3 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'individual' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}"
+                                                                title="Mostrar apenas dados exclusivos desta unidade">
+                                                            <i class="bi bi-geo-alt-fill" wire:loading.remove wire:target="setViewMode('individual')"></i>
+                                                            <span class="spinner-border spinner-border-sm" wire:loading wire:target="setViewMode('individual')"></span>
+                                                            <span class="d-none d-md-inline fw-bold small">Individual</span>
+                                                        </button>
+                                                    </div>                    
                                     <div class="text-end border-start ps-3">
                                         <span class="badge bg-surface text-primary border shadow-sm px-3 py-2 rounded-pill">
                                             <i class="bi bi-calendar3 me-2"></i>Ciclo: {{ $peiAtivo?->dsc_pei ?? 'N/A' }}
