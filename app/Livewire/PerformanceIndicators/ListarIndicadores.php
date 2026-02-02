@@ -25,6 +25,12 @@ class ListarIndicadores extends Component
     public $filtroVinculo = '';
     public $filtroObjetivo = '';
     public $organizacaoId;
+    public $peiAtivo;
+
+    // IA e Mentor
+    public bool $aiEnabled = false;
+    public $aiSuggestion = '';
+    public $smartFeedback = '';
 
     // Modais
     public bool $showModal = false;
@@ -64,14 +70,52 @@ class ListarIndicadores extends Component
     ];
 
     // Form Metas/Linha Base
-    // ...
+    public $metaAno;
+    public $metaValor;
+    public $linhaBaseAno;
+    public $linhaBaseValor;
 
     // Listas Auxiliares
     public $objetivosAgrupados = [];
     public $planosAgrupados = [];
-    public $organizacoesOptions = []; // Lista em árvore
+    public $organizacoesOptions = [];
     public $unidadesMedida = [];
-    // ...
+    public $polaridades = [];
+    public $periodosOptions = ['Mensal', 'Bimestral', 'Trimestral', 'Semestral', 'Anual'];
+    public $grausSatisfacao = [];
+
+    protected $listeners = [
+        'organizacaoSelecionada' => 'atualizarOrganizacao',
+        'peiSelecionado' => 'atualizarPEI'
+    ];
+
+    public function mount()
+    {
+        $this->organizacaoId = Session::get('organizacao_selecionada_id');
+        $this->peiAtivo = PEI::find(Session::get('pei_selecionado_id')) ?? PEI::ativos()->first();
+        
+        $this->carregarListasAuxiliares();
+        
+        // Verifica se a IA está habilitada nas configurações do sistema
+        try {
+            $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', false);
+        } catch (\Exception $e) {
+            $this->aiEnabled = false;
+        }
+    }
+
+    public function atualizarOrganizacao($id)
+    {
+        $this->organizacaoId = $id;
+        $this->resetPage();
+    }
+
+    public function atualizarPEI($id)
+    {
+        $this->peiAtivo = PEI::find($id);
+        $this->carregarListasAuxiliares();
+        $this->resetPage();
+    }
 
     public function carregarListasAuxiliares()
     {
@@ -81,7 +125,37 @@ class ListarIndicadores extends Component
         $this->organizacoesOptions = Organization::getTreeForSelector();
 
         if ($this->peiAtivo) {
-            // ...
+            // Agrupar objetivos por perspectiva para o select
+            $objetivos = Objetivo::whereHas('perspectiva', function($q) {
+                $q->where('cod_pei', $this->peiAtivo->cod_pei);
+            })->with('perspectiva')->get();
+
+            $this->objetivosAgrupados = $objetivos->groupBy(function($obj) {
+                return $obj->perspectiva->dsc_perspectiva;
+            })->map(function($group) {
+                return $group->map(function($obj) {
+                    return [
+                        'cod_objetivo' => $obj->cod_objetivo,
+                        'nom_objetivo' => $obj->nom_objetivo
+                    ];
+                });
+            })->toArray();
+
+            // Agrupar planos por objetivo
+            $planos = PlanoDeAcao::whereHas('objetivo.perspectiva', function($q) {
+                $q->where('cod_pei', $this->peiAtivo->cod_pei);
+            })->with('objetivo')->get();
+
+            $this->planosAgrupados = $planos->groupBy(function($plano) {
+                return $plano->objetivo->nom_objetivo ?? 'Sem Objetivo';
+            })->map(function($group) {
+                return $group->map(function($plano) {
+                    return [
+                        'cod_plano_de_acao' => $plano->cod_plano_de_acao,
+                        'dsc_plano_de_acao' => $plano->dsc_plano_de_acao
+                    ];
+                });
+            })->toArray();
         }
     }
 
@@ -259,6 +333,41 @@ class ListarIndicadores extends Component
             'dsc_formula' => '', 'dsc_fonte' => '', 'dsc_periodo_medicao' => 'Mensal',
             'dsc_referencial_comparativo' => '', 'dsc_atributos' => '',
         ];
+    }
+
+    public function closeSuccessModal()
+    {
+        $this->showSuccessModal = false;
+        $this->createdIndicadorName = '';
+        $this->resetForm();
+    }
+
+    public function closeErrorModal()
+    {
+        $this->showErrorModal = false;
+    }
+
+    public function pedirAjudaIA()
+    {
+        // Simulação de IA por enquanto ou integração real se houver service
+        $this->aiSuggestion = [
+            ['nome' => 'Índice de Eficiência Operacional', 'descricao' => 'Mede a relação entre recursos utilizados e resultados alcançados.', 'unidade' => 'Percentual (%)', 'formula' => '(Resultados / Recursos) * 100'],
+            ['nome' => 'Taxa de Cumprimento de Prazos', 'descricao' => 'Percentual de entregas realizadas dentro do cronograma previsto.', 'unidade' => 'Percentual (%)', 'formula' => '(Entregas no Prazo / Total de Entregas) * 100'],
+        ];
+    }
+
+    public function aplicarSugestao($nome, $desc, $unidade, $formula)
+    {
+        $this->resetForm();
+        $this->form['nom_indicador'] = $nome;
+        $this->form['dsc_indicador'] = $desc;
+        $this->form['dsc_unidade_medida'] = $unidade;
+        $this->form['dsc_formula'] = $formula;
+        if ($this->organizacaoId) {
+            $this->form['organizacoes_ids'] = [$this->organizacaoId];
+        }
+        $this->aiSuggestion = '';
+        $this->showModal = true;
     }
 
     public function render()
