@@ -27,6 +27,7 @@ class MapaEstrategico extends Component
     public $temasNorteadores = [];
     public $grausSatisfacao = [];
     public $qtdUnidadesConsolidadas = 1;
+    public $organizacoesConsolidadas = [];
     
     public string $viewMode = 'grouped'; 
 
@@ -91,10 +92,16 @@ class MapaEstrategico extends Component
 
         // IDs para o Roll-up
         $orgIds = [$this->organizacaoId];
+        $this->organizacoesConsolidadas = [];
+
         if ($this->viewMode === 'grouped') {
             $org = Organization::find($this->organizacaoId);
             if ($org) {
                 $orgIds = $org->getDescendantsAndSelfIds();
+                $this->organizacoesConsolidadas = Organization::whereIn('cod_organizacao', $orgIds)
+                    ->orderBy('nom_organizacao')
+                    ->get(['sgl_organizacao', 'nom_organizacao'])
+                    ->toArray();
             }
         }
         $this->qtdUnidadesConsolidadas = count($orgIds);

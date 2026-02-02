@@ -16,19 +16,6 @@
             </div>
 
             <div class="d-flex align-items-center gap-3">
-                {{-- STATUS DE CONSOLIDAÇÃO --}}
-                <div class="d-none d-lg-block">
-                    @if($viewMode === 'grouped')
-                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3 py-2">
-                            <i class="bi bi-diagram-3-fill me-1"></i> Consolidando {{ $qtdUnidadesConsolidadas }} unidades
-                        </span>
-                    @else
-                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-opacity-25 rounded-pill px-3 py-2">
-                            <i class="bi bi-geo-alt-fill me-1"></i> Apenas esta unidade
-                        </span>
-                    @endif
-                </div>
-
                 <div class="text-end border-start ps-3">
                     <span class="badge bg-body text-primary border shadow-sm px-3 py-2 rounded-pill">
                         <i class="bi bi-calendar3 me-2"></i>Ciclo: {{ $peiAtivo?->dsc_pei ?? 'N/A' }}
@@ -54,10 +41,32 @@
                 <h5 class="fw-bold text-uppercase letter-spacing-2 text-muted-custom mb-2">Mapa Estratégico</h5>
                 <h3 class="fw-bold text-body-emphasis letter-spacing-1">{{ $organizacaoNome }}</h3>
                 <div class="divider-center"></div>
+                
                 @if($viewMode === 'grouped')
-                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3 py-2 mt-2">
-                        <i class="bi bi-diagram-3-fill me-1"></i> Visualização Consolidada (Unidade + Descendentes)
-                    </span>
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-info bg-opacity-10 text-white border border-info border-opacity-25 rounded-pill px-3 py-2 shadow-sm" 
+                                type="button" data-bs-toggle="collapse" data-bs-target="#collapseOrgs" aria-expanded="false" aria-controls="collapseOrgs">
+                            <i class="bi bi-diagram-3-fill me-1"></i> Visualização Consolidada ({{ $qtdUnidadesConsolidadas }} unidades)
+                            <i class="bi bi-chevron-down small ms-2"></i>
+                        </button>
+                        
+                        <div class="collapse mt-3" id="collapseOrgs">
+                            <div class="card card-body border-info border-opacity-25 bg-info bg-opacity-10 shadow-sm rounded-4 mx-auto" style="max-width: 800px;">
+                                <h6 class="fw-bold text-info mb-3 text-uppercase small letter-spacing-1">Organizações Incluídas no Cálculo</h6>
+                                <div class="d-flex flex-wrap justify-content-center gap-2">
+                                    @foreach($organizacoesConsolidadas as $orgConsolidada)
+                                        <span class="badge bg-white text-dark border shadow-sm px-3 py-2 rounded-pill fw-medium">
+                                            <i class="bi bi-building me-1 text-info"></i>
+                                            {{ $orgConsolidada['sgl_organizacao'] }} - {{ $orgConsolidada['nom_organizacao'] }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                                <p class="text-muted small mt-3 mb-0">
+                                    <i class="bi bi-info-circle me-1"></i> Os valores de atingimento acima representam a média aritmética dos indicadores de todas estas unidades.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 @else
                     <span class="badge bg-secondary bg-opacity-10 text-secondary border border-opacity-25 rounded-pill px-3 py-2 mt-2">
                         <i class="bi bi-geo-alt me-1"></i> Visualização Estrita (Apenas Unidade Selecionada)
