@@ -211,7 +211,7 @@
                                                         </a>
                                                     </div>
                                                     <div class="obj-stat-box">
-                                                        <a wire:navigate href="{{ route('objetivos.detalhes', $objetivo['cod_objetivo']) }}" 
+                                                        <a wire:navigate href="{{ route('planos.index') }}?filtroObjetivo={{ $objetivo['cod_objetivo'] }}" 
                                                            class="text-decoration-none plano-link" @auth onclick="event.stopPropagation();" @endauth>
                                                             <div class="d-flex justify-content-between mb-1 align-items-center">
                                                                 <span class="stat-label-modern">Planos</span>
