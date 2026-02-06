@@ -664,6 +664,10 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
 
+    <style>
+        .flatpickr-calendar { z-index: 9999 !important; }
+    </style>
+
     <!-- Modal Criar/Editar -->
     <div class="modal fade @if($showModal) show @endif" tabindex="-1" role="dialog" wire:key="modal-plano-acao"
          style="@if($showModal) display: block; background: rgba(0,0,0,0.5); z-index: 1055; @else display: none; @endif">
@@ -860,31 +864,37 @@
                                         
                                         {{-- Flatpickr Range Wrapper --}}
                                         <div x-data="{
-                                            dateRange: '',
+                                            start: @entangle('dte_inicio'),
+                                            end: @entangle('dte_fim'),
                                             picker: null,
                                             init() {
-                                                let start = @entangle('dte_inicio');
-                                                let end = @entangle('dte_fim');
-                                                
-                                                // Pre-fill if exists
-                                                if(start && end) {
-                                                    this.dateRange = start + ' a ' + end;
-                                                }
-
                                                 this.picker = flatpickr(this.$refs.dateInput, {
                                                     mode: 'range',
                                                     dateFormat: 'Y-m-d',
                                                     altInput: true,
-                                                    altFormat: 'd/m/Y', // Formato visual brasileiro
+                                                    altFormat: 'd/m/Y',
                                                     locale: 'pt',
-                                                    minDate: 'today',
+                                                    static: true, // Faz o calendário aparecer junto ao input, evita problemas de z-index em modals
                                                     onClose: (selectedDates, dateStr, instance) => {
                                                         if (selectedDates.length === 2) {
-                                                            @this.set('dte_inicio', instance.formatDate(selectedDates[0], 'Y-m-d'));
-                                                            @this.set('dte_fim', instance.formatDate(selectedDates[1], 'Y-m-d'));
+                                                            this.start = instance.formatDate(selectedDates[0], 'Y-m-d');
+                                                            this.end = instance.formatDate(selectedDates[1], 'Y-m-d');
                                                         }
                                                     }
                                                 });
+
+                                                this.$watch('start', (val) => this.updatePicker());
+                                                this.$watch('end', (val) => this.updatePicker());
+                                                
+                                                // Sync inicial
+                                                this.updatePicker();
+                                            },
+                                            updatePicker() {
+                                                if (this.start && this.end) {
+                                                    this.picker.setDate([this.start, this.end], false);
+                                                } else if (!this.start) {
+                                                    this.picker.clear();
+                                                }
                                             }
                                         }" wire:ignore>
                                             <label class="form-label small text-muted fw-bold text-uppercase">Período (Início e Fim)</label>

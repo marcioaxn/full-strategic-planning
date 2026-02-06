@@ -21,7 +21,7 @@ class SeletorOrganizacao extends Component
         if (!$this->selecionadaId && $this->organizacoes->isNotEmpty()) {
             $first = $this->organizacoes->first();
             $id = is_array($first) ? $first['id'] : $first->cod_organizacao;
-            $this->selecionar($id);
+            $this->atualizarSessao($id);
         }
     }
 
@@ -49,6 +49,14 @@ class SeletorOrganizacao extends Component
 
     public function selecionar($id)
     {
+        if ($this->atualizarSessao($id)) {
+            // Para garantir que o Roll-up e outros filtros globais sejam aplicados instantaneamente
+            return redirect(request()->header('Referer'));
+        }
+    }
+
+    private function atualizarSessao($id)
+    {
         $org = Organization::find($id);
         
         if ($org) {
@@ -58,10 +66,9 @@ class SeletorOrganizacao extends Component
             Session::put('organizacao_selecionada_sgl', $org->sgl_organizacao);
             
             $this->dispatch('organizacaoSelecionada', id: $id);
-            
-            // Para garantir que o Roll-up e outros filtros globais sejam aplicados instantaneamente
-            return redirect(request()->header('Referer'));
+            return true;
         }
+        return false;
     }
 
     public function render()
