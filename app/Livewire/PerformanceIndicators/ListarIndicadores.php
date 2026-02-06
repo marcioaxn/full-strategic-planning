@@ -53,6 +53,7 @@ class ListarIndicadores extends Component
         'nom_indicador' => '',
         'dsc_indicador' => '',
         'dsc_tipo' => 'Objetivo',
+        'dsc_calculation_type' => 'manual',
         'cod_objetivo' => '',
         'cod_plano_de_acao' => '',
         'txt_observacao' => '',
@@ -81,6 +82,7 @@ class ListarIndicadores extends Component
     public $organizacoesOptions = [];
     public $unidadesMedida = [];
     public $polaridades = [];
+    public $calculationTypes = [];
     public $periodosOptions = ['Mensal', 'Bimestral', 'Trimestral', 'Semestral', 'Anual'];
     public $grausSatisfacao = [];
 
@@ -122,6 +124,7 @@ class ListarIndicadores extends Component
         $this->grausSatisfacao = \App\Models\StrategicPlanning\GrauSatisfacao::orderBy('vlr_minimo')->get();
         $this->unidadesMedida = Indicador::UNIDADES_MEDIDA;
         $this->polaridades = Indicador::POLARIDADES;
+        $this->calculationTypes = Indicador::CALCULATION_TYPES;
         $this->organizacoesOptions = Organization::getTreeForSelector();
 
         if ($this->peiAtivo) {
@@ -179,6 +182,7 @@ class ListarIndicadores extends Component
             'nom_indicador' => $indicador->nom_indicador,
             'dsc_indicador' => $indicador->dsc_indicador,
             'dsc_tipo' => $indicador->dsc_tipo ?? ($indicador->cod_plano_de_acao ? 'Plano' : 'Objetivo'),
+            'dsc_calculation_type' => $indicador->dsc_calculation_type ?? 'manual',
             'cod_objetivo' => $indicador->cod_objetivo,
             'cod_plano_de_acao' => $indicador->cod_plano_de_acao,
             'txt_observacao' => $indicador->txt_observacao,
@@ -328,6 +332,7 @@ class ListarIndicadores extends Component
         $this->indicadorId = null;
         $this->form = [
             'nom_indicador' => '', 'dsc_indicador' => '', 'dsc_tipo' => 'Objetivo',
+            'dsc_calculation_type' => 'manual',
             'cod_objetivo' => '', 'cod_plano_de_acao' => '', 'txt_observacao' => '',
             'dsc_meta' => '', 'dsc_unidade_medida' => 'Percentual (%)', 'dsc_polaridade' => 'Positiva', 'num_peso' => 1, 'bln_acumulado' => 'Não',
             'dsc_formula' => '', 'dsc_fonte' => '', 'dsc_periodo_medicao' => 'Mensal',

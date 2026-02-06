@@ -41,6 +41,14 @@ class Indicador extends Model implements Auditable
     public $incrementing = false;
 
     /**
+     * Tipos de Cálculo disponíveis
+     */
+    const CALCULATION_TYPES = [
+        'manual' => 'Medição Manual',
+        'action_plan' => 'Baseado em Plano de Ação',
+    ];
+
+    /**
      * Constantes de Mercado para Unidades de Medida
      */
     const UNIDADES_MEDIDA = [
@@ -89,6 +97,7 @@ class Indicador extends Model implements Auditable
         'dsc_formula',
         'dsc_fonte',
         'dsc_periodo_medicao',
+        'dsc_calculation_type',
     ];
 
     /**
@@ -183,6 +192,12 @@ class Indicador extends Model implements Auditable
      */
     public function calcularAtingimento(int $ano = null, int $mes = null): float
     {
+        // Se for cálculo automático baseado em plano de ação, usar o service
+        if ($this->dsc_calculation_type === 'action_plan' && $this->cod_plano_de_acao) {
+            $service = app(\App\Services\IndicadorCalculoService::class);
+            return $service->calcularProgressoPlano($this->planoDeAcao);
+        }
+
         // Pega o ano da sessão se não for passado
         $ano = $ano ?? session('ano_selecionado', now()->year);
         
