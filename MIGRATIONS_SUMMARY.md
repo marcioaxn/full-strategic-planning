@@ -133,6 +133,32 @@ Foram criadas/modificadas **39 migration files** que incluem:
 
 ---
 
+### 5. CÁLCULO AUTOMÁTICO DE INDICADORES (2 alterações - Fev/2026)
+
+| Migration | Tabela | Descrição |
+|-----------|--------|-----------|
+| `2026_02_06_160000_add_calculation_type_to_tab_indicador.php` | `performance_indicators.tab_indicador` | Adiciona `dsc_calculation_type` (manual/action_plan) para habilitar cálculo automático baseado em entregas |
+| `2026_02_06_160001_add_weight_to_tab_entregas.php` | `action_plan.tab_entregas` | Adiciona `num_peso` (decimal) para ponderação no cálculo de progresso |
+
+**Tipos de Cálculo:**
+- `manual`: Lançamento tradicional de evoluções mês a mês
+- `action_plan`: Cálculo automático usando a fórmula `Σ(Peso × Status)`
+
+**Status para Cálculo:**
+| Status | Percentual |
+|--------|------------|
+| Concluído | 100% |
+| Em Andamento | 50% |
+| Suspenso | 25% |
+| Não Iniciado | 0% |
+| Cancelado | Excluído |
+
+**Novos Arquivos Criados:**
+- `app/Services/IndicadorCalculoService.php` - Lógica central de cálculo ponderado
+- `app/Observers/EntregaObserver.php` - Recálculo automático ao alterar entregas
+
+---
+
 ## 🎯 CONVENÇÕES APLICADAS
 
 ### ✅ UUID Primary Keys
