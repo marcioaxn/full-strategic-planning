@@ -199,7 +199,7 @@
                                                         {{ Str::limit($objetivo['nom_objetivo'], 70) }}
                                                     </p>
                                                     <div class="obj-stat-box mb-2">
-                                                        <a wire:navigate href="{{ route('objetivos.detalhes', $objetivo['cod_objetivo']) }}" 
+                                                        <a wire:navigate href="{{ route('indicadores.index') }}?filtroObjetivo={{ $objetivo['cod_objetivo'] }}" 
                                                            class="text-decoration-none indicador-link" @auth onclick="event.stopPropagation();" @endauth>
                                                             <div class="d-flex justify-content-between mb-1 align-items-center">
                                                                 <span class="stat-label-modern">KPIs</span>
