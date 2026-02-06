@@ -53,6 +53,7 @@ class ListarIndicadores extends Component
         'nom_indicador' => '',
         'dsc_indicador' => '',
         'dsc_tipo' => 'Objetivo',
+        'dsc_calculation_type' => 'manual',
         'cod_objetivo' => '',
         'cod_plano_de_acao' => '',
         'txt_observacao' => '',
@@ -81,8 +82,16 @@ class ListarIndicadores extends Component
     public $organizacoesOptions = [];
     public $unidadesMedida = [];
     public $polaridades = [];
+    public $calculationTypes = [];
     public $periodosOptions = ['Mensal', 'Bimestral', 'Trimestral', 'Semestral', 'Anual'];
     public $grausSatisfacao = [];
+
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'filtroVinculo' => ['except' => ''],
+        'filtroObjetivo' => ['except' => ''],
+        'page' => ['except' => 1],
+    ];
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
@@ -92,16 +101,21 @@ class ListarIndicadores extends Component
     public function mount()
     {
         $this->organizacaoId = Session::get('organizacao_selecionada_id');
-        $this->peiAtivo = PEI::find(Session::get('pei_selecionado_id')) ?? PEI::ativos()->first();
+        
+        if ($this->filtroObjetivo) {
+            $obj = Objetivo::with('perspectiva.pei')->find($this->filtroObjetivo);
+            if ($obj) {
+                $this->peiAtivo = $obj->perspectiva->pei;
+            }
+        }
+
+        if (!$this->peiAtivo) {
+            $this->peiAtivo = PEI::find(Session::get('pei_selecionado_id')) ?? PEI::ativos()->first();
+        }
         
         $this->carregarListasAuxiliares();
         
-        // Verifica se a IA está habilitada nas configurações do sistema
-        try {
-            $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', false);
-        } catch (\Exception $e) {
-            $this->aiEnabled = false;
-        }
+        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
     }
 
     public function atualizarOrganizacao($id)
@@ -122,6 +136,7 @@ class ListarIndicadores extends Component
         $this->grausSatisfacao = \App\Models\StrategicPlanning\GrauSatisfacao::orderBy('vlr_minimo')->get();
         $this->unidadesMedida = Indicador::UNIDADES_MEDIDA;
         $this->polaridades = Indicador::POLARIDADES;
+        $this->calculationTypes = Indicador::CALCULATION_TYPES;
         $this->organizacoesOptions = Organization::getTreeForSelector();
 
         if ($this->peiAtivo) {
@@ -179,6 +194,7 @@ class ListarIndicadores extends Component
             'nom_indicador' => $indicador->nom_indicador,
             'dsc_indicador' => $indicador->dsc_indicador,
             'dsc_tipo' => $indicador->dsc_tipo ?? ($indicador->cod_plano_de_acao ? 'Plano' : 'Objetivo'),
+            'dsc_calculation_type' => $indicador->dsc_calculation_type ?? 'manual',
             'cod_objetivo' => $indicador->cod_objetivo,
             'cod_plano_de_acao' => $indicador->cod_plano_de_acao,
             'txt_observacao' => $indicador->txt_observacao,
@@ -328,6 +344,7 @@ class ListarIndicadores extends Component
         $this->indicadorId = null;
         $this->form = [
             'nom_indicador' => '', 'dsc_indicador' => '', 'dsc_tipo' => 'Objetivo',
+            'dsc_calculation_type' => 'manual',
             'cod_objetivo' => '', 'cod_plano_de_acao' => '', 'txt_observacao' => '',
             'dsc_meta' => '', 'dsc_unidade_medida' => 'Percentual (%)', 'dsc_polaridade' => 'Positiva', 'num_peso' => 1, 'bln_acumulado' => 'Não',
             'dsc_formula' => '', 'dsc_fonte' => '', 'dsc_periodo_medicao' => 'Mensal',

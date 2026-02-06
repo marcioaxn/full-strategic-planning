@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use App\Models\ActionPlan\Entrega;
+use App\Observers\EntregaObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +25,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register Observers for automatic indicator calculation
+        Entrega::observe(EntregaObserver::class);
+
         // Register Policies
         Gate::policy(\App\Models\Organization::class, \App\Policies\OrganizationPolicy::class);
         Gate::policy(\App\Models\User::class, \App\Policies\UserPolicy::class);

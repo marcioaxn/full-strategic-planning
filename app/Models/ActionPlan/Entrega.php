@@ -57,6 +57,7 @@ class Entrega extends Model
         'cod_responsavel',
         'cod_prioridade',
         'num_ordem',
+        'num_peso',
         'num_nivel_hierarquico_apresentacao',
         'bln_arquivado',
     ];
@@ -67,6 +68,7 @@ class Entrega extends Model
     protected $casts = [
         'num_nivel_hierarquico_apresentacao' => 'integer',
         'num_ordem' => 'integer',
+        'num_peso' => 'decimal:2',
         'bln_arquivado' => 'boolean',
         'json_propriedades' => 'array',
         'dte_prazo' => 'date',
