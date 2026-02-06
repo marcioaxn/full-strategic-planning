@@ -86,6 +86,13 @@ class ListarIndicadores extends Component
     public $periodosOptions = ['Mensal', 'Bimestral', 'Trimestral', 'Semestral', 'Anual'];
     public $grausSatisfacao = [];
 
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'filtroVinculo' => ['except' => ''],
+        'filtroObjetivo' => ['except' => ''],
+        'page' => ['except' => 1],
+    ];
+
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
         'peiSelecionado' => 'atualizarPEI'
@@ -94,16 +101,21 @@ class ListarIndicadores extends Component
     public function mount()
     {
         $this->organizacaoId = Session::get('organizacao_selecionada_id');
-        $this->peiAtivo = PEI::find(Session::get('pei_selecionado_id')) ?? PEI::ativos()->first();
+        
+        if ($this->filtroObjetivo) {
+            $obj = Objetivo::with('perspectiva.pei')->find($this->filtroObjetivo);
+            if ($obj) {
+                $this->peiAtivo = $obj->perspectiva->pei;
+            }
+        }
+
+        if (!$this->peiAtivo) {
+            $this->peiAtivo = PEI::find(Session::get('pei_selecionado_id')) ?? PEI::ativos()->first();
+        }
         
         $this->carregarListasAuxiliares();
         
-        // Verifica se a IA está habilitada nas configurações do sistema
-        try {
-            $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', false);
-        } catch (\Exception $e) {
-            $this->aiEnabled = false;
-        }
+        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
     }
 
     public function atualizarOrganizacao($id)
