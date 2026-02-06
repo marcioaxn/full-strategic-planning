@@ -809,6 +809,36 @@
                                                     </select>
                                                     @error('form.cod_plano_de_acao') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
                                                 </div>
+
+                                                {{-- Tipo de Cálculo: aparece apenas para Planos --}}
+                                                <div class="mb-4 animate-fade-in">
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">
+                                                        <i class="bi bi-calculator me-1"></i>Método de Cálculo
+                                                    </label>
+                                                    <div class="d-flex gap-2 p-1 bg-white rounded-3 shadow-sm">
+                                                        <input type="radio" class="btn-check" wire:model.live="form.dsc_calculation_type" value="manual" id="calc_manual" autocomplete="off">
+                                                        <label class="btn btn-outline-secondary border-0 rounded-3 flex-grow-1 py-2 small" for="calc_manual">
+                                                            <i class="bi bi-pencil-square me-1"></i> Manual
+                                                        </label>
+
+                                                        <input type="radio" class="btn-check" wire:model.live="form.dsc_calculation_type" value="action_plan" id="calc_auto" autocomplete="off">
+                                                        <label class="btn btn-outline-success border-0 rounded-3 flex-grow-1 py-2 small" for="calc_auto">
+                                                            <i class="bi bi-lightning-charge me-1"></i> Automático
+                                                        </label>
+                                                    </div>
+                                                    
+                                                    {{-- Dica contextual --}}
+                                                    <div class="mt-2 p-2 bg-white rounded border small text-muted lh-sm">
+                                                        @if($form['dsc_calculation_type'] === 'action_plan')
+                                                            <i class="bi bi-lightning-charge text-success me-1"></i>
+                                                            <strong>Cálculo Automático:</strong> O progresso será calculado pela fórmula <code>Σ(Peso × Status)</code> das entregas do plano. 
+                                                            <span class="text-success fw-bold">Não é necessário lançar evoluções manualmente.</span>
+                                                        @else
+                                                            <i class="bi bi-pencil-square text-secondary me-1"></i>
+                                                            <strong>Medição Manual:</strong> Você deverá lançar os valores realizados mensalmente na tela de "Lançar Evolução".
+                                                        @endif
+                                                    </div>
+                                                </div>
                                             @endif
                                             
                                             <div class="row g-3">

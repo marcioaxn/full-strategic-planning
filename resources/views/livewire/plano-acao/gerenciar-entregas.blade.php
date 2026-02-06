@@ -34,21 +34,74 @@
     <!-- Barra de Progresso do Plano -->
     <div class="card border-0 shadow-sm mb-4 overflow-hidden">
         <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="fw-bold mb-0">Progresso Consolidado do Plano</h6>
-                <span class="fw-bold text-primary fs-5">{{ number_format($progresso, 1) }}%</span>
+            <div class="row g-4">
+                {{-- Progresso Simples --}}
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold mb-0">
+                            <i class="bi bi-check-circle me-1 text-muted"></i>Progresso Simples
+                        </h6>
+                        <span class="fw-bold text-primary fs-5">{{ number_format($progresso, 1) }}%</span>
+                    </div>
+                    <div class="progress rounded-pill" style="height: 10px;">
+                        <div class="progress-bar bg-primary" 
+                             role="progressbar" 
+                             style="width: {{ $progresso }}%" 
+                             aria-valuenow="{{ $progresso }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100"></div>
+                    </div>
+                    <small class="text-muted mt-1 d-block">
+                        Baseado na quantidade de entregas concluídas.
+                    </small>
+                </div>
+
+                {{-- Progresso Ponderado --}}
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold mb-0">
+                            <i class="bi bi-speedometer me-1 text-success"></i>Progresso Ponderado
+                        </h6>
+                        <span class="fw-bold text-success fs-5">{{ number_format($progressoPonderado, 1) }}%</span>
+                    </div>
+                    <div class="progress rounded-pill" style="height: 10px;">
+                        <div class="progress-bar gradient-theme progress-bar-striped progress-bar-animated" 
+                             role="progressbar" 
+                             style="width: {{ $progressoPonderado }}%" 
+                             aria-valuenow="{{ $progressoPonderado }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100"></div>
+                    </div>
+                    <small class="text-muted mt-1 d-block">
+                        Considerando o peso de cada entrega: <code>Σ(Peso × Status)</code>.
+                    </small>
+                </div>
             </div>
-            <div class="progress rounded-pill" style="height: 12px;">
-                <div class="progress-bar gradient-theme progress-bar-striped progress-bar-animated" 
-                     role="progressbar" 
-                     style="width: {{ $progresso }}%" 
-                     aria-valuenow="{{ $progresso }}" 
-                     aria-valuemin="0" 
-                     aria-valuemax="100"></div>
-            </div>
-            <small class="text-muted mt-2 d-block text-center italic">
-                O progresso é calculado com base no número de entregas marcadas como <strong>Concluído</strong>.
-            </small>
+
+            {{-- Alerta de Validação de Pesos --}}
+            @if(!empty($validacaoPesos) && isset($validacaoPesos['total']))
+                <div class="mt-3 p-3 rounded-3 border {{ $validacaoPesos['valid'] ? 'bg-success-subtle border-success' : 'bg-warning-subtle border-warning' }}">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi {{ $validacaoPesos['valid'] ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-warning' }} fs-5"></i>
+                            <div>
+                                <span class="fw-bold">Soma dos Pesos: {{ number_format($validacaoPesos['total'], 1) }}%</span>
+                                <br>
+                                <small class="{{ $validacaoPesos['valid'] ? 'text-success' : 'text-warning' }}">
+                                    {{ $validacaoPesos['message'] }}
+                                </small>
+                            </div>
+                        </div>
+                        @if(!$validacaoPesos['valid'])
+                            @can('update', $plano)
+                                <button wire:click="redistribuirPesos" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-arrow-repeat me-1"></i>Redistribuir Pesos Iguais
+                                </button>
+                            @endcan
+                        @endif
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -61,6 +114,7 @@
                         <th class="ps-4" style="width: 60px;">Nível</th>
                         <th>Descrição da Entrega</th>
                         <th>Período de Medição</th>
+                        <th class="text-center">Peso</th>
                         <th>Status</th>
                         <th class="text-end pe-4">Ações</th>
                     </tr>
@@ -83,6 +137,17 @@
                                     <i class="bi bi-calendar-event me-1"></i>
                                     {{ $entrega->dsc_periodo_medicao ?: 'Não informado' }}
                                 </small>
+                            </td>
+                            <td class="text-center">
+                                @if($entrega->num_peso > 0)
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3">
+                                        <i class="bi bi-speedometer me-1"></i>{{ number_format($entrega->num_peso, 1) }}%
+                                    </span>
+                                @else
+                                    <span class="badge bg-light text-muted border rounded-pill px-3">
+                                        <i class="bi bi-dash me-1"></i>Não definido
+                                    </span>
+                                @endif
                             </td>
                             <td>
                                 @php
@@ -113,7 +178,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-5">
+                            <td colspan="6" class="text-center py-5">
                                 <div class="mb-3 text-muted">
                                     <i class="bi bi-box fs-1 opacity-25"></i>
                                 </div>
@@ -152,7 +217,7 @@
                         </div>
 
                         <div class="row g-3">
-                            <div class="col-md-8">
+                            <div class="col-md-5">
                                 <label class="form-label text-muted small text-uppercase fw-bold">Status</label>
                                 <select wire:model="bln_status" class="form-select @error('bln_status') is-invalid @enderror">
                                     @foreach($statusOptions as $st)
@@ -161,10 +226,25 @@
                                 </select>
                                 @error('bln_status') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label text-muted small text-uppercase fw-bold">Ordem/Nível</label>
                                 <input type="number" wire:model="num_nivel_hierarquico_apresentacao" class="form-control @error('num_nivel_hierarquico_apresentacao') is-invalid @enderror">
                                 @error('num_nivel_hierarquico_apresentacao') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small text-uppercase fw-bold">
+                                    <i class="bi bi-speedometer me-1"></i>Peso (%)
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" wire:model="num_peso" 
+                                           class="form-control @error('num_peso') is-invalid @enderror" 
+                                           step="0.01" min="0" max="100" placeholder="0">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                @error('num_peso') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                <small class="text-muted">
+                                    Peso para cálculo ponderado (0-100).
+                                </small>
                             </div>
                         </div>
                     </div>
