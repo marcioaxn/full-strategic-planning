@@ -25,6 +25,12 @@
         </div>
     </x-slot>
 
+    @guest
+    <div class="container mt-4 mb-4 pt-4 pb-4">
+
+    </div>
+    @endguest
+
     @if(!$peiAtivo)
         <div class="container py-5 text-center">
             <div class="alert alert-modern alert-warning d-inline-block p-4 shadow-sm">
