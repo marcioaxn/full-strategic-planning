@@ -122,49 +122,183 @@ class MapaEstrategico extends Component
                         $sub->select('cod_plano_de_acao')
                             ->from('action_plan.rel_plano_organizacao')
                             ->whereIn('cod_organizacao', $orgIds);
-                    });
+                    })->with(['entregas' => function($qEntrega) {
+                        $qEntrega->where('bln_arquivado', false)->orderBy('dte_prazo');
+                    }]);
                 }])->ordenadoPorNivel();
             }])
             ->orderBy('num_nivel_hierarquico_apresentacao', 'desc')
             ->get()
             ->map(function($p) {
-                $somaPersp = 0; $contPersp = 0; $listaIndicadoresMemoria = [];
+                // Pesos configurados
+                $pesoInd = $p->num_peso_indicadores ?? 100;
+                $pesoPlan = $p->num_peso_planos ?? 0;
+                $anoSelecionado = session('ano_selecionado', date('Y'));
+
+                // Coletar métricas dos Indicadores
+                $somaAtingInd = 0;
+                $totalInd = 0;
+                $listaIndicadoresMemoria = [];
+                
+                // Coletar métricas dos Planos (Entregas do Ano)
+                $somaProgressoPlan = 0;
+                $somaPesoPlan = 0;
+                $listaPlanosMemoria = [];
 
                 foreach ($p->objetivos as $obj) {
-                    $indicadores = $obj->indicadores;
-                    $totalInd = $indicadores->count();
-                    $somaAtingObj = 0;
-                    
-                    foreach ($indicadores as $ind) {
-                        $ating = $ind->calcularAtingimento();
-                        $somaAtingObj += $ating; $somaPersp += $ating; $contPersp++;
+                    $objSomaInd = 0;
+                    $objTotalInd = 0;
+
+                    // --- INDICADORES ---
+                    foreach ($obj->indicadores as $ind) {
+                        $ating = $ind->calcularAtingimento($anoSelecionado);
+                        $somaAtingInd += $ating;
+                        $totalInd++;
+                        
+                        $objSomaInd += $ating;
+                        $objTotalInd++;
+                        
                         $listaIndicadoresMemoria[] = [
-                            'objetivo' => $obj->nom_objetivo, 'indicador' => $ind->nom_indicador,
-                            'atingimento' => round($ating, 1), 'cor' => $this->getCorPorPercentual($ating),
-                            'polaridade' => $ind->dsc_polaridade ?? 'Positiva'
+                            'objetivo' => $obj->nom_objetivo,
+                            'indicador' => $ind->nom_indicador,
+                            'atingimento' => round($ating, 1),
+                            'cor' => $this->getCorPorPercentual($ating),
+                            'polaridade' => $ind->dsc_polaridade ?? 'Positiva',
+                            'tipo' => 'Indicador'
                         ];
                     }
                     
-                    $mediaAtingObj = $totalInd > 0 ? round($somaAtingObj / $totalInd, 1) : 0;
-                    $obj->resumo_indicadores = ['quantidade' => $totalInd, 'percentual' => $mediaAtingObj, 'cor' => $this->getCorPorPercentual($mediaAtingObj)];
+                    // Resumo Indicadores (Objetivo)
+                    $objMediaInd = $objTotalInd > 0 ? ($objSomaInd / $objTotalInd) : 0;
+                    $obj->resumo_indicadores = [
+                        'quantidade' => $objTotalInd, 
+                        'percentual' => round($objMediaInd, 1), 
+                        'cor' => $this->getCorPorPercentual($objMediaInd)
+                    ];
 
-                    $planos = $obj->planosAcao;
-                    $totalPlanos = $planos->count();
-                    $concluidos = $planos->where('bln_status', 'Concluído')->count();
+                    // --- PLANOS DE AÇÃO (ENTREGAS DO ANO) ---
+                    // Inicializar contadores para o card (apenas planos do ano)
+                    $objTotalPlanosAno = 0;
+                    $objConcluidosAno = 0;
                     
-                    $corPlano = '#475569';
-                    if ($totalPlanos > 0) {
-                        if ($concluidos == $totalPlanos) $corPlano = '#429B22';
-                        else if ($planos->whereIn('bln_status', ['Em Andamento', 'Atrasado'])->count() > 0) $corPlano = '#F3C72B';
+                    // Acumuladores locais para média de progresso DO OBJETIVO
+                    $objSomaProgressoPlan = 0;
+                    $objSomaPesoPlan = 0;
+                    
+                    foreach ($obj->planosAcao as $plano) {
+                        // Cálculo Granular para Perspectiva (Usando Collection Filter agora)
+                        $entregasAno = $plano->entregas->filter(function($entrega) use ($anoSelecionado) {
+                            return $entrega->dte_prazo && $entrega->dte_prazo->year == $anoSelecionado;
+                        });
+
+                        // Se não houver entregas no ano, ignorar este plano para o cálculo e contagem
+                        if ($entregasAno->count() === 0) continue;
+
+                        $objTotalPlanosAno++;
+                        if ($plano->bln_status === 'Concluído') {
+                            $objConcluidosAno++;
+                        }
+
+                        // Acumuladores Locais do Plano
+                        $planoSomaProgresso = 0;
+                        $planoSomaPeso = 0;
+                        $entregasMemoria = [];
+
+                        foreach ($entregasAno as $entrega) {
+                            if ($entrega->bln_status === 'Cancelado') continue;
+                            
+                            $statusDecimal = match($entrega->bln_status) {
+                                'Concluído' => 1.0, 'Em Andamento' => 0.5, 'Suspenso' => 0.25, default => 0.0
+                            };
+                            $peso = $entrega->num_peso > 0 ? $entrega->num_peso : 1;
+                            
+                            $planoSomaProgresso += ($peso * $statusDecimal);
+                            $planoSomaPeso += $peso;
+
+                            // Coletar para memória
+                            $entregasMemoria[] = [
+                                'entrega' => $entrega->dsc_entrega,
+                                'prazo' => $entrega->dte_prazo->format('d/m/Y'),
+                                'status' => $entrega->bln_status,
+                                'peso' => $peso
+                            ];
+                        }
+
+                        // Calcular atingimento deste plano específico no ano
+                        $planoAtingimento = $planoSomaPeso > 0 ? ($planoSomaProgresso / $planoSomaPeso) * 100 : 0;
+
+                        // Adicionar ao acumulador global da perspectiva
+                        $somaProgressoPlan += $planoSomaProgresso;
+                        $somaPesoPlan += $planoSomaPeso;
+                        
+                        // Adicionar ao acumulador local do objetivo (para média de progresso do card)
+                        $objSomaProgressoPlan += $planoSomaProgresso;
+                        $objSomaPesoPlan += $planoSomaPeso;
+
+                        // Adicionar à lista de memória
+                        $listaPlanosMemoria[] = [
+                            'objetivo' => $obj->nom_objetivo,
+                            'plano' => $plano->dsc_plano_de_acao,
+                            'entregas' => $entregasMemoria,
+                            'atingimento' => round($planoAtingimento, 1),
+                            'cor' => $this->getCorPorPercentual($planoAtingimento),
+                            'tipo' => 'Plano'
+                        ];
                     }
-                    $obj->resumo_planos = ['quantidade' => $totalPlanos, 'concluidos' => $concluidos, 'percentual' => $totalPlanos > 0 ? round(($concluidos / $totalPlanos) * 100, 1) : 0, 'cor' => $corPlano];
+                    
+                    // Calcular média ponderada de progresso do OBJETIVO (para exibição no card)
+                    $objMediaProgresso = $objSomaPesoPlan > 0 ? ($objSomaProgressoPlan / $objSomaPesoPlan) * 100 : 0;
+                    
+                    // Resumo Planos (Calculado com base filterada)
+                    $corPlano = '#475569';
+                    if ($objTotalPlanosAno > 0) {
+                        if ($objConcluidosAno == $objTotalPlanosAno) $corPlano = '#429B22';
+                        else if ($objTotalPlanosAno > $objConcluidosAno) $corPlano = '#F3C72B'; // Se tem pendente, warning
+                        // Nota: A lógica original usava query status 'Em Andamento'/'Atrasado'. 
+                        // Aqui simplificamos: Se não todos concluídos, é Warning (laranja), a menos que seja 0.
+                    }
+
+                    $obj->resumo_planos = [
+                        'quantidade' => $objTotalPlanosAno, 
+                        'concluidos' => $objConcluidosAno, 
+                        'percentual' => $objTotalPlanosAno > 0 ? round(($objConcluidosAno / $objTotalPlanosAno) * 100, 1) : 0, 
+                        'media_progresso' => round($objMediaProgresso, 1), // NOVA CHAVE: Progresso Ponderado
+                        'cor' => $corPlano
+                    ];
                 }
                 
-                $atingimentoPersp = $contPersp > 0 ? round($somaPersp / $contPersp, 1) : 0;
-                $p->atingimento_medio = $atingimentoPersp;
-                $p->cor_satisfacao = $this->getCorPorPercentual($atingimentoPersp);
-                $p->memoria_indicadores = $listaIndicadoresMemoria;
+                // Média Indicadores
+                $mediaIndicadores = $totalInd > 0 ? ($somaAtingInd / $totalInd) : 0;
                 
+                // Média Planos (Ponderada)
+                $mediaPlanos = $somaPesoPlan > 0 ? ($somaProgressoPlan / $somaPesoPlan) * 100 : 0;
+
+                // Adicionar info de planos na memória de cálculo se tiver peso
+                // (Nota: Agora mostramos a lista detalhada em vez de apenas a média, mas mantemos a média se quiser)
+                // Vamos manter a linha de média como um resumo global se a lista estiver vazia? 
+                // Não, se tem pesoPlan > 0, mostramos.
+                
+                // CÁLCULO FINAL HÍBRIDO
+                $atingimentoFinal = 0;
+                $somaPesosConfig = $pesoInd + $pesoPlan;
+
+                if ($somaPesosConfig > 0) {
+                    $atingimentoFinal = (($mediaIndicadores * $pesoInd) + ($mediaPlanos * $pesoPlan)) / $somaPesosConfig;
+                }
+
+                $p->atingimento_medio = round($atingimentoFinal, 1);
+                $p->cor_satisfacao = $this->getCorPorPercentual($atingimentoFinal);
+                $p->memoria_indicadores = $listaIndicadoresMemoria;
+                $p->memoria_planos = $listaPlanosMemoria;
+                
+                // Detalhes extras para tooltip
+                $p->detalhes_calculo = [
+                    'nota_indicadores' => round($mediaIndicadores, 1),
+                    'peso_indicadores' => $pesoInd,
+                    'nota_planos' => round($mediaPlanos, 1),
+                    'peso_planos' => $pesoPlan
+                ];
+
                 return $p;
             })->toArray();
     }
@@ -190,7 +324,9 @@ class MapaEstrategico extends Component
         $p = $this->perspectivas[$index];
         $this->detalhesCalculo = [
             'titulo' => $p['dsc_perspectiva'], 'media' => $p['atingimento_medio'],
-            'cor' => $p['cor_satisfacao'], 'indicadores' => $p['memoria_indicadores']
+            'cor' => $p['cor_satisfacao'], 'indicadores' => $p['memoria_indicadores'],
+            'planos' => $p['memoria_planos'] ?? [],
+            'detalhes_calculo' => $p['detalhes_calculo'] ?? null
         ];
         $this->showCalcModal = true;
     }

@@ -6,109 +6,195 @@ use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\ActionPlan\Entrega;
 use App\Models\PerformanceIndicators\Indicador;
 use App\Models\PerformanceIndicators\EvolucaoIndicador;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Service responsável pelo cálculo automático de indicadores
  * baseado no progresso ponderado das entregas de um Plano de Ação.
  * 
- * Fórmula de Cálculo:
- * Progresso = Σ (Peso da Entrega × Status da Entrega) / Soma Total dos Pesos
+ * ## Fórmula de Cálculo
  * 
- * Status mapeados para percentual:
- * - Concluído: 100%
- * - Em Andamento: 50%
- * - Suspenso: 25%
- * - Não Iniciado: 0%
- * - Cancelado: 0% (não contabiliza)
+ * ```
+ *                     Σ (Peso_i × Progresso_i)
+ * Progresso (%) = ─────────────────────────────── × 100
+ *                          Σ Peso_i
+ * ```
+ * 
+ * Onde:
+ * - Progresso_i = valor entre 0.0 e 1.0 (decimal)
+ * - Peso_i = peso da entrega (0-100)
+ * 
+ * ## Mapeamento de Status
+ * 
+ * | Status        | Decimal | Descrição                    |
+ * |---------------|---------|------------------------------|
+ * | Concluído     | 1.0     | 100% completo                |
+ * | Em Andamento  | 0.5     | 50% progresso estimado       |
+ * | Suspenso      | 0.25    | 25% (trabalho parcial feito) |
+ * | Não Iniciado  | 0.0     | Ainda não começou            |
+ * | Cancelado     | N/A     | Excluído do cálculo          |
  * 
  * @author SEAE Strategic Planning Team
  * @since 2026-02
+ * @version 2.0 - Refatoração com clareza matemática
  */
 class IndicadorCalculoService
 {
     /**
-     * Mapeamento de status para percentual de conclusão.
-     * Permite customização futura via configuração.
+     * Mapeamento de status para fração decimal (0.0 a 1.0).
+     * 
+     * IMPORTANTE: Usar escala decimal para evitar multiplicações
+     * duplicadas e manter clareza matemática.
+     */
+    const STATUS_DECIMAL = [
+        'Concluído'     => 1.0,
+        'Em Andamento'  => 0.5,
+        'Suspenso'      => 0.25,
+        'Não Iniciado'  => 0.0,
+        // Cancelado não está aqui - é excluído do cálculo
+    ];
+
+    /**
+     * Mapeamento legado para percentual (mantido para compatibilidade).
+     * @deprecated Use STATUS_DECIMAL para novos cálculos
      */
     const STATUS_PERCENTUAL = [
         'Concluído'     => 100,
         'Em Andamento'  => 50,
         'Suspenso'      => 25,
         'Não Iniciado'  => 0,
-        'Cancelado'     => 0,  // Cancelado não contribui para o cálculo
+        'Cancelado'     => 0,
     ];
 
     /**
      * Calcula o progresso ponderado de um Plano de Ação.
      * 
+     * ## Lógica de Cálculo
+     * 
+     * 1. Busca entregas válidas (não deletadas, não arquivadas, não canceladas)
+     * 2. Se há pesos definidos: usa média ponderada
+     * 3. Se não há pesos: usa média simples
+     * 4. Para entregas com sub-entregas: calcula recursivamente
+     * 
      * @param PlanoDeAcao $plano O plano de ação a calcular
      * @param bool $apenasRaiz Se true, considera apenas entregas raiz (sem pai)
-     * @return float Percentual de progresso (0-100)
+     * @return float Percentual de progresso (0.0 a 100.0)
      */
     public function calcularProgressoPlano(PlanoDeAcao $plano, bool $apenasRaiz = true): float
     {
-        // Buscar entregas ativas (não deletadas, não arquivadas)
-        $query = $plano->entregas()
-            ->where('bln_arquivado', false)
-            ->whereNull('deleted_at');
-
-        if ($apenasRaiz) {
-            $query->whereNull('cod_entrega_pai');
-        }
-
-        $entregas = $query->get();
+        $entregas = $this->getEntregasValidas($plano, $apenasRaiz);
 
         if ($entregas->isEmpty()) {
-            return 0;
+            return 0.0;
         }
 
-        // Verificar se plano usa pesos ou não
-        $somaPesos = $entregas->sum('num_peso');
-        $usaPesos = $somaPesos > 0;
+        // Filtrar entregas canceladas (não participam do cálculo)
+        $entregasAtivas = $entregas->filter(
+            fn(Entrega $e) => $e->bln_status !== 'Cancelado'
+        );
 
-        $progressoPonderado = 0;
-        $divisor = 0;
-
-        foreach ($entregas as $entrega) {
-            // Ignorar entregas canceladas no cálculo
-            if ($entrega->bln_status === 'Cancelado') {
-                continue;
-            }
-
-            // Obter percentual do status
-            $percentualStatus = self::STATUS_PERCENTUAL[$entrega->bln_status] ?? 0;
-
-            // Se a entrega tem sub-entregas, calcular progresso delas recursivamente
-            if ($entrega->hasSubEntregas()) {
-                $percentualStatus = $this->calcularProgressoEntregaComFilhos($entrega);
-            }
-
-            if ($usaPesos && $entrega->num_peso > 0) {
-                // Cálculo ponderado
-                $progressoPonderado += ($entrega->num_peso * $percentualStatus);
-                $divisor += $entrega->num_peso;
-            } else {
-                // Peso igual (fallback)
-                $progressoPonderado += $percentualStatus;
-                $divisor += 100; // Considera peso 100 para cada entrega
-            }
+        if ($entregasAtivas->isEmpty()) {
+            return 0.0;
         }
 
-        if ($divisor === 0) {
-            return 0;
+        // Verificar se plano usa pesos
+        $somaPesos = $entregasAtivas->sum('num_peso');
+        
+        // Se nenhum peso definido, usar média simples
+        if ($somaPesos <= 0) {
+            return $this->calcularMediaSimples($entregasAtivas);
         }
 
-        return round(($progressoPonderado / $divisor) * 100, 2);
+        // Cálculo ponderado: Σ(peso × progresso) / Σ(peso) × 100
+        return $this->calcularMediaPonderada($entregasAtivas, $somaPesos);
     }
 
     /**
-     * Calcula o progresso de uma entrega considerando suas sub-entregas.
+     * Calcula média simples quando não há pesos definidos.
+     * 
+     * Fórmula: (Σ Progresso_i) / N × 100
+     * 
+     * @param Collection $entregas Entregas para calcular
+     * @return float Percentual de progresso (0.0 a 100.0)
+     */
+    protected function calcularMediaSimples(Collection $entregas): float
+    {
+        if ($entregas->isEmpty()) {
+            return 0.0;
+        }
+
+        $somaProgresso = 0.0;
+
+        foreach ($entregas as $entrega) {
+            $somaProgresso += $this->getProgressoEntrega($entrega);
+        }
+
+        // Média simples × 100 para converter decimal para percentual
+        $media = $somaProgresso / $entregas->count();
+        
+        return round($media * 100, 2);
+    }
+
+    /**
+     * Calcula média ponderada com base nos pesos das entregas.
+     * 
+     * Fórmula: Σ(peso × progresso) / Σ(peso) × 100
+     * 
+     * @param Collection $entregas Entregas para calcular
+     * @param float $somaPesos Soma total dos pesos
+     * @return float Percentual de progresso (0.0 a 100.0)
+     */
+    protected function calcularMediaPonderada(Collection $entregas, float $somaPesos): float
+    {
+        if ($somaPesos <= 0) {
+            return 0.0;
+        }
+
+        $progressoAcumulado = 0.0;
+
+        foreach ($entregas as $entrega) {
+            // Ignorar entregas sem peso no cálculo ponderado
+            if ($entrega->num_peso <= 0) {
+                continue;
+            }
+
+            $progressoEntrega = $this->getProgressoEntrega($entrega); // 0.0 a 1.0
+            $progressoAcumulado += $entrega->num_peso * $progressoEntrega;
+        }
+
+        // Resultado: (peso × decimal) / somaPesos × 100
+        // Exemplo: (40 × 1.0 + 30 × 0.5) / 100 × 100 = 55%
+        return round(($progressoAcumulado / $somaPesos) * 100, 2);
+    }
+
+    /**
+     * Obtém o progresso de uma entrega como fração decimal (0.0 a 1.0).
+     * 
+     * Se a entrega tem sub-entregas, calcula recursivamente.
+     * Caso contrário, mapeia o status para decimal.
+     * 
+     * @param Entrega $entrega A entrega
+     * @return float Progresso decimal (0.0 a 1.0)
+     */
+    protected function getProgressoEntrega(Entrega $entrega): float
+    {
+        // Se tem sub-entregas, calcular recursivamente
+        if ($entrega->hasSubEntregas()) {
+            return $this->calcularProgressoSubEntregas($entrega);
+        }
+
+        // Mapear status para decimal
+        return self::STATUS_DECIMAL[$entrega->bln_status] ?? 0.0;
+    }
+
+    /**
+     * Calcula o progresso de uma entrega pai baseado em suas sub-entregas.
      * 
      * @param Entrega $entrega A entrega pai
-     * @return float Percentual de progresso (0-100)
+     * @return float Progresso decimal (0.0 a 1.0)
      */
-    protected function calcularProgressoEntregaComFilhos(Entrega $entrega): float
+    protected function calcularProgressoSubEntregas(Entrega $entrega): float
     {
         $subEntregas = $entrega->subEntregas()
             ->where('bln_arquivado', false)
@@ -117,37 +203,51 @@ class IndicadorCalculoService
             ->get();
 
         if ($subEntregas->isEmpty()) {
-            return self::STATUS_PERCENTUAL[$entrega->bln_status] ?? 0;
+            // Se não tem sub-entregas válidas, usar status da própria entrega
+            return self::STATUS_DECIMAL[$entrega->bln_status] ?? 0.0;
         }
 
         $somaPesos = $subEntregas->sum('num_peso');
-        $usaPesos = $somaPesos > 0;
 
-        $progressoPonderado = 0;
-        $divisor = 0;
+        // Se sub-entregas não têm pesos, usar média simples
+        if ($somaPesos <= 0) {
+            $somaProgresso = 0.0;
+            foreach ($subEntregas as $sub) {
+                $somaProgresso += $this->getProgressoEntrega($sub);
+            }
+            return $somaProgresso / $subEntregas->count();
+        }
 
+        // Cálculo ponderado das sub-entregas
+        $progressoAcumulado = 0.0;
         foreach ($subEntregas as $sub) {
-            $percentualStatus = self::STATUS_PERCENTUAL[$sub->bln_status] ?? 0;
-
-            // Recursão para sub-sub-entregas
-            if ($sub->hasSubEntregas()) {
-                $percentualStatus = $this->calcularProgressoEntregaComFilhos($sub);
-            }
-
-            if ($usaPesos && $sub->num_peso > 0) {
-                $progressoPonderado += ($sub->num_peso * $percentualStatus);
-                $divisor += $sub->num_peso;
-            } else {
-                $progressoPonderado += $percentualStatus;
-                $divisor += 100;
+            if ($sub->num_peso > 0) {
+                $progressoAcumulado += $sub->num_peso * $this->getProgressoEntrega($sub);
             }
         }
 
-        if ($divisor === 0) {
-            return 0;
+        // Retorna decimal (0.0 a 1.0), não percentual
+        return $progressoAcumulado / $somaPesos;
+    }
+
+    /**
+     * Obtém entregas válidas de um plano (não deletadas, não arquivadas).
+     * 
+     * @param PlanoDeAcao $plano O plano de ação
+     * @param bool $apenasRaiz Se true, retorna apenas entregas raiz
+     * @return Collection
+     */
+    protected function getEntregasValidas(PlanoDeAcao $plano, bool $apenasRaiz = true): Collection
+    {
+        $query = $plano->entregas()
+            ->where('bln_arquivado', false)
+            ->whereNull('deleted_at');
+
+        if ($apenasRaiz) {
+            $query->whereNull('cod_entrega_pai');
         }
 
-        return round(($progressoPonderado / $divisor) * 100, 2);
+        return $query->get();
     }
 
     /**
@@ -318,5 +418,270 @@ class IndicadorCalculoService
             'progresso_ponderado' => $this->calcularProgressoPlano($plano),
             'validacao_pesos' => $this->validarPesosPlano($plano),
         ];
+    }
+
+    /**
+     * Simula o cálculo para debug/preview.
+     * 
+     * @param PlanoDeAcao $plano O plano de ação
+     * @return array Detalhes do cálculo passo a passo
+     */
+    public function simularCalculo(PlanoDeAcao $plano): array
+    {
+        $entregas = $this->getEntregasValidas($plano);
+        $detalhes = [];
+        $soma = 0;
+        $divisor = 0;
+
+        foreach ($entregas as $entrega) {
+            if ($entrega->bln_status === 'Cancelado') {
+                $detalhes[] = [
+                    'entrega' => $entrega->dsc_entrega,
+                    'peso' => $entrega->num_peso,
+                    'status' => $entrega->bln_status,
+                    'progresso' => 'N/A (excluído)',
+                    'contribuicao' => 0,
+                ];
+                continue;
+            }
+
+            $progresso = $this->getProgressoEntrega($entrega);
+            $peso = $entrega->num_peso > 0 ? $entrega->num_peso : 0;
+            $contribuicao = $peso * $progresso;
+
+            $detalhes[] = [
+                'entrega' => $entrega->dsc_entrega,
+                'peso' => $peso,
+                'status' => $entrega->bln_status,
+                'progresso' => round($progresso * 100, 1) . '%',
+                'contribuicao' => round($contribuicao, 2),
+            ];
+
+            $soma += $contribuicao;
+            $divisor += $peso;
+        }
+
+        return [
+            'detalhes' => $detalhes,
+            'soma_contribuicoes' => round($soma, 2),
+            'soma_pesos' => round($divisor, 2),
+            'resultado' => $divisor > 0 ? round(($soma / $divisor) * 100, 2) : 0,
+        ];
+    }
+    /**
+     * Calcula o progresso de um plano considerando APENAS entregas com prazo no ano especificado.
+     * 
+     * @param PlanoDeAcao $plano O plano de ação
+     * @param int $ano O ano de referência
+     * @return array ['progresso' => float, 'total_entregas' => int, 'detalhes' => array]
+     */
+    public function calcularProgressoPlanoNoAno(PlanoDeAcao $plano, int $ano): array
+    {
+        // 1. Filtrar entregas do ano (usando a relação já carregada se possível, ou query)
+        // Preferir filter na coleção se já estiver carregada para evitar N+1 em loops
+        $entregasAno = $plano->entregas->filter(function($entrega) use ($ano) {
+            return $entrega->dte_prazo && 
+                   $entrega->dte_prazo->year == $ano &&
+                   $entrega->bln_status !== 'Cancelado' &&
+                   $entrega->cod_entrega_pai === null; // Apenas raiz
+        });
+
+        if ($entregasAno->isEmpty()) {
+            return [
+                'progresso' => 0.0,
+                'total_entregas' => 0,
+                'detalhes' => [],
+                'status_calculado' => 'Sem Entregas'
+            ];
+        }
+
+        // 2. Calcular Progresso (Ponderado ou Simples)
+        $somaPesos = $entregasAno->sum('num_peso');
+        $progressoGeral = 0.0;
+        $detalhes = [];
+
+        if ($somaPesos > 0) {
+            // Média Ponderada
+            $progressoAcumulado = 0.0;
+            foreach ($entregasAno as $entrega) {
+                if ($entrega->num_peso <= 0) continue;
+                $progressoUnitario = $this->getProgressoEntrega($entrega);
+                $progressoAcumulado += $entrega->num_peso * $progressoUnitario;
+                
+                $detalhes[] = [
+                    'entrega' => $entrega->dsc_entrega,
+                    'prazo' => $entrega->dte_prazo->format('d/m/Y'),
+                    'status' => $entrega->bln_status,
+                    'peso' => $entrega->num_peso,
+                    'progresso_item' => $progressoUnitario
+                ];
+            }
+            $progressoGeral = round(($progressoAcumulado / $somaPesos) * 100, 2);
+        } else {
+            // Média Simples
+            $somaProgresso = 0.0;
+            foreach ($entregasAno as $entrega) {
+                $progressoUnitario = $this->getProgressoEntrega($entrega);
+                $somaProgresso += $progressoUnitario;
+
+                $detalhes[] = [
+                    'entrega' => $entrega->dsc_entrega,
+                    'prazo' => $entrega->dte_prazo->format('d/m/Y'),
+                    'status' => $entrega->bln_status,
+                    'peso' => 0, // Peso zero ou indefinido
+                    'progresso_item' => $progressoUnitario
+                ];
+            }
+            $progressoGeral = round(($somaProgresso / $entregasAno->count()) * 100, 2);
+        }
+
+        return [
+            'progresso' => $progressoGeral,
+            'total_entregas' => $entregasAno->count(),
+            'detalhes' => $detalhes,
+            'status_calculado' => $progressoGeral >= 100 ? 'Concluído' : ($progressoGeral > 0 ? 'Em Andamento' : 'Não Iniciado')
+        ];
+    }
+
+    /**
+     * Calcula o atingimento global de uma perspectiva para um determinado ano.
+     * Segue EXATAMENTE a lógica do Mapa Estratégico para garantir Single Source of Truth.
+     * 
+     * @param \App\Models\StrategicPlanning\Perspectiva $perspectiva
+     * @param int $ano
+     * @return float Percentual (0-100)
+     */
+    public function calcularAtingimentoPerspectiva(\App\Models\StrategicPlanning\Perspectiva $perspectiva, int $ano): float
+    {
+        $pesoInd = $perspectiva->num_peso_indicadores ?? 100;
+        $pesoPlan = $perspectiva->num_peso_planos ?? 0;
+
+        // 1. Calcular Média Indicadores
+        $somaAtingInd = 0;
+        $totalInd = 0;
+        
+        foreach ($perspectiva->objetivos as $obj) {
+            foreach ($obj->indicadores as $ind) {
+                // Assume que o model Indicador tem este método. 
+                // Se não tiver, o Mapa Estratégico quebraria, então DEVE ter.
+                $ating = $ind->calcularAtingimento($ano); 
+                $somaAtingInd += $ating;
+                $totalInd++;
+            }
+        }
+        
+        $mediaIndicadores = $totalInd > 0 ? ($somaAtingInd / $totalInd) : 0;
+
+        // 2. Calcular Média Planos (Ponderada Globalmente)
+        $somaProgressoPlan = 0;
+        $somaPesoPlan = 0;
+        
+        foreach ($perspectiva->objetivos as $obj) {
+            foreach ($obj->planosAcao as $plano) {
+                // Filtrar entregas do ano
+                $entregasAno = $plano->entregas->filter(function($entrega) use ($ano) {
+                    return $entrega->dte_prazo && 
+                           $entrega->dte_prazo->year == $ano &&
+                           $entrega->bln_status !== 'Cancelado' &&
+                           $entrega->cod_entrega_pai === null;
+                });
+
+                if ($entregasAno->isEmpty()) continue;
+
+                foreach ($entregasAno as $entrega) {
+                    $statusDecimal = match($entrega->bln_status) {
+                        'Concluído' => 1.0, 
+                        'Em Andamento' => 0.5, 
+                        'Suspenso' => 0.25, 
+                        default => 0.0
+                    };
+                    $peso = $entrega->num_peso > 0 ? $entrega->num_peso : 1;
+                    
+                    $somaProgressoPlan += ($peso * $statusDecimal);
+                    $somaPesoPlan += $peso;
+                }
+            }
+        }
+        
+        $mediaPlanos = $somaPesoPlan > 0 ? ($somaProgressoPlan / $somaPesoPlan) * 100 : 0;
+
+        // 3. Cálculo Final Híbrido
+        $atingimentoFinal = 0;
+        $somaPesosConfig = $pesoInd + $pesoPlan;
+
+        if ($somaPesosConfig > 0) {
+            $atingimentoFinal = (($mediaIndicadores * $pesoInd) + ($mediaPlanos * $pesoPlan)) / $somaPesosConfig;
+        }
+        
+        return round($atingimentoFinal, 1);
+    }
+
+    /**
+     * Calcula o atingimento de um Objetivo específico para um determinado ano.
+     * Segue a mesma lógica híbrida da Perspectiva (Indicadores + Planos), usando os pesos da Perspectiva pai.
+     * 
+     * @param \App\Models\StrategicPlanning\Objetivo $objetivo
+     * @param int $ano
+     * @return float Percentual (0-100)
+     */
+    public function calcularAtingimentoObjetivo(\App\Models\StrategicPlanning\Objetivo $objetivo, int $ano): float
+    {
+        // Pesos vêm da Perspectiva Pai
+        $perspectiva = $objetivo->perspectiva;
+        $pesoInd = $perspectiva->num_peso_indicadores ?? 100;
+        $pesoPlan = $perspectiva->num_peso_planos ?? 0;
+
+        // 1. Calcular Média Indicadores do Objetivo
+        $somaAtingInd = 0;
+        $totalInd = 0;
+        
+        foreach ($objetivo->indicadores as $ind) {
+            $ating = $ind->calcularAtingimento($ano); 
+            $somaAtingInd += $ating;
+            $totalInd++;
+        }
+        
+        $mediaIndicadores = $totalInd > 0 ? ($somaAtingInd / $totalInd) : 0;
+
+        // 2. Calcular Média Planos do Objetivo (Ponderada)
+        $somaProgressoPlan = 0;
+        $somaPesoPlan = 0;
+        
+        foreach ($objetivo->planosAcao as $plano) {
+            // Filtrar entregas do ano
+            $entregasAno = $plano->entregas->filter(function($entrega) use ($ano) {
+                return $entrega->dte_prazo && 
+                       $entrega->dte_prazo->year == $ano &&
+                       $entrega->bln_status !== 'Cancelado' &&
+                       $entrega->cod_entrega_pai === null;
+            });
+
+            if ($entregasAno->isEmpty()) continue;
+
+            foreach ($entregasAno as $entrega) {
+                $statusDecimal = match($entrega->bln_status) {
+                    'Concluído' => 1.0, 
+                    'Em Andamento' => 0.5, 
+                    'Suspenso' => 0.25, 
+                    default => 0.0
+                };
+                $peso = $entrega->num_peso > 0 ? $entrega->num_peso : 1;
+                
+                $somaProgressoPlan += ($peso * $statusDecimal);
+                $somaPesoPlan += $peso;
+            }
+        }
+        
+        $mediaPlanos = $somaPesoPlan > 0 ? ($somaProgressoPlan / $somaPesoPlan) * 100 : 0;
+
+        // 3. Cálculo Final Híbrido
+        $atingimentoFinal = 0;
+        $somaPesosConfig = $pesoInd + $pesoPlan;
+
+        if ($somaPesosConfig > 0) {
+            $atingimentoFinal = (($mediaIndicadores * $pesoInd) + ($mediaPlanos * $pesoPlan)) / $somaPesosConfig;
+        }
+        
+        return round($atingimentoFinal, 1);
     }
 }

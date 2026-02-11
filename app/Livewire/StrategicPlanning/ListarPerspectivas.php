@@ -25,6 +25,8 @@ class ListarPerspectivas extends Component
     public $perspectivaId;
     public $dsc_perspectiva;
     public $num_nivel_hierarquico_apresentacao;
+    public $num_peso_indicadores = 100;
+    public $num_peso_planos = 0;
     public bool $aiEnabled = false;
     public $aiSuggestion = '';
 
@@ -167,6 +169,8 @@ class ListarPerspectivas extends Component
         $this->perspectivaId = $id;
         $this->dsc_perspectiva = $p->dsc_perspectiva;
         $this->num_nivel_hierarquico_apresentacao = $p->num_nivel_hierarquico_apresentacao;
+        $this->num_peso_indicadores = $p->num_peso_indicadores ?? 100;
+        $this->num_peso_planos = $p->num_peso_planos ?? 0;
         $this->showModal = true;
     }
 
@@ -176,7 +180,14 @@ class ListarPerspectivas extends Component
         $this->validate([
             'dsc_perspectiva' => 'required|string|max:255',
             'num_nivel_hierarquico_apresentacao' => 'required|integer|min:1',
+            'num_peso_indicadores' => 'required|integer|min:0|max:100',
+            'num_peso_planos' => 'required|integer|min:0|max:100',
         ]);
+        
+        if (($this->num_peso_indicadores + $this->num_peso_planos) != 100) {
+            $this->addError('num_peso_indicadores', 'A soma dos pesos deve ser exatamente 100%.');
+            return;
+        }
 
         try {
             Perspectiva::updateOrCreate(
@@ -184,7 +195,9 @@ class ListarPerspectivas extends Component
                 [
                     'dsc_perspectiva' => $this->dsc_perspectiva,
                     'num_nivel_hierarquico_apresentacao' => $this->num_nivel_hierarquico_apresentacao,
-                    'cod_pei' => $this->peiAtivo->cod_pei
+                    'cod_pei' => $this->peiAtivo->cod_pei,
+                    'num_peso_indicadores' => $this->num_peso_indicadores,
+                    'num_peso_planos' => $this->num_peso_planos,
                 ]
             );
 
@@ -232,6 +245,8 @@ class ListarPerspectivas extends Component
         $this->perspectivaId = null;
         $this->dsc_perspectiva = '';
         $this->num_nivel_hierarquico_apresentacao = 1;
+        $this->num_peso_indicadores = 100;
+        $this->num_peso_planos = 0;
     }
 
     public function render()

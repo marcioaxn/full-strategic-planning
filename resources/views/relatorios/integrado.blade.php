@@ -347,8 +347,22 @@
 
     @forelse($planos as $plano)
         @php
-            $corStatus = $plano->getSatisfacaoColor();
-            $textoClass = $plano->getSatisfacaoTextClass() == 'text-dark' ? 'color: #000' : 'color: #fff';
+            $prog = $plano->progresso_anual ?? 0;
+            $statusCalculado = $plano->status_anual ?? 'Não Iniciado';
+            $detalhesEntregas = $plano->detalhes_calculo ?? [];
+            $entregasCount = count($detalhesEntregas);
+
+            // Cores baseadas no status calculado
+            $corStatus = match($statusCalculado) {
+                'Concluído' => '#28a745', 
+                'Em Andamento' => '#007bff', 
+                'Atrasado' => '#dc3545',
+                'Suspenso' => '#ffc107',
+                'Sem Entregas' => '#6c757d',
+                default => '#6c757d'
+            };
+            // Texto branco para cores fortes, preto para amarelo
+            $textoClass = ($statusCalculado === 'Suspenso') ? 'color: #000' : 'color: #fff';
         @endphp
         
         <div style="border: 1px solid #ccc; border-radius: 5px; margin-bottom: 20px; page-break-inside: avoid;">
@@ -360,58 +374,53 @@
                             <strong style="color: #1B408E; font-size: 10px;">{{ $plano->dsc_plano_de_acao }}</strong>
                             <div style="font-size: 8px; color: #666; margin-top: 2px;">
                                 Início: {{ $plano->dte_inicio?->format('d/m/Y') }} | Fim: {{ $plano->dte_fim?->format('d/m/Y') }}
+                                <span style="margin-left: 10px; font-weight: bold; color: {{ $corStatus }};">
+                                    Progresso (Ano): {{ number_format($prog, 1) }}%
+                                </span>
                             </div>
                         </td>
                         <td style="border: none; width: 30%; text-align: right;">
                             <span class="badge" style="background: {{ $corStatus }}; {{ $textoClass }}; font-size: 9px;">
-                                {{ $plano->bln_status }}
+                                {{ $statusCalculado }}
                             </span>
                         </td>
                     </tr>
                 </table>
             </div>
 
-            <!-- Entregas do Plano -->
-            @if($plano->entregas->isNotEmpty())
+            <!-- Entregas do Plano (Usando Detalhes Calculados para consistência) -->
+            @if(!empty($detalhesEntregas))
                 <div style="padding: 5px 10px;">
-                    <strong style="font-size: 8px; color: #666; text-transform: uppercase;">Entregas Previstas:</strong>
+                    <strong style="font-size: 8px; color: #666; text-transform: uppercase;">Entregas Consideradas no Cálculo ({{ $filtros['ano'] }}):</strong>
                     <table class="deliverables-table">
                         <thead>
                             <tr>
-                                <th style="width: 45%;">Descrição da Entrega</th>
-                                <th style="width: 20%;">Responsável</th>
+                                <th style="width: 50%;">Descrição da Entrega</th>
                                 <th style="width: 15%;">Prazo</th>
+                                <th style="width: 15%; text-align: center;">Peso</th>
                                 <th style="width: 20%; text-align: center;">Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($plano->entregas as $entrega)
+                            @foreach($detalhesEntregas as $detalhe)
                                 <tr>
-                                    <!-- CORRIGIDO: dsc_entrega em vez de nom_entrega -->
-                                    <td>{{ $entrega->dsc_entrega }}</td>
-                                    <td>
-                                        @if($entrega->responsaveis->isNotEmpty())
-                                            {{ Str::limit($entrega->responsaveis->first()->name, 15) }}
-                                            @if($entrega->responsaveis->count() > 1) <span style="font-size: 7px; color: #999;">(+{{ $entrega->responsaveis->count()-1 }})</span> @endif
-                                        @else
-                                            -
-                                        @endif
-                                    </td>
-                                    <!-- CORRIGIDO: dte_prazo em vez de dte_fim -->
-                                    <td>{{ $entrega->dte_prazo?->format('d/m/y') ?? '-' }}</td>
+                                    <td>{{ $detalhe['entrega'] }}</td>
+                                    <td>{{ $detalhe['prazo'] }}</td>
+                                    <td class="text-center">{{ number_format($detalhe['peso'], 1) }}%</td>
                                     <td class="text-center">
                                         @php
-                                            $corEntrega = match($entrega->bln_status) {
-                                                'Concluído' => '#dbeddb', // Verde Notion
-                                                'Em Andamento' => '#fdecc8', // Amarelo Notion
-                                                'Atrasado' => '#ffe2dd', // Vermelho Notion
+                                            $corEntrega = match($detalhe['status']) {
+                                                'Concluído' => '#dbeddb', 
+                                                'Em Andamento' => '#fdecc8', 
+                                                'Atrasado' => '#ffe2dd', 
                                                 'Cancelado' => '#ffe2dd',
-                                                default => '#e3e2e0' // Cinza Notion
+                                                'Suspenso' => '#fdecc8',
+                                                default => '#e3e2e0'
                                             };
-                                            $textoEntrega = '#37352f'; // Texto escuro padrão Notion
+                                            $textoEntrega = '#37352f'; 
                                         @endphp
                                         <span style="padding: 2px 5px; border-radius: 3px; background: {{ $corEntrega }}; color: {{ $textoEntrega }}; font-size: 7px; font-weight: bold;">
-                                            {{ $entrega->bln_status }}
+                                            {{ $detalhe['status'] }}
                                         </span>
                                     </td>
                                 </tr>
@@ -420,7 +429,9 @@
                     </table>
                 </div>
             @else
-                <div style="padding: 10px; font-size: 8px; color: #999; text-align: center;">Nenhuma entrega cadastrada para este plano.</div>
+                <div style="padding: 10px; font-size: 8px; color: #dc3545; text-align: center; border-left: 3px solid #dc3545; background: #fff5f5; margin: 10px;">
+                    <strong>ATENÇÃO:</strong> Nenhuma entrega prevista para o exercício de {{ $filtros['ano'] }}. O progresso anual é 0%.
+                </div>
             @endif
         </div>
     @empty

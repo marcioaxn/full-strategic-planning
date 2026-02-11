@@ -29,3 +29,7 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /docs
+# Temporary Files
+~$*
+*.tmp
+*.bak

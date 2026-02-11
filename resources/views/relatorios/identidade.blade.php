@@ -161,7 +161,7 @@
                 <div class="persp-body">
                     @forelse($persp->objetivos as $obj)
                         @php
-                            $atingimento = $obj->calcularAtingimentoConsolidado($filtros['ano'], $filtros['mesLimite']);
+                            $atingimento = $obj->atingimento_calculado ?? 0;
                             $cor = $getCorSatisfacao($atingimento);
                         @endphp
                         <div class="obj-card" style="border-left: 3px solid {{ $cor }};">
