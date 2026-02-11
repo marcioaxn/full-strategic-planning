@@ -73,7 +73,12 @@
                              aria-valuemax="100"></div>
                     </div>
                     <small class="text-muted mt-1 d-block">
-                        Considerando o peso de cada entrega: <code>Σ(Peso × Status)</code>.
+                        <span data-bs-toggle="tooltip" 
+                              data-bs-html="true"
+                              title="<strong>Fórmula:</strong><br>Σ(Peso × Status%) / Σ(Peso) × 100<br><br><strong>Status:</strong><br>• Concluído = 100%<br>• Em Andamento = 50%<br>• Suspenso = 25%<br>• Não Iniciado = 0%">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Fórmula: <code>Σ(Peso × Status%)</code> / <code>ΣPeso</code>
+                        </span>
                     </small>
                 </div>
             </div>
@@ -210,10 +215,20 @@
                             @error('dsc_entrega') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label text-muted small text-uppercase fw-bold">Período de Medição / Data</label>
-                            <input type="text" wire:model="dsc_periodo_medicao" class="form-control @error('dsc_periodo_medicao') is-invalid @enderror" placeholder="Ex: Março/2025 ou 30/03/2025">
-                            @error('dsc_periodo_medicao') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label text-muted small text-uppercase fw-bold">Período de Medição (Texto)</label>
+                                <input type="text" wire:model="dsc_periodo_medicao" class="form-control @error('dsc_periodo_medicao') is-invalid @enderror" placeholder="Ex: Março/2025">
+                                @error('dsc_periodo_medicao') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small text-uppercase fw-bold">Data Limite / Prazo</label>
+                                <input type="date" wire:model="dte_prazo" 
+                                       class="form-control @error('dte_prazo') is-invalid @enderror"
+                                       min="{{ $plano->dte_inicio?->format('Y-m-d') }}"
+                                       max="{{ $plano->dte_fim?->format('Y-m-d') }}">
+                                @error('dte_prazo') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
                         </div>
 
                         <div class="row g-3">

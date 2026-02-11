@@ -27,6 +27,7 @@ class GerenciarEntregas extends Component
     public $dsc_entrega;
     public $bln_status = 'Não Iniciado';
     public $dsc_periodo_medicao;
+    public $dte_prazo;
     public $num_nivel_hierarquico_apresentacao = 1;
     public $num_peso = 0;
 
@@ -63,6 +64,9 @@ class GerenciarEntregas extends Component
         $maxNivel = $this->entregas->max('num_nivel_hierarquico_apresentacao') ?? 0;
         $this->num_nivel_hierarquico_apresentacao = $maxNivel + 1;
         
+        // Sugerir prazo final do plano
+        $this->dte_prazo = $this->plano->dte_fim?->format('Y-m-d');
+        
         $this->showModal = true;
     }
 
@@ -75,6 +79,7 @@ class GerenciarEntregas extends Component
         $this->dsc_entrega = $entrega->dsc_entrega;
         $this->bln_status = $entrega->bln_status;
         $this->dsc_periodo_medicao = $entrega->dsc_periodo_medicao;
+        $this->dte_prazo = $entrega->dte_prazo?->format('Y-m-d');
         $this->num_nivel_hierarquico_apresentacao = $entrega->num_nivel_hierarquico_apresentacao;
         $this->num_peso = $entrega->num_peso ?? 0;
 
@@ -85,10 +90,27 @@ class GerenciarEntregas extends Component
     {
         $this->authorize('update', $this->plano);
 
+        $valData = \Carbon\Carbon::parse($this->dte_prazo);
+        $planoInicio = \Carbon\Carbon::parse($this->plano->dte_inicio);
+        $planoFim = \Carbon\Carbon::parse($this->plano->dte_fim);
+
         $this->validate([
             'dsc_entrega' => 'required|string|max:500',
             'bln_status' => 'required|in:' . implode(',', $this->statusOptions),
             'dsc_periodo_medicao' => 'nullable|string|max:100',
+            'dte_prazo' => [
+                'required',
+                'date',
+                function ($attribute, $value, $fail) use ($planoInicio, $planoFim) {
+                     $dt = \Carbon\Carbon::parse($value);
+                     if ($dt->lt($planoInicio)) {
+                         $fail("O prazo não pode ser anterior ao início do plano ({$planoInicio->format('d/m/Y')}).");
+                     }
+                     if ($dt->gt($planoFim)) {
+                         $fail("O prazo não pode exceder o fim do plano ({$planoFim->format('d/m/Y')}).");
+                     }
+                }
+            ],
             'num_nivel_hierarquico_apresentacao' => 'required|integer|min:1',
             'num_peso' => 'nullable|numeric|min:0|max:100',
         ]);
@@ -100,6 +122,7 @@ class GerenciarEntregas extends Component
                 'dsc_entrega' => $this->dsc_entrega,
                 'bln_status' => $this->bln_status,
                 'dsc_periodo_medicao' => $this->dsc_periodo_medicao,
+                'dte_prazo' => $this->dte_prazo,
                 'num_nivel_hierarquico_apresentacao' => $this->num_nivel_hierarquico_apresentacao,
                 'num_peso' => $this->num_peso ?? 0,
             ]

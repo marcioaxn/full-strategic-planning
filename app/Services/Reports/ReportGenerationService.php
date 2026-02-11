@@ -23,9 +23,15 @@ use Illuminate\Support\Str;
 
 class ReportGenerationService
 {
+    protected $calculoService;
+
+    public function __construct(\App\Services\IndicadorCalculoService $calculoService)
+    {
+        $this->calculoService = $calculoService;
+    }
+
     public function generateExecutivo($organizacaoId, $ano, $periodo, $perspectivaId = null)
     {
-        // Traduzir período para mês limite de cálculo
         $mesLimite = 12;
         switch($periodo) {
             case '1_semestre': $mesLimite = 6; break;
@@ -63,6 +69,18 @@ class ReportGenerationService
                   ->whereYear('dte_fim', '>=', $ano);
             })
             ->get()
+            ->map(function ($plano) use ($ano) {
+                // Calcular progresso real do ano usando o Service
+                $calculo = $this->calculoService->calcularProgressoPlanoNoAno($plano, $ano);
+                
+                // Sobrescrever propriedades para exibição no relatório
+                $plano->progresso_anual = $calculo['progresso'];
+                $plano->status_anual = $calculo['status_calculado'];
+                $plano->entregas_ano_count = $calculo['total_entregas'];
+                $plano->detalhes_calculo = $calculo['detalhes'];
+                
+                return $plano;
+            })
             ->sortBy([
                 ['objetivo.perspectiva.num_nivel_hierarquico_apresentacao', 'asc'],
                 ['objetivo.num_nivel_hierarquico_apresentacao', 'asc'],
@@ -207,11 +225,54 @@ class ReportGenerationService
             ->where('cod_organizacao', $organizacaoId)
             ->get();
         
-        // Carregar Perspectivas e Objetivos para o Mapa
-        $perspectivas = Perspectiva::where('cod_pei', $pei?->cod_pei)
-            ->with(['objetivos.indicadores'])
-            ->ordenadoPorNivel()
-            ->get();
+        // Carregar Perspectivas e Objetivos para o Mapa (Com filtro de organização e cálculo unificado)
+        // IDs para o Roll-up (mesma lógica do Mapa Livewire)
+        $orgIds = [];
+        if ($organizacaoId) {
+            $org = Organization::find($organizacaoId);
+            if ($org) {
+                if (method_exists($org, 'getDescendantsAndSelfIds')) {
+                    $orgIds = $org->getDescendantsAndSelfIds();
+                } else {
+                    $orgIds = [$organizacaoId];
+                }
+            }
+        }
+
+        $queryPerspectivas = Perspectiva::where('cod_pei', $pei?->cod_pei)->ordenadoPorNivel();
+
+        if (!empty($orgIds)) {
+            $queryPerspectivas->with(['objetivos' => function($qObj) use ($orgIds) {
+                $qObj->with(['indicadores' => function($qInd) use ($orgIds) {
+                    $qInd->whereIn('tab_indicador.cod_indicador', function($sub) use ($orgIds) {
+                        $sub->select('cod_indicador')
+                            ->from('performance_indicators.rel_indicador_objetivo_organizacao')
+                            ->whereIn('cod_organizacao', $orgIds);
+                    });
+                }, 'planosAcao' => function($qPlan) use ($orgIds) {
+                    $qPlan->whereIn('tab_plano_de_acao.cod_plano_de_acao', function($sub) use ($orgIds) {
+                        $sub->select('cod_plano_de_acao')
+                            ->from('action_plan.rel_plano_organizacao')
+                            ->whereIn('cod_organizacao', $orgIds);
+                    })->with(['entregas' => function($qEntrega) {
+                        $qEntrega->where('bln_arquivado', false)->orderBy('dte_prazo');
+                    }]);
+                }])->ordenadoPorNivel();
+            }]);
+        } else {
+             $queryPerspectivas->with(['objetivos.indicadores', 'objetivos.planosAcao.entregas']);
+        }
+
+        $perspectivas = $queryPerspectivas->get()->map(function($p) use ($ano) {
+            $p->atingimento_calculado = $this->calculoService->calcularAtingimentoPerspectiva($p, $ano);
+            
+            // Injetar cálculo nos objetivos filhos
+            foreach($p->objetivos as $obj) {
+                $obj->atingimento_calculado = $this->calculoService->calcularAtingimentoObjetivo($obj, $ano);
+            }
+            
+            return $p;
+        });
 
         $grausSatisfacao = GrauSatisfacao::orderBy('vlr_minimo')->get();
 
@@ -405,6 +466,18 @@ class ReportGenerationService
                   ->whereYear('dte_fim', '>=', $ano);
             })
             ->get()
+            ->map(function ($plano) use ($ano) {
+                // Calcular progresso real do ano usando o Service
+                $calculo = $this->calculoService->calcularProgressoPlanoNoAno($plano, $ano);
+                
+                // Sobrescrever propriedades para exibição no relatório
+                $plano->progresso_anual = $calculo['progresso'];
+                $plano->status_anual = $calculo['status_calculado'];
+                $plano->entregas_ano_count = $calculo['total_entregas'];
+                $plano->detalhes_calculo = $calculo['detalhes'];
+                
+                return $plano;
+            })
             ->sortBy([
                 ['objetivo.perspectiva.num_nivel_hierarquico_apresentacao', 'asc'],
                 ['objetivo.num_nivel_hierarquico_apresentacao', 'asc'],

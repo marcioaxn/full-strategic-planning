@@ -24,12 +24,14 @@ class Index extends Component
     public $organizacaoNome;
     public $peiAtivo;
     public $aiSummary = '';
+    public $anoSelecionado;
     
     // Dados para os gráficos observados pelo AlpineJS
     public $chartData = [
         'bsc' => [],
         'riscos' => ['labels' => [], 'data' => [], 'colors' => []],
-        'planos' => []
+        'planos' => [],
+        'evolucao' => ['labels' => [], 'data' => []]
     ];
 
     protected $listeners = [
@@ -40,6 +42,7 @@ class Index extends Component
 
     public function mount()
     {
+        $this->anoSelecionado = Session::get('ano_selecionado', date('Y'));
         $this->organizacaoId = Session::get('organizacao_selecionada_id');
         $this->carregarPEI();
         $this->carregarNomeOrganizacao();
@@ -48,6 +51,7 @@ class Index extends Component
 
     public function atualizarAno($ano)
     {
+        $this->anoSelecionado = $ano;
         $this->atualizarDadosGraficos();
     }
 
@@ -102,6 +106,7 @@ class Index extends Component
             'bsc' => $this->getChartBSC(),
             'riscos' => $this->getChartRiscosNivel(),
             'planos' => $this->getChartPlanos(),
+            'evolucao' => $this->getChartEvolucao(),
         ];
     }
 
@@ -121,6 +126,9 @@ class Index extends Component
     private function getStats()
     {
         $codPei = $this->peiAtivo?->cod_pei;
+        $service = app(\App\Services\IndicadorCalculoService::class);
+        
+        // Buscar Planos
         $planosQuery = PlanoDeAcao::query();
         if ($codPei) {
             $planosQuery->whereHas('objetivo.perspectiva', fn($q) => $q->where('cod_pei', $codPei));
@@ -128,10 +136,23 @@ class Index extends Component
         if ($this->organizacaoId) {
             $planosQuery->where('cod_organizacao', $this->organizacaoId);
         }
+        
+        // Filtrar planos que tenham vigência no ano selecionado
+        $planosQuery->whereYear('dte_inicio', '<=', $this->anoSelecionado)
+                    ->whereYear('dte_fim', '>=', $this->anoSelecionado);
+                    
         $planos = $planosQuery->get();
+        
         $totalProgresso = 0;
+        $planosConcluidosAno = 0;
+        
         foreach ($planos as $plano) {
-            $totalProgresso += $plano->calcularProgressoEntregas();
+            $calculo = $service->calcularProgressoPlanoNoAno($plano, (int)$this->anoSelecionado);
+            $totalProgresso += $calculo['progresso'];
+            
+            if ($calculo['status_calculado'] === 'Concluído') {
+                $planosConcluidosAno++;
+            }
         }
         
         return [
@@ -140,7 +161,7 @@ class Index extends Component
             'totalIndicadores' => Indicador::whereHas('objetivo.perspectiva', fn($q) => $q->where('cod_pei', $codPei))->count(),
             'progressoPlanos' => $planos->count() > 0 ? $totalProgresso / $planos->count() : 0,
             'totalPlanos' => $planos->count(),
-            'planosConcluidos' => $planos->where('bln_status', 'Concluído')->count(),
+            'planosConcluidos' => $planosConcluidosAno,
             'riscosCriticos' => Risco::where('cod_organizacao', $this->organizacaoId)->where('cod_pei', $codPei)->criticos()->count(),
             'totalRiscos' => Risco::where('cod_organizacao', $this->organizacaoId)->where('cod_pei', $codPei)->count(),
         ];
@@ -186,15 +207,66 @@ class Index extends Component
     private function getChartBSC()
     {
         if (!$this->peiAtivo) return [];
-        return Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
-            ->orderBy('num_nivel_hierarquico_apresentacao')
-            ->get()->map(function($p) {
-                $atingimentos = $p->objetivos->map(fn($o) => $o->calcularAtingimentoConsolidado())->filter(fn($v) => $v > 0);
-                $media = $atingimentos->count() > 0 ? $atingimentos->avg() : 0;
+        $service = app(\App\Services\IndicadorCalculoService::class);
+        $ano = (int)$this->anoSelecionado;
+
+        // Determinar IDs de Organização para Roll-up (igual ao Mapa Estratégico)
+        $orgIds = [];
+        if ($this->organizacaoId) {
+            $org = Organization::find($this->organizacaoId);
+            if ($org) {
+                // Tenta pegar descendentes se o model tiver trait de árvore, senão apenas ele mesmo
+                if (method_exists($org, 'getDescendantsAndSelfIds')) {
+                    $orgIds = $org->getDescendantsAndSelfIds();
+                } else {
+                    $orgIds = [$this->organizacaoId];
+                }
+            }
+        } else {
+            // Se nenhuma organização selecionada, pegar todas vinculadas ao PEI ou do usuário?
+            // Dashboard sem Org selecionada mostra visão global.
+            // Para visão global, talvez não devamos filtrar por rel_..._organizacao.
+            // Mas o Mapa FORÇA uma organização. O Dashboard permite "Todas".
+            // Se "Todas", $orgIds vazio.
+        }
+
+        $query = Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
+            ->orderBy('num_nivel_hierarquico_apresentacao');
+
+        // Aplicar Eager Loading com Filtros APENAS sc houver $orgIds
+        if (!empty($orgIds)) {
+            $query->with(['objetivos' => function($qObj) use ($orgIds) {
+                $qObj->with(['indicadores' => function($qInd) use ($orgIds) {
+                    $qInd->whereIn('tab_indicador.cod_indicador', function($sub) use ($orgIds) {
+                        $sub->select('cod_indicador')
+                            ->from('performance_indicators.rel_indicador_objetivo_organizacao')
+                            ->whereIn('cod_organizacao', $orgIds);
+                    });
+                }, 'planosAcao' => function($qPlan) use ($orgIds) {
+                    $qPlan->whereIn('tab_plano_de_acao.cod_plano_de_acao', function($sub) use ($orgIds) {
+                        $sub->select('cod_plano_de_acao')
+                            ->from('action_plan.rel_plano_organizacao')
+                            ->whereIn('cod_organizacao', $orgIds);
+                    })->with(['entregas' => function($qEntrega) {
+                        $qEntrega->where('bln_arquivado', false)->orderBy('dte_prazo');
+                    }]);
+                }])->ordenadoPorNivel();
+            }]);
+        } else {
+            // Carregamento padrão sem filtro de org (Visão Global)
+            $query->with(['objetivos' => function($qObj) {
+                $qObj->with(['indicadores', 'planosAcao.entregas']);
+            }]);
+        }
+
+        return $query->get()->map(function($p) use ($service, $ano) {
+                // CÁLCULO CENTRALIZADO
+                $atingimento = $service->calcularAtingimentoPerspectiva($p, $ano);
+                
                 return [
                     'label' => $p->dsc_perspectiva,
-                    'count' => round($media, 1),
-                    'color' => $this->getCorAtingimento($media)
+                    'count' => $atingimento,
+                    'color' => $this->getCorAtingimento($atingimento)
                 ];
             })->toArray();
     }
@@ -209,18 +281,127 @@ class Index extends Component
 
     private function getChartPlanos()
     {
+        $service = app(\App\Services\IndicadorCalculoService::class);
         $planosQuery = PlanoDeAcao::query();
-        if ($this->peiAtivo) $planosQuery->whereHas('objetivo.perspectiva', fn($q) => $q->where('cod_pei', $this->peiAtivo->cod_pei));
-        if ($this->organizacaoId) $planosQuery->where('cod_organizacao', $this->organizacaoId);
+        
+        if ($this->peiAtivo) {
+            $planosQuery->whereHas('objetivo.perspectiva', fn($q) => $q->where('cod_pei', $this->peiAtivo->cod_pei));
+        }
+        if ($this->organizacaoId) {
+            $planosQuery->where('cod_organizacao', $this->organizacaoId);
+        }
+        
+        // Filtro de vigência
+        $planosQuery->whereYear('dte_inicio', '<=', $this->anoSelecionado)
+                    ->whereYear('dte_fim', '>=', $this->anoSelecionado);
+                    
         $planos = $planosQuery->get();
-        $status = ['Concluído' => ['c' => 0, 'col' => '#429B22'], 'Em Andamento' => ['c' => 0, 'col' => '#F3C72B'], 'Não Iniciado' => ['c' => 0, 'col' => '#475569'], 'Atrasado' => ['c' => 0, 'col' => '#dc3545']];
-        foreach ($planos as $p) { $st = $p->bln_status; if (isset($status[$st])) $status[$st]['c']++; }
-        return collect($status)->map(fn($v, $k) => ['label' => $k, 'count' => $v['c'], 'color' => $v['col']])->values()->toArray();
+        
+        $statusCounts = [
+            'Concluído' => ['c' => 0, 'col' => '#429B22'], 
+            'Em Andamento' => ['c' => 0, 'col' => '#F3C72B'], 
+            'Não Iniciado' => ['c' => 0, 'col' => '#475569'], 
+            'Atrasado' => ['c' => 0, 'col' => '#dc3545'],
+            'Sem Entregas' => ['c' => 0, 'col' => '#6c757d']
+        ];
+        
+        foreach ($planos as $plano) {
+            $calculo = $service->calcularProgressoPlanoNoAno($plano, (int)$this->anoSelecionado);
+            $st = $calculo['status_calculado'];
+            
+            if (isset($statusCounts[$st])) {
+                $statusCounts[$st]['c']++;
+            } else {
+                // Fallback para status desconhecidos
+                $statusCounts['Em Andamento']['c']++;
+            }
+        }
+        
+        return collect($statusCounts)
+            ->filter(fn($v) => $v['c'] > 0) // Remove categorias vazias para limpar o gráfico
+            ->map(fn($v, $k) => ['label' => $k, 'count' => $v['c'], 'color' => $v['col']])
+            ->values()
+            ->toArray();
+    }
+
+    private function getChartEvolucao()
+    {
+        if (!$this->peiAtivo) return ['labels' => [], 'data' => []];
+
+        // Buscar evoluções do ano selecionado vinculadas ao PEI
+        $evolucoes = \App\Models\PerformanceIndicators\EvolucaoIndicador::where('num_ano', $this->anoSelecionado)
+            ->whereHas('indicador.objetivo.perspectiva', fn($q) => $q->where('cod_pei', $this->peiAtivo->cod_pei))
+            ->get();
+
+        $dadosPorMes = [];
+        for ($i = 1; $i <= 12; $i++) {
+            // Se o ano for o atual, parar no mês atual
+            if ($this->anoSelecionado == date('Y') && $i > date('n')) break;
+            
+            $evolucoesMes = $evolucoes->where('num_mes', $i);
+            
+            if ($evolucoesMes->count() > 0) {
+                // Média simples das porcentagens de atingimento (realizado vs 100% ou meta)
+                // Considerando polaridade simplificada (assumindo realizado é bom)
+                $somaAtingimento = 0;
+                $count = 0;
+                
+                foreach ($evolucoesMes as $ev) {
+                   $meta = $ev->vlr_previsto != 0 ? $ev->vlr_previsto : 1;
+                   $real = $ev->vlr_realizado;
+                   
+                   // Limitar a 100% para não distorcer o gráfico com outliers
+                   $perc = ($real / $meta) * 100;
+                   $somaAtingimento += min($perc, 100); 
+                   $count++;
+                }
+                
+                $dadosPorMes[] = round($somaAtingimento / $count, 1);
+            } else {
+                $dadosPorMes[] = 0;
+            }
+        }
+        
+        $meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        
+        return [
+            'labels' => array_slice($meses, 0, count($dadosPorMes)),
+            'data' => $dadosPorMes
+        ];
     }
 
     private function getCorAtingimento($percentual)
     {
         $grau = GrauSatisfacao::where('vlr_minimo', '<=', $percentual)->where('vlr_maximo', '>=', $percentual)->first();
         return $grau?->cor ?? '#6c757d';
+    }
+
+    public function getMentorStatus()
+    {
+        if (!$this->organizacaoId || !$this->peiAtivo) {
+            return [
+                'steps' => ['identidade' => false, 'mapa' => false, 'objetivos' => false, 'indicadores' => false, 'planos' => false],
+                'percent' => 0
+            ];
+        }
+
+        $codPei = $this->peiAtivo->cod_pei;
+        $orgId = $this->organizacaoId;
+
+        // Verificar preenchimento das etapas
+        $steps = [
+            'identidade' => \App\Models\StrategicPlanning\MissaoVisaoValores::where('cod_organizacao', $orgId)->exists(),
+            'mapa' => Perspectiva::where('cod_pei', $codPei)->exists(),
+            'objetivos' => Objetivo::whereHas('perspectiva', fn($q) => $q->where('cod_pei', $codPei))->exists(),
+            'indicadores' => Indicador::whereHas('objetivo.perspectiva', fn($q) => $q->where('cod_pei', $codPei))->exists(),
+            'planos' => PlanoDeAcao::whereHas('objetivo.perspectiva', fn($q) => $q->where('cod_pei', $codPei))
+                        ->where('cod_organizacao', $orgId)->exists()
+        ];
+
+        $filled = count(array_filter($steps));
+        $total = count($steps);
+        $percent = $total > 0 ? round(($filled / $total) * 100) : 0;
+
+        return ['steps' => $steps, 'percent' => $percent];
     }
 }

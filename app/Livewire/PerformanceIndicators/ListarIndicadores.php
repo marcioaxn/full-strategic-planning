@@ -215,12 +215,32 @@ class ListarIndicadores extends Component
 
     public function save()
     {
-        $this->validate([
+        // Regras de validação base
+        $rules = [
             'form.nom_indicador' => 'required|string|max:255',
             'form.dsc_tipo' => 'required',
             'form.dsc_unidade_medida' => 'required',
             'form.organizacoes_ids' => 'required|array|min:1',
-        ]);
+        ];
+
+        // Validação condicional: Se tipo é Plano E cálculo é automático, plano é obrigatório
+        if ($this->form['dsc_tipo'] === 'Plano') {
+            $rules['form.cod_plano_de_acao'] = 'required|uuid|exists:tab_planos_acao,cod_plano_de_acao';
+            
+            // Se cálculo automático, reforçar mensagem
+            if ($this->form['dsc_calculation_type'] === 'action_plan') {
+                $rules['form.cod_plano_de_acao'] = 'required|uuid|exists:tab_planos_acao,cod_plano_de_acao';
+            }
+        } elseif ($this->form['dsc_tipo'] === 'Objetivo') {
+            $rules['form.cod_objetivo'] = 'required|uuid|exists:tab_objetivo,cod_objetivo';
+        }
+
+        $messages = [
+            'form.cod_plano_de_acao.required' => 'Para indicadores com cálculo automático, é obrigatório selecionar um Plano de Ação.',
+            'form.cod_objetivo.required' => 'Selecione o Objetivo Estratégico vinculado a este indicador.',
+        ];
+
+        $this->validate($rules, $messages);
 
         try {
             $data = $this->form;
@@ -228,7 +248,8 @@ class ListarIndicadores extends Component
             unset($data['organizacoes_ids']);
 
             if ($data['dsc_tipo'] === 'Objetivo') { 
-                $data['cod_plano_de_acao'] = null; 
+                $data['cod_plano_de_acao'] = null;
+                $data['dsc_calculation_type'] = 'manual'; // Objetivo sempre manual
             } else { 
                 $data['cod_objetivo'] = null; 
             }

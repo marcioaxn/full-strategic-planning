@@ -3,7 +3,7 @@
 use App\Livewire\LeadsTable;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', \App\Livewire\StrategicPlanning\MapaEstrategico::class)->name('welcome');
+Route::any('/', \App\Livewire\StrategicPlanning\MapaEstrategico::class)->name('welcome');
 
 // CSRF Token Refresh Endpoint
 Route::get('/refresh-csrf', function () {
