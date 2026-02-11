@@ -25,8 +25,9 @@ class DetalharPlano extends Component
 
     public function render()
     {
-        // Calcula progresso baseado nas entregas
-        $progresso = $this->plano->calcularProgressoEntregas();
+        // Calcula progresso baseado nas entregas (Regra Unificada via Service)
+        $service = app(\App\Services\IndicadorCalculoService::class);
+        $progresso = $service->calcularProgressoPlano($this->plano);
 
         // Busca responsáveis únicos de todas as entregas do plano
         $responsaveis = User::join('rel_entrega_users_responsaveis as r', 'users.id', '=', 'r.cod_usuario')

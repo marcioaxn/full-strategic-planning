@@ -210,15 +210,23 @@
                                                             </div>
                                                         </a>
                                                     </div>
+                                                    {{-- Planos (Foco em Atividade e Progresso) --}}
                                                     <div class="obj-stat-box">
                                                         <a wire:navigate href="{{ route('planos.index') }}?filtroObjetivo={{ $objetivo['cod_objetivo'] }}" 
                                                            class="text-decoration-none plano-link" @auth onclick="event.stopPropagation();" @endauth>
                                                             <div class="d-flex justify-content-between mb-1 align-items-center">
-                                                                <span class="stat-label-modern">Planos</span>
-                                                                <span class="stat-value-modern" style="color: {{ $pln['cor'] }};">{{ $pln['concluidos'] }}/{{ $pln['quantidade'] }}</span>
+                                                                {{-- Rótulo com Quantidade --}}
+                                                                <span class="stat-label-modern" style="text-transform: uppercase;">
+                                                                    {{ $pln['quantidade'] }} Planos Ativos
+                                                                </span>
+                                                                {{-- Percentual em Destaque --}}
+                                                                <span class="stat-value-modern" style="color: {{ $pln['cor'] }}; font-size: 0.8rem;">
+                                                                    @brazil_percent($pln['media_progresso'] ?? 0, 1)
+                                                                </span>
                                                             </div>
+                                                            {{-- Barra de Progresso --}}
                                                             <div class="stat-progress-container bg-light-custom">
-                                                                <div class="stat-progress-fill" style="width: {{ min($pln['percentual'], 100) }}%; background-color: {{ $pln['cor'] }};"></div>
+                                                                <div class="stat-progress-fill" style="width: {{ min($pln['media_progresso'] ?? 0, 100) }}%; background-color: {{ $pln['cor'] }};"></div>
                                                             </div>
                                                         </a>
                                                     </div>
@@ -279,6 +287,45 @@
                             </div>
                         </div>
 
+                        @if(isset($detalhesCalculo['detalhes_calculo']) && ($detalhesCalculo['detalhes_calculo']['peso_planos'] > 0))
+                            <div class="card border-0 bg-light-subtle shadow-sm mb-4">
+                                <div class="card-body py-3 px-4">
+                                    <h6 class="small fw-bold text-uppercase text-muted mb-3"><i class="bi bi-calculator me-1"></i>Composição da Nota (Cálculo Ponderado)</h6>
+                                    <div class="d-flex justify-content-center align-items-center gap-4 flex-wrap">
+                                        
+                                        <!-- Parte Indicadores -->
+                                        <div class="text-center px-3 border-end">
+                                            <div class="h3 mb-0 text-primary fw-bold">@brazil_percent($detalhesCalculo['detalhes_calculo']['nota_indicadores'], 1)</div>
+                                            <div class="x-small text-muted fw-bold text-uppercase mt-1">
+                                                Indicadores <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 ms-1">{{ $detalhesCalculo['detalhes_calculo']['peso_indicadores'] }}%</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-muted h3 mb-0 opacity-50">+</div>
+
+                                        <!-- Parte Planos -->
+                                        <div class="text-center px-3 border-end">
+                                            <div class="h3 mb-0 text-success fw-bold">@brazil_percent($detalhesCalculo['detalhes_calculo']['nota_planos'], 1)</div>
+                                            <div class="x-small text-muted fw-bold text-uppercase mt-1">
+                                                Planos (Ano) <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 ms-1">{{ $detalhesCalculo['detalhes_calculo']['peso_planos'] }}%</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-muted h3 mb-0 opacity-50">=</div>
+
+                                        <!-- Resultado -->
+                                        <div class="text-center px-3">
+                                            <div class="h2 mb-0 fw-800" style="color: {{ $detalhesCalculo['cor'] }}">
+                                                @brazil_percent($detalhesCalculo['media'], 1)
+                                            </div>
+                                            <div class="x-small text-muted fw-bold text-uppercase mt-1">Nota Final</div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         <div class="table-responsive rounded-3 border">
                             <table class="table table-hover mb-0">
                                 <thead class="bg-body-secondary">
@@ -311,6 +358,68 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        {{-- Tabela de Planos e Entregas (NOVO) --}}
+                        @if(isset($detalhesCalculo['planos']) && count($detalhesCalculo['planos']) > 0)
+                            <div class="divider-center my-4 opacity-25"></div>
+                            
+                            <div class="d-flex align-items-center mb-3 ps-2">
+                                <h6 class="small fw-bold text-uppercase text-muted mb-0"><i class="bi bi-list-check me-2"></i>Detalhamento de Planos e Entregas</h6>
+                            </div>
+
+                            <div class="table-responsive rounded-3 border">
+                                <table class="table table-hover mb-0 align-middle">
+                                    <thead class="bg-body-secondary">
+                                        <tr class="small text-muted text-uppercase fw-bold">
+                                            <th class="border-0 px-3 py-3" style="width: 25%;">Objetivo</th>
+                                            <th class="border-0 py-3">Plano de Ação / Entregas do Ano</th>
+                                            <th class="border-0 text-end px-3 py-3" style="width: 120px;">Nota</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-body">
+                                        @foreach($detalhesCalculo['planos'] as $plano)
+                                            <tr>
+                                                <td class="small fw-bold px-3 text-wrap">{{ $plano['objetivo'] }}</td>
+                                                <td class="py-3">
+                                                    <div class="fw-bold text-primary mb-2"><i class="bi bi-folder2-open me-1"></i>{{ $plano['plano'] }}</div>
+                                                    
+                                                    <div class="bg-light rounded-3 p-2 small">
+                                                        @foreach($plano['entregas'] as $entrega)
+                                                            <div class="d-flex align-items-center justify-content-between mb-1 pb-1 border-bottom border-light-subtle last-no-border">
+                                                                <div class="d-flex align-items-center text-truncate pe-2">
+                                                                    <i class="bi bi-dot text-muted me-1"></i>
+                                                                    <span class="text-muted" title="{{ $entrega['entrega'] }}">{{ Str::limit($entrega['entrega'], 60) }}</span>
+                                                                </div>
+                                                                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                                                    <span class="badge bg-white text-muted border fw-normal" style="font-size: 0.75rem;">{{ $entrega['prazo'] }}</span>
+                                                                    
+                                                                    @php
+                                                                        $statusColor = match($entrega['status']) {
+                                                                            'Concluído' => 'success', 'Em Andamento' => 'warning', 'Suspenso' => 'secondary', 'Atrasado' => 'danger', default => 'light'
+                                                                        };
+                                                                        $statusIcon = match($entrega['status']) {
+                                                                            'Concluído' => 'check-circle-fill', 'Em Andamento' => 'hourglass-split', 'Suspenso' => 'pause-circle', 'Atrasado' => 'exclamation-circle-fill', default => 'circle'
+                                                                        };
+                                                                    @endphp
+                                                                    
+                                                                    <span class="text-{{ $statusColor }}" title="{{ $entrega['status'] }} (Peso {{ $entrega['peso'] }})">
+                                                                        <i class="bi bi-{{ $statusIcon }}"></i>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                </td>
+                                                <td class="text-end fw-800 px-3" style="font-size: 1.1rem; color: {{ $plano['cor'] }};">
+                                                    @brazil_percent($plano['atingimento'], 1)
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+
                     </div>
                     <div class="modal-footer border-0 p-4 pt-0 text-center">
                         <button type="button" class="btn btn-secondary px-5 rounded-pill fw-bold" wire:click="fecharMemoriaCalculo">Fechar Memória</button>
@@ -322,5 +431,6 @@
 
     <style>
         .divider-left { width: 40px; height: 4px; background: var(--bs-primary); margin-top: 8px; border-radius: 10px; opacity: 0.4; }
+        .last-no-border:last-child { border-bottom: none !important; padding-bottom: 0 !important; margin-bottom: 0 !important; }
     </style>
 </div>

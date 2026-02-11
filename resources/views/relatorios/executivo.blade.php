@@ -330,11 +330,24 @@
             <tbody>
                 @forelse($planos as $plano)
                     @php 
-                        $prog = $plano->calcularProgressoEntregas(); 
+                        // Usa valores calculados pelo Service (injetados no objeto)
+                        $prog = $plano->progresso_anual ?? 0;
+                        $statusCalculado = $plano->status_anual ?? 'Não Iniciado';
+                        $entregasCount = $plano->entregas_ano_count ?? 0;
+                        
                         $perspectivaNome = $plano->objetivo?->perspectiva?->dsc_perspectiva ?? 'Não definida';
                         $objetivoNome = $plano->objetivo?->nom_objetivo ?? 'Não definido';
-                        $corStatus = $plano->getSatisfacaoColor();
-                        $textClass = ($corStatus == '#F3C72B') ? 'color: #000;' : 'color: #fff;';
+                        
+                        // Definir cor baseada no status calculado do ano
+                        $corStatus = match($statusCalculado) {
+                            'Concluído' => '#28a745', // Verde
+                            'Em Andamento' => '#007bff', // Azul
+                            'Atrasado' => '#dc3545', // Vermelho (se houver lógica de atraso no service futuro)
+                            'Suspenso' => '#ffc107', // Amarelo
+                            'Sem Entregas' => '#6c757d', // Cinza
+                            default => '#6c757d'
+                        };
+                        $textClass = 'color: #fff;';
                     @endphp
                     <tr>
                         <td style="font-size: 8px; background: #fcfcfc;">
@@ -343,16 +356,23 @@
                         </td>
                         <td>
                             <div style="font-weight: bold;">{{ $plano->dsc_plano_de_acao }}</div>
-                            <div style="font-size: 8px; color: #777;">Vigência: {{ $plano->dte_inicio?->format('d/m/Y') }} a {{ $plano->dte_fim?->format('d/m/Y') }}</div>
+                            <div style="font-size: 8px; color: #777;">
+                                Vigência: {{ $plano->dte_inicio?->format('d/m/Y') }} a {{ $plano->dte_fim?->format('d/m/Y') }}
+                                @if($entregasCount == 0)
+                                    <span style="color: #dc3545; font-weight: bold;">(Sem entregas neste ano)</span>
+                                @else
+                                    <span style="color: #28a745;">({{ $entregasCount }} entregas no ano)</span>
+                                @endif
+                            </div>
                         </td>
                         <td style="text-align: center;">
-                            <span class="badge" style="background-color: {{ $corStatus }}; {{ $textClass }}">{{ $plano->isAtrasado() ? 'Atrasado' : $plano->bln_status }}</span>
+                            <span class="badge" style="background-color: {{ $corStatus }}; {{ $textClass }}">{{ $statusCalculado }}</span>
                         </td>
                         <td>
                             <div class="progress-container" style="height: 6px;">
-                                <div class="progress-bar" style="width: {{ min($prog, 100) }}%; background-color: #429B22;"></div>
+                                <div class="progress-bar" style="width: {{ min($prog, 100) }}%; background-color: {{ $corStatus }};"></div>
                             </div>
-                            <div style="text-align: right; font-weight: bold; font-size: 8px; margin-top: 2px;">@brazil_percent($prog, 0)</div>
+                            <div style="text-align: right; font-weight: bold; font-size: 8px; margin-top: 2px;">@brazil_percent($prog, 1)</div>
                         </td>
                     </tr>
                 @empty

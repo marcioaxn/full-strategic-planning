@@ -608,9 +608,24 @@
                                         </span>
                                         <small class="d-block text-muted mt-1 small-vinculo">{{ Str::limit($ind->objetivo->nom_objetivo ?? 'N/A', 40) }}</small>
                                     @else
-                                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3">
-                                            <i class="bi bi-list-task me-1"></i> Plano
-                                        </span>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3">
+                                                <i class="bi bi-list-task me-1"></i> Plano
+                                            </span>
+                                            @if($ind->dsc_calculation_type === 'action_plan')
+                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2" 
+                                                      data-bs-toggle="tooltip" 
+                                                      title="Calculado automaticamente pelo progresso ponderado das entregas do plano">
+                                                    <i class="bi bi-lightning-charge-fill"></i> Auto
+                                                </span>
+                                            @else
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill px-2"
+                                                      data-bs-toggle="tooltip"
+                                                      title="Valores lançados manualmente">
+                                                    <i class="bi bi-pencil-fill"></i> Manual
+                                                </span>
+                                            @endif
+                                        </div>
                                         <small class="d-block text-muted mt-1 small-vinculo">{{ Str::limit($ind->planoDeAcao->dsc_plano_de_acao ?? 'N/A', 40) }}</small>
                                     @endif
                                 </td>
