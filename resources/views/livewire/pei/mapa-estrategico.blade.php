@@ -226,7 +226,7 @@
                                                         </a>
                                                     </div>
 
-                                                    {{-- Planos --}}
+                                                    {{-- Planos (Exibição Transparente: Concluídos + Avanço Médio) --}}
                                                     <div class="obj-stat-box">
                                                         <a wire:navigate href="{{ route('planos.index') }}?filtroObjetivo={{ $objetivo['cod_objetivo'] }}" 
                                                            class="text-decoration-none plano-link" @auth onclick="event.stopPropagation();" @endauth>
@@ -234,8 +234,14 @@
                                                                 <span class="stat-label-modern"><i class="bi bi-list-check me-1"></i>Planos</span>
                                                                 <span class="stat-value-modern" style="color: {{ $pln['cor'] }};">{{ $pln['concluidos'] }}/{{ $pln['quantidade'] }}</span>
                                                             </div>
+                                                            {{-- Barra usa o progresso ponderado (media_progresso) --}}
                                                             <div class="stat-progress-container bg-light-custom">
-                                                                <div class="stat-progress-fill" style="width: {{ min($pln['percentual'], 100) }}%; background-color: {{ $pln['cor'] }};"></div>
+                                                                <div class="stat-progress-fill" style="width: {{ min($pln['media_progresso'] ?? 0, 100) }}%; background-color: {{ $pln['cor'] }};"></div>
+                                                            </div>
+                                                            {{-- Texto Explicativo --}}
+                                                            <div class="d-flex justify-content-between mt-1">
+                                                                <small class="text-muted" style="font-size: 0.6rem;">Avanço Ponderado</small>
+                                                                <small class="fw-bold" style="font-size: 0.65rem; color: {{ $pln['cor'] }};">@brazil_percent($pln['media_progresso'] ?? 0, 1)</small>
                                                             </div>
                                                         </a>
                                                     </div>

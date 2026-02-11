@@ -527,6 +527,8 @@
                                         </div>
                                     </div>
 
+
+
                                     {{-- Coluna Lateral: Ordem --}}
                                     <div class="col-lg-5">
                                         <div class="card border-0 bg-light rounded-4 h-100">
@@ -559,9 +561,80 @@
                                             </div>
                                         </div>
                                     </div>
+
+
+                                    {{-- Card: Metodologia de Cálculo (Novo) --}}
+                                    <div class="col-lg-12">
+                                        <div class="card border-0 bg-light rounded-4">
+                                            <div class="card-body p-4">
+                                                <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-4">
+                                                    <h6 class="fw-bold text-dark mb-0">
+                                                        <i class="bi bi-calculator me-2"></i>Metodologia de Cálculo
+                                                    </h6>
+                                                    <span class="badge bg-primary rounded-pill">Novo</span>
+                                                </div>
+
+                                                <div x-data="{ 
+                                                    pesoInd: @entangle('num_peso_indicadores'), 
+                                                    pesoPlan: @entangle('num_peso_planos'),
+                                                    updatePesos() {
+                                                        this.pesoInd = Math.min(100, Math.max(0, parseInt(this.pesoInd) || 0));
+                                                        this.pesoPlan = 100 - this.pesoInd;
+                                                    }
+                                                }" class="px-2">
+                                                    
+                                                    <label class="form-label text-muted small text-uppercase fw-bold mb-3">Distribuição de Peso (Performance Global)</label>
+
+                                                    <div class="d-flex align-items-center gap-3 mb-2">
+                                                        {{-- Indicadores (Esquerda) --}}
+                                                        <div class="text-center" style="width: 120px;">
+                                                            <div class="fw-bold h4 mb-0 text-primary" x-text="pesoInd + '%'"></div>
+                                                            <small class="text-muted x-small text-uppercase fw-bold">Indicadores</small>
+                                                        </div>
+
+                                                        {{-- Slider --}}
+                                                        <div class="flex-grow-1 position-relative" style="height: 40px; display: flex; align-items: center;">
+                                                            {{-- Background Bar --}}
+                                                            <div class="w-100 rounded-pill overflow-hidden d-flex" style="height: 12px; background: #e9ecef;">
+                                                                <div class="bg-primary transition-all" :style="'width: ' + pesoInd + '%'"></div>
+                                                                <div class="bg-success transition-all" :style="'width: ' + pesoPlan + '%'"></div>
+                                                            </div>
+                                                            
+                                                            {{-- Range Input Invisible but Functional --}}
+                                                            <input type="range" class="form-range position-absolute w-100 top-50 start-0 translate-middle-y" 
+                                                                   style="z-index: 10; cursor: pointer;"
+                                                                   x-model="pesoInd" 
+                                                                   @input="updatePesos"
+                                                                   min="0" max="100" step="5">
+                                                        </div>
+
+                                                        {{-- Planos (Direita) --}}
+                                                        <div class="text-center" style="width: 120px;">
+                                                            <div class="fw-bold h4 mb-0 text-success" x-text="pesoPlan + '%'"></div>
+                                                            <small class="text-muted x-small text-uppercase fw-bold">Planos de Ação</small>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Legenda Explicativa --}}
+                                                    <div class="d-flex justify-content-between small text-muted px-2 mt-3">
+                                                        <div class="d-flex gap-2 align-items-center" :class="{'opacity-50': pesoInd == 0}">
+                                                            <i class="bi bi-graph-up-arrow text-primary"></i>
+                                                            <span>Resultado (Lagging)</span>
+                                                        </div>
+                                                        <div class="d-flex gap-2 align-items-center" :class="{'opacity-50': pesoPlan == 0}">
+                                                            <i class="bi bi-rocket-takeoff text-success"></i>
+                                                            <span>Esforço (Leading)</span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    @error('num_peso_indicadores') <div class="text-center text-danger x-small mt-2">{{ $message }}</div> @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-
+                            
                             {{-- Footer Premium --}}
                             <div class="modal-footer border-0 p-4 bg-white rounded-bottom-4 shadow-top-sm">
                                 <button type="button" class="btn btn-light px-4 rounded-pill fw-bold text-muted" wire:click="$set('showModal', false)">Cancelar</button>
@@ -618,6 +691,8 @@
                 </span>
             </x-danger-button>
         </x-slot>
+    </x-confirmation-modal>
+
     {{-- Success Modal Premium --}}
     @if($showSuccessModal)
     <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.6); z-index: 1060;">
@@ -671,5 +746,4 @@
         .scale-in-center { animation: scale-in-center 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; }
         @keyframes scale-in-center { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
     </style>
-    </x-confirmation-modal>
 </div>

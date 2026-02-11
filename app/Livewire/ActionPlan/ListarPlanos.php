@@ -7,6 +7,7 @@ use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\ActionPlan\TipoExecucao;
 use App\Models\Organization;
+use Carbon\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -77,9 +78,28 @@ class ListarPlanos extends Component
         'anoSelecionado' => 'atualizarAno'
     ];
 
+    public $objetivoContexto = null; // Propriedade para armazenar o objetivo carregado
+
     public function mount()
     {
         $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
+        
+        // Sanitizar filtroObjetivo vindo da URL
+        if ($this->filtroObjetivo && !preg_match('/^[0-9a-fA-F-]{36}$/', $this->filtroObjetivo)) {
+            $this->filtroObjetivo = '';
+        }
+
+        // Se houver filtroObjetivo válido, carregar o contexto
+        if ($this->filtroObjetivo) {
+            $this->objetivoContexto = \App\Models\StrategicPlanning\Objetivo::with(['perspectiva.pei', 'indicadores.evolucoes', 'indicadores.metasPorAno', 'planosAcao.entregas'])
+                ->find($this->filtroObjetivo);
+            
+            // Se não encontrou, limpa o filtro para evitar problemas
+            if (!$this->objetivoContexto) {
+                $this->filtroObjetivo = '';
+            }
+        }
+
         $this->carregarPEI();
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
         $this->tiposExecucao = TipoExecucao::orderBy('dsc_tipo_execucao')->get();
@@ -248,8 +268,46 @@ class ListarPlanos extends Component
             'txt_detalhamento' => 'nullable|string',
             'cod_objetivo' => 'required|exists:tab_objetivo,cod_objetivo',
             'cod_tipo_execucao' => 'required|exists:tab_tipo_execucao,cod_tipo_execucao',
-            'dte_inicio' => 'required|date',
-            'dte_fim' => 'required|date|after_or_equal:dte_inicio',
+            'dte_inicio' => [
+                'required', 
+                'date', 
+                function ($attribute, $value, $fail) {
+                    // Validar contra PEI associado ao objetivo selecionado
+                    if ($this->cod_objetivo) {
+                        $objetivo = Objetivo::find($this->cod_objetivo);
+                        $pei = $objetivo?->perspectiva?->pei;
+                        
+                        if ($pei) {
+                            $anoInicio = Carbon::create($pei->num_ano_inicio_pei, 1, 1)->startOfDay();
+                            $dataInput = Carbon::parse($value);
+                            
+                            if ($dataInput->lt($anoInicio)) {
+                                $fail("A data de início deve ser igual ou posterior ao início do PEI ({$pei->num_ano_inicio_pei}).");
+                            }
+                        }
+                    }
+                }
+            ],
+            'dte_fim' => [
+                'required', 
+                'date', 
+                'after_or_equal:dte_inicio',
+                function ($attribute, $value, $fail) {
+                    if ($this->cod_objetivo) {
+                        $objetivo = Objetivo::find($this->cod_objetivo);
+                        $pei = $objetivo?->perspectiva?->pei;
+                        
+                        if ($pei) {
+                            $anoFim = Carbon::create($pei->num_ano_fim_pei, 12, 31)->endOfDay();
+                            $dataInput = Carbon::parse($value);
+                            
+                            if ($dataInput->gt($anoFim)) {
+                                $fail("A data final deve ser igual ou anterior ao fim do PEI ({$pei->num_ano_fim_pei}).");
+                            }
+                        }
+                    }
+                }
+            ],
             'vlr_orcamento_previsto' => 'nullable|numeric|min:0',
             'organizacoes_ids' => 'required|array|min:1',
         ], $messages);

@@ -342,9 +342,9 @@
             </div>
         </div>
     @else
-        @if($filtroObjetivo)
+        @if($objetivoContexto)
             @php
-                $objetivoFiltrado = \App\Models\StrategicPlanning\Objetivo::with(['perspectiva.pei', 'indicadores.evolucoes', 'indicadores.metasPorAno', 'planosAcao.entregas'])->find($filtroObjetivo);
+                $objetivoFiltrado = $objetivoContexto;
             @endphp
 
             {{-- Contexto Completo do Objetivo --}}
@@ -355,17 +355,22 @@
                 @php
                     $planosDoObjetivo = $objetivoFiltrado->planosAcao;
                     $totalPlanos = $planosDoObjetivo->count();
-                    $planosConcluidos = $planosDoObjetivo->where('bln_status', 'Concluido')->count();
+                    $planosConcluidos = $planosDoObjetivo->where('bln_status', 'Concluído')->count(); // Ajustado string Concluído
                     $planosEmAndamento = $planosDoObjetivo->where('bln_status', 'Em Andamento')->count();
-                    $planosNaoIniciados = $planosDoObjetivo->where('bln_status', 'Nao Iniciado')->count();
-                    $planosAtrasados = $planosDoObjetivo->filter(fn($p) => $p->dte_fim < now() && $p->bln_status !== 'Concluido')->count();
+                    $planosNaoIniciados = $planosDoObjetivo->where('bln_status', 'Não Iniciado')->count(); // Ajustado string Não Iniciado
+                    $planosAtrasados = $planosDoObjetivo->filter(fn($p) => $p->dte_fim < now() && $p->bln_status !== 'Concluído')->count();
 
                     $orcamentoTotal = $planosDoObjetivo->sum('vlr_orcamento_previsto');
                     $totalEntregas = 0;
                     $entregasConcluidas = 0;
+                    
+                    // Contagem de entregas com segurança
                     foreach ($planosDoObjetivo as $p) {
-                        $totalEntregas += $p->entregas->count();
-                        $entregasConcluidas += $p->entregas->where('bln_status', 'Concluida')->count();
+                         // Garante que a relação entregas está carregada (foi carregada no mount)
+                        if ($p->relationLoaded('entregas')) {
+                            $totalEntregas += $p->entregas->count();
+                            $entregasConcluidas += $p->entregas->where('bln_status', 'Concluído')->count(); // Ajustado string
+                        }
                     }
                     $percentualEntregas = $totalEntregas > 0 ? round(($entregasConcluidas / $totalEntregas) * 100, 1) : 0;
                 @endphp
