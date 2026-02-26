@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('tab_analise_ambiental', function (Blueprint $table) {
             $table->uuid('cod_analise')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->foreignUuid('cod_pei')->references('cod_pei')->on('tab_pei')->cascadeOnDelete();
-            $table->foreignUuid('cod_organizacao')->nullable()->references('cod_organizacao')->on('tab_organizacoes')->cascadeOnDelete();
+            $table->foreignUuid('cod_organizacao')->nullable()->references('cod_organizacao')->on('organization.tab_organizacoes')->cascadeOnDelete();
 
             // Tipo de análise: SWOT ou PESTEL
             $table->string('dsc_tipo_analise', 10); // SWOT, PESTEL

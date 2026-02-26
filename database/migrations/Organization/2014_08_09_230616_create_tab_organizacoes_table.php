@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tab_organizacoes', function (Blueprint $table) {
+        Schema::create('organization.tab_organizacoes', function (Blueprint $table) {
             $table->uuid('cod_organizacao')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->string('sgl_organizacao')->nullable(false);
             $table->text('nom_organizacao')->nullable(false);
@@ -22,7 +22,7 @@ return new class extends Migration
         });
 
         // Inserir unidade central padrão
-        DB::table('tab_organizacoes')->insert([
+        DB::table('organization.tab_organizacoes')->insert([
             'cod_organizacao' => '3834910f-66f7-46d8-9104-2904d59e1241',
             'sgl_organizacao' => 'UnidCent',
             'nom_organizacao' => 'Unidade Central',
@@ -37,6 +37,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tab_organizacoes');
+        Schema::dropIfExists('organization.tab_organizacoes');
     }
 };

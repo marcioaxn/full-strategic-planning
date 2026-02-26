@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('strategic_planning.tab_futuro_almejado_objetivo_estrategico', function (Blueprint $table) {
             $table->uuid('cod_futuro_almejado')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->text('dsc_futuro_almejado')->nullable(false);
-            $table->foreignUuid('cod_objetivo')->references('cod_objetivo')->on('pei.tab_objetivo_estrategico')->cascadeOnDelete();
+            $table->foreignUuid('cod_objetivo')->references('cod_objetivo')->on('strategic_planning.tab_objetivo_estrategico')->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();
 
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_futuro_almejado_objetivo_estrategico');
+        Schema::dropIfExists('strategic_planning.tab_futuro_almejado_objetivo_estrategico');
     }
 };

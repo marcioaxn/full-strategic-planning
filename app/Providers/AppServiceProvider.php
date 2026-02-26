@@ -25,6 +25,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+
+        \Illuminate\Support\Facades\Schema::defaultStringLength(191);
+    
+    $this->loadMigrationsFrom([
+        database_path('migrations'),
+        database_path('migrations/Organization'),
+        database_path('migrations/ActionPlan'),
+        database_path('migrations/StrategicPlanning'),
+        database_path('migrations/PerformanceIndicators'),
+        database_path('migrations/RiskManagement'),
+    ]);
+
         // Register Observers for automatic indicator calculation
         Entrega::observe(EntregaObserver::class);
 

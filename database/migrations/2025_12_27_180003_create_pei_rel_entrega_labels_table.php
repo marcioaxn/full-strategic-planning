@@ -15,7 +15,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.rel_entrega_labels', function (Blueprint $table) {
+        Schema::create('action_plan.rel_entrega_labels', function (Blueprint $table) {
             // Chaves compostas
             $table->uuid('cod_entrega');
             $table->uuid('cod_label');
@@ -26,12 +26,12 @@ return new class extends Migration
             // Foreign keys
             $table->foreign('cod_entrega')
                   ->references('cod_entrega')
-                  ->on('pei.tab_entregas')
+                  ->on('action_plan.tab_entregas')
                   ->cascadeOnDelete();
             
             $table->foreign('cod_label')
                   ->references('cod_label')
-                  ->on('pei.tab_entrega_labels')
+                  ->on('action_plan.tab_entrega_labels')
                   ->cascadeOnDelete();
             
             // Timestamp de quando a label foi atribuída
@@ -40,7 +40,7 @@ return new class extends Migration
         
         // Comentário na tabela
         DB::statement("
-            COMMENT ON TABLE pei.rel_entrega_labels IS 
+            COMMENT ON TABLE action_plan.rel_entrega_labels IS 
             'Tabela de relacionamento N:N entre entregas e labels.';
         ");
     }
@@ -50,6 +50,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.rel_entrega_labels');
+        Schema::dropIfExists('action_plan.rel_entrega_labels');
     }
 };

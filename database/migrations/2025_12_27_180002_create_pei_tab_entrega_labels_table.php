@@ -18,7 +18,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.tab_entrega_labels', function (Blueprint $table) {
+        Schema::create('action_plan.tab_entrega_labels', function (Blueprint $table) {
             // Chave primária UUID
             $table->uuid('cod_label')
                   ->primary()
@@ -27,7 +27,7 @@ return new class extends Migration
             // FK para plano de ação (labels são específicas por plano)
             $table->foreignUuid('cod_plano_de_acao')
                   ->references('cod_plano_de_acao')
-                  ->on('pei.tab_plano_de_acao')
+                  ->on('action_plan.tab_plano_de_acao')
                   ->cascadeOnDelete();
             
             // Nome da label
@@ -52,7 +52,7 @@ return new class extends Migration
         
         // Comentário na tabela
         DB::statement("
-            COMMENT ON TABLE pei.tab_entrega_labels IS 
+            COMMENT ON TABLE action_plan.tab_entrega_labels IS 
             'Tabela de labels/tags coloridas para categorização de entregas.';
         ");
     }
@@ -62,6 +62,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_entrega_labels');
+        Schema::dropIfExists('action_plan.tab_entrega_labels');
     }
 };
