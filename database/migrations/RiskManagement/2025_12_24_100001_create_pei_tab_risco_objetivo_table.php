@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('risk_management.tab_risco_objetivo', function (Blueprint $table) {
-            $table->foreignUuid('cod_risco')->references('cod_risco')->on('pei.tab_risco')->cascadeOnDelete();
-            $table->foreignUuid('cod_objetivo')->references('cod_objetivo')->on('pei.tab_objetivo_estrategico')->cascadeOnDelete();
+            $table->foreignUuid('cod_risco')->references('cod_risco')->on('risk_management.tab_risco')->cascadeOnDelete();
+            $table->foreignUuid('cod_objetivo')->references('cod_objetivo')->on('strategic_planning.tab_objetivo_estrategico')->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();
 
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_risco_objetivo');
+        Schema::dropIfExists('risk_management.tab_risco_objetivo');
     }
 };

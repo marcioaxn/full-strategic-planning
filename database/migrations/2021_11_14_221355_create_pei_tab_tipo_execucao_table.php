@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.tab_tipo_execucao', function (Blueprint $table) {
+        Schema::create('action_plan.tab_tipo_execucao', function (Blueprint $table) {
             $table->uuid('cod_tipo_execucao')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->string('dsc_tipo_execucao')->nullable(false);
             $table->timestamps();
@@ -20,7 +20,7 @@ return new class extends Migration
         });
 
         // Inserir tipos de execução padrão
-        DB::table('pei.tab_tipo_execucao')->insert([
+        DB::table('action_plan.tab_tipo_execucao')->insert([
             [
                 'cod_tipo_execucao' => 'c00b9ebc-7014-4d37-97dc-7875e55fff1b',
                 'dsc_tipo_execucao' => 'Ação',
@@ -47,6 +47,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_tipo_execucao');
+        Schema::dropIfExists('action_plan.tab_tipo_execucao');
     }
 };

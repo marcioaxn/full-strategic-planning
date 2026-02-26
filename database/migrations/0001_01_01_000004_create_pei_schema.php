@@ -10,8 +10,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Criar schema PEI para tabelas de Planejamento Estratégico Institucional
-        DB::statement('CREATE SCHEMA IF NOT EXISTS pei;');
+        // Criar schemas para separação de domínios
+        $schemas = [
+            'strategic_planning',
+            'action_plan',
+            'performance_indicators',
+            'risk_management',
+            'organization'
+        ];
+
+        foreach ($schemas as $schema) {
+            DB::statement("CREATE SCHEMA IF NOT EXISTS $schema;");
+        }
     }
 
     /**
@@ -19,7 +29,17 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Remover schema PEI (CASCADE para remover todas as tabelas dentro dele)
-        DB::statement('DROP SCHEMA IF EXISTS pei CASCADE;');
+        // Remover schemas (CASCADE para remover todas as tabelas dentro deles)
+        $schemas = [
+            'strategic_planning',
+            'action_plan',
+            'performance_indicators',
+            'risk_management',
+            'organization'
+        ];
+
+        foreach ($schemas as $schema) {
+            DB::statement("DROP SCHEMA IF EXISTS $schema CASCADE;");
+        }
     }
 };

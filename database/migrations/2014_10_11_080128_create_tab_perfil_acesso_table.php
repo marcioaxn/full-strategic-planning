@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tab_perfil_acesso', function (Blueprint $table) {
+        Schema::create('organization.tab_perfil_acesso', function (Blueprint $table) {
             $table->uuid('cod_perfil')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->text('dsc_perfil')->nullable(false);
             $table->text('dsc_permissao')->nullable(false);
@@ -58,6 +58,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tab_perfil_acesso');
+        Schema::dropIfExists('organization.tab_perfil_acesso');
     }
 };

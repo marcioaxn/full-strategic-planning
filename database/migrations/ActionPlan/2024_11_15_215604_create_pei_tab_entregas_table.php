@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignUuid('cod_plano_de_acao')
                   ->nullable()
                   ->references('cod_plano_de_acao')
-                  ->on('pei.tab_plano_de_acao')
+                  ->on('action_plan.tab_plano_de_acao')
                   ->cascadeOnDelete();
             $table->text('dsc_entrega');
             $table->string('bln_status')->nullable(false);
@@ -36,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_entregas');
+        Schema::dropIfExists('action_plan.tab_entregas');
     }
 };
