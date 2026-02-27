@@ -16,7 +16,7 @@ return new class extends Migration
             $table->uuid('cod_linha_base')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->foreignUuid('cod_indicador')
                   ->references('cod_indicador')
-                  ->on('pei.tab_indicador')
+                  ->on('performance_indicators.tab_indicador')
                   ->cascadeOnDelete()
                   ->cascadeOnUpdate();
             $table->decimal('num_linha_base', 15, 2);
@@ -34,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_linha_base_indicador');
+        Schema::dropIfExists('performance_indicators.tab_linha_base_indicador');
     }
 };

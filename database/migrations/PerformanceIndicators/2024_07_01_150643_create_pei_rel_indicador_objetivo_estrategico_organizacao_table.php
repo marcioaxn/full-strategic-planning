@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('performance_indicators.rel_indicador_objetivo_estrategico_organizacao', function (Blueprint $table) {
-            $table->foreignUuid('cod_indicador')->references('cod_indicador')->on('pei.tab_indicador')->cascadeOnDelete();
-            $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('tab_organizacoes')->cascadeOnDelete();
+            $table->uuid('cod_indicador');
+            $table->uuid('cod_organizacao');
+            
+            $table->foreign('cod_indicador', 'fk_rioo_indicador')->references('cod_indicador')->on('performance_indicators.tab_indicador')->cascadeOnDelete();
+            $table->foreign('cod_organizacao', 'fk_rioo_org')->references('cod_organizacao')->on('organization.tab_organizacoes')->cascadeOnDelete();
+            
             $table->timestamps();
             $table->softDeletes();
 
@@ -27,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.rel_indicador_objetivo_estrategico_organizacao');
+        Schema::dropIfExists('performance_indicators.rel_indicador_objetivo_estrategico_organizacao');
     }
 };

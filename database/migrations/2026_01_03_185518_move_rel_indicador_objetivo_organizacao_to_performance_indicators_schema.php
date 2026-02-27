@@ -21,7 +21,7 @@ return new class extends Migration
 
         if ($exists) {
             // Move a tabela do schema pei para performance_indicators
-            DB::statement("ALTER TABLE pei.rel_indicador_objetivo_organizacao SET SCHEMA performance_indicators");
+            DB::statement("ALTER TABLE performance_indicators.rel_indicador_objetivo_organizacao SET SCHEMA performance_indicators");
         }
     }
 

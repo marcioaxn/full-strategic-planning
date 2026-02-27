@@ -26,12 +26,12 @@ return new class extends Migration
             // Foreign Keys
             $table->foreign('cod_pei')
                   ->references('cod_pei')
-                  ->on('pei.tab_pei')
+                  ->on('strategic_planning.tab_pei')
                   ->onDelete('cascade');
 
             $table->foreign('cod_organizacao')
                   ->references('cod_organizacao')
-                  ->on('public.tab_organizacoes')
+                  ->on('organization.tab_organizacoes')
                   ->onDelete('cascade');
         });
     }
@@ -41,6 +41,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_objetivo_estrategico');
+        Schema::dropIfExists('strategic_planning.tab_objetivo_estrategico');
     }
 };
