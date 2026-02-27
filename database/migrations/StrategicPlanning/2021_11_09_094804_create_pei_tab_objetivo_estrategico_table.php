@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('nom_objetivo')->nullable(false);
             $table->text('dsc_objetivo')->nullable(false);
             $table->smallInteger('num_nivel_hierarquico_apresentacao')->nullable(false);
-            $table->foreignUuid('cod_perspectiva')->references('cod_perspectiva')->on('pei.tab_perspectiva')->cascadeOnDelete();
+            $table->foreignUuid('cod_perspectiva')->references('cod_perspectiva')->on('strategic_planning.tab_perspectiva')->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_objetivo_estrategico');
+        Schema::dropIfExists('strategic_planning.tab_objetivo_estrategico');
     }
 };

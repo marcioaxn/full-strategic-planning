@@ -16,9 +16,9 @@ return new class extends Migration
         
         if ($existsOldTypo) {
             // Renomear para o correto
-            DB::statement("ALTER TABLE pei.tab_grau_satisfcao RENAME TO tab_grau_satisfacao");
+            DB::statement("ALTER TABLE strategic_planning.tab_grau_satisfcao RENAME TO tab_grau_satisfacao");
             // Mover para o schema correto
-            DB::statement("ALTER TABLE pei.tab_grau_satisfacao SET SCHEMA strategic_planning");
+            DB::statement("ALTER TABLE strategic_planning.tab_grau_satisfacao SET SCHEMA strategic_planning");
             return;
         }
 
@@ -26,7 +26,7 @@ return new class extends Migration
         $existsOldCorrect = DB::select("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'pei' AND table_name = 'tab_grau_satisfacao')")[0]->exists;
         
         if ($existsOldCorrect) {
-            DB::statement("ALTER TABLE pei.tab_grau_satisfacao SET SCHEMA strategic_planning");
+            DB::statement("ALTER TABLE strategic_planning.tab_grau_satisfacao SET SCHEMA strategic_planning");
             return;
         }
 

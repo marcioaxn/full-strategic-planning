@@ -18,7 +18,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.tab_entrega_anexos', function (Blueprint $table) {
+        Schema::create('action_plan.tab_entrega_anexos', function (Blueprint $table) {
             // Chave primária UUID
             $table->uuid('cod_anexo')
                   ->primary()
@@ -27,7 +27,7 @@ return new class extends Migration
             // FK para entrega
             $table->foreignUuid('cod_entrega')
                   ->references('cod_entrega')
-                  ->on('pei.tab_entregas')
+                  ->on('action_plan.tab_entregas')
                   ->cascadeOnDelete();
             
             // FK para usuário que fez upload
@@ -65,7 +65,7 @@ return new class extends Migration
         
         // Comentário na tabela
         DB::statement("
-            COMMENT ON TABLE pei.tab_entrega_anexos IS 
+            COMMENT ON TABLE action_plan.tab_entrega_anexos IS 
             'Tabela de anexos/arquivos em entregas. Suporta imagens, documentos e outros arquivos.';
         ");
     }
@@ -75,6 +75,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_entrega_anexos');
+        Schema::dropIfExists('action_plan.tab_entrega_anexos');
     }
 };

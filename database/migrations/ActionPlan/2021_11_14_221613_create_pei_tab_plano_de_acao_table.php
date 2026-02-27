@@ -14,9 +14,9 @@ return new class extends Migration
     {
         Schema::create('action_plan.tab_plano_de_acao', function (Blueprint $table) {
             $table->uuid('cod_plano_de_acao')->primary()->default(DB::raw('gen_random_uuid()'));
-            $table->foreignUuid('cod_objetivo')->references('cod_objetivo')->on('pei.tab_objetivo_estrategico')->cascadeOnDelete();
-            $table->foreignUuid('cod_tipo_execucao')->references('cod_tipo_execucao')->on('pei.tab_tipo_execucao')->cascadeOnDelete();
-            $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('tab_organizacoes')->cascadeOnDelete();
+            $table->foreignUuid('cod_objetivo')->references('cod_objetivo')->on('strategic_planning.tab_objetivo_estrategico')->cascadeOnDelete();
+            $table->foreignUuid('cod_tipo_execucao')->references('cod_tipo_execucao')->on('action_plan.tab_tipo_execucao')->cascadeOnDelete();
+            $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('organization.tab_organizacoes')->cascadeOnDelete();
             $table->smallInteger('num_nivel_hierarquico_apresentacao')->nullable(false);
             $table->text('dsc_plano_de_acao')->nullable(false);
             $table->date('dte_inicio')->nullable(false);
@@ -40,6 +40,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_plano_de_acao');
+        Schema::dropIfExists('action_plan.tab_plano_de_acao');
     }
 };

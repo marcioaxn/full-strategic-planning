@@ -14,8 +14,8 @@ return new class extends Migration
     {
         Schema::create('performance_indicators.tab_indicador', function (Blueprint $table) {
             $table->uuid('cod_indicador')->primary()->default(DB::raw('gen_random_uuid()'));
-            $table->foreignUuid('cod_plano_de_acao')->nullable()->references('cod_plano_de_acao')->on('pei.tab_plano_de_acao')->cascadeOnDelete();
-            $table->foreignUuid('cod_objetivo')->nullable()->references('cod_objetivo')->on('pei.tab_objetivo_estrategico')->cascadeOnDelete();
+            $table->foreignUuid('cod_plano_de_acao')->nullable()->references('cod_plano_de_acao')->on('action_plan.tab_plano_de_acao')->cascadeOnDelete();
+            $table->foreignUuid('cod_objetivo')->nullable()->references('cod_objetivo')->on('strategic_planning.tab_objetivo_estrategico')->cascadeOnDelete();
             $table->text('dsc_tipo')->nullable(false);
             $table->text('nom_indicador')->nullable(false);
             $table->text('dsc_indicador')->nullable(false);
@@ -43,6 +43,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_indicador');
+        Schema::dropIfExists('performance_indicators.tab_indicador');
     }
 };

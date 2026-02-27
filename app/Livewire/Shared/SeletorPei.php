@@ -6,7 +6,7 @@ use App\Models\StrategicPlanning\PEI;
 use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 
-class SeletorPEI extends Component
+class SeletorPei extends Component
 {
     public $peis;
     public $selecionadoId;

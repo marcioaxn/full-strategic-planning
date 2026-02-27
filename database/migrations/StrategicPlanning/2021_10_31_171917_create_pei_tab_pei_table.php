@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_pei');
+        Schema::dropIfExists('strategic_planning.tab_pei');
     }
 };

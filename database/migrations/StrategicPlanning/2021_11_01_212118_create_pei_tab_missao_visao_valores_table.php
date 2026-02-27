@@ -16,8 +16,8 @@ return new class extends Migration
             $table->uuid('cod_missao_visao_valores')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->text('dsc_missao')->nullable(false);
             $table->text('dsc_visao')->nullable(false);
-            $table->foreignUuid('cod_pei')->references('cod_pei')->on('pei.tab_pei')->cascadeOnDelete();
-            $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('tab_organizacoes')->cascadeOnDelete();
+            $table->foreignUuid('cod_pei')->references('cod_pei')->on('strategic_planning.tab_pei')->cascadeOnDelete();
+            $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('organization.tab_organizacoes')->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_missao_visao_valores');
+        Schema::dropIfExists('strategic_planning.tab_missao_visao_valores');
     }
 };

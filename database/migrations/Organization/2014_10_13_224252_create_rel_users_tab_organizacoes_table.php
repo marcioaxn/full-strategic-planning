@@ -12,10 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('rel_users_tab_organizacoes', function (Blueprint $table) {
+        Schema::create('organization.rel_users_tab_organizacoes', function (Blueprint $table) {
             $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->foreignUuid('user_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('tab_organizacoes')->cascadeOnDelete();
+            $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('organization.tab_organizacoes')->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();
 
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rel_users_tab_organizacoes');
+        Schema::dropIfExists('organization.rel_users_tab_organizacoes');
     }
 };

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->uuid('cod_perspectiva')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->text('dsc_perspectiva')->nullable(false);
             $table->smallInteger('num_nivel_hierarquico_apresentacao')->nullable(false);
-            $table->foreignUuid('cod_pei')->references('cod_pei')->on('pei.tab_pei')->cascadeOnDelete();
+            $table->foreignUuid('cod_pei')->references('cod_pei')->on('strategic_planning.tab_pei')->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_perspectiva');
+        Schema::dropIfExists('strategic_planning.tab_perspectiva');
     }
 };

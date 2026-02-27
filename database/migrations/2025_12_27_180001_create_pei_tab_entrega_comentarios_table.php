@@ -18,7 +18,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pei.tab_entrega_comentarios', function (Blueprint $table) {
+        Schema::create('action_plan.tab_entrega_comentarios', function (Blueprint $table) {
             // Chave primária UUID
             $table->uuid('cod_comentario')
                   ->primary()
@@ -27,7 +27,7 @@ return new class extends Migration
             // FK para entrega
             $table->foreignUuid('cod_entrega')
                   ->references('cod_entrega')
-                  ->on('pei.tab_entregas')
+                  ->on('action_plan.tab_entregas')
                   ->cascadeOnDelete();
             
             // FK para usuário que comentou
@@ -54,7 +54,7 @@ return new class extends Migration
         
         // Comentário na tabela
         DB::statement("
-            COMMENT ON TABLE pei.tab_entrega_comentarios IS 
+            COMMENT ON TABLE action_plan.tab_entrega_comentarios IS 
             'Tabela de comentários em entregas. Suporta menções a usuários e rich text.';
         ");
     }
@@ -64,6 +64,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_entrega_comentarios');
+        Schema::dropIfExists('action_plan.tab_entrega_comentarios');
     }
 };

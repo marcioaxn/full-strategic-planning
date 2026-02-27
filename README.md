@@ -319,7 +319,7 @@ graph LR
 | **Schema** | Monolithic (`pei` or `public`) | **Domain-Segregated** (`strategic_planning`, `action_plan`, etc.) |
 | **Models** | All in `App\Models` or `App\Models\PEI` | **Domain Folders** (`App\Models\ActionPlan`, etc.) |
 | **Organization** | Mixed responsibilities | **Separation of Concerns** (DDD) |
-| **Naming** | `pei.tab_tabela` (Hardcoded) | `tab_tabela` (Schema agnostic via `search_path`) |
+| **Naming** | `strategic_planning.tab_tabela` (Hardcoded) | `tab_tabela` (Using specific schemas) |
 | **Deliverables** | Simple hierarchical list | **Notion-like Board** (Kanban, Timeline, Calendar, List) |
 | **Data Structure** | Fixed columns | **Flexible JSON properties** + Rich metadata |
 
@@ -443,7 +443,7 @@ The migration strategy was designed as a **zero-downtime, backward-compatible** 
 **Data Migration:**
 ```sql
 -- Migrates existing data from num_nivel_hierarquico_apresentacao to num_ordem
-UPDATE pei.tab_entregas
+UPDATE strategic_planning.tab_entregas
 SET
     num_ordem = COALESCE(num_nivel_hierarquico_apresentacao, 0),
     dsc_tipo = 'task',
