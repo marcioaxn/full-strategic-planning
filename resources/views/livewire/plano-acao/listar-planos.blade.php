@@ -862,52 +862,26 @@
 
                             {{-- Coluna Lateral --}}
                             <div class="col-lg-4">
-                                {{-- Card Vigência (Travel Style) --}}
+                                {{-- Card Vigência (Nativo) --}}
                                 <div class="card border-0 bg-light rounded-4 mb-3 h-auto">
                                     <div class="card-body p-4">
                                         <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-calendar-check me-2 text-primary"></i>Vigência</h6>
                                         
-                                        {{-- Flatpickr Range Wrapper --}}
-                                        <div x-data="{
-                                            start: @entangle('dte_inicio'),
-                                            end: @entangle('dte_fim'),
-                                            picker: null,
-                                            init() {
-                                                this.picker = flatpickr(this.$refs.dateInput, {
-                                                    mode: 'range',
-                                                    dateFormat: 'Y-m-d',
-                                                    altInput: true,
-                                                    altFormat: 'd/m/Y',
-                                                    locale: 'pt',
-                                                    static: true, // Faz o calendário aparecer junto ao input, evita problemas de z-index em modals
-                                                    onClose: (selectedDates, dateStr, instance) => {
-                                                        if (selectedDates.length === 2) {
-                                                            this.start = instance.formatDate(selectedDates[0], 'Y-m-d');
-                                                            this.end = instance.formatDate(selectedDates[1], 'Y-m-d');
-                                                        }
-                                                    }
-                                                });
-
-                                                this.$watch('start', (val) => this.updatePicker());
-                                                this.$watch('end', (val) => this.updatePicker());
-                                                
-                                                // Sync inicial
-                                                this.updatePicker();
-                                            },
-                                            updatePicker() {
-                                                if (this.start && this.end) {
-                                                    this.picker.setDate([this.start, this.end], false);
-                                                } else if (!this.start) {
-                                                    this.picker.clear();
-                                                }
-                                            }
-                                        }" wire:ignore>
-                                            <label class="form-label small text-muted fw-bold text-uppercase">Período (Início e Fim)</label>
-                                            <div class="input-group shadow-sm">
-                                                <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-calendar-range"></i></span>
-                                                <input x-ref="dateInput" type="text" class="form-control bg-white border-0 fw-bold text-dark" placeholder="Selecione o período..." readonly>
+                                        <div class="row g-3">
+                                            <div class="col-6">
+                                                <label class="form-label small text-muted fw-bold text-uppercase">Início <span class="text-danger">*</span></label>
+                                                <div class="input-group shadow-sm">
+                                                    <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-calendar-event"></i></span>
+                                                    <input type="date" wire:model.live="dte_inicio" class="form-control bg-white border-0 fw-bold text-dark">
+                                                </div>
                                             </div>
-                                            <div class="form-text x-small text-end mt-1 text-muted">Selecione a data de Início e de Fim.</div>
+                                            <div class="col-6">
+                                                <label class="form-label small text-muted fw-bold text-uppercase">Término <span class="text-danger">*</span></label>
+                                                <div class="input-group shadow-sm">
+                                                    <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-calendar-check"></i></span>
+                                                    <input type="date" wire:model.live="dte_fim" class="form-control bg-white border-0 fw-bold text-dark">
+                                                </div>
+                                            </div>
                                         </div>
 
                                         @error('dte_inicio') <div class="text-danger x-small mt-2 text-end">{{ $message }}</div> @enderror
@@ -915,9 +889,13 @@
 
                                         @if($dte_inicio && $dte_fim)
                                             @php
-                                                $start = \Carbon\Carbon::parse($dte_inicio);
-                                                $end = \Carbon\Carbon::parse($dte_fim);
-                                                $diff = $start->diffInDays($end, false);
+                                                try {
+                                                    $start = \Carbon\Carbon::parse($dte_inicio);
+                                                    $end = \Carbon\Carbon::parse($dte_fim);
+                                                    $diff = $start->diffInDays($end, false);
+                                                } catch (\Exception $e) {
+                                                    $diff = 0;
+                                                }
                                             @endphp
                                             <div class="mt-3 p-3 bg-white rounded-3 border border-light text-center shadow-sm">
                                                 <div class="d-flex justify-content-around">
@@ -932,7 +910,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="mt-2 border-top pt-2">
-                                                    <span class="badge {{ $diff > 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border rounded-pill">
+                                                    <span class="badge {{ $diff >= 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border rounded-pill">
                                                         <i class="bi bi-clock-history me-1"></i>{{ abs($diff) }} dias de duração
                                                     </span>
                                                 </div>
