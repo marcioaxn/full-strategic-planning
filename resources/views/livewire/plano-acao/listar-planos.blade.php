@@ -794,7 +794,7 @@
                                         
                                         {{-- 2. Descrição --}}
                                         <div class="mb-4">
-                                            <label class="form-label fw-bold small text-muted text-uppercase">2. Descrição da Ação <span class="text-danger">*</span></label>
+                                            <label class="form-label fw-bold small text-muted text-uppercase">2. Descrição da Iniciativa <span class="text-danger">*</span></label>
                                             <textarea wire:model="dsc_plano_de_acao" class="form-control form-control-lg bg-white border-0 shadow-sm" rows="2" placeholder="Descreva o que será feito de forma clara..."></textarea>
                                             @error('dsc_plano_de_acao') <div class="text-danger small mt-1 ms-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div> @enderror
                                         </div>
