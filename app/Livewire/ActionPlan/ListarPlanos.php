@@ -102,7 +102,7 @@ class ListarPlanos extends Component
 
         $this->carregarPEI();
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
-        $this->tiposExecucao = TipoExecucao::where('dsc_tipo_execucao', '!=', 'Iniciativa')
+        $this->tiposExecucao = TipoExecucao::where('cod_tipo_execucao', '!=', 'ecef6a50-c010-4cda-afc3-cbda245b55b0')
             ->orderBy('dsc_tipo_execucao')
             ->get();
         $this->filtroAno = Session::get('ano_selecionado', now()->year);
@@ -393,7 +393,8 @@ class ListarPlanos extends Component
     public function render()
     {
         $query = PlanoDeAcao::query()
-            ->with(['objetivo', 'tipoExecucao', 'organizacoes']);
+            ->with(['objetivo', 'tipoExecucao', 'organizacoes'])
+            ->where('cod_tipo_execucao', '!=', 'ecef6a50-c010-4cda-afc3-cbda245b55b0');
 
         if ($this->filtroObjetivo) {
             $query->where('cod_objetivo', $this->filtroObjetivo);
