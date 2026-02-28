@@ -102,7 +102,9 @@ class ListarPlanos extends Component
 
         $this->carregarPEI();
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
-        $this->tiposExecucao = TipoExecucao::orderBy('dsc_tipo_execucao')->get();
+        $this->tiposExecucao = TipoExecucao::where('dsc_tipo_execucao', '!=', 'Iniciativa')
+            ->orderBy('dsc_tipo_execucao')
+            ->get();
         $this->filtroAno = Session::get('ano_selecionado', now()->year);
         $this->organizacoesOptions = Organization::getTreeForSelector();
     }
