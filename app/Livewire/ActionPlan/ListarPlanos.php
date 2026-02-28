@@ -143,6 +143,13 @@ class ListarPlanos extends Component
             O campo 'justificativa' deve ser detalhado e explicar como o plano ajuda a alcançar o objetivo.";
             
             $response = $aiService->suggest($prompt);
+            
+            if (str_contains($response, 'Erro na IA:') || str_contains($response, 'Falha técnica')) {
+                $this->aiSuggestion = null;
+                session()->flash('error', $response);
+                return;
+            }
+
             $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
 
             if (is_array($decoded)) {
