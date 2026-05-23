@@ -1,6 +1,6 @@
-# Documentacao tecnica v2 - Sistema de Planejamento Estrategico
+# Documentacao tecnica - Sistema de Planejamento Estrategico
 
-Data: 2026-05-23. Status: documentacao reconstruida. Esta versao substitui a documentacao anterior como referencia tecnica proposta para upgrade.
+Data: 2026-05-23. Finalidade: subsidiar avaliacao tecnica e planejamento de upgrade do Sistema de Planejamento Estrategico.
 
 ## Controle de confianca
 
@@ -10,21 +10,18 @@ Data: 2026-05-23. Status: documentacao reconstruida. Esta versao substitui a doc
 - `Inferido tecnicamente`: conclusao baseada em padroes do codigo, mas que deve ser validada antes de decisao executiva.
 - `Nao confirmado`: ponto que o codigo nao prova integralmente.
 
-## Fontes usadas e fontes excluidas
+## Fontes usadas
 
-| Fonte | Uso nesta v2 | Confianca |
+| Fonte | Uso nesta documentacao | Confianca |
 |---|---|---|
 | Codigo em `app`, `routes`, `config`, `bootstrap`, `resources` | Fonte primaria de arquitetura, regras e fluxo | Verificado no codigo |
 | PostgreSQL real via `information_schema`, `pg_indexes`, `migrations` | Fonte primaria de schema, constraints, indices e migrations aplicadas | Verificado no banco |
 | `php artisan about` e `php artisan route:list` | Fonte de runtime e rotas efetivas | Verificado em runtime |
 | `README.md` | Apoio para descricao macro quando coerente com codigo | Verificado no codigo, mas tratado como documentacao de apoio |
-| `AGENTS.md` | Nao usado como fonte factual de produto, dominio ou nome | Excluido como fonte factual |
 
 ## Identidade correta do projeto
 
 Verificado no codigo e no README: este repositorio implementa um Sistema de Planejamento Estrategico institucional. O dominio funcional real e PEI/BSC, com objetivos estrategicos, perspectivas, identidade estrategica, indicadores de desempenho, planos de acao, entregas, riscos, relatorios, auditoria e governanca por organizacao/perfil.
-
-Nao confirmado: nao ha evidencia no codigo lido de que este repositorio seja um modulo de outra plataforma chamada Visao 360. Essa denominacao veio de arquivo operacional externo e nao sera considerada verdade do produto.
 
 ## Sumario executivo tecnico
 
@@ -3549,4 +3546,4 @@ Assinaturas extraidas do codigo. Os modulos criticos lidos semanticamente estao 
 
 ## Conclusao
 
-Esta v2 documenta o repositorio como Sistema de Planejamento Estrategico, com base em evidencias do codigo, banco real e runtime. O documento anterior deve ser considerado substituido para fins executivos. Pontos marcados como risco ou nao confirmado devem ser tratados antes de qualquer upgrade de versao ou refatoracao estrutural.
+Esta documentacao descreve o repositorio como Sistema de Planejamento Estrategico, com base em evidencias do codigo, banco real e runtime. Pontos marcados como risco ou nao confirmado devem ser tratados antes de qualquer upgrade de versao ou refatoracao estrutural.
