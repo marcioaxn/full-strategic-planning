@@ -1,0 +1,3552 @@
+# Documentacao tecnica v2 - Sistema de Planejamento Estrategico
+
+Data: 2026-05-23. Status: documentacao reconstruida. Esta versao substitui a documentacao anterior como referencia tecnica proposta para upgrade.
+
+## Controle de confianca
+
+- `Verificado no codigo`: afirmacao comprovada por arquivos do repositorio.
+- `Verificado no banco`: afirmacao comprovada por consulta somente leitura ao PostgreSQL real.
+- `Verificado em runtime`: afirmacao comprovada por comandos Artisan de leitura.
+- `Inferido tecnicamente`: conclusao baseada em padroes do codigo, mas que deve ser validada antes de decisao executiva.
+- `Nao confirmado`: ponto que o codigo nao prova integralmente.
+
+## Fontes usadas e fontes excluidas
+
+| Fonte | Uso nesta v2 | Confianca |
+|---|---|---|
+| Codigo em `app`, `routes`, `config`, `bootstrap`, `resources` | Fonte primaria de arquitetura, regras e fluxo | Verificado no codigo |
+| PostgreSQL real via `information_schema`, `pg_indexes`, `migrations` | Fonte primaria de schema, constraints, indices e migrations aplicadas | Verificado no banco |
+| `php artisan about` e `php artisan route:list` | Fonte de runtime e rotas efetivas | Verificado em runtime |
+| `README.md` | Apoio para descricao macro quando coerente com codigo | Verificado no codigo, mas tratado como documentacao de apoio |
+| `AGENTS.md` | Nao usado como fonte factual de produto, dominio ou nome | Excluido como fonte factual |
+
+## Identidade correta do projeto
+
+Verificado no codigo e no README: este repositorio implementa um Sistema de Planejamento Estrategico institucional. O dominio funcional real e PEI/BSC, com objetivos estrategicos, perspectivas, identidade estrategica, indicadores de desempenho, planos de acao, entregas, riscos, relatorios, auditoria e governanca por organizacao/perfil.
+
+Nao confirmado: nao ha evidencia no codigo lido de que este repositorio seja um modulo de outra plataforma chamada Visao 360. Essa denominacao veio de arquivo operacional externo e nao sera considerada verdade do produto.
+
+## Sumario executivo tecnico
+
+- Aplicacao Laravel 12.53.0, PHP 8.3.28 e Livewire 3.7.11 em runtime local.
+- Arquitetura principal: Laravel + Livewire + Blade, com Jetstream/Fortify/Sanctum para autenticacao, PostgreSQL multi-schema para persistencia, Policies/Gates para autorizacao, Services para calculos/relatorios/IA e Observer para recalculo automatico de indicadores a partir de entregas.
+- O fluxo metodologico central e guiado por `PeiGuidanceService`: ciclo PEI, identidade, perspectivas BSC, objetivos, graus de satisfacao, indicadores, planos de acao e monitoramento.
+- O mapa estrategico calcula atingimento hibrido por perspectiva combinando indicadores e planos/entregas com pesos configuraveis.
+- O banco real possui 56 tabelas em schemas PostgreSQL de dominio e infraestrutura.
+- A tabela `migrations` possui 67 migrations aplicadas; ha 67 arquivos de migration no disco.
+
+## Runtime e dependencias
+
+Verificado em runtime por `php artisan about`: Laravel 12.53.0, PHP 8.3.28, Composer 2.6.5, ambiente local, debug habilitado, banco `pgsql`, cache/queue/session em database, mail em log, Livewire 3.7.11, storage publico nao linkado.
+
+### Dependencias PHP
+
+- `php`: `^8.2`
+- `barryvdh/laravel-dompdf`: `*`
+- `laravel/framework`: `^12.0`
+- `laravel/jetstream`: `^5.3`
+- `laravel/sanctum`: `^4.0`
+- `laravel/tinker`: `^2.10.1`
+- `livewire/livewire`: `^3.6.4`
+- `maatwebsite/excel`: `*`
+- `owen-it/laravel-auditing`: `^14.0`
+- `spatie/laravel-html`: `^3.12`
+
+### Dependencias PHP de desenvolvimento
+
+- `fakerphp/faker`: `^1.23`
+- `laravel/pail`: `^1.2.2`
+- `laravel/pint`: `^1.24`
+- `laravel/sail`: `^1.41`
+- `mockery/mockery`: `^1.6`
+- `nunomaduro/collision`: `^8.6`
+- `pestphp/pest`: `^4.1`
+- `pestphp/pest-plugin-laravel`: `^4.0`
+
+### Dependencias frontend/build
+
+- `@alpinejs/mask`: `^3.15.2`
+- `@alpinejs/focus`: `^3.15.2`
+- `@popperjs/core`: `^2.11.8`
+- `alpinejs`: `^3.15.2`
+- `axios`: `^1.11.0`
+- `bootstrap`: `^5.3.3`
+- `bootstrap-icons`: `^1.11.3`
+- `concurrently`: `^9.0.1`
+- `laravel-vite-plugin`: `^2.0.0`
+- `sass`: `^1.81.0`
+- `sortablejs`: `^1.15.6`
+- `vite`: `^7.0.7`
+
+## Arquitetura de dominio
+
+| Dominio | Evidencia | Responsabilidade real observada |
+|---|---|---|
+| PEI/ciclos | `StrategicPlanning\PEI`, rotas `pei/*` | Define periodo do planejamento estrategico e ancora perspectivas, identidade e monitoramento. |
+| Identidade estrategica | `MissaoVisao`, `MissaoVisaoValores`, `Valor`, `TemaNorteador` | Mantem missao, visao, valores e temas por organizacao e PEI. |
+| BSC/perspectivas | `Perspectiva`, `ListarPerspectivas`, `MapaEstrategico` | Organiza objetivos por perspectivas e calcula desempenho por pesos de indicadores/planos. |
+| Objetivos estrategicos | `Objetivo`, `ListarObjetivos`, `DetalharObjetivo` | Cadastro, ordenacao e detalhamento de objetivos vinculados a perspectivas. |
+| Graus de satisfacao | `GrauSatisfacao`, rotas `graus-satisfacao` | Faixas/cor para classificar desempenho percentual. |
+| Indicadores/KPIs | `Indicador`, `EvolucaoIndicador`, `MetaPorAno`, `LinhaBaseIndicador` | Define KPI, metas, linha de base, evolucao e calculo de atingimento. |
+| Planos de acao | `PlanoDeAcao`, `ListarPlanos`, `DetalharPlano` | Vincula iniciativas/projetos a objetivos, organizacoes e periodo. |
+| Entregas | `Entrega`, `DeliverablesBoard`, anexos/comentarios/labels/historico | Gerencia execucao operacional em kanban/lista/timeline/calendario, com responsaveis e anexos. |
+| Riscos | `Risco`, `RiscoMitigacao`, `RiscoOcorrencia`, componentes RiskManagement | Mapeia riscos, matriz 5x5, mitigacoes e ocorrencias. |
+| Relatorios | `RelatorioController`, `ReportGenerationService`, Exports | Gera PDFs e Excel de identidade, objetivos, indicadores, planos, riscos, executivo e integrado. |
+| Auditoria | pacote `owen-it/laravel-auditing`, `TabAudit`, telas Audit | Registra e lista mudancas/acoes em entidades criticas. |
+
+## Fluxo metodologico PEI verificado
+
+Verificado no codigo em `app/Services/PeiGuidanceService.php`: o sistema avalia completude do PEI em fases sequenciais. Se nao ha PEI vigente, retorna status critical e direciona para `pei.ciclos`. Com PEI, marca ciclo como completo e exige identidade com missao e visao preenchidas. Depois valida perspectivas, objetivos, graus de satisfacao, indicadores e planos de acao. Quando todos existem, retorna status success, progresso 100 e direciona para dashboard.
+
+| Fase | Criterio observado | Rota de acao |
+|---|---|---|
+| Ciclo PEI | Existencia de PEI ativo ou selecionado | `pei.ciclos` |
+| Identidade | Missao e visao com conteudo minimo | `pei.index` |
+| Perspectivas | Pelo menos uma perspectiva; recomenda 4 pilares | `pei.perspectivas` |
+| Objetivos | Pelo menos um objetivo nas perspectivas do PEI | `objetivos.index` |
+| Graus | Existencia de graus de satisfacao | `graus-satisfacao.index` |
+| Indicadores | Indicadores vinculados aos objetivos do PEI | `indicadores.index` |
+| Planos | Planos vinculados aos objetivos | `planos.index` |
+| Monitoramento | Todas as fases anteriores concluidas | `dashboard` |
+
+## Modulos criticos lidos semanticamente
+
+| Modulo | Fonte lida | Fatos verificados | Entradas | Saidas | Riscos/lacunas |
+|---|---|---|---|---|---|
+| Identidade estrategica | `app/Livewire/StrategicPlanning/MissaoVisao.php` | Carrega PEI de sessao ou primeiro ativo; filtra por organizacao selecionada; salva missao/visao por `cod_organizacao` e `cod_pei`; gerencia valores; pode solicitar sugestao de IA; envia notificacao do mentor ao salvar. | Sessao `pei_selecionado_id`, `organizacao_selecionada_id`, campos missao/visao/valores. | View `livewire.p-e-i.missao-visao`, flash/status, eventos `mentor-notification`, registros em `MissaoVisaoValores` e `Valor`. | Validacoes existem, mas nem todos os metodos usam `messages()` humanizadas; IA depende de JSON bem-formado. |
+| Mapa estrategico | `app/Livewire/StrategicPlanning/MapaEstrategico.php` | Rota publica e autenticada usam o mesmo componente; escolhe organizacao via sessao, usuario ou raiz; suporta modo agrupado com roll-up de descendentes; calcula desempenho por perspectiva com indicadores e planos; usa graus de satisfacao para cor. | Organizacao, PEI, ano de sessao, modo `grouped`/outro. | View `livewire.p-e-i.mapa-estrategico`, layout app ou publico, memoria de calculo em modal. | Calculo pesado dentro de componente; usa queries e loops com colecoes; mudancas em pesos ou status impactam dashboard/relatorios. |
+| Objetivos estrategicos | `app/Livewire/StrategicPlanning/ListarObjetivos.php` | Lista objetivos agrupados por perspectiva; valida objetivo, descricao, ordem e perspectiva; usa `PeiGuidanceService` para bloquear criacao antes das fases anteriores; possui auditoria SMART via IA; calcula impacto de exclusao por indicadores e planos. | PEI selecionado, perspectiva, campos do objetivo. | Objetivo criado/atualizado/excluido, modais de sucesso/erro, view `livewire.p-e-i.listar-objetivos`. | Exclusao e direta no model; precisa confirmar constraints e comportamento esperado se houver dependencias. |
+| Planos de acao | `app/Livewire/ActionPlan/ListarPlanos.php` | Filtra por organizacao, objetivo, status, tipo e ano; autoriza create/update/delete por policy; valida datas contra anos do PEI do objetivo; suporta multivinculacao por `organizacoes_ids` e mantem `cod_organizacao` legado com primeiro ID. | Organizacao/ano/PEI da sessao, filtros, formulario de plano. | Registros em `PlanoDeAcao`, sync com `organizacoes`, view `livewire.plano-acao.listar-planos`. | Compatibilidade legada com `cod_organizacao` e pivot pode gerar divergencia se nao mantida. |
+| Entregas | `app/Livewire/Deliverables/DeliverablesBoard.php` | Gerencia entregas por plano com views kanban/lista/timeline/calendario; filtra por status, prioridade, responsavel e busca; cria/edita entrega, responsaveis, labels, comentarios, anexos, arquivamento, lixeira e exclusao permanente; autoriza via policy do plano. | `planoId`, filtros por URL, uploads, eventos Livewire, formulario de entrega. | Registros em `tab_entregas`, pivots de responsaveis/labels, anexos em storage public, historico/comentarios, eventos UI. | Componente concentra muitas responsabilidades; exclusao permanente existe; storage publico nao estava linkado no ambiente. |
+| Indicadores | `app/Livewire/PerformanceIndicators/ListarIndicadores.php` | Gerencia KPIs vinculados a objetivo ou plano; carrega unidades, polaridades e tipos de calculo; suporta multivinculacao a organizacoes; gerencia metas anuais e linha de base; filtra por objetivo, organizacao e tipo de vinculo. | Formulario do indicador, metas, linha base, organizacao, PEI. | Registros em `Indicador`, `MetaPorAno`, `LinhaBaseIndicador`, pivot de organizacoes e view de listagem. | No codigo lido ha regra `exists:tab_planos_acao,cod_plano_de_acao`, enquanto o model/migrations usam `tab_plano_de_acao`; isso deve ser validado antes de upgrade. |
+| Calculo de indicadores | `app/Services/IndicadorCalculoService.php` | Calcula progresso de planos por media simples ou ponderada de entregas; exclui canceladas; trata sub-entregas recursivamente; atualiza indicadores automaticos de tipo `action_plan`; valida soma de pesos igual a 100; calcula desempenho de perspectiva e objetivo. | Plano, indicador, ano. | Percentuais, arrays de simulacao/estatisticas, `EvolucaoIndicador` atualizada para periodo atual. | Observer de entrega pode disparar atualizacao automatica; mudanca de status/peso tem impacto em indicadores e relatorios. |
+| Riscos | `app/Livewire/RiskManagement/ListarRiscos.php` | Gerencia riscos por organizacao e PEI; valida titulo, categoria, probabilidade, impacto e responsavel; vincula objetivos; filtra por categoria/nivel; cria risco com `cod_pei` e `cod_organizacao`; pode sugerir riscos por IA. | Organizacao, PEI, objetivos, formulario de risco. | Registros em `Risco` e pivot com objetivos, notificacoes mentor. | Filtro de nivel esta parcial no codigo (`... outros filtros`); ampliar exige leitura dos demais componentes de matriz/mitigacao/ocorrencia. |
+| Relatorios | `app/Http/Controllers/Reports/RelatorioController.php` | Gera downloads streamados para executivo, identidade, objetivos, indicadores, planos, riscos e integrado; usa `ReportGenerationService` para PDF/conteudo e `maatwebsite/excel` para exports. | Query params `organizacaoId`, `organizacao_id`, `ano`, `periodo`, `perspectiva`, `include_ai`, sessao. | `streamDownload` para PDFs/conteudos e arquivos Excel. | Relatorio integrado aumenta memory_limit para 512M e timeout para 600s; indica carga pesada. |
+| Acesso e perfis | `app/Models/User.php e app/Policies/*.php` | Usuario usa UUID, Jetstream, Fortify, Sanctum, 2FA, flags `ativo`, `adm`, `trocarsenha`; super admin e `adm=true`; perfis por pivot com organizacao e plano; policies restringem create/update/delete conforme super admin, admin unidade, gestor responsavel/substituto e responsavel por risco. | Usuario autenticado, organizacao, plano, indicador, risco. | Autorizacao booleana via Gate/Policy. | Acesso de listagem depende tambem de filtros nas queries; policies `viewAny` retornam true em varias entidades. |
+
+## Banco de dados real
+
+Verificado no banco: 67 migrations aplicadas. Verificado no disco: 67 arquivos de migration. Arquivos nao aplicados: nenhum. Migrations aplicadas sem arquivo: nenhuma.
+
+### Tabelas reais por schema
+
+- `action_plan.acoes` com 8 colunas.
+- `action_plan.rel_entrega_labels` com 3 colunas.
+- `action_plan.rel_entrega_users_responsaveis` com 4 colunas.
+- `action_plan.rel_plano_organizacao` com 2 colunas.
+- `action_plan.tab_entrega_anexos` com 12 colunas.
+- `action_plan.tab_entrega_comentarios` com 9 colunas.
+- `action_plan.tab_entrega_historico` com 9 colunas.
+- `action_plan.tab_entrega_labels` com 8 colunas.
+- `action_plan.tab_entregas` com 18 colunas.
+- `action_plan.tab_plano_de_acao` com 16 colunas.
+- `action_plan.tab_tipo_execucao` com 5 colunas.
+- `organization.rel_organizacao` com 6 colunas.
+- `organization.rel_users_tab_organizacoes` com 6 colunas.
+- `organization.rel_users_tab_organizacoes_tab_perfil_acesso` com 8 colunas.
+- `organization.tab_organizacoes` com 7 colunas.
+- `organization.tab_perfil_acesso` com 6 colunas.
+- `performance_indicators.rel_indicador_objetivo_organizacao` com 5 colunas.
+- `performance_indicators.tab_evolucao_indicador` com 11 colunas.
+- `performance_indicators.tab_indicador` com 21 colunas.
+- `performance_indicators.tab_linha_base_indicador` com 7 colunas.
+- `performance_indicators.tab_meta_por_ano` com 7 colunas.
+- `public.audits` com 14 colunas.
+- `public.cache` com 3 colunas.
+- `public.cache_locks` com 3 colunas.
+- `public.failed_jobs` com 7 colunas.
+- `public.job_batches` com 10 colunas.
+- `public.jobs` com 7 colunas.
+- `public.migrations` com 3 colunas.
+- `public.password_reset_tokens` com 3 colunas.
+- `public.personal_access_tokens` com 10 colunas.
+- `public.sessions` com 6 colunas.
+- `public.strategic_alerts` com 10 colunas.
+- `public.system_settings` com 8 colunas.
+- `public.tab_analise_ambiental` com 12 colunas.
+- `public.tab_audit` com 14 colunas.
+- `public.tab_relatorios_agendados` com 10 colunas.
+- `public.tab_relatorios_gerados` com 9 colunas.
+- `public.tab_status` com 2 colunas.
+- `public.users` com 17 colunas.
+- `risk_management.tab_risco` com 17 colunas.
+- `risk_management.tab_risco_mitigacao` com 11 colunas.
+- `risk_management.tab_risco_objetivo` com 5 colunas.
+- `risk_management.tab_risco_ocorrencia` com 10 colunas.
+- `strategic_planning.tab_arquivos` com 9 colunas.
+- `strategic_planning.tab_atividade_cadeia_valor` com 7 colunas.
+- `strategic_planning.tab_futuro_almejado_objetivo` com 6 colunas.
+- `strategic_planning.tab_grau_satisfacao` com 10 colunas.
+- `strategic_planning.tab_missao_visao_valores` com 8 colunas.
+- `strategic_planning.tab_nivel_hierarquico` com 4 colunas.
+- `strategic_planning.tab_objetivo` com 8 colunas.
+- `strategic_planning.tab_objetivo_comentarios` com 8 colunas.
+- `strategic_planning.tab_pei` com 7 colunas.
+- `strategic_planning.tab_perspectiva` com 9 colunas.
+- `strategic_planning.tab_processos_atividade_cadeia_valor` com 8 colunas.
+- `strategic_planning.tab_tema_norteador` com 7 colunas.
+- `strategic_planning.tab_valores` com 8 colunas.
+
+### Estrutura real das tabelas
+
+#### `action_plan.acoes`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `id` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `table_id` | `character varying/varchar(191)` | `NO` | `` |
+| `user_id` | `uuid/uuid` | `NO` | `` |
+| `table` | `character varying/varchar(191)` | `NO` | `` |
+| `acao` | `text/text` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571329_599515_1_not_null` em ``
+- `CHECK` `571329_599515_2_not_null` em ``
+- `CHECK` `571329_599515_3_not_null` em ``
+- `CHECK` `571329_599515_4_not_null` em ``
+- `CHECK` `571329_599515_5_not_null` em ``
+- `FOREIGN KEY` `action_plan_acoes_user_id_foreign` em `user_id`
+- `PRIMARY KEY` `acoes_pkey` em `id` -> action_plan.acoes.id
+
+Indices verificados:
+- `acoes_pkey`: `CREATE UNIQUE INDEX acoes_pkey ON action_plan.acoes USING btree (id)`
+- `action_plan_acoes_table_table_id_index`: `CREATE INDEX action_plan_acoes_table_table_id_index ON action_plan.acoes USING btree ("table", table_id)`
+- `action_plan_acoes_user_id_index`: `CREATE INDEX action_plan_acoes_user_id_index ON action_plan.acoes USING btree (user_id)`
+
+#### `action_plan.rel_entrega_labels`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_entrega` | `uuid/uuid` | `NO` | `` |
+| `cod_label` | `uuid/uuid` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `NO` | `CURRENT_TIMESTAMP` |
+
+Constraints verificadas:
+- `CHECK` `571329_600063_1_not_null` em ``
+- `CHECK` `571329_600063_2_not_null` em ``
+- `CHECK` `571329_600063_3_not_null` em ``
+- `FOREIGN KEY` `action_plan_rel_entrega_labels_cod_entrega_foreign` em `cod_entrega` -> action_plan.tab_entregas.cod_entrega
+- `FOREIGN KEY` `action_plan_rel_entrega_labels_cod_label_foreign` em `cod_label` -> action_plan.tab_entrega_labels.cod_label
+- `PRIMARY KEY` `rel_entrega_labels_pkey` em `cod_entrega` -> action_plan.rel_entrega_labels.cod_entrega
+- `PRIMARY KEY` `rel_entrega_labels_pkey` em `cod_entrega` -> action_plan.rel_entrega_labels.cod_label
+- `PRIMARY KEY` `rel_entrega_labels_pkey` em `cod_label` -> action_plan.rel_entrega_labels.cod_label
+- `PRIMARY KEY` `rel_entrega_labels_pkey` em `cod_label` -> action_plan.rel_entrega_labels.cod_entrega
+
+Indices verificados:
+- `rel_entrega_labels_pkey`: `CREATE UNIQUE INDEX rel_entrega_labels_pkey ON action_plan.rel_entrega_labels USING btree (cod_entrega, cod_label)`
+
+#### `action_plan.rel_entrega_users_responsaveis`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_entrega` | `uuid/uuid` | `NO` | `` |
+| `cod_usuario` | `uuid/uuid` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571329_600115_1_not_null` em ``
+- `CHECK` `571329_600115_2_not_null` em ``
+- `FOREIGN KEY` `action_plan_rel_entrega_users_responsaveis_cod_entrega_foreign` em `cod_entrega` -> action_plan.tab_entregas.cod_entrega
+- `FOREIGN KEY` `action_plan_rel_entrega_users_responsaveis_cod_usuario_foreign` em `cod_usuario`
+- `PRIMARY KEY` `rel_entrega_users_responsaveis_pkey` em `cod_entrega` -> action_plan.rel_entrega_users_responsaveis.cod_usuario
+- `PRIMARY KEY` `rel_entrega_users_responsaveis_pkey` em `cod_entrega` -> action_plan.rel_entrega_users_responsaveis.cod_entrega
+- `PRIMARY KEY` `rel_entrega_users_responsaveis_pkey` em `cod_usuario` -> action_plan.rel_entrega_users_responsaveis.cod_entrega
+- `PRIMARY KEY` `rel_entrega_users_responsaveis_pkey` em `cod_usuario` -> action_plan.rel_entrega_users_responsaveis.cod_usuario
+
+Indices verificados:
+- `rel_entrega_users_responsaveis_pkey`: `CREATE UNIQUE INDEX rel_entrega_users_responsaveis_pkey ON action_plan.rel_entrega_users_responsaveis USING btree (cod_entrega, cod_usuario)`
+
+#### `action_plan.rel_plano_organizacao`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_plano_de_acao` | `uuid/uuid` | `NO` | `` |
+| `cod_organizacao` | `uuid/uuid` | `NO` | `` |
+
+Constraints verificadas:
+- `CHECK` `571329_600235_1_not_null` em ``
+- `CHECK` `571329_600235_2_not_null` em ``
+- `FOREIGN KEY` `action_plan_rel_plano_organizacao_cod_organizacao_foreign` em `cod_organizacao`
+- `FOREIGN KEY` `action_plan_rel_plano_organizacao_cod_plano_de_acao_foreign` em `cod_plano_de_acao` -> action_plan.tab_plano_de_acao.cod_plano_de_acao
+- `PRIMARY KEY` `rel_plano_organizacao_pkey` em `cod_plano_de_acao` -> action_plan.rel_plano_organizacao.cod_organizacao
+- `PRIMARY KEY` `rel_plano_organizacao_pkey` em `cod_plano_de_acao` -> action_plan.rel_plano_organizacao.cod_plano_de_acao
+- `PRIMARY KEY` `rel_plano_organizacao_pkey` em `cod_organizacao` -> action_plan.rel_plano_organizacao.cod_organizacao
+- `PRIMARY KEY` `rel_plano_organizacao_pkey` em `cod_organizacao` -> action_plan.rel_plano_organizacao.cod_plano_de_acao
+
+Indices verificados:
+- `rel_plano_organizacao_pkey`: `CREATE UNIQUE INDEX rel_plano_organizacao_pkey ON action_plan.rel_plano_organizacao USING btree (cod_plano_de_acao, cod_organizacao)`
+
+#### `action_plan.tab_entrega_anexos`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_anexo` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_entrega` | `uuid/uuid` | `NO` | `` |
+| `cod_usuario` | `uuid/uuid` | `NO` | `` |
+| `dsc_nome_arquivo` | `character varying/varchar(255)` | `NO` | `` |
+| `dsc_caminho` | `character varying/varchar(500)` | `NO` | `` |
+| `dsc_mime_type` | `character varying/varchar(100)` | `NO` | `` |
+| `num_tamanho_bytes` | `bigint/int8` | `NO` | `` |
+| `dsc_descricao` | `character varying/varchar(500)` | `YES` | `` |
+| `dsc_thumbnail` | `text/text` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571329_600079_1_not_null` em ``
+- `CHECK` `571329_600079_2_not_null` em ``
+- `CHECK` `571329_600079_3_not_null` em ``
+- `CHECK` `571329_600079_4_not_null` em ``
+- `CHECK` `571329_600079_5_not_null` em ``
+- `CHECK` `571329_600079_6_not_null` em ``
+- `CHECK` `571329_600079_7_not_null` em ``
+- `FOREIGN KEY` `action_plan_tab_entrega_anexos_cod_entrega_foreign` em `cod_entrega` -> action_plan.tab_entregas.cod_entrega
+- `PRIMARY KEY` `tab_entrega_anexos_pkey` em `cod_anexo` -> action_plan.tab_entrega_anexos.cod_anexo
+
+Indices verificados:
+- `idx_anexos_entrega`: `CREATE INDEX idx_anexos_entrega ON action_plan.tab_entrega_anexos USING btree (cod_entrega)`
+- `idx_anexos_mime`: `CREATE INDEX idx_anexos_mime ON action_plan.tab_entrega_anexos USING btree (dsc_mime_type)`
+- `idx_anexos_usuario`: `CREATE INDEX idx_anexos_usuario ON action_plan.tab_entrega_anexos USING btree (cod_usuario)`
+- `tab_entrega_anexos_pkey`: `CREATE UNIQUE INDEX tab_entrega_anexos_pkey ON action_plan.tab_entrega_anexos USING btree (cod_anexo)`
+
+#### `action_plan.tab_entrega_comentarios`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_comentario` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_entrega` | `uuid/uuid` | `NO` | `` |
+| `cod_usuario` | `uuid/uuid` | `NO` | `` |
+| `dsc_comentario` | `text/text` | `NO` | `` |
+| `json_mencoes` | `jsonb/jsonb` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `cod_comentario_pai` | `uuid/uuid` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571329_600031_1_not_null` em ``
+- `CHECK` `571329_600031_2_not_null` em ``
+- `CHECK` `571329_600031_3_not_null` em ``
+- `CHECK` `571329_600031_4_not_null` em ``
+- `FOREIGN KEY` `action_plan_tab_entrega_comentarios_cod_comentario_pai_foreign` em `cod_comentario_pai` -> action_plan.tab_entrega_comentarios.cod_comentario
+- `FOREIGN KEY` `action_plan_tab_entrega_comentarios_cod_entrega_foreign` em `cod_entrega` -> action_plan.tab_entregas.cod_entrega
+- `PRIMARY KEY` `tab_entrega_comentarios_pkey` em `cod_comentario` -> action_plan.tab_entrega_comentarios.cod_comentario
+
+Indices verificados:
+- `idx_comentarios_data`: `CREATE INDEX idx_comentarios_data ON action_plan.tab_entrega_comentarios USING btree (created_at)`
+- `idx_comentarios_entrega`: `CREATE INDEX idx_comentarios_entrega ON action_plan.tab_entrega_comentarios USING btree (cod_entrega)`
+- `idx_comentarios_pai`: `CREATE INDEX idx_comentarios_pai ON action_plan.tab_entrega_comentarios USING btree (cod_comentario_pai)`
+- `idx_comentarios_usuario`: `CREATE INDEX idx_comentarios_usuario ON action_plan.tab_entrega_comentarios USING btree (cod_usuario)`
+- `tab_entrega_comentarios_pkey`: `CREATE UNIQUE INDEX tab_entrega_comentarios_pkey ON action_plan.tab_entrega_comentarios USING btree (cod_comentario)`
+
+#### `action_plan.tab_entrega_historico`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_historico` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_entrega` | `uuid/uuid` | `NO` | `` |
+| `cod_usuario` | `uuid/uuid` | `YES` | `` |
+| `dsc_acao` | `character varying/varchar(50)` | `NO` | `` |
+| `dsc_campo` | `character varying/varchar(100)` | `YES` | `` |
+| `json_valor_antigo` | `jsonb/jsonb` | `YES` | `` |
+| `json_valor_novo` | `jsonb/jsonb` | `YES` | `` |
+| `dsc_descricao` | `text/text` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `NO` | `CURRENT_TIMESTAMP` |
+
+Constraints verificadas:
+- `CHECK` `571329_600096_1_not_null` em ``
+- `CHECK` `571329_600096_2_not_null` em ``
+- `CHECK` `571329_600096_4_not_null` em ``
+- `CHECK` `571329_600096_9_not_null` em ``
+- `FOREIGN KEY` `action_plan_tab_entrega_historico_cod_entrega_foreign` em `cod_entrega` -> action_plan.tab_entregas.cod_entrega
+- `PRIMARY KEY` `tab_entrega_historico_pkey` em `cod_historico` -> action_plan.tab_entrega_historico.cod_historico
+
+Indices verificados:
+- `idx_historico_acao`: `CREATE INDEX idx_historico_acao ON action_plan.tab_entrega_historico USING btree (dsc_acao)`
+- `idx_historico_data`: `CREATE INDEX idx_historico_data ON action_plan.tab_entrega_historico USING btree (created_at)`
+- `idx_historico_entrega`: `CREATE INDEX idx_historico_entrega ON action_plan.tab_entrega_historico USING btree (cod_entrega)`
+- `idx_historico_usuario`: `CREATE INDEX idx_historico_usuario ON action_plan.tab_entrega_historico USING btree (cod_usuario)`
+- `tab_entrega_historico_pkey`: `CREATE UNIQUE INDEX tab_entrega_historico_pkey ON action_plan.tab_entrega_historico USING btree (cod_historico)`
+
+#### `action_plan.tab_entrega_labels`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_label` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_plano_de_acao` | `uuid/uuid` | `NO` | `` |
+| `dsc_label` | `character varying/varchar(100)` | `NO` | `` |
+| `dsc_cor` | `character varying/varchar(7)` | `NO` | `'#6366f1'::character varying` |
+| `dsc_icone` | `character varying/varchar(50)` | `YES` | `` |
+| `num_ordem` | `integer/int4` | `NO` | `0` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571329_600048_1_not_null` em ``
+- `CHECK` `571329_600048_2_not_null` em ``
+- `CHECK` `571329_600048_3_not_null` em ``
+- `CHECK` `571329_600048_4_not_null` em ``
+- `CHECK` `571329_600048_6_not_null` em ``
+- `FOREIGN KEY` `action_plan_tab_entrega_labels_cod_plano_de_acao_foreign` em `cod_plano_de_acao` -> action_plan.tab_plano_de_acao.cod_plano_de_acao
+- `PRIMARY KEY` `tab_entrega_labels_pkey` em `cod_label` -> action_plan.tab_entrega_labels.cod_label
+
+Indices verificados:
+- `idx_labels_ordem`: `CREATE INDEX idx_labels_ordem ON action_plan.tab_entrega_labels USING btree (num_ordem)`
+- `idx_labels_plano`: `CREATE INDEX idx_labels_plano ON action_plan.tab_entrega_labels USING btree (cod_plano_de_acao)`
+- `tab_entrega_labels_pkey`: `CREATE UNIQUE INDEX tab_entrega_labels_pkey ON action_plan.tab_entrega_labels USING btree (cod_label)`
+
+#### `action_plan.tab_entregas`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_entrega` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_plano_de_acao` | `uuid/uuid` | `YES` | `` |
+| `dsc_entrega` | `text/text` | `NO` | `` |
+| `bln_status` | `character varying/varchar(191)` | `NO` | `` |
+| `dsc_periodo_medicao` | `character varying/varchar(191)` | `NO` | `` |
+| `num_nivel_hierarquico_apresentacao` | `smallint/int2` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `cod_entrega_pai` | `uuid/uuid` | `YES` | `` |
+| `dsc_tipo` | `character varying/varchar(50)` | `NO` | `'task'::character varying` |
+| `json_propriedades` | `jsonb/jsonb` | `YES` | `` |
+| `dte_prazo` | `date/date` | `YES` | `` |
+| `cod_responsavel` | `uuid/uuid` | `YES` | `` |
+| `cod_prioridade` | `character varying/varchar(20)` | `NO` | `'media'::character varying` |
+| `num_ordem` | `integer/int4` | `NO` | `0` |
+| `bln_arquivado` | `boolean/bool` | `NO` | `false` |
+| `num_peso` | `numeric/numeric` | `NO` | `'0'::numeric` |
+
+Constraints verificadas:
+- `CHECK` `571329_599842_11_not_null` em ``
+- `CHECK` `571329_599842_15_not_null` em ``
+- `CHECK` `571329_599842_16_not_null` em ``
+- `CHECK` `571329_599842_17_not_null` em ``
+- `CHECK` `571329_599842_18_not_null` em ``
+- `CHECK` `571329_599842_1_not_null` em ``
+- `CHECK` `571329_599842_3_not_null` em ``
+- `CHECK` `571329_599842_4_not_null` em ``
+- `CHECK` `571329_599842_5_not_null` em ``
+- `CHECK` `571329_599842_6_not_null` em ``
+- `FOREIGN KEY` `action_plan_tab_entregas_cod_plano_de_acao_foreign` em `cod_plano_de_acao` -> action_plan.tab_plano_de_acao.cod_plano_de_acao
+- `FOREIGN KEY` `fk_entregas_entrega_pai` em `cod_entrega_pai` -> action_plan.tab_entregas.cod_entrega
+- `FOREIGN KEY` `fk_entregas_responsavel` em `cod_responsavel`
+- `PRIMARY KEY` `tab_entregas_pkey` em `cod_entrega` -> action_plan.tab_entregas.cod_entrega
+
+Indices verificados:
+- `action_plan_tab_entregas_cod_plano_de_acao_index`: `CREATE INDEX action_plan_tab_entregas_cod_plano_de_acao_index ON action_plan.tab_entregas USING btree (cod_plano_de_acao)`
+- `idx_entregas_arquivado`: `CREATE INDEX idx_entregas_arquivado ON action_plan.tab_entregas USING btree (bln_arquivado)`
+- `idx_entregas_entrega_pai`: `CREATE INDEX idx_entregas_entrega_pai ON action_plan.tab_entregas USING btree (cod_entrega_pai)`
+- `idx_entregas_ordem`: `CREATE INDEX idx_entregas_ordem ON action_plan.tab_entregas USING btree (num_ordem)`
+- `idx_entregas_peso`: `CREATE INDEX idx_entregas_peso ON action_plan.tab_entregas USING btree (num_peso)`
+- `idx_entregas_prazo`: `CREATE INDEX idx_entregas_prazo ON action_plan.tab_entregas USING btree (dte_prazo)`
+- `idx_entregas_prioridade`: `CREATE INDEX idx_entregas_prioridade ON action_plan.tab_entregas USING btree (cod_prioridade)`
+- `idx_entregas_responsavel`: `CREATE INDEX idx_entregas_responsavel ON action_plan.tab_entregas USING btree (cod_responsavel)`
+- `idx_entregas_tipo`: `CREATE INDEX idx_entregas_tipo ON action_plan.tab_entregas USING btree (dsc_tipo)`
+- `tab_entregas_pkey`: `CREATE UNIQUE INDEX tab_entregas_pkey ON action_plan.tab_entregas USING btree (cod_entrega)`
+
+#### `action_plan.tab_plano_de_acao`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_plano_de_acao` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_objetivo` | `uuid/uuid` | `NO` | `` |
+| `cod_tipo_execucao` | `uuid/uuid` | `NO` | `` |
+| `cod_organizacao` | `uuid/uuid` | `NO` | `` |
+| `num_nivel_hierarquico_apresentacao` | `smallint/int2` | `NO` | `` |
+| `dsc_plano_de_acao` | `text/text` | `NO` | `` |
+| `dte_inicio` | `date/date` | `NO` | `` |
+| `dte_fim` | `date/date` | `NO` | `` |
+| `vlr_orcamento_previsto` | `numeric/numeric` | `YES` | `` |
+| `bln_status` | `character varying/varchar(191)` | `NO` | `` |
+| `cod_ppa` | `character varying/varchar(191)` | `YES` | `` |
+| `cod_loa` | `character varying/varchar(191)` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `txt_detalhamento` | `text/text` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571329_599598_10_not_null` em ``
+- `CHECK` `571329_599598_1_not_null` em ``
+- `CHECK` `571329_599598_2_not_null` em ``
+- `CHECK` `571329_599598_3_not_null` em ``
+- `CHECK` `571329_599598_4_not_null` em ``
+- `CHECK` `571329_599598_5_not_null` em ``
+- `CHECK` `571329_599598_6_not_null` em ``
+- `CHECK` `571329_599598_7_not_null` em ``
+- `CHECK` `571329_599598_8_not_null` em ``
+- `FOREIGN KEY` `action_plan_tab_plano_de_acao_cod_objetivo_foreign` em `cod_objetivo`
+- `FOREIGN KEY` `action_plan_tab_plano_de_acao_cod_organizacao_foreign` em `cod_organizacao`
+- `FOREIGN KEY` `action_plan_tab_plano_de_acao_cod_tipo_execucao_foreign` em `cod_tipo_execucao` -> action_plan.tab_tipo_execucao.cod_tipo_execucao
+- `PRIMARY KEY` `tab_plano_de_acao_pkey` em `cod_plano_de_acao` -> action_plan.tab_plano_de_acao.cod_plano_de_acao
+
+Indices verificados:
+- `action_plan_tab_plano_de_acao_bln_status_index`: `CREATE INDEX action_plan_tab_plano_de_acao_bln_status_index ON action_plan.tab_plano_de_acao USING btree (bln_status)`
+- `action_plan_tab_plano_de_acao_cod_objetivo_index`: `CREATE INDEX action_plan_tab_plano_de_acao_cod_objetivo_index ON action_plan.tab_plano_de_acao USING btree (cod_objetivo)`
+- `action_plan_tab_plano_de_acao_cod_organizacao_index`: `CREATE INDEX action_plan_tab_plano_de_acao_cod_organizacao_index ON action_plan.tab_plano_de_acao USING btree (cod_organizacao)`
+- `tab_plano_de_acao_pkey`: `CREATE UNIQUE INDEX tab_plano_de_acao_pkey ON action_plan.tab_plano_de_acao USING btree (cod_plano_de_acao)`
+
+#### `action_plan.tab_tipo_execucao`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_tipo_execucao` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `dsc_tipo_execucao` | `character varying/varchar(191)` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571329_599592_1_not_null` em ``
+- `CHECK` `571329_599592_2_not_null` em ``
+- `PRIMARY KEY` `tab_tipo_execucao_pkey` em `cod_tipo_execucao` -> action_plan.tab_tipo_execucao.cod_tipo_execucao
+
+Indices verificados:
+- `tab_tipo_execucao_pkey`: `CREATE UNIQUE INDEX tab_tipo_execucao_pkey ON action_plan.tab_tipo_execucao USING btree (cod_tipo_execucao)`
+
+#### `organization.rel_organizacao`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `id` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_organizacao` | `uuid/uuid` | `NO` | `` |
+| `rel_cod_organizacao` | `uuid/uuid` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571332_599497_1_not_null` em ``
+- `CHECK` `571332_599497_2_not_null` em ``
+- `CHECK` `571332_599497_3_not_null` em ``
+- `FOREIGN KEY` `organization_rel_organizacao_cod_organizacao_foreign` em `cod_organizacao` -> organization.tab_organizacoes.cod_organizacao
+- `FOREIGN KEY` `organization_rel_organizacao_rel_cod_organizacao_foreign` em `rel_cod_organizacao` -> organization.tab_organizacoes.cod_organizacao
+- `PRIMARY KEY` `rel_organizacao_pkey` em `id` -> organization.rel_organizacao.id
+- `UNIQUE` `organization_rel_organizacao_cod_organizacao_rel_cod_organizaca` em `cod_organizacao` -> organization.rel_organizacao.cod_organizacao
+- `UNIQUE` `organization_rel_organizacao_cod_organizacao_rel_cod_organizaca` em `cod_organizacao` -> organization.rel_organizacao.rel_cod_organizacao
+- `UNIQUE` `organization_rel_organizacao_cod_organizacao_rel_cod_organizaca` em `rel_cod_organizacao` -> organization.rel_organizacao.rel_cod_organizacao
+- `UNIQUE` `organization_rel_organizacao_cod_organizacao_rel_cod_organizaca` em `rel_cod_organizacao` -> organization.rel_organizacao.cod_organizacao
+
+Indices verificados:
+- `organization_rel_organizacao_cod_organizacao_rel_cod_organizaca`: `CREATE UNIQUE INDEX organization_rel_organizacao_cod_organizacao_rel_cod_organizaca ON organization.rel_organizacao USING btree (cod_organizacao, rel_cod_organizacao)`
+- `rel_organizacao_pkey`: `CREATE UNIQUE INDEX rel_organizacao_pkey ON organization.rel_organizacao USING btree (id)`
+
+#### `organization.rel_users_tab_organizacoes`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `id` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `user_id` | `uuid/uuid` | `NO` | `` |
+| `cod_organizacao` | `uuid/uuid` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571332_599479_1_not_null` em ``
+- `CHECK` `571332_599479_2_not_null` em ``
+- `CHECK` `571332_599479_3_not_null` em ``
+- `FOREIGN KEY` `organization_rel_users_tab_organizacoes_cod_organizacao_foreign` em `cod_organizacao` -> organization.tab_organizacoes.cod_organizacao
+- `FOREIGN KEY` `organization_rel_users_tab_organizacoes_user_id_foreign` em `user_id`
+- `PRIMARY KEY` `rel_users_tab_organizacoes_pkey` em `id` -> organization.rel_users_tab_organizacoes.id
+- `UNIQUE` `organization_rel_users_tab_organizacoes_user_id_cod_organizacao` em `user_id` -> organization.rel_users_tab_organizacoes.cod_organizacao
+- `UNIQUE` `organization_rel_users_tab_organizacoes_user_id_cod_organizacao` em `user_id` -> organization.rel_users_tab_organizacoes.user_id
+- `UNIQUE` `organization_rel_users_tab_organizacoes_user_id_cod_organizacao` em `cod_organizacao` -> organization.rel_users_tab_organizacoes.user_id
+- `UNIQUE` `organization_rel_users_tab_organizacoes_user_id_cod_organizacao` em `cod_organizacao` -> organization.rel_users_tab_organizacoes.cod_organizacao
+
+Indices verificados:
+- `organization_rel_users_tab_organizacoes_user_id_cod_organizacao`: `CREATE UNIQUE INDEX organization_rel_users_tab_organizacoes_user_id_cod_organizacao ON organization.rel_users_tab_organizacoes USING btree (user_id, cod_organizacao)`
+- `rel_users_tab_organizacoes_pkey`: `CREATE UNIQUE INDEX rel_users_tab_organizacoes_pkey ON organization.rel_users_tab_organizacoes USING btree (id)`
+
+#### `organization.rel_users_tab_organizacoes_tab_perfil_acesso`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `id` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `user_id` | `uuid/uuid` | `NO` | `` |
+| `cod_organizacao` | `uuid/uuid` | `NO` | `` |
+| `cod_plano_de_acao` | `uuid/uuid` | `YES` | `` |
+| `cod_perfil` | `uuid/uuid` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571332_599625_1_not_null` em ``
+- `CHECK` `571332_599625_2_not_null` em ``
+- `CHECK` `571332_599625_3_not_null` em ``
+- `CHECK` `571332_599625_5_not_null` em ``
+- `FOREIGN KEY` `fk_uopp_org` em `cod_organizacao` -> organization.tab_organizacoes.cod_organizacao
+- `FOREIGN KEY` `fk_uopp_perfil` em `cod_perfil` -> organization.tab_perfil_acesso.cod_perfil
+- `FOREIGN KEY` `fk_uopp_plano` em `cod_plano_de_acao`
+- `FOREIGN KEY` `fk_uopp_user` em `user_id`
+- `PRIMARY KEY` `rel_users_tab_organizacoes_tab_perfil_acesso_pkey` em `id` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.id
+- `UNIQUE` `rel_uopp_unique` em `user_id` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.cod_plano_de_acao
+- `UNIQUE` `rel_uopp_unique` em `user_id` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.cod_perfil
+- `UNIQUE` `rel_uopp_unique` em `user_id` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.cod_organizacao
+- `UNIQUE` `rel_uopp_unique` em `user_id` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.user_id
+- `UNIQUE` `rel_uopp_unique` em `cod_organizacao` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.user_id
+- `UNIQUE` `rel_uopp_unique` em `cod_organizacao` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.cod_perfil
+- `UNIQUE` `rel_uopp_unique` em `cod_organizacao` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.cod_plano_de_acao
+- `UNIQUE` `rel_uopp_unique` em `cod_organizacao` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.cod_organizacao
+- `UNIQUE` `rel_uopp_unique` em `cod_plano_de_acao` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.user_id
+- `UNIQUE` `rel_uopp_unique` em `cod_plano_de_acao` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.cod_plano_de_acao
+- `UNIQUE` `rel_uopp_unique` em `cod_plano_de_acao` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.cod_organizacao
+- `UNIQUE` `rel_uopp_unique` em `cod_plano_de_acao` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.cod_perfil
+- `UNIQUE` `rel_uopp_unique` em `cod_perfil` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.cod_plano_de_acao
+- `UNIQUE` `rel_uopp_unique` em `cod_perfil` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.cod_organizacao
+- `UNIQUE` `rel_uopp_unique` em `cod_perfil` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.cod_perfil
+- `UNIQUE` `rel_uopp_unique` em `cod_perfil` -> organization.rel_users_tab_organizacoes_tab_perfil_acesso.user_id
+
+Indices verificados:
+- `organization_rel_users_tab_organizacoes_tab_perfil_acesso_cod_o`: `CREATE INDEX organization_rel_users_tab_organizacoes_tab_perfil_acesso_cod_o ON organization.rel_users_tab_organizacoes_tab_perfil_acesso USING btree (cod_organizacao)`
+- `organization_rel_users_tab_organizacoes_tab_perfil_acesso_cod_p`: `CREATE INDEX organization_rel_users_tab_organizacoes_tab_perfil_acesso_cod_p ON organization.rel_users_tab_organizacoes_tab_perfil_acesso USING btree (cod_plano_de_acao)`
+- `organization_rel_users_tab_organizacoes_tab_perfil_acesso_user_`: `CREATE INDEX organization_rel_users_tab_organizacoes_tab_perfil_acesso_user_ ON organization.rel_users_tab_organizacoes_tab_perfil_acesso USING btree (user_id)`
+- `rel_uopp_unique`: `CREATE UNIQUE INDEX rel_uopp_unique ON organization.rel_users_tab_organizacoes_tab_perfil_acesso USING btree (user_id, cod_organizacao, cod_plano_de_acao, cod_perfil)`
+- `rel_users_tab_organizacoes_tab_perfil_acesso_pkey`: `CREATE UNIQUE INDEX rel_users_tab_organizacoes_tab_perfil_acesso_pkey ON organization.rel_users_tab_organizacoes_tab_perfil_acesso USING btree (id)`
+
+#### `organization.tab_organizacoes`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_organizacao` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `sgl_organizacao` | `character varying/varchar(191)` | `NO` | `` |
+| `nom_organizacao` | `text/text` | `NO` | `` |
+| `rel_cod_organizacao` | `uuid/uuid` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571332_599461_1_not_null` em ``
+- `CHECK` `571332_599461_2_not_null` em ``
+- `CHECK` `571332_599461_3_not_null` em ``
+- `PRIMARY KEY` `tab_organizacoes_pkey` em `cod_organizacao` -> organization.tab_organizacoes.cod_organizacao
+
+Indices verificados:
+- `tab_organizacoes_pkey`: `CREATE UNIQUE INDEX tab_organizacoes_pkey ON organization.tab_organizacoes USING btree (cod_organizacao)`
+
+#### `organization.tab_perfil_acesso`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_perfil` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `dsc_perfil` | `text/text` | `NO` | `` |
+| `dsc_permissao` | `text/text` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571332_599470_1_not_null` em ``
+- `CHECK` `571332_599470_2_not_null` em ``
+- `CHECK` `571332_599470_3_not_null` em ``
+- `PRIMARY KEY` `tab_perfil_acesso_pkey` em `cod_perfil` -> organization.tab_perfil_acesso.cod_perfil
+
+Indices verificados:
+- `tab_perfil_acesso_pkey`: `CREATE UNIQUE INDEX tab_perfil_acesso_pkey ON organization.tab_perfil_acesso USING btree (cod_perfil)`
+
+#### `performance_indicators.rel_indicador_objetivo_organizacao`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_indicador` | `uuid/uuid` | `NO` | `` |
+| `cod_organizacao` | `uuid/uuid` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571330_599827_1_not_null` em ``
+- `CHECK` `571330_599827_2_not_null` em ``
+- `FOREIGN KEY` `fk_rioo_indicador` em `cod_indicador` -> performance_indicators.tab_indicador.cod_indicador
+- `FOREIGN KEY` `fk_rioo_org` em `cod_organizacao`
+- `PRIMARY KEY` `rel_indicador_objetivo_estrategico_organizacao_pkey` em `cod_indicador` -> performance_indicators.rel_indicador_objetivo_organizacao.cod_organizacao
+- `PRIMARY KEY` `rel_indicador_objetivo_estrategico_organizacao_pkey` em `cod_indicador` -> performance_indicators.rel_indicador_objetivo_organizacao.cod_indicador
+- `PRIMARY KEY` `rel_indicador_objetivo_estrategico_organizacao_pkey` em `cod_organizacao` -> performance_indicators.rel_indicador_objetivo_organizacao.cod_organizacao
+- `PRIMARY KEY` `rel_indicador_objetivo_estrategico_organizacao_pkey` em `cod_organizacao` -> performance_indicators.rel_indicador_objetivo_organizacao.cod_indicador
+
+Indices verificados:
+- `rel_indicador_objetivo_estrategico_organizacao_pkey`: `CREATE UNIQUE INDEX rel_indicador_objetivo_estrategico_organizacao_pkey ON performance_indicators.rel_indicador_objetivo_organizacao USING btree (cod_indicador, cod_organizacao)`
+
+#### `performance_indicators.tab_evolucao_indicador`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_evolucao_indicador` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_indicador` | `uuid/uuid` | `NO` | `` |
+| `num_ano` | `smallint/int2` | `NO` | `` |
+| `num_mes` | `smallint/int2` | `NO` | `` |
+| `vlr_previsto` | `numeric/numeric` | `YES` | `` |
+| `vlr_realizado` | `numeric/numeric` | `YES` | `` |
+| `txt_avaliacao` | `text/text` | `YES` | `` |
+| `bln_atualizado` | `character varying/varchar(191)` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571330_599677_1_not_null` em ``
+- `CHECK` `571330_599677_2_not_null` em ``
+- `CHECK` `571330_599677_3_not_null` em ``
+- `CHECK` `571330_599677_4_not_null` em ``
+- `FOREIGN KEY` `performance_indicators_tab_evolucao_indicador_cod_indicador_for` em `cod_indicador` -> performance_indicators.tab_indicador.cod_indicador
+- `PRIMARY KEY` `tab_evolucao_indicador_pkey` em `cod_evolucao_indicador` -> performance_indicators.tab_evolucao_indicador.cod_evolucao_indicador
+
+Indices verificados:
+- `performance_indicators_tab_evolucao_indicador_cod_indicador_num`: `CREATE INDEX performance_indicators_tab_evolucao_indicador_cod_indicador_num ON performance_indicators.tab_evolucao_indicador USING btree (cod_indicador, num_ano, num_mes)`
+- `tab_evolucao_indicador_pkey`: `CREATE UNIQUE INDEX tab_evolucao_indicador_pkey ON performance_indicators.tab_evolucao_indicador USING btree (cod_evolucao_indicador)`
+
+#### `performance_indicators.tab_indicador`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_indicador` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_plano_de_acao` | `uuid/uuid` | `YES` | `` |
+| `cod_objetivo` | `uuid/uuid` | `YES` | `` |
+| `dsc_tipo` | `text/text` | `NO` | `` |
+| `nom_indicador` | `text/text` | `NO` | `` |
+| `dsc_indicador` | `text/text` | `NO` | `` |
+| `txt_observacao` | `text/text` | `YES` | `` |
+| `dsc_meta` | `text/text` | `YES` | `` |
+| `dsc_atributos` | `text/text` | `YES` | `` |
+| `dsc_referencial_comparativo` | `text/text` | `YES` | `` |
+| `dsc_unidade_medida` | `text/text` | `NO` | `` |
+| `num_peso` | `smallint/int2` | `YES` | `` |
+| `bln_acumulado` | `character varying/varchar(191)` | `NO` | `` |
+| `dsc_formula` | `text/text` | `YES` | `` |
+| `dsc_fonte` | `character varying/varchar(191)` | `YES` | `` |
+| `dsc_periodo_medicao` | `character varying/varchar(191)` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `dsc_polaridade` | `character varying/varchar(191)` | `YES` | `` |
+| `dsc_calculation_type` | `character varying/varchar(20)` | `NO` | `'manual'::character varying` |
+
+Constraints verificadas:
+- `CHECK` `571330_599656_11_not_null` em ``
+- `CHECK` `571330_599656_13_not_null` em ``
+- `CHECK` `571330_599656_16_not_null` em ``
+- `CHECK` `571330_599656_1_not_null` em ``
+- `CHECK` `571330_599656_21_not_null` em ``
+- `CHECK` `571330_599656_4_not_null` em ``
+- `CHECK` `571330_599656_5_not_null` em ``
+- `CHECK` `571330_599656_6_not_null` em ``
+- `FOREIGN KEY` `performance_indicators_tab_indicador_cod_objetivo_foreign` em `cod_objetivo`
+- `FOREIGN KEY` `performance_indicators_tab_indicador_cod_plano_de_acao_foreign` em `cod_plano_de_acao`
+- `PRIMARY KEY` `tab_indicador_pkey` em `cod_indicador` -> performance_indicators.tab_indicador.cod_indicador
+
+Indices verificados:
+- `idx_indicador_calculation_type`: `CREATE INDEX idx_indicador_calculation_type ON performance_indicators.tab_indicador USING btree (dsc_calculation_type)`
+- `performance_indicators_tab_indicador_cod_objetivo_index`: `CREATE INDEX performance_indicators_tab_indicador_cod_objetivo_index ON performance_indicators.tab_indicador USING btree (cod_objetivo)`
+- `performance_indicators_tab_indicador_cod_plano_de_acao_index`: `CREATE INDEX performance_indicators_tab_indicador_cod_plano_de_acao_index ON performance_indicators.tab_indicador USING btree (cod_plano_de_acao)`
+- `tab_indicador_pkey`: `CREATE UNIQUE INDEX tab_indicador_pkey ON performance_indicators.tab_indicador USING btree (cod_indicador)`
+
+#### `performance_indicators.tab_linha_base_indicador`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_linha_base` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_indicador` | `uuid/uuid` | `NO` | `` |
+| `num_linha_base` | `numeric/numeric` | `NO` | `` |
+| `num_ano` | `smallint/int2` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571330_599692_1_not_null` em ``
+- `CHECK` `571330_599692_2_not_null` em ``
+- `CHECK` `571330_599692_3_not_null` em ``
+- `CHECK` `571330_599692_4_not_null` em ``
+- `FOREIGN KEY` `performance_indicators_tab_linha_base_indicador_cod_indicador_f` em `cod_indicador` -> performance_indicators.tab_indicador.cod_indicador
+- `PRIMARY KEY` `tab_linha_base_indicador_pkey` em `cod_linha_base` -> performance_indicators.tab_linha_base_indicador.cod_linha_base
+
+Indices verificados:
+- `performance_indicators_tab_linha_base_indicador_cod_indicador_n`: `CREATE INDEX performance_indicators_tab_linha_base_indicador_cod_indicador_n ON performance_indicators.tab_linha_base_indicador USING btree (cod_indicador, num_ano)`
+- `tab_linha_base_indicador_pkey`: `CREATE UNIQUE INDEX tab_linha_base_indicador_pkey ON performance_indicators.tab_linha_base_indicador USING btree (cod_linha_base)`
+
+#### `performance_indicators.tab_meta_por_ano`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_meta_por_ano` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_indicador` | `uuid/uuid` | `NO` | `` |
+| `num_ano` | `smallint/int2` | `NO` | `` |
+| `meta` | `numeric/numeric` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571330_599704_1_not_null` em ``
+- `CHECK` `571330_599704_2_not_null` em ``
+- `CHECK` `571330_599704_3_not_null` em ``
+- `FOREIGN KEY` `performance_indicators_tab_meta_por_ano_cod_indicador_foreign` em `cod_indicador` -> performance_indicators.tab_indicador.cod_indicador
+- `PRIMARY KEY` `tab_meta_por_ano_pkey` em `cod_meta_por_ano` -> performance_indicators.tab_meta_por_ano.cod_meta_por_ano
+
+Indices verificados:
+- `performance_indicators_tab_meta_por_ano_cod_indicador_num_ano_i`: `CREATE INDEX performance_indicators_tab_meta_por_ano_cod_indicador_num_ano_i ON performance_indicators.tab_meta_por_ano USING btree (cod_indicador, num_ano)`
+- `tab_meta_por_ano_pkey`: `CREATE UNIQUE INDEX tab_meta_por_ano_pkey ON performance_indicators.tab_meta_por_ano USING btree (cod_meta_por_ano)`
+
+#### `public.audits`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `id` | `bigint/int8` | `NO` | `nextval('audits_id_seq'::regclass)` |
+| `user_type` | `character varying/varchar(191)` | `YES` | `` |
+| `user_id` | `uuid/uuid` | `YES` | `` |
+| `event` | `character varying/varchar(191)` | `NO` | `` |
+| `auditable_type` | `character varying/varchar(191)` | `NO` | `` |
+| `auditable_id` | `uuid/uuid` | `NO` | `` |
+| `old_values` | `text/text` | `YES` | `` |
+| `new_values` | `text/text` | `YES` | `` |
+| `url` | `text/text` | `YES` | `` |
+| `ip_address` | `inet/inet` | `YES` | `` |
+| `user_agent` | `character varying/varchar(1023)` | `YES` | `` |
+| `tags` | `character varying/varchar(191)` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `2200_599859_1_not_null` em ``
+- `CHECK` `2200_599859_4_not_null` em ``
+- `CHECK` `2200_599859_5_not_null` em ``
+- `CHECK` `2200_599859_6_not_null` em ``
+- `PRIMARY KEY` `audits_pkey` em `id` -> public.audits.id
+
+Indices verificados:
+- `audits_auditable_id_auditable_type_index`: `CREATE INDEX audits_auditable_id_auditable_type_index ON public.audits USING btree (auditable_id, auditable_type)`
+- `audits_pkey`: `CREATE UNIQUE INDEX audits_pkey ON public.audits USING btree (id)`
+- `audits_user_id_user_type_index`: `CREATE INDEX audits_user_id_user_type_index ON public.audits USING btree (user_id, user_type)`
+
+#### `public.cache`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `key` | `character varying/varchar(191)` | `NO` | `` |
+| `value` | `text/text` | `NO` | `` |
+| `expiration` | `integer/int4` | `NO` | `` |
+
+Constraints verificadas:
+- `CHECK` `2200_599404_1_not_null` em ``
+- `CHECK` `2200_599404_2_not_null` em ``
+- `CHECK` `2200_599404_3_not_null` em ``
+- `PRIMARY KEY` `cache_pkey` em `key` -> public.cache.key
+
+Indices verificados:
+- `cache_pkey`: `CREATE UNIQUE INDEX cache_pkey ON public.cache USING btree (key)`
+
+#### `public.cache_locks`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `key` | `character varying/varchar(191)` | `NO` | `` |
+| `owner` | `character varying/varchar(191)` | `NO` | `` |
+| `expiration` | `integer/int4` | `NO` | `` |
+
+Constraints verificadas:
+- `CHECK` `2200_599412_1_not_null` em ``
+- `CHECK` `2200_599412_2_not_null` em ``
+- `CHECK` `2200_599412_3_not_null` em ``
+- `PRIMARY KEY` `cache_locks_pkey` em `key` -> public.cache_locks.key
+
+Indices verificados:
+- `cache_locks_pkey`: `CREATE UNIQUE INDEX cache_locks_pkey ON public.cache_locks USING btree (key)`
+
+#### `public.failed_jobs`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `id` | `bigint/int8` | `NO` | `nextval('failed_jobs_id_seq'::regclass)` |
+| `uuid` | `character varying/varchar(191)` | `NO` | `` |
+| `connection` | `text/text` | `NO` | `` |
+| `queue` | `text/text` | `NO` | `` |
+| `payload` | `text/text` | `NO` | `` |
+| `exception` | `text/text` | `NO` | `` |
+| `failed_at` | `timestamp without time zone/timestamp` | `NO` | `CURRENT_TIMESTAMP` |
+
+Constraints verificadas:
+- `CHECK` `2200_599439_1_not_null` em ``
+- `CHECK` `2200_599439_2_not_null` em ``
+- `CHECK` `2200_599439_3_not_null` em ``
+- `CHECK` `2200_599439_4_not_null` em ``
+- `CHECK` `2200_599439_5_not_null` em ``
+- `CHECK` `2200_599439_6_not_null` em ``
+- `CHECK` `2200_599439_7_not_null` em ``
+- `PRIMARY KEY` `failed_jobs_pkey` em `id` -> public.failed_jobs.id
+- `UNIQUE` `failed_jobs_uuid_unique` em `uuid` -> public.failed_jobs.uuid
+
+Indices verificados:
+- `failed_jobs_pkey`: `CREATE UNIQUE INDEX failed_jobs_pkey ON public.failed_jobs USING btree (id)`
+- `failed_jobs_uuid_unique`: `CREATE UNIQUE INDEX failed_jobs_uuid_unique ON public.failed_jobs USING btree (uuid)`
+
+#### `public.job_batches`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `id` | `character varying/varchar(191)` | `NO` | `` |
+| `name` | `character varying/varchar(191)` | `NO` | `` |
+| `total_jobs` | `integer/int4` | `NO` | `` |
+| `pending_jobs` | `integer/int4` | `NO` | `` |
+| `failed_jobs` | `integer/int4` | `NO` | `` |
+| `failed_job_ids` | `text/text` | `NO` | `` |
+| `options` | `text/text` | `YES` | `` |
+| `cancelled_at` | `integer/int4` | `YES` | `` |
+| `created_at` | `integer/int4` | `NO` | `` |
+| `finished_at` | `integer/int4` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `2200_599429_1_not_null` em ``
+- `CHECK` `2200_599429_2_not_null` em ``
+- `CHECK` `2200_599429_3_not_null` em ``
+- `CHECK` `2200_599429_4_not_null` em ``
+- `CHECK` `2200_599429_5_not_null` em ``
+- `CHECK` `2200_599429_6_not_null` em ``
+- `CHECK` `2200_599429_9_not_null` em ``
+- `PRIMARY KEY` `job_batches_pkey` em `id` -> public.job_batches.id
+
+Indices verificados:
+- `job_batches_pkey`: `CREATE UNIQUE INDEX job_batches_pkey ON public.job_batches USING btree (id)`
+
+#### `public.jobs`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `id` | `bigint/int8` | `NO` | `nextval('jobs_id_seq'::regclass)` |
+| `queue` | `character varying/varchar(191)` | `NO` | `` |
+| `payload` | `text/text` | `NO` | `` |
+| `attempts` | `smallint/int2` | `NO` | `` |
+| `reserved_at` | `integer/int4` | `YES` | `` |
+| `available_at` | `integer/int4` | `NO` | `` |
+| `created_at` | `integer/int4` | `NO` | `` |
+
+Constraints verificadas:
+- `CHECK` `2200_599419_1_not_null` em ``
+- `CHECK` `2200_599419_2_not_null` em ``
+- `CHECK` `2200_599419_3_not_null` em ``
+- `CHECK` `2200_599419_4_not_null` em ``
+- `CHECK` `2200_599419_6_not_null` em ``
+- `CHECK` `2200_599419_7_not_null` em ``
+- `PRIMARY KEY` `jobs_pkey` em `id` -> public.jobs.id
+
+Indices verificados:
+- `jobs_pkey`: `CREATE UNIQUE INDEX jobs_pkey ON public.jobs USING btree (id)`
+- `jobs_queue_index`: `CREATE INDEX jobs_queue_index ON public.jobs USING btree (queue)`
+
+#### `public.migrations`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `id` | `integer/int4` | `NO` | `nextval('migrations_id_seq'::regclass)` |
+| `migration` | `character varying/varchar(191)` | `NO` | `` |
+| `batch` | `integer/int4` | `NO` | `` |
+
+Constraints verificadas:
+- `CHECK` `2200_599379_1_not_null` em ``
+- `CHECK` `2200_599379_2_not_null` em ``
+- `CHECK` `2200_599379_3_not_null` em ``
+- `PRIMARY KEY` `migrations_pkey` em `id` -> public.migrations.id
+
+Indices verificados:
+- `migrations_pkey`: `CREATE UNIQUE INDEX migrations_pkey ON public.migrations USING btree (id)`
+
+#### `public.password_reset_tokens`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `email` | `character varying/varchar(191)` | `NO` | `` |
+| `token` | `character varying/varchar(191)` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `2200_599399_1_not_null` em ``
+- `CHECK` `2200_599399_2_not_null` em ``
+- `PRIMARY KEY` `password_reset_tokens_pkey` em `email` -> public.password_reset_tokens.email
+
+Indices verificados:
+- `password_reset_tokens_pkey`: `CREATE UNIQUE INDEX password_reset_tokens_pkey ON public.password_reset_tokens USING btree (email)`
+
+#### `public.personal_access_tokens`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `id` | `uuid/uuid` | `NO` | `` |
+| `tokenable_type` | `character varying/varchar(191)` | `NO` | `` |
+| `tokenable_id` | `uuid/uuid` | `NO` | `` |
+| `name` | `text/text` | `NO` | `` |
+| `token` | `character varying/varchar(64)` | `NO` | `` |
+| `abilities` | `text/text` | `YES` | `` |
+| `last_used_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `expires_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `2200_599879_1_not_null` em ``
+- `CHECK` `2200_599879_2_not_null` em ``
+- `CHECK` `2200_599879_3_not_null` em ``
+- `CHECK` `2200_599879_4_not_null` em ``
+- `CHECK` `2200_599879_5_not_null` em ``
+- `PRIMARY KEY` `personal_access_tokens_pkey` em `id` -> public.personal_access_tokens.id
+- `UNIQUE` `personal_access_tokens_token_unique` em `token` -> public.personal_access_tokens.token
+
+Indices verificados:
+- `personal_access_tokens_expires_at_index`: `CREATE INDEX personal_access_tokens_expires_at_index ON public.personal_access_tokens USING btree (expires_at)`
+- `personal_access_tokens_pkey`: `CREATE UNIQUE INDEX personal_access_tokens_pkey ON public.personal_access_tokens USING btree (id)`
+- `personal_access_tokens_token_unique`: `CREATE UNIQUE INDEX personal_access_tokens_token_unique ON public.personal_access_tokens USING btree (token)`
+- `personal_access_tokens_tokenable_type_tokenable_id_index`: `CREATE INDEX personal_access_tokens_tokenable_type_tokenable_id_index ON public.personal_access_tokens USING btree (tokenable_type, tokenable_id)`
+
+#### `public.sessions`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `id` | `character varying/varchar(191)` | `NO` | `` |
+| `user_id` | `uuid/uuid` | `YES` | `` |
+| `ip_address` | `character varying/varchar(45)` | `YES` | `` |
+| `user_agent` | `text/text` | `YES` | `` |
+| `payload` | `text/text` | `NO` | `` |
+| `last_activity` | `integer/int4` | `NO` | `` |
+
+Constraints verificadas:
+- `CHECK` `2200_599451_1_not_null` em ``
+- `CHECK` `2200_599451_5_not_null` em ``
+- `CHECK` `2200_599451_6_not_null` em ``
+- `PRIMARY KEY` `sessions_pkey` em `id` -> public.sessions.id
+
+Indices verificados:
+- `sessions_last_activity_index`: `CREATE INDEX sessions_last_activity_index ON public.sessions USING btree (last_activity)`
+- `sessions_pkey`: `CREATE UNIQUE INDEX sessions_pkey ON public.sessions USING btree (id)`
+- `sessions_user_id_index`: `CREATE INDEX sessions_user_id_index ON public.sessions USING btree (user_id)`
+
+#### `public.strategic_alerts`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `id` | `uuid/uuid` | `NO` | `` |
+| `user_id` | `uuid/uuid` | `NO` | `` |
+| `cod_organizacao` | `uuid/uuid` | `YES` | `` |
+| `title` | `character varying/varchar(191)` | `NO` | `` |
+| `message` | `text/text` | `NO` | `` |
+| `icon` | `character varying/varchar(191)` | `NO` | `'bi-info-circle'::character varying` |
+| `type` | `character varying/varchar(191)` | `NO` | `'info'::character varying` |
+| `read_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `2200_600169_1_not_null` em ``
+- `CHECK` `2200_600169_2_not_null` em ``
+- `CHECK` `2200_600169_4_not_null` em ``
+- `CHECK` `2200_600169_5_not_null` em ``
+- `CHECK` `2200_600169_6_not_null` em ``
+- `CHECK` `2200_600169_7_not_null` em ``
+- `FOREIGN KEY` `strategic_alerts_user_id_foreign` em `user_id` -> public.users.id
+- `PRIMARY KEY` `strategic_alerts_pkey` em `id` -> public.strategic_alerts.id
+
+Indices verificados:
+- `strategic_alerts_pkey`: `CREATE UNIQUE INDEX strategic_alerts_pkey ON public.strategic_alerts USING btree (id)`
+
+#### `public.system_settings`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `id` | `bigint/int8` | `NO` | `nextval('system_settings_id_seq'::regclass)` |
+| `key` | `character varying/varchar(191)` | `NO` | `` |
+| `value` | `text/text` | `YES` | `` |
+| `type` | `character varying/varchar(191)` | `NO` | `'string'::character varying` |
+| `is_encrypted` | `boolean/bool` | `NO` | `false` |
+| `description` | `character varying/varchar(191)` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `2200_600156_1_not_null` em ``
+- `CHECK` `2200_600156_2_not_null` em ``
+- `CHECK` `2200_600156_4_not_null` em ``
+- `CHECK` `2200_600156_5_not_null` em ``
+- `PRIMARY KEY` `system_settings_pkey` em `id` -> public.system_settings.id
+- `UNIQUE` `system_settings_key_unique` em `key` -> public.system_settings.key
+
+Indices verificados:
+- `system_settings_key_unique`: `CREATE UNIQUE INDEX system_settings_key_unique ON public.system_settings USING btree (key)`
+- `system_settings_pkey`: `CREATE UNIQUE INDEX system_settings_pkey ON public.system_settings USING btree (id)`
+
+#### `public.tab_analise_ambiental`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_analise` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_pei` | `uuid/uuid` | `NO` | `` |
+| `cod_organizacao` | `uuid/uuid` | `YES` | `` |
+| `dsc_tipo_analise` | `character varying/varchar(10)` | `NO` | `` |
+| `dsc_categoria` | `character varying/varchar(20)` | `NO` | `` |
+| `dsc_item` | `character varying/varchar(500)` | `NO` | `` |
+| `num_impacto` | `integer/int4` | `NO` | `3` |
+| `txt_observacao` | `text/text` | `YES` | `` |
+| `num_ordem` | `integer/int4` | `NO` | `0` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `2200_599986_1_not_null` em ``
+- `CHECK` `2200_599986_2_not_null` em ``
+- `CHECK` `2200_599986_4_not_null` em ``
+- `CHECK` `2200_599986_5_not_null` em ``
+- `CHECK` `2200_599986_6_not_null` em ``
+- `CHECK` `2200_599986_7_not_null` em ``
+- `CHECK` `2200_599986_9_not_null` em ``
+- `FOREIGN KEY` `tab_analise_ambiental_cod_organizacao_foreign` em `cod_organizacao`
+- `FOREIGN KEY` `tab_analise_ambiental_cod_pei_foreign` em `cod_pei`
+- `PRIMARY KEY` `tab_analise_ambiental_pkey` em `cod_analise` -> public.tab_analise_ambiental.cod_analise
+
+Indices verificados:
+- `tab_analise_ambiental_cod_organizacao_index`: `CREATE INDEX tab_analise_ambiental_cod_organizacao_index ON public.tab_analise_ambiental USING btree (cod_organizacao)`
+- `tab_analise_ambiental_cod_pei_index`: `CREATE INDEX tab_analise_ambiental_cod_pei_index ON public.tab_analise_ambiental USING btree (cod_pei)`
+- `tab_analise_ambiental_dsc_tipo_analise_dsc_categoria_index`: `CREATE INDEX tab_analise_ambiental_dsc_tipo_analise_dsc_categoria_index ON public.tab_analise_ambiental USING btree (dsc_tipo_analise, dsc_categoria)`
+- `tab_analise_ambiental_pkey`: `CREATE UNIQUE INDEX tab_analise_ambiental_pkey ON public.tab_analise_ambiental USING btree (cod_analise)`
+
+#### `public.tab_audit`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `id` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `acao` | `character varying/varchar(191)` | `NO` | `` |
+| `antes` | `text/text` | `YES` | `` |
+| `depois` | `text/text` | `YES` | `` |
+| `table` | `character varying/varchar(191)` | `NO` | `` |
+| `column_name` | `character varying/varchar(191)` | `NO` | `` |
+| `data_type` | `character varying/varchar(191)` | `YES` | `` |
+| `table_id` | `character varying/varchar(191)` | `NO` | `` |
+| `ip` | `character varying/varchar(191)` | `NO` | `` |
+| `user_id` | `uuid/uuid` | `NO` | `` |
+| `dte_expired_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `2200_599716_10_not_null` em ``
+- `CHECK` `2200_599716_1_not_null` em ``
+- `CHECK` `2200_599716_2_not_null` em ``
+- `CHECK` `2200_599716_5_not_null` em ``
+- `CHECK` `2200_599716_6_not_null` em ``
+- `CHECK` `2200_599716_8_not_null` em ``
+- `CHECK` `2200_599716_9_not_null` em ``
+- `FOREIGN KEY` `tab_audit_user_id_foreign` em `user_id` -> public.users.id
+- `PRIMARY KEY` `tab_audit_pkey` em `id` -> public.tab_audit.id
+
+Indices verificados:
+- `tab_audit_acao_index`: `CREATE INDEX tab_audit_acao_index ON public.tab_audit USING btree (acao)`
+- `tab_audit_pkey`: `CREATE UNIQUE INDEX tab_audit_pkey ON public.tab_audit USING btree (id)`
+- `tab_audit_table_table_id_index`: `CREATE INDEX tab_audit_table_table_id_index ON public.tab_audit USING btree ("table", table_id)`
+- `tab_audit_user_id_index`: `CREATE INDEX tab_audit_user_id_index ON public.tab_audit USING btree (user_id)`
+
+#### `public.tab_relatorios_agendados`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_agendamento` | `uuid/uuid` | `NO` | `` |
+| `user_id` | `uuid/uuid` | `NO` | `` |
+| `dsc_tipo_relatorio` | `character varying/varchar(191)` | `NO` | `` |
+| `dsc_frequencia` | `character varying/varchar(191)` | `NO` | `` |
+| `txt_filtros` | `jsonb/jsonb` | `YES` | `` |
+| `dte_proxima_execucao` | `timestamp without time zone/timestamp` | `NO` | `` |
+| `bln_ativo` | `boolean/bool` | `NO` | `true` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `2200_600190_1_not_null` em ``
+- `CHECK` `2200_600190_2_not_null` em ``
+- `CHECK` `2200_600190_3_not_null` em ``
+- `CHECK` `2200_600190_4_not_null` em ``
+- `CHECK` `2200_600190_6_not_null` em ``
+- `CHECK` `2200_600190_7_not_null` em ``
+- `FOREIGN KEY` `tab_relatorios_agendados_user_id_foreign` em `user_id` -> public.users.id
+- `PRIMARY KEY` `tab_relatorios_agendados_pkey` em `cod_agendamento` -> public.tab_relatorios_agendados.cod_agendamento
+
+Indices verificados:
+- `tab_relatorios_agendados_pkey`: `CREATE UNIQUE INDEX tab_relatorios_agendados_pkey ON public.tab_relatorios_agendados USING btree (cod_agendamento)`
+
+#### `public.tab_relatorios_gerados`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_relatorio_gerado` | `uuid/uuid` | `NO` | `` |
+| `user_id` | `uuid/uuid` | `YES` | `` |
+| `dsc_tipo_relatorio` | `character varying/varchar(191)` | `NO` | `` |
+| `dsc_caminho_arquivo` | `character varying/varchar(191)` | `NO` | `` |
+| `dsc_formato` | `character varying/varchar(191)` | `NO` | `` |
+| `txt_filtros_aplicados` | `jsonb/jsonb` | `YES` | `` |
+| `num_tamanho_bytes` | `integer/int4` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `2200_600204_1_not_null` em ``
+- `CHECK` `2200_600204_3_not_null` em ``
+- `CHECK` `2200_600204_4_not_null` em ``
+- `CHECK` `2200_600204_5_not_null` em ``
+- `FOREIGN KEY` `tab_relatorios_gerados_user_id_foreign` em `user_id` -> public.users.id
+- `PRIMARY KEY` `tab_relatorios_gerados_pkey` em `cod_relatorio_gerado` -> public.tab_relatorios_gerados.cod_relatorio_gerado
+
+Indices verificados:
+- `tab_relatorios_gerados_pkey`: `CREATE UNIQUE INDEX tab_relatorios_gerados_pkey ON public.tab_relatorios_gerados USING btree (cod_relatorio_gerado)`
+
+#### `public.tab_status`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_status` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `dsc_status` | `text/text` | `NO` | `` |
+
+Constraints verificadas:
+- `CHECK` `2200_599870_1_not_null` em ``
+- `CHECK` `2200_599870_2_not_null` em ``
+- `PRIMARY KEY` `tab_status_pkey` em `cod_status` -> public.tab_status.cod_status
+
+Indices verificados:
+- `tab_status_pkey`: `CREATE UNIQUE INDEX tab_status_pkey ON public.tab_status USING btree (cod_status)`
+
+#### `public.users`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `id` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `name` | `character varying/varchar(191)` | `NO` | `` |
+| `email` | `character varying/varchar(191)` | `NO` | `` |
+| `ativo` | `smallint/int2` | `NO` | `'1'::smallint` |
+| `adm` | `smallint/int2` | `NO` | `'2'::smallint` |
+| `email_verified_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `password` | `character varying/varchar(191)` | `NO` | `` |
+| `trocarsenha` | `smallint/int2` | `NO` | `'1'::smallint` |
+| `two_factor_secret` | `text/text` | `YES` | `` |
+| `two_factor_recovery_codes` | `text/text` | `YES` | `` |
+| `two_factor_confirmed_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `remember_token` | `character varying/varchar(100)` | `YES` | `` |
+| `current_team_id` | `uuid/uuid` | `YES` | `` |
+| `profile_photo_path` | `character varying/varchar(2048)` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `theme_color` | `character varying/varchar(191)` | `NO` | `'primary'::character varying` |
+
+Constraints verificadas:
+- `CHECK` `2200_599385_17_not_null` em ``
+- `CHECK` `2200_599385_1_not_null` em ``
+- `CHECK` `2200_599385_2_not_null` em ``
+- `CHECK` `2200_599385_3_not_null` em ``
+- `CHECK` `2200_599385_4_not_null` em ``
+- `CHECK` `2200_599385_5_not_null` em ``
+- `CHECK` `2200_599385_7_not_null` em ``
+- `CHECK` `2200_599385_8_not_null` em ``
+- `PRIMARY KEY` `users_pkey` em `id` -> public.users.id
+- `UNIQUE` `users_email_unique` em `email` -> public.users.email
+
+Indices verificados:
+- `users_email_unique`: `CREATE UNIQUE INDEX users_email_unique ON public.users USING btree (email)`
+- `users_pkey`: `CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id)`
+
+#### `risk_management.tab_risco`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_risco` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_pei` | `uuid/uuid` | `NO` | `` |
+| `cod_organizacao` | `uuid/uuid` | `NO` | `` |
+| `num_codigo_risco` | `integer/int4` | `NO` | `` |
+| `dsc_titulo` | `character varying/varchar(255)` | `NO` | `` |
+| `txt_descricao` | `text/text` | `NO` | `` |
+| `dsc_categoria` | `character varying/varchar(50)` | `NO` | `` |
+| `dsc_status` | `character varying/varchar(50)` | `NO` | `` |
+| `num_probabilidade` | `smallint/int2` | `NO` | `` |
+| `num_impacto` | `smallint/int2` | `NO` | `` |
+| `num_nivel_risco` | `smallint/int2` | `NO` | `` |
+| `txt_causas` | `text/text` | `YES` | `` |
+| `txt_consequencias` | `text/text` | `YES` | `` |
+| `cod_responsavel_monitoramento` | `uuid/uuid` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571331_599892_10_not_null` em ``
+- `CHECK` `571331_599892_11_not_null` em ``
+- `CHECK` `571331_599892_1_not_null` em ``
+- `CHECK` `571331_599892_2_not_null` em ``
+- `CHECK` `571331_599892_3_not_null` em ``
+- `CHECK` `571331_599892_4_not_null` em ``
+- `CHECK` `571331_599892_5_not_null` em ``
+- `CHECK` `571331_599892_6_not_null` em ``
+- `CHECK` `571331_599892_7_not_null` em ``
+- `CHECK` `571331_599892_8_not_null` em ``
+- `CHECK` `571331_599892_9_not_null` em ``
+- `CHECK` `chk_impacto` em `` -> risk_management.tab_risco.num_impacto
+- `CHECK` `chk_nivel_risco` em `` -> risk_management.tab_risco.num_nivel_risco
+- `CHECK` `chk_probabilidade` em `` -> risk_management.tab_risco.num_probabilidade
+- `FOREIGN KEY` `risk_management_tab_risco_cod_organizacao_foreign` em `cod_organizacao`
+- `FOREIGN KEY` `risk_management_tab_risco_cod_pei_foreign` em `cod_pei`
+- `FOREIGN KEY` `risk_management_tab_risco_cod_responsavel_monitoramento_foreign` em `cod_responsavel_monitoramento`
+- `PRIMARY KEY` `tab_risco_pkey` em `cod_risco` -> risk_management.tab_risco.cod_risco
+
+Indices verificados:
+- `risk_management_tab_risco_cod_organizacao_index`: `CREATE INDEX risk_management_tab_risco_cod_organizacao_index ON risk_management.tab_risco USING btree (cod_organizacao)`
+- `risk_management_tab_risco_cod_pei_index`: `CREATE INDEX risk_management_tab_risco_cod_pei_index ON risk_management.tab_risco USING btree (cod_pei)`
+- `risk_management_tab_risco_cod_pei_num_codigo_risco_index`: `CREATE INDEX risk_management_tab_risco_cod_pei_num_codigo_risco_index ON risk_management.tab_risco USING btree (cod_pei, num_codigo_risco)`
+- `risk_management_tab_risco_dsc_categoria_index`: `CREATE INDEX risk_management_tab_risco_dsc_categoria_index ON risk_management.tab_risco USING btree (dsc_categoria)`
+- `risk_management_tab_risco_dsc_status_index`: `CREATE INDEX risk_management_tab_risco_dsc_status_index ON risk_management.tab_risco USING btree (dsc_status)`
+- `risk_management_tab_risco_num_nivel_risco_index`: `CREATE INDEX risk_management_tab_risco_num_nivel_risco_index ON risk_management.tab_risco USING btree (num_nivel_risco)`
+- `tab_risco_pkey`: `CREATE UNIQUE INDEX tab_risco_pkey ON risk_management.tab_risco USING btree (cod_risco)`
+
+#### `risk_management.tab_risco_mitigacao`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_mitigacao` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_risco` | `uuid/uuid` | `NO` | `` |
+| `dsc_tipo_mitigacao` | `character varying/varchar(50)` | `NO` | `` |
+| `txt_acao_mitigacao` | `text/text` | `NO` | `` |
+| `cod_responsavel` | `uuid/uuid` | `YES` | `` |
+| `dte_prazo` | `date/date` | `YES` | `` |
+| `dsc_status` | `character varying/varchar(50)` | `NO` | `` |
+| `txt_observacoes` | `text/text` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571331_599940_1_not_null` em ``
+- `CHECK` `571331_599940_2_not_null` em ``
+- `CHECK` `571331_599940_3_not_null` em ``
+- `CHECK` `571331_599940_4_not_null` em ``
+- `CHECK` `571331_599940_7_not_null` em ``
+- `FOREIGN KEY` `risk_management_tab_risco_mitigacao_cod_responsavel_foreign` em `cod_responsavel`
+- `FOREIGN KEY` `risk_management_tab_risco_mitigacao_cod_risco_foreign` em `cod_risco` -> risk_management.tab_risco.cod_risco
+- `PRIMARY KEY` `tab_risco_mitigacao_pkey` em `cod_mitigacao` -> risk_management.tab_risco_mitigacao.cod_mitigacao
+
+Indices verificados:
+- `risk_management_tab_risco_mitigacao_cod_responsavel_index`: `CREATE INDEX risk_management_tab_risco_mitigacao_cod_responsavel_index ON risk_management.tab_risco_mitigacao USING btree (cod_responsavel)`
+- `risk_management_tab_risco_mitigacao_cod_risco_index`: `CREATE INDEX risk_management_tab_risco_mitigacao_cod_risco_index ON risk_management.tab_risco_mitigacao USING btree (cod_risco)`
+- `risk_management_tab_risco_mitigacao_dsc_status_index`: `CREATE INDEX risk_management_tab_risco_mitigacao_dsc_status_index ON risk_management.tab_risco_mitigacao USING btree (dsc_status)`
+- `risk_management_tab_risco_mitigacao_dsc_tipo_mitigacao_index`: `CREATE INDEX risk_management_tab_risco_mitigacao_dsc_tipo_mitigacao_index ON risk_management.tab_risco_mitigacao USING btree (dsc_tipo_mitigacao)`
+- `tab_risco_mitigacao_pkey`: `CREATE UNIQUE INDEX tab_risco_mitigacao_pkey ON risk_management.tab_risco_mitigacao USING btree (cod_mitigacao)`
+
+#### `risk_management.tab_risco_objetivo`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_risco` | `uuid/uuid` | `NO` | `` |
+| `cod_objetivo` | `uuid/uuid` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571331_599925_1_not_null` em ``
+- `CHECK` `571331_599925_2_not_null` em ``
+- `FOREIGN KEY` `risk_management_tab_risco_objetivo_cod_objetivo_foreign` em `cod_objetivo`
+- `FOREIGN KEY` `risk_management_tab_risco_objetivo_cod_risco_foreign` em `cod_risco` -> risk_management.tab_risco.cod_risco
+- `PRIMARY KEY` `tab_risco_objetivo_pkey` em `cod_risco` -> risk_management.tab_risco_objetivo.cod_risco
+- `PRIMARY KEY` `tab_risco_objetivo_pkey` em `cod_risco` -> risk_management.tab_risco_objetivo.cod_objetivo
+- `PRIMARY KEY` `tab_risco_objetivo_pkey` em `cod_objetivo` -> risk_management.tab_risco_objetivo.cod_risco
+- `PRIMARY KEY` `tab_risco_objetivo_pkey` em `cod_objetivo` -> risk_management.tab_risco_objetivo.cod_objetivo
+
+Indices verificados:
+- `tab_risco_objetivo_pkey`: `CREATE UNIQUE INDEX tab_risco_objetivo_pkey ON risk_management.tab_risco_objetivo USING btree (cod_risco, cod_objetivo)`
+
+#### `risk_management.tab_risco_ocorrencia`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_ocorrencia` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_risco` | `uuid/uuid` | `NO` | `` |
+| `dte_ocorrencia` | `date/date` | `NO` | `` |
+| `txt_descricao_ocorrencia` | `text/text` | `NO` | `` |
+| `vlr_impacto_financeiro` | `numeric/numeric` | `YES` | `` |
+| `txt_acoes_tomadas` | `text/text` | `YES` | `` |
+| `txt_licoes_aprendidas` | `text/text` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571331_599963_1_not_null` em ``
+- `CHECK` `571331_599963_2_not_null` em ``
+- `CHECK` `571331_599963_3_not_null` em ``
+- `CHECK` `571331_599963_4_not_null` em ``
+- `FOREIGN KEY` `risk_management_tab_risco_ocorrencia_cod_risco_foreign` em `cod_risco` -> risk_management.tab_risco.cod_risco
+- `PRIMARY KEY` `tab_risco_ocorrencia_pkey` em `cod_ocorrencia` -> risk_management.tab_risco_ocorrencia.cod_ocorrencia
+
+Indices verificados:
+- `risk_management_tab_risco_ocorrencia_cod_risco_index`: `CREATE INDEX risk_management_tab_risco_ocorrencia_cod_risco_index ON risk_management.tab_risco_ocorrencia USING btree (cod_risco)`
+- `risk_management_tab_risco_ocorrencia_dte_ocorrencia_index`: `CREATE INDEX risk_management_tab_risco_ocorrencia_dte_ocorrencia_index ON risk_management.tab_risco_ocorrencia USING btree (dte_ocorrencia)`
+- `tab_risco_ocorrencia_pkey`: `CREATE UNIQUE INDEX tab_risco_ocorrencia_pkey ON risk_management.tab_risco_ocorrencia USING btree (cod_ocorrencia)`
+
+#### `strategic_planning.tab_arquivos`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_arquivo` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_evolucao_indicador` | `uuid/uuid` | `NO` | `` |
+| `txt_assunto` | `text/text` | `NO` | `` |
+| `data` | `text/text` | `NO` | `` |
+| `dsc_nome_arquivo` | `text/text` | `NO` | `` |
+| `dsc_tipo` | `character varying/varchar(191)` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571328_599742_1_not_null` em ``
+- `CHECK` `571328_599742_2_not_null` em ``
+- `CHECK` `571328_599742_3_not_null` em ``
+- `CHECK` `571328_599742_4_not_null` em ``
+- `CHECK` `571328_599742_5_not_null` em ``
+- `CHECK` `571328_599742_6_not_null` em ``
+- `FOREIGN KEY` `strategic_planning_tab_arquivos_cod_evolucao_indicador_foreign` em `cod_evolucao_indicador`
+- `PRIMARY KEY` `tab_arquivos_pkey` em `cod_arquivo` -> strategic_planning.tab_arquivos.cod_arquivo
+
+Indices verificados:
+- `strategic_planning_tab_arquivos_cod_evolucao_indicador_index`: `CREATE INDEX strategic_planning_tab_arquivos_cod_evolucao_indicador_index ON strategic_planning.tab_arquivos USING btree (cod_evolucao_indicador)`
+- `tab_arquivos_pkey`: `CREATE UNIQUE INDEX tab_arquivos_pkey ON strategic_planning.tab_arquivos USING btree (cod_arquivo)`
+
+#### `strategic_planning.tab_atividade_cadeia_valor`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_atividade_cadeia_valor` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_pei` | `uuid/uuid` | `NO` | `` |
+| `cod_perspectiva` | `uuid/uuid` | `NO` | `` |
+| `dsc_atividade` | `text/text` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571328_599757_1_not_null` em ``
+- `CHECK` `571328_599757_2_not_null` em ``
+- `CHECK` `571328_599757_3_not_null` em ``
+- `CHECK` `571328_599757_4_not_null` em ``
+- `FOREIGN KEY` `strategic_planning_tab_atividade_cadeia_valor_cod_pei_foreign` em `cod_pei` -> strategic_planning.tab_pei.cod_pei
+- `FOREIGN KEY` `strategic_planning_tab_atividade_cadeia_valor_cod_perspectiva_f` em `cod_perspectiva` -> strategic_planning.tab_perspectiva.cod_perspectiva
+- `PRIMARY KEY` `tab_atividade_cadeia_valor_pkey` em `cod_atividade_cadeia_valor` -> strategic_planning.tab_atividade_cadeia_valor.cod_atividade_cadeia_valor
+
+Indices verificados:
+- `strategic_planning_tab_atividade_cadeia_valor_cod_pei_index`: `CREATE INDEX strategic_planning_tab_atividade_cadeia_valor_cod_pei_index ON strategic_planning.tab_atividade_cadeia_valor USING btree (cod_pei)`
+- `strategic_planning_tab_atividade_cadeia_valor_cod_perspectiva_i`: `CREATE INDEX strategic_planning_tab_atividade_cadeia_valor_cod_perspectiva_i ON strategic_planning.tab_atividade_cadeia_valor USING btree (cod_perspectiva)`
+- `tab_atividade_cadeia_valor_pkey`: `CREATE UNIQUE INDEX tab_atividade_cadeia_valor_pkey ON strategic_planning.tab_atividade_cadeia_valor USING btree (cod_atividade_cadeia_valor)`
+
+#### `strategic_planning.tab_futuro_almejado_objetivo`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_futuro_almejado` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `dsc_futuro_almejado` | `text/text` | `NO` | `` |
+| `cod_objetivo` | `uuid/uuid` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571328_599812_1_not_null` em ``
+- `CHECK` `571328_599812_2_not_null` em ``
+- `CHECK` `571328_599812_3_not_null` em ``
+- `FOREIGN KEY` `strategic_planning_tab_futuro_almejado_objetivo_estrategico_cod` em `cod_objetivo` -> strategic_planning.tab_objetivo.cod_objetivo
+- `PRIMARY KEY` `tab_futuro_almejado_objetivo_estrategico_pkey` em `cod_futuro_almejado` -> strategic_planning.tab_futuro_almejado_objetivo.cod_futuro_almejado
+
+Indices verificados:
+- `strategic_planning_tab_futuro_almejado_objetivo_estrategico_cod`: `CREATE INDEX strategic_planning_tab_futuro_almejado_objetivo_estrategico_cod ON strategic_planning.tab_futuro_almejado_objetivo USING btree (cod_objetivo)`
+- `tab_futuro_almejado_objetivo_estrategico_pkey`: `CREATE UNIQUE INDEX tab_futuro_almejado_objetivo_estrategico_pkey ON strategic_planning.tab_futuro_almejado_objetivo USING btree (cod_futuro_almejado)`
+
+#### `strategic_planning.tab_grau_satisfacao`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_grau_satisfacao` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `dsc_grau_satisfacao` | `text/text` | `NO` | `` |
+| `cor` | `character varying/varchar(191)` | `NO` | `` |
+| `vlr_minimo` | `numeric/numeric` | `NO` | `` |
+| `vlr_maximo` | `numeric/numeric` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `cod_pei` | `uuid/uuid` | `YES` | `` |
+| `num_ano` | `integer/int4` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571328_599733_1_not_null` em ``
+- `CHECK` `571328_599733_2_not_null` em ``
+- `CHECK` `571328_599733_3_not_null` em ``
+- `CHECK` `571328_599733_4_not_null` em ``
+- `CHECK` `571328_599733_5_not_null` em ``
+- `FOREIGN KEY` `strategic_planning_tab_grau_satisfacao_cod_pei_foreign` em `cod_pei` -> strategic_planning.tab_pei.cod_pei
+- `PRIMARY KEY` `tab_grau_satisfcao_pkey` em `cod_grau_satisfacao` -> strategic_planning.tab_grau_satisfacao.cod_grau_satisfacao
+
+Indices verificados:
+- `idx_grau_satisfacao_pei_ano`: `CREATE INDEX idx_grau_satisfacao_pei_ano ON strategic_planning.tab_grau_satisfacao USING btree (cod_pei, num_ano)`
+- `tab_grau_satisfcao_pkey`: `CREATE UNIQUE INDEX tab_grau_satisfcao_pkey ON strategic_planning.tab_grau_satisfacao USING btree (cod_grau_satisfacao)`
+
+#### `strategic_planning.tab_missao_visao_valores`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_missao_visao_valores` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `dsc_missao` | `text/text` | `NO` | `` |
+| `dsc_visao` | `text/text` | `NO` | `` |
+| `cod_pei` | `uuid/uuid` | `NO` | `` |
+| `cod_organizacao` | `uuid/uuid` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571328_599540_1_not_null` em ``
+- `CHECK` `571328_599540_2_not_null` em ``
+- `CHECK` `571328_599540_3_not_null` em ``
+- `CHECK` `571328_599540_4_not_null` em ``
+- `CHECK` `571328_599540_5_not_null` em ``
+- `FOREIGN KEY` `strategic_planning_tab_missao_visao_valores_cod_organizacao_for` em `cod_organizacao`
+- `FOREIGN KEY` `strategic_planning_tab_missao_visao_valores_cod_pei_foreign` em `cod_pei` -> strategic_planning.tab_pei.cod_pei
+- `PRIMARY KEY` `tab_missao_visao_valores_pkey` em `cod_missao_visao_valores` -> strategic_planning.tab_missao_visao_valores.cod_missao_visao_valores
+
+Indices verificados:
+- `tab_missao_visao_valores_pkey`: `CREATE UNIQUE INDEX tab_missao_visao_valores_pkey ON strategic_planning.tab_missao_visao_valores USING btree (cod_missao_visao_valores)`
+
+#### `strategic_planning.tab_nivel_hierarquico`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `num_nivel_hierarquico_apresentacao` | `smallint/int2` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571328_599587_1_not_null` em ``
+- `PRIMARY KEY` `tab_nivel_hierarquico_pkey` em `num_nivel_hierarquico_apresentacao` -> strategic_planning.tab_nivel_hierarquico.num_nivel_hierarquico_apresentacao
+
+Indices verificados:
+- `tab_nivel_hierarquico_pkey`: `CREATE UNIQUE INDEX tab_nivel_hierarquico_pkey ON strategic_planning.tab_nivel_hierarquico USING btree (num_nivel_hierarquico_apresentacao)`
+
+#### `strategic_planning.tab_objetivo`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_objetivo` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `nom_objetivo` | `text/text` | `NO` | `` |
+| `dsc_objetivo` | `text/text` | `NO` | `` |
+| `num_nivel_hierarquico_apresentacao` | `smallint/int2` | `NO` | `` |
+| `cod_perspectiva` | `uuid/uuid` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571328_599573_1_not_null` em ``
+- `CHECK` `571328_599573_2_not_null` em ``
+- `CHECK` `571328_599573_3_not_null` em ``
+- `CHECK` `571328_599573_4_not_null` em ``
+- `CHECK` `571328_599573_5_not_null` em ``
+- `FOREIGN KEY` `strategic_planning_tab_objetivo_estrategico_cod_perspectiva_for` em `cod_perspectiva` -> strategic_planning.tab_perspectiva.cod_perspectiva
+- `PRIMARY KEY` `tab_objetivo_estrategico_pkey` em `cod_objetivo` -> strategic_planning.tab_objetivo.cod_objetivo
+
+Indices verificados:
+- `tab_objetivo_estrategico_pkey`: `CREATE UNIQUE INDEX tab_objetivo_estrategico_pkey ON strategic_planning.tab_objetivo USING btree (cod_objetivo)`
+
+#### `strategic_planning.tab_objetivo_comentarios`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_comentario` | `uuid/uuid` | `NO` | `` |
+| `cod_objetivo` | `uuid/uuid` | `NO` | `` |
+| `user_id` | `uuid/uuid` | `NO` | `` |
+| `dsc_comentario` | `text/text` | `NO` | `` |
+| `cod_comentario_pai` | `uuid/uuid` | `YES` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571328_600217_1_not_null` em ``
+- `CHECK` `571328_600217_2_not_null` em ``
+- `CHECK` `571328_600217_3_not_null` em ``
+- `CHECK` `571328_600217_4_not_null` em ``
+- `FOREIGN KEY` `strategic_planning_tab_objetivo_comentarios_cod_objetivo_foreig` em `cod_objetivo` -> strategic_planning.tab_objetivo.cod_objetivo
+- `FOREIGN KEY` `strategic_planning_tab_objetivo_comentarios_user_id_foreign` em `user_id`
+- `PRIMARY KEY` `tab_objetivo_comentarios_pkey` em `cod_comentario` -> strategic_planning.tab_objetivo_comentarios.cod_comentario
+
+Indices verificados:
+- `tab_objetivo_comentarios_pkey`: `CREATE UNIQUE INDEX tab_objetivo_comentarios_pkey ON strategic_planning.tab_objetivo_comentarios USING btree (cod_comentario)`
+
+#### `strategic_planning.tab_pei`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_pei` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `dsc_pei` | `text/text` | `NO` | `` |
+| `num_ano_inicio_pei` | `smallint/int2` | `NO` | `` |
+| `num_ano_fim_pei` | `smallint/int2` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571328_599531_1_not_null` em ``
+- `CHECK` `571328_599531_2_not_null` em ``
+- `CHECK` `571328_599531_3_not_null` em ``
+- `CHECK` `571328_599531_4_not_null` em ``
+- `PRIMARY KEY` `tab_pei_pkey` em `cod_pei` -> strategic_planning.tab_pei.cod_pei
+
+Indices verificados:
+- `tab_pei_pkey`: `CREATE UNIQUE INDEX tab_pei_pkey ON strategic_planning.tab_pei USING btree (cod_pei)`
+
+#### `strategic_planning.tab_perspectiva`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_perspectiva` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `dsc_perspectiva` | `text/text` | `NO` | `` |
+| `num_nivel_hierarquico_apresentacao` | `smallint/int2` | `NO` | `` |
+| `cod_pei` | `uuid/uuid` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `num_peso_indicadores` | `integer/int4` | `NO` | `100` |
+| `num_peso_planos` | `integer/int4` | `NO` | `0` |
+
+Constraints verificadas:
+- `CHECK` `571328_599559_1_not_null` em ``
+- `CHECK` `571328_599559_2_not_null` em ``
+- `CHECK` `571328_599559_3_not_null` em ``
+- `CHECK` `571328_599559_4_not_null` em ``
+- `CHECK` `571328_599559_8_not_null` em ``
+- `CHECK` `571328_599559_9_not_null` em ``
+- `FOREIGN KEY` `strategic_planning_tab_perspectiva_cod_pei_foreign` em `cod_pei` -> strategic_planning.tab_pei.cod_pei
+- `PRIMARY KEY` `tab_perspectiva_pkey` em `cod_perspectiva` -> strategic_planning.tab_perspectiva.cod_perspectiva
+
+Indices verificados:
+- `tab_perspectiva_pkey`: `CREATE UNIQUE INDEX tab_perspectiva_pkey ON strategic_planning.tab_perspectiva USING btree (cod_perspectiva)`
+
+#### `strategic_planning.tab_processos_atividade_cadeia_valor`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_processo_atividade_cadeia_valor` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `cod_atividade_cadeia_valor` | `uuid/uuid` | `NO` | `` |
+| `dsc_entrada` | `text/text` | `NO` | `` |
+| `dsc_transformacao` | `text/text` | `NO` | `` |
+| `dsc_saida` | `text/text` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571328_599778_1_not_null` em ``
+- `CHECK` `571328_599778_2_not_null` em ``
+- `CHECK` `571328_599778_3_not_null` em ``
+- `CHECK` `571328_599778_4_not_null` em ``
+- `CHECK` `571328_599778_5_not_null` em ``
+- `FOREIGN KEY` `strategic_planning_tab_processos_atividade_cadeia_valor_cod_ati` em `cod_atividade_cadeia_valor` -> strategic_planning.tab_atividade_cadeia_valor.cod_atividade_cadeia_valor
+- `PRIMARY KEY` `tab_processos_atividade_cadeia_valor_pkey` em `cod_processo_atividade_cadeia_valor` -> strategic_planning.tab_processos_atividade_cadeia_valor.cod_processo_atividade_cadeia_valor
+
+Indices verificados:
+- `strategic_planning_tab_processos_atividade_cadeia_valor_cod_ati`: `CREATE INDEX strategic_planning_tab_processos_atividade_cadeia_valor_cod_ati ON strategic_planning.tab_processos_atividade_cadeia_valor USING btree (cod_atividade_cadeia_valor)`
+- `tab_processos_atividade_cadeia_valor_pkey`: `CREATE UNIQUE INDEX tab_processos_atividade_cadeia_valor_pkey ON strategic_planning.tab_processos_atividade_cadeia_valor USING btree (cod_processo_atividade_cadeia_valor)`
+
+#### `strategic_planning.tab_tema_norteador`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_tema_norteador` | `uuid/uuid` | `NO` | `` |
+| `nom_tema_norteador` | `text/text` | `NO` | `` |
+| `cod_pei` | `uuid/uuid` | `NO` | `` |
+| `cod_organizacao` | `uuid/uuid` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571328_600136_1_not_null` em ``
+- `CHECK` `571328_600136_2_not_null` em ``
+- `CHECK` `571328_600136_3_not_null` em ``
+- `CHECK` `571328_600136_4_not_null` em ``
+- `FOREIGN KEY` `strategic_planning_tab_objetivo_estrategico_cod_organizacao_for` em `cod_organizacao`
+- `FOREIGN KEY` `strategic_planning_tab_objetivo_estrategico_cod_pei_foreign` em `cod_pei` -> strategic_planning.tab_pei.cod_pei
+- `PRIMARY KEY` `tab_objetivo_estrategico_pkey1` em `cod_tema_norteador` -> strategic_planning.tab_tema_norteador.cod_tema_norteador
+
+Indices verificados:
+- `tab_objetivo_estrategico_pkey1`: `CREATE UNIQUE INDEX tab_objetivo_estrategico_pkey1 ON strategic_planning.tab_tema_norteador USING btree (cod_tema_norteador)`
+
+#### `strategic_planning.tab_valores`
+
+| Coluna | Tipo | Nulo | Default |
+|---|---|---|---|
+| `cod_valor` | `uuid/uuid` | `NO` | `gen_random_uuid()` |
+| `nom_valor` | `text/text` | `NO` | `` |
+| `dsc_valor` | `text/text` | `NO` | `` |
+| `cod_pei` | `uuid/uuid` | `NO` | `` |
+| `cod_organizacao` | `uuid/uuid` | `NO` | `` |
+| `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+| `deleted_at` | `timestamp without time zone/timestamp` | `YES` | `` |
+
+Constraints verificadas:
+- `CHECK` `571328_599793_1_not_null` em ``
+- `CHECK` `571328_599793_2_not_null` em ``
+- `CHECK` `571328_599793_3_not_null` em ``
+- `CHECK` `571328_599793_4_not_null` em ``
+- `CHECK` `571328_599793_5_not_null` em ``
+- `FOREIGN KEY` `strategic_planning_tab_valores_cod_organizacao_foreign` em `cod_organizacao`
+- `FOREIGN KEY` `strategic_planning_tab_valores_cod_pei_foreign` em `cod_pei` -> strategic_planning.tab_pei.cod_pei
+- `PRIMARY KEY` `tab_valores_pkey` em `cod_valor` -> strategic_planning.tab_valores.cod_valor
+
+Indices verificados:
+- `tab_valores_pkey`: `CREATE UNIQUE INDEX tab_valores_pkey ON strategic_planning.tab_valores USING btree (cod_valor)`
+
+## Rotas efetivas
+
+Verificado em runtime por `php artisan route:list` e colecao real de rotas Laravel.
+
+| Metodo | URI | Nome | Acao | Middleware |
+|---|---|---|---|---|
+| `GET|POST|PUT|PATCH|DELETE|OPTIONS` | `/` | `welcome` | `App\Livewire\StrategicPlanning\MapaEstrategico` | `web` |
+| `GET` | `api/user` | `` | `Closure` | `api, auth:sanctum` |
+| `GET` | `auditoria` | `audit.index` | `App\Livewire\Audit\ListarLogs` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `auditoria/{id}/detalhes` | `audit.detalhes` | `App\Livewire\Audit\DetalharLog` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `configuracoes` | `admin.configuracoes` | `App\Livewire\Admin\ConfiguracaoSistema` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `dashboard` | `dashboard` | `App\Livewire\Dashboard\Index` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `entregas` | `entregas.index` | `App\Livewire\Deliverables\DeliverablesBoard` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `forgot-password` | `password.request` | `Laravel\Fortify\Http\Controllers\PasswordResetLinkController@create` | `web, guest:web` |
+| `POST` | `forgot-password` | `password.email` | `Laravel\Fortify\Http\Controllers\PasswordResetLinkController@store` | `web, guest:web` |
+| `GET` | `graus-satisfacao` | `graus-satisfacao.index` | `App\Livewire\StrategicPlanning\ListarGrausSatisfacao` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `graus-satisfacao/{id}/detalhes` | `graus-satisfacao.detalhes` | `App\Livewire\StrategicPlanning\DetalharGrauSatisfacao` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `indicadores` | `indicadores.index` | `App\Livewire\PerformanceIndicators\ListarIndicadores` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `indicadores/{id}/detalhes` | `indicadores.detalhes` | `App\Livewire\PerformanceIndicators\DetalharIndicador` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `indicadores/{indicadorId}/evolucao` | `indicadores.evolucao` | `App\Livewire\PerformanceIndicators\LancarEvolucao` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `leads` | `leads.index` | `App\Livewire\LeadsTable` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `livewire/livewire.js` | `` | `Livewire\Mechanisms\FrontendAssets\FrontendAssets@returnJavaScriptAsFile` | `` |
+| `GET` | `livewire/livewire.min.js.map` | `` | `Livewire\Mechanisms\FrontendAssets\FrontendAssets@maps` | `` |
+| `GET` | `livewire/preview-file/{filename}` | `livewire.preview-file` | `Livewire\Features\SupportFileUploads\FilePreviewController@handle` | `web` |
+| `POST` | `livewire/update` | `livewire.update` | `Livewire\Mechanisms\HandleRequests\HandleRequests@handleUpdate` | `web` |
+| `POST` | `livewire/upload-file` | `livewire.upload-file` | `Livewire\Features\SupportFileUploads\FileUploadController@handle` | `web, throttle:60,1` |
+| `GET` | `login` | `login` | `Laravel\Fortify\Http\Controllers\AuthenticatedSessionController@create` | `web, guest:web` |
+| `POST` | `login` | `login.store` | `Laravel\Fortify\Http\Controllers\AuthenticatedSessionController@store` | `web, guest:web, throttle:login` |
+| `POST` | `logout` | `logout` | `Laravel\Fortify\Http\Controllers\AuthenticatedSessionController@destroy` | `web, auth:web` |
+| `GET` | `objetivos` | `objetivos.index` | `App\Livewire\StrategicPlanning\ListarObjetivos` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `objetivos/{id}/detalhes` | `objetivos.detalhes` | `App\Livewire\StrategicPlanning\DetalharObjetivo` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `objetivos/{objetivoId}/futuro` | `objetivos.futuro` | `App\Livewire\StrategicPlanning\GerenciarFuturoAlmejado` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `organizacoes` | `organizacoes.index` | `App\Livewire\Organization\ListarOrganizacoes` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `organizacoes/{id}/detalhes` | `organizacoes.detalhes` | `App\Livewire\Organization\DetalharOrganizacao` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `pei` | `pei.index` | `App\Livewire\StrategicPlanning\MissaoVisao` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `pei/ciclos` | `pei.ciclos` | `App\Livewire\StrategicPlanning\ListarPeis` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `pei/identidade/{id}/detalhes` | `pei.identidade.detalhes` | `App\Livewire\StrategicPlanning\DetalharIdentidade` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `pei/mapa` | `pei.mapa` | `App\Livewire\StrategicPlanning\MapaEstrategico` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `pei/perspectivas` | `pei.perspectivas` | `App\Livewire\StrategicPlanning\ListarPerspectivas` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `pei/perspectivas/{id}/detalhes` | `pei.perspectivas.detalhes` | `App\Livewire\StrategicPlanning\DetalharPerspectiva` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `pei/pestel` | `pei.pestel` | `App\Livewire\StrategicPlanning\AnalisePESTEL` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `pei/swot` | `pei.swot` | `App\Livewire\StrategicPlanning\AnaliseSWOT` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `pei/valores` | `pei.valores` | `App\Livewire\StrategicPlanning\ListarValores` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `pei/valores/{id}/detalhes` | `pei.valores.detalhes` | `App\Livewire\StrategicPlanning\DetalharValor` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `pei/{id}/detalhes` | `pei.detalhes` | `App\Livewire\StrategicPlanning\DetalharPei` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `planos` | `planos.index` | `App\Livewire\ActionPlan\ListarPlanos` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `planos/{id}/detalhes` | `planos.detalhes` | `App\Livewire\ActionPlan\DetalharPlano` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `planos/{planoId}/entregas` | `planos.entregas` | `App\Livewire\Deliverables\DeliverablesBoard` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `planos/{planoId}/responsaveis` | `planos.responsaveis` | `App\Livewire\ActionPlan\AtribuirResponsaveis` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `refresh-csrf` | `csrf.refresh` | `Closure` | `web` |
+| `GET` | `register` | `register` | `Laravel\Fortify\Http\Controllers\RegisteredUserController@create` | `web, guest:web` |
+| `POST` | `register` | `register.store` | `Laravel\Fortify\Http\Controllers\RegisteredUserController@store` | `web, guest:web` |
+| `GET` | `relatorios` | `relatorios.index` | `App\Livewire\Reports\ListarRelatorios` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `relatorios/executivo/{organizacaoId?}` | `relatorios.executivo` | `App\Http\Controllers\Reports\RelatorioController@executivo` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `relatorios/historico` | `relatorios.historico` | `App\Livewire\Reports\HistoricoRelatorios` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `relatorios/identidade/{organizacaoId}` | `relatorios.identidade` | `App\Http\Controllers\Reports\RelatorioController@identidade` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `relatorios/indicadores/excel/{organizacaoId?}` | `relatorios.indicadores.excel` | `App\Http\Controllers\Reports\RelatorioController@indicadoresExcel` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `relatorios/indicadores/pdf/{organizacaoId?}` | `relatorios.indicadores.pdf` | `App\Http\Controllers\Reports\RelatorioController@indicadoresPdf` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `relatorios/integrado/{organizacaoId?}` | `relatorios.integrado` | `App\Http\Controllers\Reports\RelatorioController@integrado` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `relatorios/objetivos/excel` | `relatorios.objetivos.excel` | `App\Http\Controllers\Reports\RelatorioController@objetivosExcel` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `relatorios/objetivos/pdf` | `relatorios.objetivos.pdf` | `App\Http\Controllers\Reports\RelatorioController@objetivosPdf` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `relatorios/planos/excel` | `relatorios.planos.excel` | `App\Http\Controllers\Reports\RelatorioController@planosExcel` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `relatorios/planos/pdf` | `relatorios.planos.pdf` | `App\Http\Controllers\Reports\RelatorioController@planosPdf` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `relatorios/riscos/excel` | `relatorios.riscos.excel` | `App\Http\Controllers\Reports\RelatorioController@riscosExcel` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `relatorios/riscos/pdf` | `relatorios.riscos.pdf` | `App\Http\Controllers\Reports\RelatorioController@riscosPdf` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `POST` | `reset-password` | `password.update` | `Laravel\Fortify\Http\Controllers\NewPasswordController@store` | `web, guest:web` |
+| `GET` | `reset-password/{token}` | `password.reset` | `Laravel\Fortify\Http\Controllers\NewPasswordController@create` | `web, guest:web` |
+| `GET` | `riscos` | `riscos.index` | `App\Livewire\RiskManagement\ListarRiscos` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `riscos/matriz` | `riscos.matriz` | `App\Livewire\RiskManagement\MatrizRiscos` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `riscos/{riscoId}/mitigacao` | `riscos.mitigacao` | `App\Livewire\RiskManagement\GerenciarMitigacoes` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `riscos/{riscoId}/ocorrencias` | `riscos.ocorrencias` | `App\Livewire\RiskManagement\RegistrarOcorrencias` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `sanctum/csrf-cookie` | `sanctum.csrf-cookie` | `Laravel\Sanctum\Http\Controllers\CsrfCookieController@show` | `web` |
+| `POST` | `session/ping` | `session.ping` | `Closure` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `storage/{path}` | `storage.local` | `Closure` | `` |
+| `PUT` | `storage/{path}` | `storage.local.upload` | `Closure` | `` |
+| `GET` | `temas-norteadores` | `temas-norteadores.index` | `App\Livewire\StrategicPlanning\GerenciarTemasNorteadores` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `trocar-senha` | `auth.trocar-senha` | `App\Livewire\Auth\TrocarSenha` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `two-factor-challenge` | `two-factor.login` | `Laravel\Fortify\Http\Controllers\TwoFactorAuthenticatedSessionController@create` | `web, guest:web` |
+| `POST` | `two-factor-challenge` | `two-factor.login.store` | `Laravel\Fortify\Http\Controllers\TwoFactorAuthenticatedSessionController@store` | `web, guest:web, throttle:two-factor` |
+| `GET` | `up` | `` | `Closure` | `` |
+| `GET` | `user/confirm-password` | `password.confirm` | `Laravel\Fortify\Http\Controllers\ConfirmablePasswordController@show` | `web, auth:web` |
+| `POST` | `user/confirm-password` | `password.confirm.store` | `Laravel\Fortify\Http\Controllers\ConfirmablePasswordController@store` | `web, auth:web` |
+| `GET` | `user/confirmed-password-status` | `password.confirmation` | `Laravel\Fortify\Http\Controllers\ConfirmedPasswordStatusController@show` | `web, auth:web` |
+| `POST` | `user/confirmed-two-factor-authentication` | `two-factor.confirm` | `Laravel\Fortify\Http\Controllers\ConfirmedTwoFactorAuthenticationController@store` | `web, auth:web, password.confirm` |
+| `PUT` | `user/password` | `user-password.update` | `Laravel\Fortify\Http\Controllers\PasswordController@update` | `web, auth:web` |
+| `GET` | `user/profile` | `profile.show` | `Laravel\Jetstream\Http\Controllers\Livewire\UserProfileController@show` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession` |
+| `PUT` | `user/profile-information` | `user-profile-information.update` | `Laravel\Fortify\Http\Controllers\ProfileInformationController@update` | `web, auth:web` |
+| `DELETE` | `user/two-factor-authentication` | `two-factor.disable` | `Laravel\Fortify\Http\Controllers\TwoFactorAuthenticationController@destroy` | `web, auth:web, password.confirm` |
+| `POST` | `user/two-factor-authentication` | `two-factor.enable` | `Laravel\Fortify\Http\Controllers\TwoFactorAuthenticationController@store` | `web, auth:web, password.confirm` |
+| `GET` | `user/two-factor-qr-code` | `two-factor.qr-code` | `Laravel\Fortify\Http\Controllers\TwoFactorQrCodeController@show` | `web, auth:web, password.confirm` |
+| `GET` | `user/two-factor-recovery-codes` | `two-factor.recovery-codes` | `Laravel\Fortify\Http\Controllers\RecoveryCodeController@index` | `web, auth:web, password.confirm` |
+| `POST` | `user/two-factor-recovery-codes` | `two-factor.regenerate-recovery-codes` | `Laravel\Fortify\Http\Controllers\RecoveryCodeController@store` | `web, auth:web, password.confirm` |
+| `GET` | `user/two-factor-secret-key` | `two-factor.secret-key` | `Laravel\Fortify\Http\Controllers\TwoFactorSecretKeyController@show` | `web, auth:web, password.confirm` |
+| `GET` | `usuarios` | `usuarios.index` | `App\Livewire\UserManagement\ListarUsuarios` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+| `GET` | `usuarios/{id}/detalhes` | `usuarios.detalhes` | `App\Livewire\UserManagement\DetalharUsuario` | `web, auth:sanctum, Laravel\Jetstream\Http\Middleware\AuthenticateSession, verified` |
+
+## Inventario de Models
+
+Inventario extraido do codigo. Para models de dominio, a tabela declarada e relevante porque o banco usa schemas PostgreSQL e `search_path`.
+
+### `App\Models\ActionPlan\Acao`
+
+- Fonte: verificado no codigo em `app/Models/ActionPlan/Acao.php`.
+- Tabela declarada: `acoes` com PK `id`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public user` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorTabela` | `$query, string $tabela` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorRegistro` | `$query, string $tableId` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorUsuario` | `$query, string $userId` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeRecentes` | `$query, int $dias = 7` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\ActionPlan\Entrega`
+
+- Fonte: verificado no codigo em `app/Models/ActionPlan/Entrega.php`.
+- Tabela declarada: `tab_entregas` com PK `cod_entrega`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public planoDeAcao` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public entregaPai` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public subEntregas` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public responsavel` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public responsaveis` | `sem parametros` | `BelongsToMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public comentarios` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public labels` | `sem parametros` | `BelongsToMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public anexos` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public historico` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isConcluida` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isAtrasada` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isSubEntrega` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public hasSubEntregas` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getStatusColor` | `sem parametros` | `string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getPrioridadeInfo` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getTipoInfo` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getProp` | `string $key, $default = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public setProp` | `string $key, $value` | `self` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public calcularProgressoSubEntregas` | `sem parametros` | `float` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public registrarHistorico` | `string $acao, ?string $campo = null, $valorAntigo = null, $valorNovo = null, ?string $descricao = null` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorStatus` | `$query, string $status` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeConcluidas` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePendentes` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeOrdenadoPorNivel` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeOrdenado` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeRaiz` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeAtivas` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeArquivadas` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorPrioridade` | `$query, string $prioridade` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorResponsavel` | `$query, int $userId` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeAtrasadas` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeTarefas` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeDeletadasRecentemente` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\ActionPlan\EntregaAnexo`
+
+- Fonte: verificado no codigo em `app/Models/ActionPlan/EntregaAnexo.php`.
+- Tabela declarada: `tab_entrega_anexos` com PK `cod_anexo`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public entrega` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public usuario` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isImagem` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isDocumento` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getUrl` | `sem parametros` | `string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getTamanhoFormatado` | `sem parametros` | `string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getIcone` | `sem parametros` | `string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getExtensao` | `sem parametros` | `string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\ActionPlan\EntregaComentario`
+
+- Fonte: verificado no codigo em `app/Models/ActionPlan/EntregaComentario.php`.
+- Tabela declarada: `tab_entrega_comentarios` com PK `cod_comentario`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public entrega` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public usuario` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public comentarioPai` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public respostas` | `sem parametros` | `\Illuminate\Database\Eloquent\Relations\HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getUsuariosMencionados` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public mencionou` | `int $userId` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\ActionPlan\EntregaHistorico`
+
+- Fonte: verificado no codigo em `app/Models/ActionPlan/EntregaHistorico.php`.
+- Tabela declarada: `tab_entrega_historico` com PK `cod_historico`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public entrega` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public usuario` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getAcaoInfo` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getValorAntigo` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getValorNovo` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getDescricaoLegivel` | `sem parametros` | `string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected getCampoLabel` | `sem parametros` | `string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getTempoRelativo` | `sem parametros` | `string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorAcao` | `$query, string $acao` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorUsuario` | `$query, int $userId` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeRecentes` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\ActionPlan\EntregaLabel`
+
+- Fonte: verificado no codigo em `app/Models/ActionPlan/EntregaLabel.php`.
+- Tabela declarada: `tab_entrega_labels` com PK `cod_label`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public planoDeAcao` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public entregas` | `sem parametros` | `BelongsToMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getCorRgb` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isCorEscura` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getCorTexto` | `sem parametros` | `string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeOrdenado` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\ActionPlan\PlanoDeAcao`
+
+- Fonte: verificado no codigo em `app/Models/ActionPlan/PlanoDeAcao.php`.
+- Tabela declarada: `tab_plano_de_acao` com PK `cod_plano_de_acao`.
+- Auditoria: implementa contrato `Auditable`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public objetivo` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public tipoExecucao` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public organizacao` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public entregas` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public indicadores` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public organizacoes` | `sem parametros` | `\Illuminate\Database\Eloquent\Relations\BelongsToMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getSatisfacaoColor` | `sem parametros` | `string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getSatisfacaoTextClass` | `sem parametros` | `string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isAtrasado` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public calcularProgressoEntregas` | `sem parametros` | `float` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorTipo` | `$query, string $tipo` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorStatus` | `$query, string $status` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeAtrasados` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeEmAndamento` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getResponsaveisAttribute` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\ActionPlan\TipoExecucao`
+
+- Fonte: verificado no codigo em `app/Models/ActionPlan/TipoExecucao.php`.
+- Tabela declarada: `tab_tipo_execucao` com PK `cod_tipo_execucao`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public planosAcao` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isAcao` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isIniciativa` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isProjeto` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\Lead`
+
+- Fonte: verificado no codigo em `app/Models/Lead.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public getStatusLabelAttribute` | `sem parametros` | `string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getStatusBadgeClassAttribute` | `sem parametros` | `string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\Organization`
+
+- Fonte: verificado no codigo em `app/Models/Organization.php`.
+- Tabela declarada: `tab_organizacoes` com PK `cod_organizacao`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public pai` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public filhas` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public usuarios` | `sem parametros` | `BelongsToMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public planosAcao` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public identidadeEstrategica` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public valores` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getDescendantsAndSelfIds` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isRaiz` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getNivelHierarquico` | `int $nivel = 0` | `int` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeRaiz` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeFilhasDe` | `$query, string $codOrganizacaoPai` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\PerfilAcesso`
+
+- Fonte: verificado no codigo em `app/Models/PerfilAcesso.php`.
+- Tabela declarada: `tab_perfil_acesso` com PK `cod_perfil`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public usuarios` | `sem parametros` | `BelongsToMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isSuperAdmin` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isAdminUnidade` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isGestor` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\PerformanceIndicators\EvolucaoIndicador`
+
+- Fonte: verificado no codigo em `app/Models/PerformanceIndicators/EvolucaoIndicador.php`.
+- Tabela declarada: `tab_evolucao_indicador` com PK `cod_evolucao_indicador`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public indicador` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public arquivos` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public calcularAtingimento` | `sem parametros` | `float` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getNomeMes` | `sem parametros` | `string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorAno` | `$query, int $ano` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorPeriodo` | `$query, int $ano, int $mes` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeAtualizadas` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeNaoAtualizadas` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\PerformanceIndicators\Indicador`
+
+- Fonte: verificado no codigo em `app/Models/PerformanceIndicators/Indicador.php`.
+- Tabela declarada: `tab_indicador` com PK `cod_indicador`.
+- Auditoria: implementa contrato `Auditable`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public planoDeAcao` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public objetivo` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public evolucoes` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public linhaBase` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public metasPorAno` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public organizacoes` | `sem parametros` | `BelongsToMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getUltimaEvolucao` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public calcularAtingimento` | `int $ano = null, int $mes = null` | `float` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected calcularPercentualPorTipo` | `float $realizado, float $previsto` | `float` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getCorFarol` | `int $ano = null` | `?string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeDeObjetivo` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeDePlano` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorPeriodo` | `$query, string $periodo` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\PerformanceIndicators\LinhaBaseIndicador`
+
+- Fonte: verificado no codigo em `app/Models/PerformanceIndicators/LinhaBaseIndicador.php`.
+- Tabela declarada: `tab_linha_base_indicador` com PK `cod_linha_base`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public indicador` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorAno` | `$query, int $ano` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\PerformanceIndicators\MetaPorAno`
+
+- Fonte: verificado no codigo em `app/Models/PerformanceIndicators/MetaPorAno.php`.
+- Tabela declarada: `tab_meta_por_ano` com PK `cod_meta_por_ano`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public indicador` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorAno` | `$query, int $ano` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeAnoAtual` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\Reports\RelatorioAgendado`
+
+- Fonte: verificado no codigo em `app/Models/Reports/RelatorioAgendado.php`.
+- Tabela declarada: `tab_relatorios_agendados` com PK `cod_agendamento`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public user` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\Reports\RelatorioGerado`
+
+- Fonte: verificado no codigo em `app/Models/Reports/RelatorioGerado.php`.
+- Tabela declarada: `tab_relatorios_gerados` com PK `cod_relatorio_gerado`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public user` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\RiskManagement\Risco`
+
+- Fonte: verificado no codigo em `app/Models/RiskManagement/Risco.php`.
+- Tabela declarada: `tab_risco` com PK `cod_risco`.
+- Auditoria: implementa contrato `Auditable`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public pei` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public organizacao` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public responsavel` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public objetivos` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public mitigacoes` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public ocorrencias` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeAtivos` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeCriticos` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorCategoria` | `$query, $categoria` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorNivel` | `$query, $nivelMin, $nivelMax = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public calcularNivelRisco` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getNivelRiscoLabel` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getNivelRiscoCor` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getNivelRiscoBadgeClass` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isCritico` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public temPlanoMitigacao` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public temOcorrencia` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getProbabilidadeLabel` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getImpactoLabel` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\RiskManagement\RiscoMitigacao`
+
+- Fonte: verificado no codigo em `app/Models/RiskManagement/RiscoMitigacao.php`.
+- Tabela declarada: `tab_risco_mitigacao` com PK `cod_mitigacao`.
+- Auditoria: implementa contrato `Auditable`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public risco` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public responsavel` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeAtrasados` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorStatus` | `$query, $status` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorTipo` | `$query, $tipo` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isAtrasado` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isConcluido` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getDiasRestantes` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getStatusBadgeClass` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\RiskManagement\RiscoObjetivo`
+
+- Fonte: verificado no codigo em `app/Models/RiskManagement/RiscoObjetivo.php`.
+- Tabela declarada: `tab_risco_objetivo` com PK `cod_risco_objetivo`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public risco` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public objetivo` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\RiskManagement\RiscoOcorrencia`
+
+- Fonte: verificado no codigo em `app/Models/RiskManagement/RiscoOcorrencia.php`.
+- Tabela declarada: `tab_risco_ocorrencia` com PK `cod_ocorrencia`.
+- Auditoria: implementa contrato `Auditable`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public risco` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeRecentes` | `$query, $dias = 30` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorPeriodo` | `$query, $dataInicio, $dataFim` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getImpactoRealLabel` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getImpactoRealCor` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isRecente` | `$dias = 7` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\StrategicAlert`
+
+- Fonte: verificado no codigo em `app/Models/StrategicAlert.php`.
+- Tabela declarada: `strategic_alerts`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public user` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeUnread` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public markAsRead` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\StrategicPlanning\AnaliseAmbiental`
+
+- Fonte: verificado no codigo em `app/Models/StrategicPlanning/AnaliseAmbiental.php`.
+- Tabela declarada: `tab_analise_ambiental` com PK `cod_analise`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public pei` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public organizacao` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeSwot` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePestel` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeCategoria` | `$query, string $categoria` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeOrdenado` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\StrategicPlanning\Arquivo`
+
+- Fonte: verificado no codigo em `app/Models/StrategicPlanning/Arquivo.php`.
+- Tabela declarada: `tab_arquivos` com PK `cod_arquivo`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public evolucaoIndicador` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getExtensao` | `sem parametros` | `string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isImagem` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isPdf` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorTipo` | `$query, string $tipo` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeRecentes` | `$query, int $dias = 30` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\StrategicPlanning\AtividadeCadeiaValor`
+
+- Fonte: verificado no codigo em `app/Models/StrategicPlanning/AtividadeCadeiaValor.php`.
+- Tabela declarada: `tab_atividade_cadeia_valor` com PK `cod_atividade_cadeia_valor`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public pei` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public perspectiva` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public processos` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorPei` | `$query, string $codPei` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorPerspectiva` | `$query, string $codPerspectiva` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\StrategicPlanning\FuturoAlmejado`
+
+- Fonte: verificado no codigo em `app/Models/StrategicPlanning/FuturoAlmejado.php`.
+- Tabela declarada: `tab_futuro_almejado_objetivo` com PK `cod_futuro_almejado`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public objetivo` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\StrategicPlanning\GrauSatisfacao`
+
+- Fonte: verificado no codigo em `app/Models/StrategicPlanning/GrauSatisfacao.php`.
+- Tabela declarada: `tab_grau_satisfacao` com PK `cod_grau_satisfacao`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public pei` | `sem parametros` | `\Illuminate\Database\Eloquent\Relations\BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeOrdenadoPorValor` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\StrategicPlanning\MissaoVisaoValores`
+
+- Fonte: verificado no codigo em `app/Models/StrategicPlanning/MissaoVisaoValores.php`.
+- Tabela declarada: `tab_missao_visao_valores` com PK `cod_missao_visao_valores`.
+- Auditoria: implementa contrato `Auditable`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public pei` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public organizacao` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\StrategicPlanning\Objetivo`
+
+- Fonte: verificado no codigo em `app/Models/StrategicPlanning/Objetivo.php`.
+- Tabela declarada: `tab_objetivo` com PK `cod_objetivo`.
+- Auditoria: implementa contrato `Auditable`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public perspectiva` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public planosAcao` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public indicadores` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public futuroAlmejado` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public comentarios` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public calcularAtingimentoConsolidado` | `int $ano = null, int $mes = null` | `float` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getCorFarolConsolidado` | `int $ano = null, int $mes = null` | `?string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getResumoDesempenho` | `int $ano = null` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeOrdenadoPorNivel` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorPerspectiva` | `$query, string $codPerspectiva` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\StrategicPlanning\ObjetivoComentario`
+
+- Fonte: verificado no codigo em `app/Models/StrategicPlanning/ObjetivoComentario.php`.
+- Tabela declarada: `tab_objetivo_comentarios` com PK `cod_comentario`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public user` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public objetivo` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\StrategicPlanning\PEI`
+
+- Fonte: verificado no codigo em `app/Models/StrategicPlanning/PEI.php`.
+- Tabela declarada: `tab_pei` com PK `cod_pei`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public perspectivas` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public identidadeEstrategica` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public valores` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atividadesCadeiaValor` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isAtivo` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeAtivos` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeFuturos` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePassados` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\StrategicPlanning\Perspectiva`
+
+- Fonte: verificado no codigo em `app/Models/StrategicPlanning/Perspectiva.php`.
+- Tabela declarada: `tab_perspectiva` com PK `cod_perspectiva`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public pei` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public objetivos` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atividades` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getIndicadoresAttribute` | `sem parametros` | `Collection` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public calcularDesempenho` | `?int $ano = null` | `float` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected calcularDesempenhoIndicadores` | `int $ano` | `float` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected calcularDesempenhoPlanos` | `int $ano` | `float` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeOrdenadoPorNivel` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\StrategicPlanning\ProcessoAtividadeCadeiaValor`
+
+- Fonte: verificado no codigo em `app/Models/StrategicPlanning/ProcessoAtividadeCadeiaValor.php`.
+- Tabela declarada: `tab_processos_atividade_cadeia_valor` com PK `cod_processo_atividade_cadeia_valor`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public atividadeCadeiaValor` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorAtividade` | `$query, string $codAtividade` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\StrategicPlanning\TemaNorteador`
+
+- Fonte: verificado no codigo em `app/Models/StrategicPlanning/TemaNorteador.php`.
+- Tabela declarada: `strategic_planning.tab_tema_norteador` com PK `cod_tema_norteador`.
+- Auditoria: implementa contrato `Auditable`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public pei` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public organizacao` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\StrategicPlanning\Valor`
+
+- Fonte: verificado no codigo em `app/Models/StrategicPlanning/Valor.php`.
+- Tabela declarada: `tab_valores` com PK `cod_valor`.
+- Auditoria: implementa contrato `Auditable`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public pei` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public organizacao` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\SystemSetting`
+
+- Fonte: verificado no codigo em `app/Models/SystemSetting.php`.
+- Tabela declarada: `system_settings`.
+- Metodos declarados: nenhum metodo proprio identificado.
+
+### `App\Models\TabAudit`
+
+- Fonte: verificado no codigo em `app/Models/TabAudit.php`.
+- Tabela declarada: `tab_audit` com PK `id`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public user` | `sem parametros` | `BelongsTo` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isExpirado` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getDiferencas` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorTabela` | `$query, string $tabela` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorRegistro` | `$query, string $tableId` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorUsuario` | `$query, string $userId` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorAcao` | `$query, string $acao` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopePorColuna` | `$query, string $coluna` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeRecentes` | `$query, int $dias = 7` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeNaoExpiradas` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeExpiradas` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\TabStatus`
+
+- Fonte: verificado no codigo em `app/Models/TabStatus.php`.
+- Tabela declarada: `tab_status` com PK `cod_status`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public scopeBuscarPorDescricao` | `$query, string $termo` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeOrdenadoPorDescricao` | `$query, string $direcao = 'asc'` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Models\User`
+
+- Fonte: verificado no codigo em `app/Models/User.php`.
+- Tabela declarada: `users` com PK `id`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `protected casts` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public organizacoes` | `sem parametros` | `BelongsToMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public perfisAcesso` | `sem parametros` | `BelongsToMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public acoes` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public audits` | `sem parametros` | `HasMany` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isSuperAdmin` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isAtivo` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public deveTrocarSenha` | `sem parametros` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public temPermissaoOrganizacao` | `Organization $org` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public perfisNaOrganizacao` | `Organization $org` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isGestorResponsavel` | `string $codPlanoDeAcao` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public isGestorSubstituto` | `string $codPlanoDeAcao` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeAtivos` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeAdministradores` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public scopeDevemTrocarSenha` | `$query` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+## Inventario de Componentes Livewire
+
+Assinaturas extraidas do codigo. Os modulos criticos lidos semanticamente estao resumidos acima.
+
+### `App\Livewire\ActionPlan\AtribuirResponsaveis`
+
+- Fonte: verificado no codigo em `app/Livewire/ActionPlan/AtribuirResponsaveis.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `$planoId` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarDados` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public adicionar` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public remover` | `$pivotId` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\ActionPlan\DetalharPlano`
+
+- Fonte: verificado no codigo em `app/Livewire/ActionPlan/DetalharPlano.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\ActionPlan\GerenciarEntregas`
+
+- Fonte: verificado no codigo em `app/Livewire/ActionPlan/GerenciarEntregas.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `$planoId` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarDados` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetForm` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public redistribuirPesos` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\ActionPlan\ListarPlanos`
+
+- Fonte: verificado no codigo em `app/Livewire/ActionPlan/ListarPlanos.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeSuccessModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public pedirAjudaIA` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public aplicarSugestao` | `$nome, $justificativa = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarAno` | `$ano` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPEI` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private carregarPEI` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarOrganizacao` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarObjetivos` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public confirmDelete` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetForm` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Admin\ConfiguracaoSistema`
+
+- Fonte: verificado no codigo em `app/Livewire/Admin/ConfiguracaoSistema.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public testConnection` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public saveAiSettings` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Audit\DetalharLog`
+
+- Fonte: verificado no codigo em `app/Livewire/Audit/DetalharLog.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Audit\ListarLogs`
+
+- Fonte: verificado no codigo em `app/Livewire/Audit/ListarLogs.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updated` | `$propertyName` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public verDetalhes` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected getQuery` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public exportar` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Auth\TrocarSenha`
+
+- Fonte: verificado no codigo em `app/Livewire/Auth/TrocarSenha.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `protected rules` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public trocarSenha` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public logout` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Dashboard\Index`
+
+- Fonte: verificado no codigo em `app/Livewire/Dashboard/Index.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarAno` | `$ano` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarOrganizacao` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPEI` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarPEI` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public generateAiSummary` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private carregarNomeOrganizacao` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarDadosGraficos` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private getStats` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private getMinhasEntregas` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private getMinhasEntregasAgrupadas` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private getComentariosRecentes` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private getChartBSC` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private getChartRiscosNivel` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private getChartPlanos` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private getChartEvolucao` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private getCorAtingimento` | `$percentual` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getMentorStatus` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Dashboard\PeiChecklist`
+
+- Fonte: verificado no codigo em `app/Livewire/Dashboard/PeiChecklist.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `PeiGuidanceService $service` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public dismiss` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public refreshGuidance` | `$id = null, PeiGuidanceService $service = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Deliverables\DeliverablesBoard`
+
+- Fonte: verificado no codigo em `app/Livewire/Deliverables/DeliverablesBoard.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `?string $planoId = null` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarListasEstrategicas` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatedPerspectivaId` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatedObjetivoId` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public mudarPlano` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected getEntregas` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected getEntregasPorStatus` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected getLabels` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected getUsuarios` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected calcularProgresso` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public setView` | `string $view` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public limparFiltros` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public toggleArquivados` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public toggleLixeira` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public calendarioAnterior` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public calendarioProximo` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public calendarioHoje` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public calendarioIrPara` | `int $mes, int $ano` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public timelineAnterior` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public timelineProximo` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public timelineHoje` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public timelineZoomIn` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public timelineZoomOut` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public timelineDefinirPeriodo` | `string $inicio, string $fim` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPrazoEntrega` | `string $entregaId, string $novoPrazo` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public openQuickAdd` | `string $status = 'Não Iniciado'` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeQuickAdd` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public criarRapido` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public openEditModal` | `?string $entregaId = null` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeEditModal` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected resetEditForm` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public salvarEntrega` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public openDetails` | `string $entregaId` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeDetails` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarTitulo` | `string $entregaId, string $titulo` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarStatus` | `string $entregaId, string $status` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPrioridade` | `string $entregaId, string $prioridade` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarResponsaveis` | `string $entregaId, array $userIds` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPrazo` | `string $entregaId, ?string $prazo` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public reordenarEntregas` | `array $ordem` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public moverParaStatus` | `string $entregaId, string $novoStatus, int $novaPosicao` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public arquivar` | `string $entregaId` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public desarquivar` | `string $entregaId` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public confirmDeleteEntrega` | `string $entregaId, bool $isPermanent = false` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public excluir` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public restaurar` | `string $entregaId` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public excluirPermanente` | `string $entregaId` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public openLabelsModal` | `string $entregaId` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeLabelsModal` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public toggleLabel` | `string $entregaId, string $labelId` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public criarLabel` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public setRespondendo` | `?string $comentarioId` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public adicionarComentario` | `$entregaId, $conteudo = null, $comentarioPaiId = null` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public excluirComentario` | `string $comentarioId` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatedAnexosUpload` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public excluirAnexo` | `string $anexoId` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeSuccessModal` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public poll` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\LeadsTable`
+
+- Fonte: verificado no codigo em `app/Livewire/LeadsTable.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `protected rules` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatingSearch` | `string $value` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatingStatus` | `string $value` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetFilters` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getStatusesProperty` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getStatusOptionsProperty` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected baseQuery` | `sem parametros` | `Builder` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected paginatedLeads` | `sem parametros` | `LengthAwarePaginator` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `int $leadId` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeFormModal` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public confirmDelete` | `int $leadId` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public cancelDelete` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public exportCsv` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected resetForm` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected notify` | `string $message, string $style = 'success'` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected applySearchFilter` | `Builder $query, string $search` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Organization\DetalharOrganizacao`
+
+- Fonte: verificado no codigo em `app/Livewire/Organization/DetalharOrganizacao.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Organization\ListarOrganizacoes`
+
+- Fonte: verificado no codigo em `app/Livewire/Organization/ListarOrganizacoes.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public pedirAjudaIA` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public aplicarSugestaoSigla` | `$sigla` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected rules` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatingSearch` | `string $value` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetFilters` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getOrganizacoesPaiProperty` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected baseQuery` | `sem parametros` | `Builder` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected paginatedOrganizacoes` | `sem parametros` | `LengthAwarePaginator` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `string $id` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeFormModal` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeSuccessModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeErrorModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public confirmDelete` | `string $id` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public cancelDelete` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected resetForm` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected notify` | `string $message, string $style = 'success'` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected applySearchFilter` | `Builder $query, string $search` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\PerformanceIndicators\DetalharIndicador`
+
+- Fonte: verificado no codigo em `app/Livewire/PerformanceIndicators/DetalharIndicador.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public atualizarAno` | `$ano` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public mount` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected carregarAnosDisponiveis` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatedAnoFiltro` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected prepareChartData` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\PerformanceIndicators\LancarEvolucao`
+
+- Fonte: verificado no codigo em `app/Livewire/PerformanceIndicators/LancarEvolucao.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public atualizarAno` | `$ano` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public mount` | `$indicadorId` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatedAno` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatedMes` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarPeriodo` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarHistorico` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public salvar` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public excluirArquivo` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\PerformanceIndicators\ListarIndicadores`
+
+- Fonte: verificado no codigo em `app/Livewire/PerformanceIndicators/ListarIndicadores.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarOrganizacao` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPEI` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarListasAuxiliares` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `\App\Services\PeiGuidanceService $service` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public abrirMetas` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public salvarMeta` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public excluirMeta` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public abrirLinhaBase` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public salvarLinhaBase` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public excluirLinhaBase` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public confirmDelete` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetForm` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeSuccessModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeErrorModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public pedirAjudaIA` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public aplicarSugestao` | `$nome, $desc, $unidade, $formula` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Profile\UpdateThemeColorForm`
+
+- Fonte: verificado no codigo em `app/Livewire/Profile/UpdateThemeColorForm.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updated` | `$propertyName` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updateThemeColor` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\PublicNavbar`
+
+- Fonte: verificado no codigo em `app/Livewire/PublicNavbar.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Reports\AgendarRelatorio`
+
+- Fonte: verificado no codigo em `app/Livewire/Reports/AgendarRelatorio.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public carregar` | `$tipo, $filtros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public salvar` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Reports\GerenciarAgendamentos`
+
+- Fonte: verificado no codigo em `app/Livewire/Reports/GerenciarAgendamentos.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public toggleStatus` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Reports\HistoricoRelatorios`
+
+- Fonte: verificado no codigo em `app/Livewire/Reports/HistoricoRelatorios.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public download` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Reports\ListarRelatorios`
+
+- Fonte: verificado no codigo em `app/Livewire/Reports/ListarRelatorios.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public atualizarAno` | `$ano` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPEI` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private carregarPEI` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private carregarIdentidade` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private carregarPerspectivas` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarOrganizacao` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatedOrganizacaoId` | `$value` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public setOrganizacao` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getQueryParamsProperty` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public gerarInsightIA` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public download` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\RiskManagement\GerenciarMitigacoes`
+
+- Fonte: verificado no codigo em `app/Livewire/RiskManagement/GerenciarMitigacoes.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `$riscoId` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarDados` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetForm` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\RiskManagement\ListarRiscos`
+
+- Fonte: verificado no codigo em `app/Livewire/RiskManagement/ListarRiscos.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeSuccessModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeErrorModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public pedirAjudaIA` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public aplicarSugestao` | `$titulo, $categoria, $descricao` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPEI` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private carregarPEI` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarOrganizacao` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarListasAuxiliares` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatingSearch` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public confirmDelete` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetForm` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\RiskManagement\MatrizRiscos`
+
+- Fonte: verificado no codigo em `app/Livewire/RiskManagement/MatrizRiscos.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarMatriz` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarMatriz` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\RiskManagement\RegistrarOcorrencias`
+
+- Fonte: verificado no codigo em `app/Livewire/RiskManagement/RegistrarOcorrencias.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `$riscoId` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarDados` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetForm` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Shared\SeletorAno`
+
+- Fonte: verificado no codigo em `app/Livewire/Shared/SeletorAno.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPeiId` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarAnos` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public selecionar` | `$ano` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private trocarPeiSilencioso` | `PEI $pei` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Shared\SeletorOrganizacao`
+
+- Fonte: verificado no codigo em `app/Livewire/Shared/SeletorOrganizacao.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarOrganizacoes` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public selecionar` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private atualizarSessao` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Shared\SeletorPei`
+
+- Fonte: verificado no codigo em `app/Livewire/Shared/SeletorPei.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarPEIs` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private definirSessao` | `PEI $pei` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public selecionar` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\Shared\StrategicAlertsBell`
+
+- Fonte: verificado no codigo em `app/Livewire/Shared/StrategicAlertsBell.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public refreshCount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public markAllAsRead` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getRecentAlerts` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\AnalisePESTEL`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/AnalisePESTEL.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public pedirAjudaIA` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public adicionarSugerido` | `$categoria, $item` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPEI` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private carregarPEI` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarOrganizacao` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarDados` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `$categoria` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetForm` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\AnaliseSWOT`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/AnaliseSWOT.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public pedirAjudaIA` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public adicionarSugerido` | `$categoria, $item` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPEI` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private carregarPEI` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarOrganizacao` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarDados` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public toggleModoVisualizacao` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `$categoria` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetForm` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\DetalharGrauSatisfacao`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/DetalharGrauSatisfacao.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\DetalharIdentidade`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/DetalharIdentidade.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\DetalharObjetivo`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/DetalharObjetivo.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarObjetivo` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private getCorFarolManual` | `$val` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public postarComentario` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public removerComentario` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\DetalharPei`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/DetalharPei.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarEstatisticas` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\DetalharPerspectiva`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/DetalharPerspectiva.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\DetalharValor`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/DetalharValor.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\GerenciarFuturoAlmejado`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/GerenciarFuturoAlmejado.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `$objetivoId` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarFuturos` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetForm` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\GerenciarTemasNorteadores`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/GerenciarTemasNorteadores.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public pedirAjudaIA` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public aplicarSugestao` | `$nome` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPEI` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private carregarPEI` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarOrganizacao` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatingSearch` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public confirmDelete` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetForm` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\ListarGrausSatisfacao`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/ListarGrausSatisfacao.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeSuccessModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeErrorModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public pedirAjudaIA` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public aplicarSugestao` | `$nome, $cor, $min, $max` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected rules` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatingSearch` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public openModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetForm` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public confirmDelete` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public cancelDelete` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\ListarObjetivos`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/ListarObjetivos.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public closeSuccessModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeErrorModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatedNomObjetivo` | `$value` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public auditSmart` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public pedirAjudaIA` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public aplicarSugestao` | `$nome, $descricao, $ordem` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPEI` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private carregarPEI` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarPerspectivas` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `$perspectivaId = null, \App\Services\PeiGuidanceService $service = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatedCodPerspectiva` | `$value` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public confirmDelete` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetForm` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\ListarPeis`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/ListarPeis.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeSuccessModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeErrorModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatingSearch` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetFilters` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public confirmDelete` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetForm` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\ListarPerspectivas`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/ListarPerspectivas.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeSuccessModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeErrorModal` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public pedirAjudaIA` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public aplicarSugestao` | `$nome, $ordem` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public testarNotificacao` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPEI` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private carregarPEI` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarPerspectivas` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `\App\Services\PeiGuidanceService $service` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public confirmDelete` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetForm` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\ListarValores`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/ListarValores.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPEI` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private carregarPEI` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarOrganizacao` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarValores` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetForm` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\MapaEstrategico`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/MapaEstrategico.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public setViewMode` | `$mode` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarOrganizacao` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPEI` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private carregarPEI` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarMapa` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarIdentidadeEstrategica` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getCorPorPercentual` | `$percentual` | `string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getCoresPerspectiva` | `$nivel` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public abrirMemoriaCalculo` | `$index` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public fecharMemoriaCalculo` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\StrategicPlanning\MissaoVisao`
+
+- Fonte: verificado no codigo em `app/Livewire/StrategicPlanning/MissaoVisao.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public pedirAjudaIA` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public aplicarIdentidade` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public adicionarValorSugerido` | `$nome, $descricao` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarPEI` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private carregarPEI` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarOrganizacao` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetarDados` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public carregarDados` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public habilitarEdicao` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public cancelar` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public salvar` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public adicionarValor` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public confirmDeleteValor` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public removerValor` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public editarValor` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarValor` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public cancelarEdicaoValor` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\UserManagement\DetalharUsuario`
+
+- Fonte: verificado no codigo em `app/Livewire/UserManagement/DetalharUsuario.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public mount` | `$id` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Livewire\UserManagement\ListarUsuarios`
+
+- Fonte: verificado no codigo em `app/Livewire/UserManagement/ListarUsuarios.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `protected rules` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public updatingSearch` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public resetFilters` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getOrganizacoesOptionsProperty` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getPerfisOptionsProperty` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected baseQuery` | `sem parametros` | `Builder` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected paginatedUsuarios` | `sem parametros` | `LengthAwarePaginator` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public edit` | `string $id` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public adicionarVinculo` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public removerVinculo` | `$index` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public closeFormModal` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public save` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public confirmDelete` | `string $id` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public cancelDelete` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public render` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected resetForm` | `sem parametros` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected notify` | `string $message, string $style = 'success'` | `void` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+## Inventario de Controllers
+
+### `App\Http\Controllers\Controller`
+
+- Fonte: verificado no codigo em `app/Http/Controllers/Controller.php`.
+- Metodos declarados: nenhum metodo proprio identificado.
+
+### `App\Http\Controllers\Reports\RelatorioController`
+
+- Fonte: verificado no codigo em `app/Http/Controllers/Reports/RelatorioController.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public __construct` | `ReportGenerationService $reportService` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public executivo` | `Request $request, $organizacaoId = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public identidade` | `Request $request, $organizacaoId` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public objetivosPdf` | `Request $request` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public objetivosExcel` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public indicadoresPdf` | `Request $request, $organizacaoId = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public indicadoresExcel` | `$organizacaoId = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public planosPdf` | `Request $request` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public planosExcel` | `Request $request` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public riscosPdf` | `Request $request` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public riscosExcel` | `Request $request` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public integrado` | `Request $request, $organizacaoId = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+## Inventario de Services
+
+### `App\Services\AI\AiProviderInterface`
+
+- Fonte: verificado no codigo em `app/Services/AI/AiProviderInterface.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public suggest` | `string $prompt, string $context = ''` | `?string;` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public testConnection` | `sem parametros` | `array;` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public analyzeSmart` | `string $type, string $title, string $description = ''` | `?string;` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public summarizeStrategy` | `array $stats, string $orgName` | `?string;` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public analyzeTrends` | `array $indicatorData, string $orgName` | `?string;` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Services\AI\AiServiceFactory`
+
+- Fonte: verificado no codigo em `app/Services/AI/AiServiceFactory.php`.
+- Metodos declarados: nenhum metodo proprio identificado.
+
+### `App\Services\AI\GeminiProvider`
+
+- Fonte: verificado no codigo em `app/Services/AI/GeminiProvider.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public __construct` | `?string $apiKey = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public suggest` | `string $prompt, string $context = ''` | `?string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public testConnection` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public analyzeSmart` | `string $type, string $title, string $description = ''` | `?string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public summarizeStrategy` | `array $stats, string $orgName` | `?string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public analyzeTrends` | `array $indicatorData, string $orgName` | `?string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Services\AI\OpenAiProvider`
+
+- Fonte: verificado no codigo em `app/Services/AI/OpenAiProvider.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public __construct` | `?string $apiKey = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public suggest` | `string $prompt, string $context = ''` | `?string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public testConnection` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public analyzeSmart` | `string $type, string $title, string $description = ''` | `?string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public summarizeStrategy` | `array $stats, string $orgName` | `?string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public analyzeTrends` | `array $indicatorData, string $orgName` | `?string` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Services\IndicadorCalculoService`
+
+- Fonte: verificado no codigo em `app/Services/IndicadorCalculoService.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public calcularProgressoPlano` | `PlanoDeAcao $plano, bool $apenasRaiz = true` | `float` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected calcularMediaSimples` | `Collection $entregas` | `float` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected calcularMediaPonderada` | `Collection $entregas, float $somaPesos` | `float` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected getProgressoEntrega` | `Entrega $entrega` | `float` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected calcularProgressoSubEntregas` | `Entrega $entrega` | `float` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `protected getEntregasValidas` | `PlanoDeAcao $plano, bool $apenasRaiz = true` | `Collection` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarIndicadorAutomatico` | `Indicador $indicador` | `?EvolucaoIndicador` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public atualizarIndicadoresDoPlano` | `PlanoDeAcao $plano` | `int` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public validarPesosPlano` | `PlanoDeAcao $plano` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public redistribuirPesosIguais` | `PlanoDeAcao $plano` | `int` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public getEstatisticasPlano` | `PlanoDeAcao $plano` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public simularCalculo` | `PlanoDeAcao $plano` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public calcularProgressoPlanoNoAno` | `PlanoDeAcao $plano, int $ano` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public calcularAtingimentoPerspectiva` | `\App\Models\StrategicPlanning\Perspectiva $perspectiva, int $ano` | `float` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public calcularAtingimentoObjetivo` | `\App\Models\StrategicPlanning\Objetivo $objetivo, int $ano` | `float` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Services\NotificationService`
+
+- Fonte: verificado no codigo em `app/Services/NotificationService.php`.
+- Metodos declarados: nenhum metodo proprio identificado.
+
+### `App\Services\PeiGuidanceService`
+
+- Fonte: verificado no codigo em `app/Services/PeiGuidanceService.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public analyzeCompleteness` | `?string $peiId = null` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private buildResponse` | `array $phases, string $currentPhaseKey, int $progress, $pei, string $msg, string $route, string $label` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private getNextStepInfo` | `string $currentPhase` | `?array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private getEmptyPhasesStructure` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Services\Reports\ReportGenerationService`
+
+- Fonte: verificado no codigo em `app/Services/Reports/ReportGenerationService.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public __construct` | `\App\Services\IndicadorCalculoService $calculoService` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public generateExecutivo` | `$organizacaoId, $ano, $periodo, $perspectivaId = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public generateIdentidade` | `$organizacaoId, $ano = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public __construct` | `$graus` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public __invoke` | `$percentual` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public generateObjetivos` | `$organizacaoId = null, $ano = null, $perspectivaId = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public generateIndicadores` | `$organizacaoId = null, $ano = null, $periodo = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public generatePlanos` | `$organizacaoId = null, $ano = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public generateRiscos` | `$organizacaoId = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public generateIntegrado` | `$organizacaoId, $ano, $periodo, $includeAi = true` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+## Inventario de Policies
+
+### `App\Policies\IndicadorPolicy`
+
+- Fonte: verificado no codigo em `app/Policies/IndicadorPolicy.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public viewAny` | `User $user` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public view` | `User $user, Indicador $indicador` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `User $user` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public update` | `User $user, Indicador $indicador` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `User $user, Indicador $indicador` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Policies\OrganizationPolicy`
+
+- Fonte: verificado no codigo em `app/Policies/OrganizationPolicy.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public viewAny` | `User $user` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public view` | `User $user, Organization $organization` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `User $user` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public update` | `User $user, Organization $organization` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `User $user, Organization $organization` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public restore` | `User $user, Organization $organization` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public forceDelete` | `User $user, Organization $organization` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Policies\PlanoDeAcaoPolicy`
+
+- Fonte: verificado no codigo em `app/Policies/PlanoDeAcaoPolicy.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public viewAny` | `User $user` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public view` | `User $user, PlanoDeAcao $planoDeAcao` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `User $user` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public update` | `User $user, PlanoDeAcao $planoDeAcao` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `User $user, PlanoDeAcao $planoDeAcao` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public restore` | `User $user, PlanoDeAcao $planoDeAcao` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public forceDelete` | `User $user, PlanoDeAcao $planoDeAcao` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Policies\RiscoPolicy`
+
+- Fonte: verificado no codigo em `app/Policies/RiscoPolicy.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public viewAny` | `User $user` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public view` | `User $user, Risco $risco` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `User $user` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public update` | `User $user, Risco $risco` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `User $user, Risco $risco` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Policies\UserPolicy`
+
+- Fonte: verificado no codigo em `app/Policies/UserPolicy.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public viewAny` | `User $user` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public view` | `User $user, User $model` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public create` | `User $user` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public update` | `User $user, User $model` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public delete` | `User $user, User $model` | `bool` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+## Inventario de Middlewares
+
+### `App\Http\Middleware\CheckPasswordChange`
+
+- Fonte: verificado no codigo em `app/Http/Middleware/CheckPasswordChange.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public handle` | `Request $request, Closure $next` | `Response` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+## Inventario de Commands Artisan
+
+### `App\Console\Commands\FixPlanosEntregasDates`
+
+- Fonte: verificado no codigo em `app/Console/Commands/FixPlanosEntregasDates.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public handle` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Console\Commands\GenerateCsvTemplates`
+
+- Fonte: verificado no codigo em `app/Console/Commands/GenerateCsvTemplates.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public handle` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private generatePair` | `$path, $prefix, $columnsMap, $guideMap` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Console\Commands\ProcessScheduledReports`
+
+- Fonte: verificado no codigo em `app/Console/Commands/ProcessScheduledReports.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public handle` | `ReportGenerationService $reportService` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `private atualizarProximaExecucao` | `RelatorioAgendado $agendamento` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Console\Commands\SeedMIDREnvironment`
+
+- Fonte: verificado no codigo em `app/Console/Commands/SeedMIDREnvironment.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public handle` | `sem parametros` | `int` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+## Inventario de Exports
+
+### `App\Exports\IndicadoresExport`
+
+- Fonte: verificado no codigo em `app/Exports/IndicadoresExport.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public __construct` | `$organizacaoId` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public collection` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public headings` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public map` | `$indicador` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Exports\ObjetivosExport`
+
+- Fonte: verificado no codigo em `app/Exports/ObjetivosExport.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public __construct` | `$codPei` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public collection` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public headings` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public map` | `$objetivo` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Exports\PlanosExport`
+
+- Fonte: verificado no codigo em `app/Exports/PlanosExport.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public __construct` | `$organizacaoId, $ano = null` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public collection` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public headings` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public map` | `$plano` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+### `App\Exports\RiscosExport`
+
+- Fonte: verificado no codigo em `app/Exports/RiscosExport.php`.
+
+| Metodo | Entrada | Saida declarada | Nivel de confianca |
+|---|---|---|---|
+| `public __construct` | `$organizacaoId` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public collection` | `sem parametros` | `nao declarado` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public headings` | `sem parametros` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+| `public map` | `$risco` | `array` | Assinatura extraida do codigo; semantica exige leitura do corpo para alteracao. |
+
+## Auditoria, eventos e efeitos colaterais
+
+- Verificado no codigo: `config/audit.php` habilita `owen-it/laravel-auditing`, driver database, tabela `audits`, eventos `created`, `updated`, `deleted`, `restored`, sem fila e sem auditoria de console.
+- Verificado no codigo: models de dominio como `PlanoDeAcao`, `Indicador`, `Risco`, `RiscoMitigacao`, `RiscoOcorrencia`, `MissaoVisaoValores`, `Objetivo`, `TemaNorteador` e `Valor` implementam `Auditable` no inventario extraido.
+- Verificado no codigo: `AppServiceProvider` registra `EntregaObserver` para `Entrega`; o observer recalcula indicadores quando entregas sao criadas, atualizadas, deletadas ou restauradas.
+
+## Exceptions e resiliencia
+
+- Verificado no codigo: `bootstrap/app.php` personaliza `AuthenticationException`, `TokenMismatchException`, 403, 404, `QueryException` PostgreSQL 23503 e Throwable generico em producao para usuario nao autenticado.
+- Para CSRF 419, invalida sessao, regenera token, efetua logout se autenticado e responde JSON para AJAX/Livewire com `session_expired` e `redirect`.
+- Para FK 23503, retorna mensagem amigavel e status 422 em JSON ou `back()->with(error)`.
+
+## Frontend e UX real
+
+- Verificado no codigo: frontend e Blade/Livewire com layouts `app`, `guest` e `public`.
+- Verificado nas dependencias: Bootstrap 5, Bootstrap Icons, Alpine.js, plugins mask/focus, SortableJS, Sass e Vite.
+- Verificado em componentes: uso intensivo de modais, eventos Livewire, notificacoes `notify` e `mentor-notification`, seletores globais de PEI/organizacao/ano, e board de entregas com kanban/lista/timeline/calendario.
+
+## Inconsistencias e riscos encontrados
+
+- README informa Laravel 11 em trecho de Tech Stack, mas runtime e `composer.json` confirmam Laravel 12. Tratar README como parcialmente desatualizado.
+- Runtime real e Livewire 3.7.11, embora instrucoes externas possam mencionar Livewire 4. Upgrade para Livewire 4 deve ser projeto especifico.
+- `ListarIndicadores` contem validacao `exists:tab_planos_acao,cod_plano_de_acao`; schema/model indicam `tab_plano_de_acao`. Isso deve ser testado/corrigido antes de upgrade.
+- Dependencia de `search_path` PostgreSQL: varios models declaram tabelas sem schema, enquanto o banco real distribui dominio em schemas especificos.
+- `DeliverablesBoard` concentra CRUD, filtros, anexos, comentarios, labels, lixeira e calendario/timeline; alto risco de regressao em refactor.
+- Relatorio integrado aumenta memoria/timeout em runtime, sinalizando necessidade de profiling antes de upgrade.
+- Storage publico nao estava linkado no ambiente analisado; anexos e arquivos podem falhar operacionalmente se o link nao existir.
+
+## Recomendacao para upgrade
+
+1. Congelar baseline com dump estrutural do PostgreSQL e backup completo antes de qualquer DDL.
+2. Criar smoke tests para rotas principais autenticadas e publicas, incluindo mapa publico, dashboard, PEI, objetivos, indicadores, planos, entregas, riscos e relatorios.
+3. Corrigir inconsistencias conhecidas de validacao/tabela antes de upgrades de framework.
+4. Isolar calculos de mapa/indicadores/planos em services testaveis antes de mexer em Livewire.
+5. Refatorar `DeliverablesBoard` apenas com testes de regressao de board, anexos, comentarios, labels e lixeira.
+6. Revisar policies e filtros de query em conjunto, porque `viewAny=true` depende de filtros corretos para isolamento de dados.
+7. Tratar upgrade de Livewire como frente propria, com auditoria de atributos, eventos, uploads, query string e renderizacao.
+
+## Conclusao
+
+Esta v2 documenta o repositorio como Sistema de Planejamento Estrategico, com base em evidencias do codigo, banco real e runtime. O documento anterior deve ser considerado substituido para fins executivos. Pontos marcados como risco ou nao confirmado devem ser tratados antes de qualquer upgrade de versao ou refatoracao estrutural.
