@@ -1,15 +1,16 @@
-# Documentacao completa do projeto - subsidio para upgrade
+# Documentacao completa do Sistema de Planejamento Estrategico - subsidio para upgrade
 
 Data de geracao: 2026-05-22. Fonte: codigo local, `php artisan about`, `php artisan route:list`, arquivos de configuracao e catalogo PostgreSQL consultado via Laravel em modo somente leitura.
 
 ## 1. Sumario executivo
 
-A Plataforma Visao 360 - Modulo Integra+ e uma aplicacao Laravel 12 baseada em Livewire 3, Jetstream/Fortify, Sanctum, PostgreSQL multi-schema, Vite, Bootstrap 5, Sass e Alpine.js. O backend e sustentado por Eloquent Models, Policies/Gates, Services de dominio, observers e controller de relatorios. O frontend operacional e majoritariamente Livewire + Blade, com componentes compartilhados e views modulares para dashboard, planejamento estrategico, planos de acao, entregas, indicadores, riscos, auditoria, relatorios e administracao.
+Este projeto e um Sistema de Planejamento Estrategico sustentado por Laravel 12, Livewire 3, Jetstream/Fortify, Sanctum, PostgreSQL multi-schema, Vite, Bootstrap 5, Sass e Alpine.js. O backend e sustentado por Eloquent Models, Policies/Gates, Services de dominio, observers e controller de relatorios. O frontend operacional e majoritariamente Livewire + Blade, com componentes compartilhados e views modulares para dashboard, planejamento estrategico, planos de acao, entregas, indicadores, riscos, auditoria, relatorios e administracao.
 
 Ponto critico para upgrade: o banco real foi acessado e a tabela `migrations` possui 67 migrations aplicadas; existem 67 arquivos de migration no disco e nao foram encontrados arquivos pendentes nem migrations aplicadas sem arquivo correspondente. A estrutura real, contudo, distribui tabelas entre schemas PostgreSQL (`public`, `strategic_planning`, `action_plan`, `performance_indicators`, `risk_management`, `organization`) enquanto alguns Models usam nomes sem schema e dependem do `search_path` configurado em `config/database.php`.
 
 ## 2. Estado do workspace e limites de verdade
 
+- O nome "Plataforma Visao 360 - Modulo Integra+" apareceu nas instrucoes operacionais do reposititorio (`AGENTS.md`), mas o dominio funcional real identificado pelo codigo, rotas, models, migrations, views e services e Planejamento Estrategico.
 - O worktree estava sujo antes desta intervencao, com alteracoes preexistentes em model, lockfiles, migrations e seeders. Nada disso foi revertido ou limpo.
 - Esta documentacao nao inventa regras externas ao codigo. Quando a responsabilidade de um metodo nao tem retorno tipado ou contrato explicito, a descricao e inferida pelo nome, assinatura e convencoes Livewire/Eloquent, e deve ser confirmada em leitura fina antes de refatoracao.
 - A consulta ao banco foi somente leitura, usando `information_schema`, `pg_indexes` e `migrations`.
