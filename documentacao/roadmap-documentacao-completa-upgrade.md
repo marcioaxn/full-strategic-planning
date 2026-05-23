@@ -2,11 +2,12 @@
 
 ## Contexto
 
-O CEO solicitou uma documentacao ampla e honesta do projeto Plataforma Visao 360 - Modulo Integra+, com foco em subsidiar um upgrade tecnico. O artefato final deve ficar em `documentacao`, cobrir estrutura, stack, dependencias, backend, frontend, migrations, banco real, models, controllers, componentes Livewire, gates/policies, middlewares, rotas, usuarios, services, exceptions e auditorias.
+O CEO solicitou uma documentacao ampla e honesta do Sistema de Planejamento Estrategico, com foco em subsidiar um upgrade tecnico. O artefato final deve ficar em `documentacao`, cobrir estrutura, stack, dependencias, backend, frontend, migrations, banco real, models, controllers, componentes Livewire, gates/policies, middlewares, rotas, usuarios, services, exceptions e auditorias.
 
 ## Diagnostico inicial
 
 - O projeto esta em Laravel com Livewire, Jetstream/Fortify, PostgreSQL e Vite/Sass.
+- A instrucao operacional `AGENTS.md` menciona "Plataforma Visao 360 - Modulo Integra+", mas a leitura do codigo identifica o dominio real como Planejamento Estrategico.
 - O worktree ja iniciou com alteracoes preexistentes nao realizadas por esta intervencao, incluindo migrations, seeders, lockfiles, model e arquivos novos. Essas alteracoes devem ser preservadas.
 - A documentacao sera baseada apenas no codigo e no schema real acessivel no ambiente local. Pontos nao comprovados serao marcados explicitamente como nao verificados ou nao encontrados.
 - Nao serao executados comandos destrutivos, migrations, `migrate:fresh`, `RefreshDatabase`, limpeza de banco ou alteracoes em codigo funcional.
