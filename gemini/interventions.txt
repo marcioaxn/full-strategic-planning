@@ -1,0 +1,2 @@
+2026-05-22 - Criado roadmap `documentacao/roadmap-documentacao-completa-upgrade.md` para orientar a documentacao completa do projeto solicitada para subsidiar upgrade tecnico. Nenhum codigo funcional foi alterado.
+2026-05-22 - Gerado `documentacao/documentacao-completa-projeto-upgrade.md` com inventario tecnico do projeto, incluindo stack, dependencias, rotas, models, controllers, componentes Livewire, services, policies, middleware, auditoria, exceptions, migrations aplicadas e schema real PostgreSQL consultado em modo somente leitura. Nenhum codigo funcional foi alterado.
