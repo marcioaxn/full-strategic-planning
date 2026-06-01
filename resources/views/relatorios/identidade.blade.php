@@ -2,182 +2,125 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Mapa Estratégico</title>
+    <title>Mapa Estratégico — {{ $organizacao->nom_organizacao }}</title>
+    @include('relatorios.partials.estilos')
     <style>
-        @page { margin: 0.5cm; size: a4 landscape; }
-        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 9px; color: #333; line-height: 1.2; margin: 0; padding: 0; }
-        
-        /* Cores */
-        .text-primary { color: #1B408E; }
-        
-        /* Cabeçalho Compacto */
-        .header { border-bottom: 2px solid #1B408E; padding-bottom: 5px; margin-bottom: 10px; display: table; width: 100%; }
-        .header-left { display: table-cell; width: 60%; vertical-align: bottom; }
-        .header-right { display: table-cell; width: 40%; text-align: right; vertical-align: bottom; }
-        .doc-title { font-size: 18px; font-weight: bold; color: #1B408E; text-transform: uppercase; margin: 0; }
-        .doc-subtitle { font-size: 11px; color: #555; margin: 2px 0 0 0; }
-        
-        /* Mapa Estratégico Compacto */
-        .map-container { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-        .persp-row { page-break-inside: avoid; }
-        
-        /* Header da Perspectiva */
-        .persp-header-cell; 
-            width: 30px; 
-            text-align: center; 
-            vertical-align: middle; 
-            color: white; 
-            font-weight: bold; 
-            font-size: 9px; 
-            text-transform: uppercase; 
-            border-radius: 4px 0 0 4px;
-        }
-        .persp-header-text {
-            writing-mode: vertical-rl; 
-            transform: rotate(180deg); 
-            white-space: nowrap;
-            padding: 5px 0;
-            margin: 0 auto;
-        }
+        /* ── Orientação Paisagem ── */
+        @page { size: a4 landscape; margin: 95px 28px 52px 28px; }
+        .rpt-header { top: -78px; height: 70px; }
 
-        .persp-body-cell; 
-            background: #fdfdfd; 
-            border: 1px solid #ddd; 
-            border-left: none; 
-            border-radius: 0 4px 4px 0; 
-            padding: 5px; 
-            vertical-align: middle;
-        }
-
-        /* Card de Objetivo Ultra Compacto */
+        /* ── Swimlanes BSC ── */
+        .persp-row { margin-bottom: 7px; border: 1px solid #e2e8f0; border-radius: 7px; overflow: hidden; page-break-inside: avoid; }
+        .persp-header { color: #fff; padding: 5px 12px; font-weight: bold; text-transform: uppercase; font-size: 9px; letter-spacing: .5px; }
+        .persp-body { padding: 6px; background: #fdfdfd; }
         .obj-card {
-            display: inline-block;
-            width: 23%; 
-            vertical-align: top;
-            background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 5px;
-            margin: 3px;
-            text-align: left;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.05);
-            position: relative;
-            min-height: 40px;
+            display: inline-block; width: 18%; vertical-align: top;
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 5px;
+            padding: 6px; margin: 2px; min-height: 42px;
         }
-        .obj-title { font-weight: bold; font-size: 8px; color: #333; margin-bottom: 3px; display: block; line-height: 1.1; }
-        .obj-status { position: absolute; top: 0; right: 0; width: 8px; height: 8px; border-radius: 0 4px 0 4px; }
-        .obj-meta { font-size: 7px; color: #777; margin-top: 2px; }
+        .obj-title { font-weight: bold; font-size: 7.5px; color: #2d3748; display: block; line-height: 1.2; margin-bottom: 3px; }
 
-        /* Rodapé */
-        footer { position: fixed; bottom: -15px; left: 0; right: 0; height: 15px; text-align: center; font-size: 7px; color: #999; border-top: 1px solid #eee; padding-top: 2px; }
+        /* ── Cards de Identidade ── */
+        .id-card-l { background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid #1B408E; border-radius: 7px; padding: 8px 12px; }
+        .id-card-r { background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid #e07b39; border-radius: 7px; padding: 8px 12px; }
+        .id-label  { font-weight: bold; font-size: 7.5px; text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 4px; }
+        .id-text   { font-style: italic; font-size: 8.5px; line-height: 1.4; color: #2d3748; }
+        .chip-sm { display: inline-block; background: #eef2f9; color: #1B408E; border: 1px solid #c7d6ec; border-radius: 999px; padding: 3px 9px; margin: 2px; font-size: 7.5px; font-weight: bold; }
     </style>
 </head>
 <body>
+    @include('relatorios.partials.cabecalho', [
+        'rptTitulo'    => 'Mapa Estratégico',
+        'rptEyebrow'   => 'Balanced Scorecard · Módulo 02 — Planejar',
+        'rptSubtitulo' => $organizacao->nom_organizacao . ' · Exercício ' . $filtros['ano'],
+        'rptIcon'      => '&#9737;',
+    ])
+    @include('relatorios.partials.rodape')
 
-    <footer>
-        {{ $organizacao->nom_organizacao }} | Gerado em {{ now()->format('d/m/Y H:i') }}
-    </footer>
+    @php
+        $coresNivel = [1 => '#475569', 2 => '#2e8b57', 3 => '#0891b2', 4 => '#d97706', 5 => '#1B408E'];
+    @endphp
 
-    <!-- MAPA ESTRATÉGICO (Página 2) -->
-    <div class="chapter-title" style="margin-top: 0;">1. Mapa Estratégico</div>
-    
-    <!-- Identidade Separada (Cards - Altura Igual e Cantos Arredondados) -->
-    <table style="width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 15px; table-layout: fixed; border: none;" border="0" cellpadding="0" cellspacing="0">
+    {{-- Missão / Visão --}}
+    <table style="width:100%; border-collapse:separate; border-spacing:6px 0; margin-bottom:6px;">
         <tr>
-            <!-- Card Missão -->
-            <td style="width: 49%; background: #ffffff; border-left: 4px solid #1B408E; border-top: 1px solid #eeeeee; border-right: 1px solid #eeeeee; border-bottom: 1px solid #eeeeee; border-radius: 6px; padding: 15px; vertical-align: top;">
-                <strong style="color: #1B408E; margin-bottom: 12px; display: block; font-size: 9px;">MISSÃO</strong>
-                <div style="font-style: italic; font-size: 10px; line-height: 1.4;">{{ $identidade->dsc_missao ?? 'Não definida' }}</div>
+            <td style="width:50%;">
+                <div class="id-card-l">
+                    <span class="id-label" style="color:#1B408E;">Missão</span>
+                    <div class="id-text">{{ $identidade->dsc_missao ?? 'Não definida' }}</div>
+                </div>
             </td>
-            
-            <!-- Espaçador Central (Invisível) -->
-            <td style="width: 2%; border: none; background: none;"></td>
-            
-            <!-- Card Visão -->
-            <td style="width: 49%; background: #ffffff; border-left: 4px solid #1B408E; border-top: 1px solid #eeeeee; border-right: 1px solid #eeeeee; border-bottom: 1px solid #eeeeee; border-radius: 6px; padding: 15px; vertical-align: top;">
-                <strong style="color: #1B408E; margin-bottom: 12px; display: block; font-size: 9px;">VISÃO</strong>
-                <div style="font-style: italic; font-size: 10px; line-height: 1.4;">{{ $identidade->dsc_visao ?? 'Não definida' }}</div>
-            </td>
-        </tr>
-    </table>
-
-    <!-- Valores (Card Dedicado - Arredondado) -->
-    <table style="width: 100%; margin-bottom: 15px; border-collapse: separate; border-spacing: 0; border: none;" border="0" cellpadding="0" cellspacing="0">
-        <tr>
-            <td style="background: #ffffff; border-left: 4px solid #1B408E; border-top: 1px solid #eeeeee; border-right: 1px solid #eeeeee; border-bottom: 1px solid #eeeeee; border-radius: 6px; padding: 15px; vertical-align: top; text-align: center;">
-                <strong style="color: #1B408E; margin-bottom: 25px; padding-bottom: 5px; display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">VALORES INSTITUCIONAIS</strong>
-                <div style="text-align: center; margin-top: 10px;">
-                    @forelse($valores as $valor)
-                        <span class="badge" style="background: #f1f4f9; color: #1B408E; margin: 4px 8px; font-weight: bold; border: 1px solid #1B408E; padding: 5px 12px; font-size: 9px;">
-                            {{ $valor->nom_valor }}
-                        </span>
-                    @empty
-                        <span style="font-style: italic; color: #999; font-size: 8px;">Valores não cadastrados.</span>
-                    @endforelse
+            <td style="width:50%;">
+                <div class="id-card-r">
+                    <span class="id-label" style="color:#e07b39;">Visão</span>
+                    <div class="id-text">{{ $identidade->dsc_visao ?? 'Não definida' }}</div>
                 </div>
             </td>
         </tr>
     </table>
 
-    <!-- Temas Norteadores (Card Dedicado - Arredondado) -->
-    @if($temasNorteadores->isNotEmpty())
-        <table style="width: 100%; margin-bottom: 25px; border-collapse: separate; border-spacing: 0; border: none;" border="0" cellpadding="0" cellspacing="0">
-            <tr>
-                <td style="background: #ffffff; border-left: 4px solid #1B408E; border-top: 1px solid #eeeeee; border-right: 1px solid #eeeeee; border-bottom: 1px solid #eeeeee; border-radius: 6px; padding: 15px; vertical-align: top; text-align: center;">
-                    <strong style="color: #1B408E; margin-bottom: 25px; padding-bottom: 5px; display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">TEMAS NORTEADORES</strong>
-                    <div style="line-height: 2.2; text-align: center; margin-top: 10px;">
-                        @foreach($temasNorteadores as $objEst)
-                            <span class="badge" style="background: #fff; color: #1B408E; margin: 4px 8px; font-weight: bold; border: 1px solid #1B408E; padding: 5px 12px; font-size: 9px;">
-                                {{ $objEst->nom_tema_norteador }}
-                            </span>
-                        @endforeach
-                    </div>
-                </td>
-            </tr>
-        </table>
-    @endif
+    {{-- Valores · Temas Norteadores · Legenda --}}
+    <table style="width:100%; border-collapse:separate; border-spacing:6px 0; margin-bottom:10px;">
+        <tr>
+            @if($valores->isNotEmpty())
+            <td style="background:#fff; border:1px solid #e2e8f0; border-radius:7px; padding:7px 12px; text-align:center; vertical-align:middle;">
+                <div style="color:#718096; font-weight:bold; font-size:7px; text-transform:uppercase; margin-bottom:4px; letter-spacing:.5px;">Valores Institucionais</div>
+                @foreach($valores as $valor)
+                    <span class="chip-sm">{{ $valor->nom_valor }}</span>
+                @endforeach
+            </td>
+            @endif
+            @if($temasNorteadores->isNotEmpty())
+            <td style="background:#fff; border:1px solid #e2e8f0; border-radius:7px; padding:7px 12px; text-align:center; vertical-align:middle;">
+                <div style="color:#718096; font-weight:bold; font-size:7px; text-transform:uppercase; margin-bottom:4px; letter-spacing:.5px;">Temas Norteadores</div>
+                @foreach($temasNorteadores as $t)
+                    <span class="chip-sm" style="background:#fff8e1; color:#d97706; border-color:#fde68a;">{{ $t->nom_tema_norteador }}</span>
+                @endforeach
+            </td>
+            @endif
+            <td style="background:#f7fafc; border:1px solid #e2e8f0; border-radius:7px; padding:7px 12px; vertical-align:middle;">
+                <div style="color:#718096; font-weight:bold; font-size:7px; text-transform:uppercase; margin-bottom:4px; letter-spacing:.5px;">Legenda de Atingimento</div>
+                @foreach($grausSatisfacao as $grau)
+                    <span style="font-size:7.5px; margin-right:8px; white-space:nowrap;">
+                        <span class="farol" style="background:{{ $grau->cor }};"></span>
+                        {{ $grau->dsc_grau_satisfcao ?? $grau->dsc_grau_satisfacao ?? '' }}
+                        ({{ number_format($grau->vlr_minimo, 0) }}–{{ number_format($grau->vlr_maximo, 0) }}%)
+                    </span>
+                @endforeach
+            </td>
+        </tr>
+    </table>
 
-    <!-- Swimlanes do Mapa -->
-    <div class="map-container">
-        @php
-            // Mapeamento de Cores por Nível (Cientificamente extraído do MapaEstrategico.php)
-            $coresNivel = [
-                1 => '#6c757d', // Secondary/Slate
-                2 => '#198754', // Success
-                3 => '#0dcaf0', // Info
-                4 => '#ffc107', // Warning
-                5 => '#0d6efd', // Primary
-            ];
-        @endphp
-
-        @foreach($perspectivas as $persp)
-            @php
-                $corPersp = $coresNivel[$persp->num_nivel_hierarquico_apresentacao] ?? '#1B408E';
-                // Ajuste de contraste para texto (Preto para Warning/Amarelo, Branco para resto)
-                $textoCor = ($persp->num_nivel_hierarquico_apresentacao == 4) ? '#000' : '#fff';
-            @endphp
-            <div class="persp-row" style="border-color: {{ $corPersp }};">
-                <div class="persp-header" style="background: {{ $corPersp }}; color: {{ $textoCor }};">{{ $persp->dsc_perspectiva }}</div>
-                <div class="persp-body">
-                    @forelse($persp->objetivos as $obj)
-                        @php
-                            $atingimento = $obj->atingimento_calculado ?? 0;
-                            $cor = $getCorSatisfacao($atingimento);
-                        @endphp
-                        <div class="obj-card" style="border-left: 3px solid {{ $cor }};">
-                            <div class="obj-status" style="background: {{ $cor }};"></div>
-                            <span class="obj-title">{{ $obj->nom_objetivo }}</span>
-                            <div style="font-size: 8px; color: #666; margin-top: 4px;">
-                                Atingimento: <strong>{{ number_format($atingimento, 2, ',', '.') }}%</strong>
-                            </div>
-                        </div>
-                    @empty
-                        <div style="font-style: italic; color: #999; padding: 10px;">Sem objetivos vinculados.</div>
-                    @endforelse
-                </div>
+    {{-- Swimlanes BSC --}}
+    @forelse($perspectivas->sortByDesc('num_nivel_hierarquico_apresentacao') as $persp)
+        @php $corP = $coresNivel[$persp->num_nivel_hierarquico_apresentacao] ?? '#1B408E'; @endphp
+        <div class="persp-row">
+            <div class="persp-header" style="background:{{ $corP }};">
+                {{ $persp->dsc_perspectiva }}
+                <span style="float:right; background:rgba(255,255,255,.2); border-radius:10px; padding:1px 8px; font-size:8px;">
+                    {{ $persp->objetivos->count() }} objetivo(s)
+                </span>
             </div>
-        @endforeach
-    </div>
-
+            <div class="persp-body">
+                @forelse($persp->objetivos as $obj)
+                    @php
+                        $at  = $obj->atingimento_calculado ?? 0;
+                        $cor = $getCorSatisfacao($at);
+                    @endphp
+                    <div class="obj-card" style="border-left:3px solid {{ $cor }};">
+                        <span class="obj-title">{{ $obj->nom_objetivo }}</span>
+                        <div style="font-size:7px; color:#718096;">
+                            <span class="farol" style="background:{{ $cor }}; width:8px; height:8px;"></span>
+                            <strong style="color:{{ $cor }};">{{ number_format($at, 1, ',', '.') }}%</strong>
+                        </div>
+                    </div>
+                @empty
+                    <span style="font-style:italic; color:#a0aec0; font-size:8px; padding:8px; display:block;">Sem objetivos vinculados nesta perspectiva.</span>
+                @endforelse
+            </div>
+        </div>
+    @empty
+        <div class="vazio">Nenhuma perspectiva cadastrada para este ciclo PEI.</div>
+    @endforelse
 </body>
 </html>

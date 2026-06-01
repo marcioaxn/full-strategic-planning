@@ -5,6 +5,7 @@ namespace App\Livewire\StrategicPlanning;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\StrategicPlanning\Objetivo;
+use App\Models\Agenda2030\ODS;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Facades\Session;
@@ -28,6 +29,12 @@ class ListarObjetivos extends Component
     public $dsc_objetivo;
     public $num_nivel_hierarquico_apresentacao;
     public $cod_perspectiva;
+
+    // Agenda 2030 — vínculo de ODS ao objetivo (máx. 3, padrão ONU institucional)
+    public array $odsSelecionados = [];
+    public array $odsContribuicoes = [];
+    public const MAX_ODS = 3;
+
     public bool $aiEnabled = false;
     public $aiSuggestion = '';
     public $smartFeedback = '';
@@ -158,10 +165,34 @@ class ListarObjetivos extends Component
     {
         $this->perspectivas = Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
             ->with(['objetivos' => function($query) {
-                $query->ordenadoPorNivel();
+                $query->ordenadoPorNivel()->with('ods');
             }])
             ->ordenadoPorNivel()
             ->get();
+    }
+
+    /**
+     * Alterna a seleção de um ODS no formulário (respeita o limite institucional).
+     */
+    public function toggleOds(int $numOds): void
+    {
+        if (in_array($numOds, $this->odsSelecionados)) {
+            $this->odsSelecionados = array_values(array_diff($this->odsSelecionados, [$numOds]));
+            unset($this->odsContribuicoes[$numOds]);
+            return;
+        }
+
+        if (count($this->odsSelecionados) >= self::MAX_ODS) {
+            $this->dispatch('mentor-notification',
+                title: 'Limite de ODS atingido',
+                message: 'Recomenda-se vincular no máximo ' . self::MAX_ODS . ' ODS por objetivo, mantendo o foco estratégico.',
+                icon: 'bi-info-circle',
+                type: 'info'
+            );
+            return;
+        }
+
+        $this->odsSelecionados[] = $numOds;
     }
 
     public function create($perspectivaId = null, \App\Services\PeiGuidanceService $service = null)
@@ -184,12 +215,17 @@ class ListarObjetivos extends Component
 
     public function edit($id)
     {
-        $obj = Objetivo::findOrFail($id);
+        $obj = Objetivo::with('ods')->findOrFail($id);
         $this->objetivoId = $id;
         $this->nom_objetivo = $obj->nom_objetivo;
         $this->dsc_objetivo = $obj->dsc_objetivo;
         $this->num_nivel_hierarquico_apresentacao = $obj->num_nivel_hierarquico_apresentacao;
         $this->cod_perspectiva = $obj->cod_perspectiva;
+
+        // Carregar vínculos de ODS existentes
+        $this->odsSelecionados  = $obj->ods->pluck('num_ods')->map(fn($n) => (int) $n)->toArray();
+        $this->odsContribuicoes = $obj->ods->pluck('pivot.txt_contribuicao', 'num_ods')->toArray();
+
         $this->showModal = true;
     }
 
@@ -218,7 +254,7 @@ class ListarObjetivos extends Component
         ]);
 
         try {
-            Objetivo::updateOrCreate(
+            $objetivo = Objetivo::updateOrCreate(
                 ['cod_objetivo' => $this->objetivoId],
                 [
                     'nom_objetivo' => $this->nom_objetivo,
@@ -227,6 +263,13 @@ class ListarObjetivos extends Component
                     'cod_perspectiva' => $this->cod_perspectiva,
                 ]
             );
+
+            // Sincronizar vínculos de ODS (Agenda 2030) com a contribuição de cada um
+            $syncOds = [];
+            foreach ($this->odsSelecionados as $num) {
+                $syncOds[(int) $num] = ['txt_contribuicao' => $this->odsContribuicoes[$num] ?? null];
+            }
+            $objetivo->ods()->sync($syncOds);
 
             if ($this->objetivoId) {
                 $this->successMessage = "As definições do objetivo estratégico foram atualizadas com sucesso e já estão refletidas no mapa estratégico.";
@@ -282,10 +325,14 @@ class ListarObjetivos extends Component
         $this->dsc_objetivo = '';
         $this->num_nivel_hierarquico_apresentacao = 1;
         $this->cod_perspectiva = '';
+        $this->odsSelecionados = [];
+        $this->odsContribuicoes = [];
     }
 
     public function render()
     {
-        return view('livewire.p-e-i.listar-objetivos');
+        return view('livewire.p-e-i.listar-objetivos', [
+            'todosOds' => ODS::ordenado()->get(),
+        ]);
     }
 }

@@ -12,6 +12,7 @@
                     </ol>
                 </nav>
                 <h2 class="h4 fw-bold mb-0 text-body">Mapa Estratégico Institucional</h2>
+                <div class="mt-1"><x-gppei-link :page="30" label="Mapa Estratégico BSC" /></div>
                 <p class="text-muted small mb-0"><i class="bi bi-building me-1"></i>{{ $organizacaoNome }}</p>
             </div>
 
@@ -195,9 +196,16 @@
                                             <div class="objetivo-card-modern shadow-sm border h-100" 
                                                  @auth onclick="Livewire.navigate('{{ route('objetivos.index') }}?search={{ urlencode($objetivo['nom_objetivo']) }}')" @endauth style="cursor: pointer;">
                                                 <div class="obj-content p-3">
-                                                    <p class="obj-title mb-3" title="{{ $objetivo['nom_objetivo'] }}">
+                                                    <p class="obj-title mb-2" title="{{ $objetivo['nom_objetivo'] }}">
                                                         {{ Str::limit($objetivo['nom_objetivo'], 70) }}
                                                     </p>
+                                                    @if(!empty($objetivo['ods']))
+                                                        <div class="d-flex flex-wrap gap-1 mb-3" @auth onclick="event.stopPropagation();" @endauth>
+                                                            @foreach($objetivo['ods'] as $ods)
+                                                                <x-ods-badge :num="$ods['num_ods']" size="sm" />
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
                                                     <div class="obj-stat-box mb-2">
                                                         <a wire:navigate href="{{ route('indicadores.index') }}?filtroObjetivo={{ $objetivo['cod_objetivo'] }}" 
                                                            class="text-decoration-none indicador-link" @auth onclick="event.stopPropagation();" @endauth>

@@ -21,11 +21,11 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        // Inserir unidade central padrão
+        // Inserir unidade central padrão (MIDR)
         DB::table('organization.tab_organizacoes')->insert([
             'cod_organizacao' => '3834910f-66f7-46d8-9104-2904d59e1241',
-            'sgl_organizacao' => 'UnidCent',
-            'nom_organizacao' => 'Unidade Central',
+            'sgl_organizacao' => 'MIDR',
+            'nom_organizacao' => 'Ministério da Integração e do Desenvolvimento Regional',
             'rel_cod_organizacao' => '3834910f-66f7-46d8-9104-2904d59e1241',
             'created_at' => now(),
             'updated_at' => now(),

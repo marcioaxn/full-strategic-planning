@@ -7,6 +7,7 @@
                     <i class="bi bi-bullseye"></i>
                 </div>
                 <h1 class="h3 fw-bold mb-0">{{ __('Objetivos BSC') }}</h1>
+                <div class="mt-1"><x-gppei-link :page="29" label="Referencial Estratégico" /></div>
                 <span class="badge-modern badge-count">
                     {{ $perspectivas->sum(fn($p) => $p->objetivos->count()) }}
                 </span>
@@ -502,6 +503,13 @@
                                     </td>
                                     <td>
                                         <a href="{{ route('objetivos.detalhes', $objetivo->cod_objetivo) }}" wire:navigate class="fw-bold text-dark text-decoration-none hover-primary">{{ $objetivo->nom_objetivo }}</a>
+                                        @if($objetivo->ods->isNotEmpty())
+                                            <div class="d-flex flex-wrap align-items-center gap-1 mt-1">
+                                                @foreach($objetivo->ods as $ods)
+                                                    <x-ods-badge :ods="$ods" size="sm" />
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     </td>
                                     <td>
                                         <div class="text-muted small text-truncate" style="max-width: 400px;" title="{{ $objetivo->dsc_objetivo }}">
@@ -650,6 +658,64 @@
                                                 </p>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- ═══════════ Agenda 2030 — Vínculo de ODS ═══════════ --}}
+                            <div class="mt-4">
+                                <div class="card border-0 bg-light rounded-4">
+                                    <div class="card-body p-4">
+                                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom pb-2 mb-3">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-globe-americas text-success fs-5"></i>
+                                                <h6 class="fw-bold text-dark mb-0">Contribuição para a Agenda 2030 (ODS)</h6>
+                                            </div>
+                                            <span class="badge rounded-pill {{ count($odsSelecionados) >= \App\Livewire\StrategicPlanning\ListarObjetivos::MAX_ODS ? 'bg-success' : 'bg-secondary-subtle text-secondary' }}">
+                                                {{ count($odsSelecionados) }} / {{ \App\Livewire\StrategicPlanning\ListarObjetivos::MAX_ODS }} selecionados
+                                            </span>
+                                        </div>
+
+                                        <p class="text-muted small mb-3">
+                                            Selecione até {{ \App\Livewire\StrategicPlanning\ListarObjetivos::MAX_ODS }} Objetivos de Desenvolvimento Sustentável para os quais este objetivo estratégico contribui.
+                                            Manter o foco aumenta a rastreabilidade institucional.
+                                        </p>
+
+                                        {{-- Grid dos 17 ODS --}}
+                                        <div class="d-flex flex-wrap gap-2 mb-2">
+                                            @foreach($todosOds as $ods)
+                                                @php $ativo = in_array($ods->num_ods, $odsSelecionados); @endphp
+                                                <button type="button"
+                                                        wire:click="toggleOds({{ $ods->num_ods }})"
+                                                        class="ods-pick-tile border-0 bg-transparent p-0 position-relative"
+                                                        style="opacity:{{ $ativo ? '1' : '.45' }};transition:all .18s ease;{{ $ativo ? 'transform:scale(1.05);' : '' }}"
+                                                        title="ODS {{ $ods->num_ods }} — {{ $ods->nom_ods }}">
+                                                    <x-ods-badge :ods="$ods" size="md" />
+                                                    @if($ativo)
+                                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-success p-1 border border-2 border-white" style="z-index:2;">
+                                                            <i class="bi bi-check-lg" style="font-size:.6rem;"></i>
+                                                        </span>
+                                                    @endif
+                                                </button>
+                                            @endforeach
+                                        </div>
+
+                                        {{-- Campos de contribuição por ODS selecionado --}}
+                                        @if(count($odsSelecionados) > 0)
+                                            <div class="mt-3 d-flex flex-column gap-2">
+                                                @foreach($todosOds as $ods)
+                                                    @if(in_array($ods->num_ods, $odsSelecionados))
+                                                        <div class="d-flex align-items-center gap-2 bg-white rounded-3 p-2 border">
+                                                            <x-ods-badge :ods="$ods" size="sm" />
+                                                            <input type="text"
+                                                                   wire:model="odsContribuicoes.{{ $ods->num_ods }}"
+                                                                   class="form-control form-control-sm border-0 shadow-none"
+                                                                   placeholder="Como este objetivo contribui para o ODS {{ $ods->num_ods }} ({{ $ods->nom_ods_abreviado }})? (opcional)">
+                                                        </div>
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>

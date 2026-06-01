@@ -40,6 +40,14 @@ class AtividadeCadeiaValor extends Model
         'cod_pei',
         'cod_perspectiva',
         'dsc_atividade',
+        'dsc_tipo',
+        'num_ordem',
+    ];
+
+    public const TIPOS = ['Finalística', 'Suporte'];
+
+    protected $casts = [
+        'num_ordem' => 'integer',
     ];
 
     /**

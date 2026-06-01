@@ -44,6 +44,8 @@ class ListarPlanos extends Component
     public $cod_ppa;
     public $cod_loa;
 
+    public array $modelo_logico = ['insumos' => '', 'atividades' => '', 'resultados' => '', 'impacto' => '', 'pressupostos' => ''];
+
     public $organizacoes_ids = []; // Suporte a multivinculação
     public $organizacoesOptions = []; // Lista em árvore
 
@@ -257,6 +259,7 @@ class ListarPlanos extends Component
         $this->cod_ppa = $plano->cod_ppa;
         $this->cod_loa = $plano->cod_loa;
         $this->organizacoes_ids = $plano->organizacoes->pluck('cod_organizacao')->toArray();
+        $this->modelo_logico = array_merge(['insumos' => '', 'atividades' => '', 'resultados' => '', 'impacto' => '', 'pressupostos' => ''], $plano->json_modelo_logico ?? []);
 
         $this->showModal = true;
     }
@@ -333,8 +336,9 @@ class ListarPlanos extends Component
             'bln_status' => $this->bln_status,
             'cod_ppa' => $this->cod_ppa,
             'cod_loa' => $this->cod_loa,
-            'cod_organizacao' => $this->organizacoes_ids[0], // Mantém compatibilidade legada
-            'num_nivel_hierarquico_apresentacao' => 3, // Padrão: 3 (Nível Operacional/Ação)
+            'cod_organizacao' => $this->organizacoes_ids[0],
+            'num_nivel_hierarquico_apresentacao' => 3,
+            'json_modelo_logico' => array_filter($this->modelo_logico) ?: null,
         ];
 
         if ($this->planoId) {
@@ -393,6 +397,7 @@ class ListarPlanos extends Component
         $this->bln_status = 'Não Iniciado';
         $this->cod_ppa = '';
         $this->cod_loa = '';
+        $this->modelo_logico = ['insumos' => '', 'atividades' => '', 'resultados' => '', 'impacto' => '', 'pressupostos' => ''];
         $this->organizacoes_ids = $this->organizacaoId ? [$this->organizacaoId] : [];
         $this->aiSuggestion = '';
     }

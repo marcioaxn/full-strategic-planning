@@ -15,6 +15,10 @@
                     <i class="bi bi-graph-up-arrow"></i>
                 </div>
                 <h2 class="h4 fw-bold mb-0">Indicadores de Desempenho</h2>
+                <div class="mt-1 d-flex gap-2">
+                    <x-gppei-link :page="31" label="Métricas Estratégicas" />
+                    <x-projetos-link :page="33" label="Indicadores e Resultados-Chave" />
+                </div>
             </div>
         </div>
 
@@ -657,21 +661,33 @@
                                     </div>
                                 </td>
                                 <td class="text-end pe-4">
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                            <li><h6 class="dropdown-header small text-uppercase">Lançamentos</h6></li>
-                                            <li><a class="dropdown-item" href="{{ route('indicadores.detalhes', $ind->cod_indicador) }}" wire:navigate><i class="bi bi-eye me-2 text-primary"></i> Ficha Técnica</a></li>
-                                            <li><a class="dropdown-item" href="{{ route('indicadores.evolucao', $ind->cod_indicador) }}" wire:navigate><i class="bi bi-graph-up-arrow me-2 text-success"></i> Lançar Evolução</a></li>
-                                            <li><button class="dropdown-item" wire:click="abrirMetas('{{ $ind->cod_indicador }}')"><i class="bi bi-bullseye me-2 text-primary"></i> Gerenciar Metas</button></li>
-                                            <li><button class="dropdown-item" wire:click="abrirLinhaBase('{{ $ind->cod_indicador }}')"><i class="bi bi-bar-chart-steps me-2 text-warning"></i> Linha de Base</button></li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li><h6 class="dropdown-header small text-uppercase">Configuração</h6></li>
-                                            <li><button class="dropdown-item" wire:click="edit('{{ $ind->cod_indicador }}')"><i class="bi bi-pencil me-2"></i> Editar</button></li>
-                                            <li><button class="dropdown-item text-danger" wire:click="confirmDelete('{{ $ind->cod_indicador }}')"><i class="bi bi-trash me-2"></i> Excluir</button></li>
-                                        </ul>
+                                    <div class="d-flex align-items-center justify-content-end gap-2">
+                                        {{-- Botão direto: Lançar Evolução (apenas para indicadores manuais) --}}
+                                        @if($ind->dsc_calculation_type !== 'action_plan')
+                                            <a href="{{ route('indicadores.evolucao', $ind->cod_indicador) }}"
+                                               wire:navigate
+                                               class="btn btn-sm btn-success px-3"
+                                               data-bs-toggle="tooltip"
+                                               title="Lançar valor realizado deste indicador">
+                                                <i class="bi bi-graph-up-arrow me-1"></i> Lançar Evolução
+                                            </a>
+                                        @endif
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                                <li><h6 class="dropdown-header small text-uppercase">Lançamentos</h6></li>
+                                                <li><a class="dropdown-item" href="{{ route('indicadores.detalhes', $ind->cod_indicador) }}" wire:navigate><i class="bi bi-eye me-2 text-primary"></i> Ficha Técnica</a></li>
+                                                <li><a class="dropdown-item" href="{{ route('indicadores.evolucao', $ind->cod_indicador) }}" wire:navigate><i class="bi bi-graph-up-arrow me-2 text-success"></i> Lançar Evolução</a></li>
+                                                <li><button class="dropdown-item" wire:click="abrirMetas('{{ $ind->cod_indicador }}')"><i class="bi bi-bullseye me-2 text-primary"></i> Gerenciar Metas</button></li>
+                                                <li><button class="dropdown-item" wire:click="abrirLinhaBase('{{ $ind->cod_indicador }}')"><i class="bi bi-bar-chart-steps me-2 text-warning"></i> Linha de Base</button></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><h6 class="dropdown-header small text-uppercase">Configuração</h6></li>
+                                                <li><button class="dropdown-item" wire:click="edit('{{ $ind->cod_indicador }}')"><i class="bi bi-pencil me-2"></i> Editar</button></li>
+                                                <li><button class="dropdown-item text-danger" wire:click="confirmDelete('{{ $ind->cod_indicador }}')"><i class="bi bi-trash me-2"></i> Excluir</button></li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -940,6 +956,28 @@
                                                     <label class="form-label text-muted small text-uppercase fw-bold">Fonte dos Dados</label>
                                                     <textarea wire:model="form.dsc_fonte" class="form-control bg-white border-0 shadow-sm" rows="2" placeholder="Ex: Sistema Financeiro ERP..."></textarea>
                                                 </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Checklist SMART --}}
+                                <div class="col-12">
+                                    <div class="card border-0 bg-light rounded-4">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex align-items-center gap-2 border-bottom pb-2 mb-3">
+                                                <h6 class="fw-bold text-dark mb-0 small">Checklist SMART</h6>
+                                                <div class="ms-auto"><x-gppei-link :page="77" label="Metas SMART" /></div>
+                                            </div>
+                                            <div class="row g-2">
+                                                @foreach(['especifico' => 'Específico (S) — mede algo bem definido', 'mensuravel' => 'Mensurável (M) — tem unidade e fórmula', 'atingivel' => 'Atingível (A) — meta realista', 'relevante' => 'Relevante (R) — alinhado ao objetivo', 'temporal' => 'Temporal (T) — tem periodicidade'] as $k => $desc)
+                                                <div class="col-md-6">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" wire:model="form.smart.{{ $k }}" id="smart_{{ $k }}">
+                                                        <label class="form-check-label small" for="smart_{{ $k }}">{{ $desc }}</label>
+                                                    </div>
+                                                </div>
+                                                @endforeach
                                             </div>
                                         </div>
                                     </div>

@@ -120,7 +120,42 @@ class Index extends Component
             'minhasEntregas' => $this->getMinhasEntregas(),
             'entregasAgrupadas' => $this->getMinhasEntregasAgrupadas(),
             'comentariosRecentes' => $this->getComentariosRecentes(),
+            'alertasPrazos' => $this->getAlertasPrazos(),
+            'odsCobertura' => $this->getOdsCobertura(),
         ]);
+    }
+
+    /**
+     * Alertas de entregas com prazo vencido ou próximo do vencimento (próximos 7 dias).
+     */
+    private function getAlertasPrazos()
+    {
+        if (!$this->peiAtivo) {
+            return collect();
+        }
+
+        $query = Entrega::whereNotNull('dte_prazo')
+            ->where('bln_status', '!=', 'Concluído')
+            ->where('bln_arquivado', false)
+            ->whereNull('deleted_at')
+            ->where('dte_prazo', '<=', now()->addDays(7))
+            ->whereHas('planoDeAcao.objetivo.perspectiva', fn($q) => $q->where('cod_pei', $this->peiAtivo->cod_pei))
+            ->with('planoDeAcao');
+
+        if ($this->organizacaoId) {
+            $query->whereHas('planoDeAcao', fn($q) => $q->where('cod_organizacao', $this->organizacaoId));
+        }
+
+        return $query->orderBy('dte_prazo')->take(6)->get()->map(function ($e) {
+            $venceu = $e->dte_prazo->isPast();
+            return [
+                'titulo'    => $e->dsc_entrega,
+                'plano'     => $e->planoDeAcao?->dsc_plano_de_acao,
+                'prazo'     => $e->dte_prazo,
+                'vencido'   => $venceu,
+                'plano_id'  => $e->cod_plano_de_acao,
+            ];
+        });
     }
 
     private function getStats()
@@ -374,6 +409,32 @@ class Index extends Component
     {
         $grau = GrauSatisfacao::where('vlr_minimo', '<=', $percentual)->where('vlr_maximo', '>=', $percentual)->first();
         return $grau?->cor ?? '#6c757d';
+    }
+
+    /**
+     * Cobertura da Agenda 2030: quais dos 17 ODS têm objetivos estratégicos
+     * vinculados neste ciclo PEI. Degrada graciosamente se as tabelas ODS
+     * ainda não existirem.
+     */
+    private function getOdsCobertura(): array
+    {
+        $codPei = $this->peiAtivo?->cod_pei;
+        $total = 18;
+
+        if (!$codPei) {
+            return ['cobertos' => [], 'total' => $total];
+        }
+
+        try {
+            $total = \App\Models\Agenda2030\ODS::count() ?: 18;
+            $cobertos = \App\Models\Agenda2030\ODS::whereHas('objetivos', function ($q) use ($codPei) {
+                $q->whereHas('perspectiva', fn ($qp) => $qp->where('cod_pei', $codPei));
+            })->pluck('num_ods')->map(fn ($n) => (int) $n)->toArray();
+        } catch (\Throwable $e) {
+            $cobertos = [];
+        }
+
+        return ['cobertos' => $cobertos, 'total' => $total];
     }
 
     public function getMentorStatus()

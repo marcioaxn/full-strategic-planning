@@ -40,139 +40,247 @@
           x-on:app-close-sidebar.window="closeSidebar()">
         <x-banner />
 
+        @if(session()->has('impersonator_id'))
+            <div style="position:sticky;top:0;z-index:1080;background:linear-gradient(135deg,#d97706,#f59e0b);color:#fff;box-shadow:0 2px 12px rgba(217,119,6,.4);">
+                <div class="container-fluid px-3 px-lg-4 py-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-person-bounding-box fs-5"></i>
+                        <span class="fw-bold small">
+                            Modo Impersonação Ativo —
+                            você está visualizando o sistema como <strong>{{ Auth::user()->name }}</strong> ({{ Auth::user()->email }})
+                        </span>
+                    </div>
+                    <a href="{{ route('impersonate.stop') }}" class="btn btn-sm btn-light fw-bold rounded-pill px-3">
+                        <i class="bi bi-box-arrow-left me-1"></i>Encerrar Impersonação
+                    </a>
+                </div>
+            </div>
+        @endif
+
         @php
             $appNavigation = [
-                // Principal
+
+                // ── Dashboard ─────────────────────────────────────────────────────────
                 [
-                    'label' => __('Dashboard'),
-                    'route' => 'dashboard',
-                    'icon' => 'speedometer2',
-                    'single' => true
+                    'label'  => 'Dashboard',
+                    'route'  => 'dashboard',
+                    'icon'   => 'speedometer2',
+                    'single' => true,
                 ],
 
-                // Grupo: Planejamento (conforme especificação do usuário)
+                // ── Separador ─────────────────────────────────────────────────────────
+                ['separator' => true, 'label' => 'Metodologia GPPEI'],
+
+                // ── Módulo 01 — Inaugurar e Integrar ─────────────────────────────────
                 [
-                    'label' => __('Planejamento'),
-                    'icon' => 'compass',
-                    'id' => 'nav-planejamento',
+                    'label'    => 'Inaugurar e Integrar',
+                    'icon'     => 'rocket-takeoff',
+                    'id'       => 'nav-inaugurar',
                     'children' => [
                         [
-                            'label' => __('Ciclos PEI'),
+                            'label' => 'Inaugurar e Integrar',
+                            'route' => 'pei.inaugurar',
+                            'icon'  => 'flag-fill',
+                        ],
+                        [
+                            'label' => 'Ciclos PEI',
                             'route' => 'pei.ciclos',
-                            'icon' => 'calendar-range'
+                            'icon'  => 'calendar-range',
                         ],
                         [
-                            'label' => __('Identidade Estratégica'),
+                            'label' => 'Cadeia de Valor',
+                            'route' => 'pei.cadeia-valor',
+                            'icon'  => 'diagram-2',
+                        ],
+                    ],
+                ],
+
+                // ── Módulo 02 — Planejar ──────────────────────────────────────────────
+                [
+                    'label'    => 'Planejar',
+                    'icon'     => 'compass',
+                    'id'       => 'nav-planejar',
+                    'children' => [
+                        [
+                            'label' => 'Identidade Estratégica',
                             'route' => 'pei.index',
-                            'icon' => 'clipboard-data'
+                            'icon'  => 'gem',
                         ],
                         [
-                            'label' => __('Análise SWOT'),
-                            'route' => 'pei.swot',
-                            'icon' => 'grid-3x3-gap'
+                            'label' => 'Valores Institucionais',
+                            'route' => 'pei.valores',
+                            'icon'  => 'heart',
                         ],
                         [
-                            'label' => __('Análise PESTEL'),
-                            'route' => 'pei.pestel',
-                            'icon' => 'globe2'
-                        ],
-                        [
-                            'label' => __('Perspectivas'),
-                            'route' => 'pei.perspectivas',
-                            'icon' => 'layers'
-                        ],
-                        [
-                            'label' => __('Objetivos'),
-                            'route' => 'objetivos.index',
-                            'icon' => 'bullseye'
-                        ],
-                        [
-                            'label' => __('Temas Norteadores'),
+                            'label' => 'Temas Norteadores',
                             'route' => 'temas-norteadores.index',
-                            'icon' => 'shield-check'
+                            'icon'  => 'shield-check',
                         ],
                         [
-                            'label' => __('Planos de Ação'),
-                            'route' => 'planos.index',
-                            'icon' => 'list-task'
+                            'label' => 'Análise SWOT',
+                            'route' => 'pei.swot',
+                            'icon'  => 'grid-3x3-gap',
                         ],
                         [
-                            'label' => __('Gerenciar Entregas'),
-                            'route' => 'entregas.index',
-                            'icon' => 'check2-all'
+                            'label' => 'Análise PESTEL',
+                            'route' => 'pei.pestel',
+                            'icon'  => 'globe2',
                         ],
                         [
-                            'label' => __('Graus de Satisfação'),
-                            'route' => 'graus-satisfacao.index',
-                            'icon' => 'palette'
+                            'label' => 'Perspectivas BSC',
+                            'route' => 'pei.perspectivas',
+                            'icon'  => 'layers',
                         ],
                         [
-                            'label' => __('Indicadores'),
+                            'label' => 'Objetivos Estratégicos',
+                            'route' => 'objetivos.index',
+                            'icon'  => 'bullseye',
+                        ],
+                        [
+                            'label' => 'Agenda 2030 (ODS)',
+                            'route' => 'agenda2030.index',
+                            'icon'  => 'globe-americas',
+                        ],
+                        [
+                            'label' => 'Indicadores',
                             'route' => 'indicadores.index',
-                            'icon' => 'graph-up'
+                            'icon'  => 'graph-up',
                         ],
                         [
-                            'label' => __('Riscos'),
-                            'route' => 'riscos.index',
-                            'icon' => 'exclamation-triangle'
+                            'label' => 'Planos de Ação',
+                            'route' => 'planos.index',
+                            'icon'  => 'list-task',
                         ],
                         [
-                            'label' => __('Mapa Estratégico'),
+                            'label' => 'Gerenciar Entregas',
+                            'route' => 'entregas.index',
+                            'icon'  => 'kanban',
+                        ],
+                        [
+                            'label' => 'Mapa Estratégico',
                             'route' => 'pei.mapa',
-                            'icon' => 'map'
+                            'icon'  => 'map',
                         ],
-                    ]
+                    ],
                 ],
 
-                // Grupo: Gestão (apenas Auditoria e Relatórios)
+                // ── Módulo 03 — Monitorar e Avaliar ──────────────────────────────────
                 [
-                    'label' => __('Gestão'),
-                    'icon' => 'gear',
-                    'id' => 'nav-gestao',
+                    'label'    => 'Monitorar e Avaliar',
+                    'icon'     => 'graph-up-arrow',
+                    'id'       => 'nav-monitorar',
                     'children' => [
                         [
-                            'label' => __('Auditoria'),
-                            'route' => 'audit.index',
-                            'icon' => 'shield-lock',
-                            'can' => 'isSuperAdmin'
+                            'label' => 'Gestão de Riscos',
+                            'route' => 'riscos.index',
+                            'icon'  => 'shield-exclamation',
                         ],
                         [
-                            'label' => __('Relatórios'),
+                            'label' => 'RAE — Revisão da Estratégia',
+                            'route' => 'monitoramento.rae',
+                            'icon'  => 'arrow-repeat',
+                        ],
+                        [
+                            'label' => 'Relatórios',
                             'route' => 'relatorios.index',
-                            'icon' => 'file-earmark-bar-graph'
+                            'icon'  => 'file-earmark-bar-graph',
                         ],
                         [
-                            'label' => __('Histórico de Relatórios'),
+                            'label' => 'Histórico de Relatórios',
                             'route' => 'relatorios.historico',
-                            'icon' => 'clock-history'
+                            'icon'  => 'clock-history',
                         ],
-                    ]
+                    ],
                 ],
 
-                // Grupo: Administração
+                // ── Separador ─────────────────────────────────────────────────────────
+                ['separator' => true, 'label' => 'Pessoal'],
+
+                // ── Meu Espaço ────────────────────────────────────────────────────────
                 [
-                    'label' => __('Administração'),
-                    'icon' => 'sliders',
-                    'id' => 'nav-admin',
-                    'can' => 'isSuperAdmin',
+                    'label'    => 'Meu Espaço',
+                    'icon'     => 'person-workspace',
+                    'id'       => 'nav-pessoal',
                     'children' => [
                         [
-                            'label' => __('Organizações'),
-                            'route' => 'organizacoes.index',
-                            'icon' => 'building'
+                            'label' => 'Minhas Entregas',
+                            'route' => 'entregas.minhas',
+                            'icon'  => 'person-check',
                         ],
                         [
-                            'label' => __('Usuários'),
-                            'route' => 'usuarios.index',
-                            'icon' => 'people'
+                            'label' => 'Lições Aprendidas',
+                            'route' => 'licoes.index',
+                            'icon'  => 'lightbulb',
                         ],
-                        [
-                            'label' => __('Configurações'),
-                            'route' => 'admin.configuracoes',
-                            'icon' => 'gear-wide-connected'
-                        ],
-                    ]
+                    ],
                 ],
+
+                // ── Separador ─────────────────────────────────────────────────────────
+                ['separator' => true, 'label' => 'Recursos'],
+
+                // ── Referências Metodológicas ─────────────────────────────────────────
+                [
+                    'label'    => 'Referências',
+                    'icon'     => 'bookmarks',
+                    'id'       => 'nav-referencias',
+                    'children' => [
+                        [
+                            'label' => 'Guia GPPEI',
+                            'route' => 'documentos.viewer-gppei',
+                            'icon'  => 'book-half',
+                        ],
+                        [
+                            'label' => 'Guia de Projetos',
+                            'route' => 'documentos.projetos',
+                            'icon'  => 'journal-bookmark-fill',
+                        ],
+                    ],
+                ],
+
+                // ── Separador (visível só para super admin) ───────────────────────────
+                ['separator' => true, 'label' => 'Sistema', 'can' => 'isSuperAdmin'],
+
+                // ── Administração ─────────────────────────────────────────────────────
+                [
+                    'label'    => 'Administração',
+                    'icon'     => 'gear-wide-connected',
+                    'id'       => 'nav-admin',
+                    'can'      => 'isSuperAdmin',
+                    'children' => [
+                        [
+                            'label' => 'Organizações',
+                            'route' => 'organizacoes.index',
+                            'icon'  => 'building',
+                        ],
+                        [
+                            'label' => 'Usuários',
+                            'route' => 'usuarios.index',
+                            'icon'  => 'people',
+                        ],
+                        [
+                            'label' => 'Perfis de Acesso',
+                            'route' => 'admin.perfis',
+                            'icon'  => 'person-badge',
+                        ],
+                        [
+                            'label' => 'Graus de Satisfação',
+                            'route' => 'graus-satisfacao.index',
+                            'icon'  => 'palette',
+                        ],
+                        [
+                            'label' => 'Configurações',
+                            'route' => 'admin.configuracoes',
+                            'icon'  => 'sliders',
+                        ],
+                        [
+                            'label' => 'Auditoria',
+                            'route' => 'audit.index',
+                            'icon'  => 'journal-text',
+                            'can'   => 'isSuperAdmin',
+                        ],
+                    ],
+                ],
+
             ];
 
             // Filtro de navegação por permissão (recursivo)

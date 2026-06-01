@@ -59,7 +59,7 @@ class ReportGenerationService
         if ($perspectivaId) {
             $queryPerspectivas->where('cod_perspectiva', $perspectivaId);
         }
-        $perspectivas = $queryPerspectivas->with(['objetivos.indicadores'])->ordenadoPorNivel()->get();
+        $perspectivas = $queryPerspectivas->with(['objetivos.indicadores', 'objetivos.ods'])->ordenadoPorNivel()->get();
         
         // 3. Planos de Ação (Ordenados por Perspectiva > Objetivo > Plano)
         $planos = PlanoDeAcao::where('cod_organizacao', $organizacaoId)
@@ -375,23 +375,41 @@ class ReportGenerationService
         $ano = $ano ?? date('Y');
         $organizacao = $organizacaoId ? Organization::find($organizacaoId) : null;
 
-        $query = PlanoDeAcao::query()->with(['objetivo', 'entregas', 'responsaveis']);
+        $query = PlanoDeAcao::query()->with(['objetivo.perspectiva', 'entregas', 'tipoExecucao']);
 
         if ($organizacaoId) {
             $query->where('cod_organizacao', $organizacaoId);
         }
 
-        // Filtrar por ano (início ou fim no ano selecionado)
+        // Filtrar por ano (vigência no ano selecionado)
         $query->where(function($q) use ($ano) {
-            $q->whereYear('dte_inicio', $ano)
-              ->orWhereYear('dte_fim', $ano);
+            $q->whereYear('dte_inicio', '<=', $ano)
+              ->whereYear('dte_fim', '>=', $ano);
         });
 
-        $planos = $query->orderBy('dte_fim')->get();
+        // Calcular progresso e status reais via Service unificado
+        $planos = $query->orderBy('dte_fim')->get()->map(function ($plano) use ($ano) {
+            $calculo = $this->calculoService->calcularProgressoPlanoNoAno($plano, (int) $ano);
+            $plano->progresso_anual    = $calculo['progresso'];
+            $plano->status_anual       = $calculo['status_calculado'];
+            $plano->entregas_ano_count = $calculo['total_entregas'];
+            return $plano;
+        });
 
-        $pdf = Pdf::loadView('relatorios.planos', compact('planos', 'organizacao', 'ano'));
+        // Sumário por status (calculado)
+        $resumo = [
+            'total'        => $planos->count(),
+            'concluidos'   => $planos->where('status_anual', 'Concluído')->count(),
+            'andamento'    => $planos->where('status_anual', 'Em Andamento')->count(),
+            'atrasados'    => $planos->where('status_anual', 'Atrasado')->count(),
+            'nao_iniciado' => $planos->whereIn('status_anual', ['Não Iniciado', 'Sem Entregas'])->count(),
+            'progresso_medio' => $planos->count() > 0 ? round($planos->avg('progresso_anual'), 1) : 0,
+            'orcamento_total' => $planos->sum('vlr_orcamento_previsto'),
+        ];
+
+        $pdf = Pdf::loadView('relatorios.planos', compact('planos', 'organizacao', 'ano', 'resumo'));
         $nomeArquivo = $organizacao ? "Planos_Acao_{$organizacao->sgl_organizacao}_{$ano}.pdf" : "Planos_Acao_{$ano}.pdf";
-        
+
         return [
             'content' => $pdf->output(),
             'filename' => $nomeArquivo
@@ -453,7 +471,8 @@ class ReportGenerationService
                 'objetivos.indicadores.metasPorAno' => function($q) use ($ano) {
                     $q->where('num_ano', $ano);
                 },
-                'objetivos.planosAcao'
+                'objetivos.planosAcao',
+                'objetivos.ods'
             ])
             ->ordenadoPorNivel()
             ->get();
@@ -565,16 +584,89 @@ class ReportGenerationService
             ->where('cod_organizacao', $organizacaoId)
             ->get();
 
+        // ════════════════════════════════════════════════════════════════════
+        // MÓDULOS NOVOS DO SISTEMA (incorporados ao Dossiê Integrado)
+        // ════════════════════════════════════════════════════════════════════
+        $codPei = $pei?->cod_pei;
+        $planoIds = $planos->pluck('cod_plano_de_acao')->all();
+
+        // Módulo 01 — Inaugurar e Integrar
+        $inaugurar = $this->safe(fn() => \App\Models\StrategicPlanning\InauguraPei::where('cod_pei', $codPei)->first());
+        $integracoes = $this->safe(fn() => \App\Models\StrategicPlanning\IntegracaoInstrumento::where('cod_pei', $codPei)->orderBy('num_ordem')->get(), collect());
+        $eventosPei = $this->safe(fn() => \App\Models\StrategicPlanning\CalendarioEventoPei::where('cod_pei', $codPei)->orderBy('dte_evento')->get(), collect());
+
+        // Cadeia de Valor
+        $cadeiaValor = $this->safe(fn() => \App\Models\StrategicPlanning\AtividadeCadeiaValor::with('processos', 'perspectiva')
+            ->where('cod_pei', $codPei)->orderBy('dsc_tipo')->orderBy('num_ordem')->get()->groupBy('dsc_tipo'), collect());
+
+        // Análise Ambiental expandida
+        $pestel = $this->safe(fn() => \App\Models\StrategicPlanning\AnaliseAmbiental::pestel()
+            ->where('cod_pei', $codPei)->where('cod_organizacao', $organizacaoId)->get()->groupBy('dsc_categoria'), collect());
+        $partesInteressadas = $this->safe(fn() => \App\Models\StrategicPlanning\ParteInteressada::where('cod_pei', $codPei)
+            ->orderBy('num_influencia', 'desc')->orderBy('num_interesse', 'desc')->get(), collect());
+        $cenarios = $this->safe(fn() => \App\Models\StrategicPlanning\CenarioProspectivo::where('cod_pei', $codPei)
+            ->orderBy('dsc_tipo')->get(), collect());
+
+        // Partes Interessadas e Comunicação (Domínio 5)
+        $comunicacoes = $this->safe(fn() => \App\Models\ActionPlan\PlanoComunicacao::whereIn('cod_plano_de_acao', $planoIds)
+            ->with('plano')->orderBy('num_ordem')->get(), collect());
+
+        // RACI (Domínio 3)
+        $racis = $this->safe(fn() => \App\Models\ActionPlan\Raci::whereIn('cod_plano_de_acao', $planoIds)
+            ->with(['usuario', 'plano'])->get()->groupBy('cod_plano_de_acao'), collect());
+
+        // Impacto e Aprendizado (Domínio 7) — Lições Aprendidas
+        $licoesAprendidas = $this->safe(fn() => \App\Models\ActionPlan\LicaoAprendida::whereIn('cod_plano_de_acao', $planoIds)
+            ->with('plano')->orderBy('dsc_tipo')->get()->groupBy('dsc_tipo'), collect());
+
+        // Monitorar e Avaliar — RAE
+        $raes = $this->safe(fn() => \App\Models\StrategicPlanning\Rae::where('cod_pei', $codPei)
+            ->where('cod_organizacao', $organizacaoId)->orderByDesc('dte_referencia')->get(), collect());
+
+        // Agenda 2030 — aderência institucional (PEI ↔ ODS) e cobertura por objetivos
+        $odsAderencia = $this->safe(fn() => $pei?->ods()->get() ?? collect(), collect());
+
+        $odsPorObjetivo = [];
+        foreach ($perspectivas as $persp) {
+            foreach ($persp->objetivos as $obj) {
+                foreach ($obj->ods ?? [] as $o) {
+                    if (!isset($odsPorObjetivo[$o->num_ods])) {
+                        $odsPorObjetivo[$o->num_ods] = ['ods' => $o, 'objetivos' => []];
+                    }
+                    $odsPorObjetivo[$o->num_ods]['objetivos'][] = $obj->nom_objetivo;
+                }
+            }
+        }
+        ksort($odsPorObjetivo);
+
         // Renderização da View Integrada
         $pdf = Pdf::loadView('relatorios.integrado', compact(
-            'organizacao', 'identidade', 'valores', 
+            'organizacao', 'identidade', 'valores',
             'perspectivas', 'planos', 'filtros', 'swot', 'riscosSummary', 'riscosDetalhado', 'grausSatisfacao',
-            'aiSummary', 'aiTrends', 'indicadoresDetalhados', 'temasNorteadores'
+            'aiSummary', 'aiTrends', 'indicadoresDetalhados', 'temasNorteadores',
+            // módulos novos
+            'inaugurar', 'integracoes', 'eventosPei', 'cadeiaValor', 'pestel',
+            'partesInteressadas', 'cenarios', 'comunicacoes', 'racis', 'licoesAprendidas', 'raes', 'pei',
+            // Agenda 2030
+            'odsAderencia', 'odsPorObjetivo'
         ));
 
         return [
             'content' => $pdf->output(),
             'filename' => "Dossie_Estrategico_{$organizacao->sgl_organizacao}_{$ano}.pdf"
         ];
+    }
+
+    /**
+     * Executa uma query de módulo de forma resiliente: se a tabela ainda não
+     * foi migrada ou ocorrer erro, retorna o fallback em vez de quebrar o PDF.
+     */
+    private function safe(callable $fn, $fallback = null)
+    {
+        try {
+            return $fn();
+        } catch (\Throwable $e) {
+            return $fallback;
+        }
     }
 }

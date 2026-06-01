@@ -67,7 +67,8 @@ class ListarIndicadores extends Component
         'dsc_periodo_medicao' => 'Mensal',
         'dsc_referencial_comparativo' => '',
         'dsc_atributos' => '',
-        'organizacoes_ids' => [], // IDs para multivinculação
+        'organizacoes_ids' => [],
+        'smart' => ['especifico' => false, 'mensuravel' => false, 'atingivel' => false, 'relevante' => false, 'temporal' => false],
     ];
 
     // Form Metas/Linha Base
@@ -209,6 +210,7 @@ class ListarIndicadores extends Component
             'dsc_referencial_comparativo' => $indicador->dsc_referencial_comparativo,
             'dsc_atributos' => $indicador->dsc_atributos,
             'organizacoes_ids' => $indicador->organizacoes->pluck('cod_organizacao')->toArray(),
+            'smart'            => $indicador->json_smart ?? ['especifico' => false, 'mensuravel' => false, 'atingivel' => false, 'relevante' => false, 'temporal' => false],
         ];
         $this->showModal = true;
     }
@@ -246,6 +248,8 @@ class ListarIndicadores extends Component
             $data = $this->form;
             $orgIds = $data['organizacoes_ids'];
             unset($data['organizacoes_ids']);
+            $data['json_smart'] = $data['smart'] ?? [];
+            unset($data['smart']);
 
             if ($data['dsc_tipo'] === 'Objetivo') { 
                 $data['cod_plano_de_acao'] = null;
@@ -370,6 +374,7 @@ class ListarIndicadores extends Component
             'dsc_meta' => '', 'dsc_unidade_medida' => 'Percentual (%)', 'dsc_polaridade' => 'Positiva', 'num_peso' => 1, 'bln_acumulado' => 'Não',
             'dsc_formula' => '', 'dsc_fonte' => '', 'dsc_periodo_medicao' => 'Mensal',
             'dsc_referencial_comparativo' => '', 'dsc_atributos' => '',
+            'smart' => ['especifico' => false, 'mensuravel' => false, 'atingivel' => false, 'relevante' => false, 'temporal' => false],
         ];
     }
 
