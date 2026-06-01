@@ -17,13 +17,22 @@
     <div class="app-sidebar-scroll flex-grow-1 overflow-auto px-2 pb-4">
         <nav class="nav nav-pills flex-column gap-1" id="sidebarAccordion">
             @foreach ($items as $item)
-                @if(isset($item['single']) && $item['single'])
-                    {{-- Item Único (Dashboard) --}}
+                @if(isset($item['separator']))
+                    {{-- Separador de Seção --}}
+                    <div class="sidebar-section-sep {{ $loop->first ? '' : 'mt-3' }} mb-1 px-1 d-flex align-items-center gap-2">
+                        <div class="sep-line flex-grow-1"></div>
+                        <span class="sidebar-text sep-label">{{ $item['label'] ?? '' }}</span>
+                        <div class="sep-line flex-grow-1"></div>
+                    </div>
+                @elseif(isset($item['single']) && $item['single'])
+                    {{-- Item Único --}}
                     @php
                         $isActive = request()->routeIs($item['route']);
+                        $itemTarget = $item['target'] ?? null;
                     @endphp
                     <a href="{{ route($item['route']) }}"
-                       wire:navigate
+                       @if(!$itemTarget) wire:navigate @endif
+                       @if($itemTarget) target="{{ $itemTarget }}" rel="noopener" @endif
                        class="nav-link-modern d-flex align-items-center gap-2 py-2 px-3 {{ $isActive ? 'active gradient-theme-nav' : '' }}"
                        data-bs-toggle="tooltip"
                        data-bs-placement="right"
@@ -35,7 +44,6 @@
                     {{-- Grupo com Filhos (Accordion) --}}
                     @php
                         $groupId = $item['id'] ?? 'group-' . Str::slug($item['label']);
-                        // Verifica se algum filho está ativo para abrir o grupo
                         $hasActiveChild = false;
                         foreach ($item['children'] as $child) {
                             if (request()->routeIs($child['route'])) {
@@ -44,8 +52,8 @@
                             }
                         }
                     @endphp
-                    
-                    <div class="nav-group mt-2">
+
+                    <div class="nav-group mt-1">
                         <button class="nav-link-modern w-100 d-flex align-items-center justify-content-between gap-2 py-2 px-3 border-0 bg-transparent {{ $hasActiveChild ? 'text-primary' : '' }}"
                                 type="button"
                                 data-bs-toggle="collapse"
@@ -61,23 +69,28 @@
                             </div>
                             <i class="bi bi-chevron-down transition-transform fs-7 {{ $hasActiveChild ? 'rotate-180' : '' }}"></i>
                         </button>
-                        
-                        <div id="{{ $groupId }}" 
-                             class="collapse {{ $hasActiveChild ? 'show' : '' }}" 
+
+                        <div id="{{ $groupId }}"
+                             class="collapse {{ $hasActiveChild ? 'show' : '' }}"
                              data-bs-parent="#sidebarAccordion">
                             <div class="nav flex-column gap-1 ps-3 py-1">
                                 @foreach($item['children'] as $child)
                                     @php
                                         $isChildActive = request()->routeIs($child['route']);
+                                        $childTarget   = $child['target'] ?? null;
                                     @endphp
                                     <a href="{{ route($child['route']) }}"
-                                       wire:navigate
+                                       @if(!$childTarget) wire:navigate @endif
+                                       @if($childTarget) target="{{ $childTarget }}" rel="noopener" @endif
                                        class="nav-link-modern d-flex align-items-center gap-2 py-2 px-3 {{ $isChildActive ? 'active gradient-theme-nav' : '' }}"
                                        data-bs-toggle="tooltip"
                                        data-bs-placement="right"
                                        title="{{ $child['label'] }}">
                                         <i class="bi bi-{{ $child['icon'] }} fs-6 flex-shrink-0"></i>
                                         <span class="sidebar-text small">{{ $child['label'] }}</span>
+                                        @if($childTarget)
+                                            <i class="bi bi-box-arrow-up-right ms-auto sidebar-text" style="font-size:.6rem;opacity:.4;"></i>
+                                        @endif
                                     </a>
                                 @endforeach
                             </div>
@@ -86,6 +99,11 @@
                 @endif
             @endforeach
         </nav>
+    </div>
+
+    <!-- PEI Progress -->
+    <div class="px-2 py-2 border-top">
+        @livewire('shared.pei-progress-bar')
     </div>
 
     <!-- User Footer -->
@@ -219,7 +237,14 @@
         <!-- Navigation Mobile -->
         <nav class="nav nav-pills flex-column gap-1 mb-4" id="mobileAccordion">
             @foreach ($items as $item)
-                @if(isset($item['single']) && $item['single'])
+                @if(isset($item['separator']))
+                    {{-- Separador de Seção (Mobile) --}}
+                    <div class="sidebar-section-sep mt-3 mb-1 px-1 d-flex align-items-center gap-2">
+                        <div class="sep-line flex-grow-1"></div>
+                        <span class="sep-label">{{ $item['label'] ?? '' }}</span>
+                        <div class="sep-line flex-grow-1"></div>
+                    </div>
+                @elseif(isset($item['single']) && $item['single'])
                     @php
                         $isActive = request()->routeIs($item['route']);
                     @endphp
@@ -241,7 +266,7 @@
                             }
                         }
                     @endphp
-                    
+
                     <div class="nav-group-mobile mb-1">
                         <button class="nav-link-modern-mobile w-100 d-flex align-items-center justify-content-between gap-2 py-2 px-3 border-0 bg-transparent {{ $hasActiveChild ? 'text-primary fw-bold' : '' }}"
                                 type="button"
@@ -254,21 +279,26 @@
                             </div>
                             <i class="bi bi-chevron-down transition-transform fs-7 {{ $hasActiveChild ? 'rotate-180' : '' }}"></i>
                         </button>
-                        
-                        <div id="{{ $groupId }}" 
+
+                        <div id="{{ $groupId }}"
                              class="collapse {{ $hasActiveChild ? 'show' : '' }}"
                              data-bs-parent="#mobileAccordion">
                             <div class="nav flex-column gap-1 ps-4 mt-1 border-start ms-3">
                                 @foreach($item['children'] as $child)
                                     @php
                                         $isChildActive = request()->routeIs($child['route']);
+                                        $childTarget   = $child['target'] ?? null;
                                     @endphp
                                     <a href="{{ route($child['route']) }}"
-                                       wire:navigate
+                                       @if(!$childTarget) wire:navigate @endif
+                                       @if($childTarget) target="{{ $childTarget }}" rel="noopener" @endif
                                        class="nav-link-modern-mobile d-flex align-items-center gap-2 py-2 px-3 {{ $isChildActive ? 'active gradient-theme-nav' : '' }}"
-                                       data-bs-dismiss="offcanvas">
+                                       @if(!$childTarget) data-bs-dismiss="offcanvas" @endif>
                                         <i class="bi bi-{{ $child['icon'] }} fs-6 flex-shrink-0"></i>
                                         <span class="small">{{ $child['label'] }}</span>
+                                        @if($childTarget)
+                                            <i class="bi bi-box-arrow-up-right ms-auto" style="font-size:.6rem;opacity:.4;"></i>
+                                        @endif
                                     </a>
                                 @endforeach
                             </div>
@@ -301,6 +331,37 @@
 
 <style>
 /* ========== Desktop Sidebar Styles ========== */
+
+/* ── Section Separators ──────────────────────── */
+.sidebar-section-sep {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 0.25rem;
+}
+.sidebar-section-sep .sep-line {
+    height: 1px;
+    background: var(--bs-border-color);
+    min-width: 8px;
+}
+.sidebar-section-sep .sep-label {
+    font-size: 0.585rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--bs-secondary);
+    opacity: 0.55;
+    white-space: nowrap;
+}
+.app-sidebar.is-collapsed .sidebar-section-sep {
+    display: none !important;
+}
+[data-bs-theme="dark"] .sidebar-section-sep .sep-line {
+    background: rgba(255, 255, 255, 0.1);
+}
+[data-bs-theme="dark"] .sidebar-section-sep .sep-label {
+    opacity: 0.4;
+}
 
 /* Accordion/Group Styles */
 .transition-transform {

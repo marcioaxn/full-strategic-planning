@@ -138,9 +138,46 @@ class RelatorioController extends Controller
         set_time_limit(600); 
 
         $result = $this->reportService->generateIntegrado($organizacaoId, $ano, $periodo, $includeAi);
-        
+
         return response()->streamDownload(function () use ($result) {
             echo $result['content'];
         }, $result['filename']);
+    }
+
+    /**
+     * Relatório consolidado do Plano de Comunicação do PEI.
+     * Reúne todos os itens de comunicação de todos os planos da organização/PEI.
+     */
+    public function comunicacao(Request $request)
+    {
+        $organizacaoId = $request->query('organizacao_id') ?? session('organizacao_selecionada_id');
+        $peiId = session('pei_selecionado_id');
+
+        $organizacao = $organizacaoId ? \App\Models\Organization::find($organizacaoId) : null;
+        $pei = $peiId ? \App\Models\StrategicPlanning\PEI::find($peiId) : \App\Models\StrategicPlanning\PEI::ativos()->first();
+
+        $planosQuery = \App\Models\ActionPlan\PlanoDeAcao::query()
+            ->with(['comunicacoes' => fn($q) => $q->orderBy('num_ordem')]);
+
+        if ($pei) {
+            $planosQuery->whereHas('objetivo.perspectiva', fn($q) => $q->where('cod_pei', $pei->cod_pei));
+        }
+        if ($organizacaoId) {
+            $planosQuery->where('cod_organizacao', $organizacaoId);
+        }
+
+        $planos = $planosQuery->get()->filter(fn($p) => $p->comunicacoes->isNotEmpty());
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('relatorios.comunicacao', [
+            'planos'      => $planos,
+            'pei'         => $pei,
+            'organizacao' => $organizacao,
+            'data'        => now()->format('d/m/Y'),
+        ])->setPaper('a4', 'portrait');
+
+        return response()->streamDownload(
+            fn() => print($pdf->output()),
+            'Plano_Comunicacao_PEI_' . now()->format('Y_m_d') . '.pdf'
+        );
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Livewire\ActionPlan;
 
+use App\Models\ActionPlan\LicaoAprendida;
+use App\Models\ActionPlan\PlanoComunicacao;
 use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\User;
 use Livewire\Attributes\Layout;
@@ -45,10 +47,23 @@ class DetalharPlano extends Component
             ->take(5)
             ->get();
 
+        // Plano de comunicação e lições aprendidas (com try/catch até migrations aplicadas)
+        try {
+            $comunicacoes = PlanoComunicacao::where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)
+                ->orderBy('num_ordem')->get();
+            $licoes = LicaoAprendida::where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)
+                ->orderBy('dsc_tipo')->get();
+        } catch (\Exception) {
+            $comunicacoes = collect();
+            $licoes = collect();
+        }
+
         return view('livewire.plano-acao.detalhar-plano', [
-            'progresso' => $progresso,
+            'progresso'    => $progresso,
             'responsaveis' => $responsaveis,
-            'auditoria' => $auditoria,
+            'auditoria'    => $auditoria,
+            'comunicacoes' => $comunicacoes,
+            'licoes'       => $licoes,
         ]);
     }
 }

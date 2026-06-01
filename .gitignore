@@ -5,7 +5,12 @@
 .env.production
 .phpactor.json
 .phpunit.result.cache
-/.claude
+# Claude Code Harness (logs e estado local — settings.json e templates rastreados via git add -f se necessário)
+/.claude/ralph/logs/
+/.claude/ralph/state/
+/.claude/settings.local.json
+# Descomente a linha abaixo para ignorar todo o harness:
+# /.claude
 /temp
 /.fleet
 /.idea

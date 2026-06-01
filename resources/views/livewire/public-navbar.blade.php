@@ -15,12 +15,12 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navbarPublic">
-            {{-- Seletores Globais (Visíveis para Visitantes) --}}
-            <div class="mx-auto d-flex flex-column flex-lg-row align-items-center gap-2 py-3 py-lg-0">
-                @livewire('shared.seletor-organizacao')
-                @livewire('shared.seletor-pei')
-                @livewire('shared.seletor-ano')
-            </div>
+            {{-- Âncoras de navegação da landing page --}}
+            <ul class="navbar-nav mx-auto align-items-center gap-lg-2 py-3 py-lg-0">
+                <li class="nav-item"><a class="nav-link fw-medium" href="#modulos">Módulos</a></li>
+                <li class="nav-item"><a class="nav-link fw-medium" href="#funcionalidades">Funcionalidades</a></li>
+                <li class="nav-item"><a class="nav-link fw-medium" href="{{ route('documentos.gppei') }}" target="_blank">Guia GPPEI</a></li>
+            </ul>
 
             <ul class="navbar-nav ms-auto align-items-center gap-3">
                 <li class="nav-item">

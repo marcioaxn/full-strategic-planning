@@ -54,16 +54,18 @@ class PlanoDeAcao extends Model implements Auditable
         'bln_status',
         'cod_ppa',
         'cod_loa',
+        'json_modelo_logico',
     ];
 
     /**
      * Casts
      */
     protected $casts = [
-        'dte_inicio' => 'date',
-        'dte_fim' => 'date',
-        'vlr_orcamento_previsto' => 'decimal:2',
-        'num_nivel_hierarquico_apresentacao' => 'integer',
+        'dte_inicio'                          => 'date',
+        'dte_fim'                             => 'date',
+        'vlr_orcamento_previsto'              => 'decimal:2',
+        'num_nivel_hierarquico_apresentacao'  => 'integer',
+        'json_modelo_logico'                  => 'array',
     ];
 
     /**
@@ -72,6 +74,30 @@ class PlanoDeAcao extends Model implements Auditable
     public function objetivo(): BelongsTo
     {
         return $this->belongsTo(Objetivo::class, 'cod_objetivo', 'cod_objetivo');
+    }
+
+    /**
+     * Relacionamento: Itens do Plano de Comunicação
+     */
+    public function comunicacoes(): HasMany
+    {
+        return $this->hasMany(PlanoComunicacao::class, 'cod_plano_de_acao', 'cod_plano_de_acao');
+    }
+
+    /**
+     * Relacionamento: Lições Aprendidas
+     */
+    public function licoesAprendidas(): HasMany
+    {
+        return $this->hasMany(LicaoAprendida::class, 'cod_plano_de_acao', 'cod_plano_de_acao');
+    }
+
+    /**
+     * Relacionamento: Papéis RACI
+     */
+    public function racis(): HasMany
+    {
+        return $this->hasMany(Raci::class, 'cod_plano_de_acao', 'cod_plano_de_acao');
     }
 
     /**

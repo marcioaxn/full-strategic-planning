@@ -101,6 +101,30 @@
         
         .animate-entry { animation: slideUp 0.5s ease-out forwards; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ════════════ DARK MODE (escopo do dashboard) ════════════ */
+        [data-bs-theme="dark"] .dashboard-wrapper .glass-panel {
+            background: rgba(30, 41, 59, .72);
+            border-color: rgba(255, 255, 255, .08) !important;
+        }
+        [data-bs-theme="dark"] .dashboard-wrapper .glass-panel:hover {
+            background: rgba(30, 41, 59, .95);
+            border-color: rgba(127, 179, 245, .35);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, .3);
+        }
+        [data-bs-theme="dark"] .dashboard-wrapper .glass-header {
+            background: rgba(255, 255, 255, .03);
+            border-bottom-color: rgba(255, 255, 255, .06);
+        }
+        /* text-dark do Bootstrap não adapta sozinho — forçar claro no escopo */
+        [data-bs-theme="dark"] .dashboard-wrapper .text-dark { color: #e2e8f0 !important; }
+        /* Bordas e fundos claros utilitários → tons escuros sutis */
+        [data-bs-theme="dark"] .dashboard-wrapper .border-light { border-color: rgba(255, 255, 255, .08) !important; }
+        [data-bs-theme="dark"] .dashboard-wrapper .bg-white { background-color: #1e293b !important; }
+        [data-bs-theme="dark"] .dashboard-wrapper .bg-light { background-color: rgba(255, 255, 255, .04) !important; }
+        /* Mentor estratégico */
+        [data-bs-theme="dark"] .dashboard-wrapper .step-circle { background: #1e293b; }
+        [data-bs-theme="dark"] .dashboard-wrapper .mentor-line { background: rgba(255, 255, 255, .1); }
     </style>
 
     {{-- Header --}}
@@ -133,6 +157,100 @@
                 <span>Analisando...</span>
             </span>
         </button>
+    </div>
+
+    {{-- Portal de Módulos GPPEI --}}
+    <div class="row g-3 mb-4 animate-entry">
+        {{-- Módulo 01 --}}
+        <div class="col-md-4">
+            <div class="glass-panel p-3 h-100 border d-flex flex-column">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="fw-black fs-2 text-primary opacity-25 lh-1">01</span>
+                    <div>
+                        <span class="badge bg-primary-subtle text-primary small fw-bold text-uppercase">Inaugurar e Integrar</span>
+                        <p class="mb-0 x-small text-muted mt-1">Planejamento do processo e integração com instrumentos de governo</p>
+                    </div>
+                </div>
+                <div class="mt-auto d-flex flex-wrap gap-1 pt-2 border-top">
+                    <a href="{{ route('pei.ciclos') }}" wire:navigate class="btn btn-xs btn-outline-primary py-1 px-2 small"><i class="bi bi-calendar me-1"></i>Ciclo PEI</a>
+                    <a href="{{ route('pei.index') }}" wire:navigate class="btn btn-xs btn-outline-primary py-1 px-2 small"><i class="bi bi-gem me-1"></i>Identidade</a>
+                    <a href="{{ route('pei.perspectivas') }}" wire:navigate class="btn btn-xs btn-outline-primary py-1 px-2 small"><i class="bi bi-layers me-1"></i>Perspectivas</a>
+                </div>
+            </div>
+        </div>
+        {{-- Módulo 02 --}}
+        <div class="col-md-4">
+            <div class="glass-panel p-3 h-100 border d-flex flex-column">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="fw-black fs-2 text-success opacity-25 lh-1">02</span>
+                    <div>
+                        <span class="badge bg-success-subtle text-success small fw-bold text-uppercase">Planejar</span>
+                        <p class="mb-0 x-small text-muted mt-1">Cadeia de valor, análise ambiental, objetivos, indicadores e planos</p>
+                    </div>
+                </div>
+                <div class="mt-auto d-flex flex-wrap gap-1 pt-2 border-top">
+                    <a href="{{ route('pei.swot') }}" wire:navigate class="btn btn-xs btn-outline-success py-1 px-2 small"><i class="bi bi-grid me-1"></i>SWOT</a>
+                    <a href="{{ route('pei.pestel') }}" wire:navigate class="btn btn-xs btn-outline-success py-1 px-2 small"><i class="bi bi-diagram-3 me-1"></i>PESTEL</a>
+                    <a href="{{ route('objetivos.index') }}" wire:navigate class="btn btn-xs btn-outline-success py-1 px-2 small"><i class="bi bi-bullseye me-1"></i>Objetivos</a>
+                    <a href="{{ route('indicadores.index') }}" wire:navigate class="btn btn-xs btn-outline-success py-1 px-2 small"><i class="bi bi-graph-up me-1"></i>Indicadores</a>
+                    <a href="{{ route('planos.index') }}" wire:navigate class="btn btn-xs btn-outline-success py-1 px-2 small"><i class="bi bi-list-check me-1"></i>Planos</a>
+                </div>
+            </div>
+        </div>
+        {{-- Módulo 03 --}}
+        <div class="col-md-4">
+            <div class="glass-panel p-3 h-100 border d-flex flex-column">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="fw-black fs-2 text-warning opacity-25 lh-1">03</span>
+                    <div>
+                        <span class="badge bg-warning-subtle text-warning small fw-bold text-uppercase">Monitorar e Avaliar</span>
+                        <p class="mb-0 x-small text-muted mt-1">Acompanhamento de indicadores, riscos, relatórios e avaliação da estratégia</p>
+                    </div>
+                </div>
+                <div class="mt-auto d-flex flex-wrap gap-1 pt-2 border-top">
+                    <a href="{{ route('pei.mapa') }}" wire:navigate class="btn btn-xs btn-outline-warning py-1 px-2 small"><i class="bi bi-map me-1"></i>Mapa</a>
+                    <a href="{{ route('indicadores.index') }}" wire:navigate class="btn btn-xs btn-outline-warning py-1 px-2 small"><i class="bi bi-graph-up-arrow me-1"></i>Evolução</a>
+                    <a href="{{ route('riscos.index') }}" wire:navigate class="btn btn-xs btn-outline-warning py-1 px-2 small"><i class="bi bi-shield-exclamation me-1"></i>Riscos</a>
+                    <a href="{{ route('relatorios.index') }}" wire:navigate class="btn btn-xs btn-outline-warning py-1 px-2 small"><i class="bi bi-file-earmark-text me-1"></i>Relatórios</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Widget: Cobertura da Agenda 2030 (ODS) --}}
+    @php $qtdCobertos = count($odsCobertura['cobertos'] ?? []); @endphp
+    <div class="glass-panel p-4 mb-4 animate-entry">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-globe-americas text-success fs-5"></i>
+                <h5 class="fw-bold text-dark mb-0 fs-6">Agenda 2030 — Contribuição aos ODS</h5>
+                <span class="badge rounded-pill {{ $qtdCobertos > 0 ? 'bg-success' : 'bg-secondary' }} bg-opacity-75">
+                    {{ $qtdCobertos }} / {{ $odsCobertura['total'] ?? 18 }} cobertos
+                </span>
+            </div>
+            <a href="{{ route('agenda2030.index') }}" wire:navigate class="btn btn-sm btn-outline-success rounded-pill px-3">
+                <i class="bi bi-arrow-up-right me-1"></i>Abrir Painel
+            </a>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+            @for($n = 1; $n <= ($odsCobertura['total'] ?? 18); $n++)
+                @php $coberto = in_array($n, $odsCobertura['cobertos'] ?? []); @endphp
+                <a href="{{ route('agenda2030.index') }}" wire:navigate
+                   class="text-decoration-none"
+                   style="opacity:{{ $coberto ? '1' : '.35' }};transition:opacity .18s ease;"
+                   title="ODS {{ $n }}{{ $coberto ? ' — coberto' : ' — sem objetivos vinculados' }}">
+                    <x-ods-badge :num="$n" size="sm" />
+                </a>
+            @endfor
+        </div>
+
+        @if($qtdCobertos === 0)
+            <p class="text-muted small mb-0 mt-3">
+                <i class="bi bi-info-circle me-1"></i>
+                Nenhum objetivo deste ciclo está vinculado a um ODS ainda. O vínculo é opcional e pode ser feito ao criar ou editar objetivos.
+            </p>
+        @endif
     </div>
 
     {{-- Item 2, 4, 5, 6: Mentor Estratégico --}}
@@ -355,6 +473,124 @@
         </div>
     </div>
     
+    {{-- Painel Executivo: Alertas e RAE --}}
+    <div class="row g-4 mb-5 animate-entry">
+        {{-- Top 3 Indicadores Críticos --}}
+        <div class="col-lg-6">
+            <div class="glass-panel h-100 border">
+                <div class="glass-header d-flex justify-content-between align-items-center bg-transparent border-bottom border-light">
+                    <h6 class="fw-bold text-dark mb-0"><i class="bi bi-exclamation-triangle text-danger me-2"></i>Indicadores em Alerta</h6>
+                    <a href="{{ route('indicadores.index') }}" wire:navigate class="btn btn-xs btn-outline-secondary py-1 px-2 small">Ver todos</a>
+                </div>
+                <div class="p-3">
+                    @php
+                        $indicadoresCriticos = collect();
+                        if(isset($stats) && $peiAtivo) {
+                            try {
+                                $peiId = $peiAtivo->cod_pei;
+                                $indicadoresCriticos = \App\Models\PerformanceIndicators\Indicador::whereHas('objetivo.perspectiva', fn($q) => $q->where('cod_pei', $peiId))
+                                    ->with(['objetivo', 'evolucoes'])
+                                    ->get()
+                                    ->sortBy(fn($ind) => $ind->calcularAtingimento())
+                                    ->take(3);
+                            } catch (\Exception $e) { $indicadoresCriticos = collect(); }
+                        }
+                    @endphp
+                    @forelse($indicadoresCriticos as $ind)
+                    @php $at = $ind->calcularAtingimento(); @endphp
+                    <div class="d-flex align-items-center gap-3 py-2 border-bottom">
+                        <div class="farol-dot flex-shrink-0" style="width:12px;height:12px;border-radius:50%;background:{{ $ind->getCorFarol() ?: '#dee2e6' }};"></div>
+                        <div class="flex-grow-1 min-width-0">
+                            <p class="fw-semibold mb-0 small text-truncate">{{ $ind->nom_indicador }}</p>
+                            <small class="text-muted">{{ $ind->objetivo?->nom_objetivo ?? 'Sem objetivo' }}</small>
+                        </div>
+                        <span class="fw-bold small flex-shrink-0 {{ $at < 50 ? 'text-danger' : 'text-warning' }}">
+                            @brazil_percent($at, 1)
+                        </span>
+                    </div>
+                    @empty
+                    <div class="text-center py-3 text-muted small">
+                        <i class="bi bi-check-circle-fill text-success d-block mb-1 fs-4"></i>
+                        Nenhum indicador em alerta.
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
+        {{-- Acesso Rápido RAE + Link --}}
+        <div class="col-lg-6">
+            <div class="glass-panel h-100 border">
+                <div class="glass-header d-flex justify-content-between align-items-center bg-transparent border-bottom border-light">
+                    <h6 class="fw-bold text-dark mb-0"><i class="bi bi-arrow-repeat text-primary me-2"></i>Revisão e Avaliação da Estratégia</h6>
+                    <a href="{{ route('monitoramento.rae') }}" wire:navigate class="btn btn-xs btn-outline-primary py-1 px-2 small">Gerenciar RAE</a>
+                </div>
+                <div class="p-4 text-center">
+                    @php
+                        $ultimaRae = null;
+                        if($peiAtivo && $organizacaoId) {
+                            try {
+                                $ultimaRae = \App\Models\StrategicPlanning\Rae::where('cod_pei', $peiAtivo->cod_pei)
+                                    ->where('cod_organizacao', $organizacaoId)
+                                    ->orderByDesc('dte_referencia')
+                                    ->first();
+                            } catch (\Exception $e) {}
+                        }
+                    @endphp
+                    @if($ultimaRae)
+                        <i class="bi bi-arrow-repeat fs-1 text-primary mb-2 d-block opacity-50"></i>
+                        <p class="fw-bold mb-1">Última RAE: {{ $ultimaRae->dte_referencia->format('M/Y') }}</p>
+                        <p class="text-muted small mb-2">{{ $ultimaRae->dsc_tipo_reuniao }}</p>
+                        @if($ultimaRae->num_progresso_geral !== null)
+                        <div class="progress mx-auto mb-2" style="width:120px;height:8px;">
+                            <div class="progress-bar {{ $ultimaRae->num_progresso_geral >= 70 ? 'bg-success' : 'bg-warning' }}"
+                                 style="width:{{ $ultimaRae->num_progresso_geral }}%"></div>
+                        </div>
+                        <small class="text-muted">Progresso registrado: {{ number_format($ultimaRae->num_progresso_geral, 1) }}%</small>
+                        @endif
+                    @else
+                        <i class="bi bi-arrow-repeat fs-1 text-muted mb-2 d-block opacity-25"></i>
+                        <p class="text-muted mb-3 small">Nenhuma RAE registrada para este ciclo PEI.</p>
+                        <a href="{{ route('monitoramento.rae') }}" wire:navigate class="btn btn-primary gradient-theme-btn px-4 rounded-pill">
+                            <i class="bi bi-plus-lg me-2"></i>Registrar Primeira RAE
+                        </a>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Alertas de Prazos --}}
+    @if($alertasPrazos->isNotEmpty())
+    <div class="glass-panel border mb-5 animate-entry">
+        <div class="glass-header d-flex justify-content-between align-items-center bg-transparent border-bottom border-light">
+            <h6 class="fw-bold text-dark mb-0">
+                <i class="bi bi-alarm text-warning me-2"></i>Alertas de Prazos
+                <span class="badge bg-warning text-dark ms-1">{{ $alertasPrazos->count() }}</span>
+            </h6>
+            <a href="{{ route('entregas.minhas') }}" wire:navigate class="btn btn-xs btn-outline-secondary py-1 px-2 small">Minhas Entregas</a>
+        </div>
+        <div class="p-3">
+            <div class="row g-2">
+                @foreach($alertasPrazos as $alerta)
+                <div class="col-md-6 col-lg-4">
+                    <a href="{{ route('planos.entregas', $alerta['plano_id']) }}" wire:navigate
+                       class="d-flex align-items-center gap-2 p-2 rounded-3 text-decoration-none {{ $alerta['vencido'] ? 'bg-danger bg-opacity-10' : 'bg-warning bg-opacity-10' }}">
+                        <i class="bi bi-{{ $alerta['vencido'] ? 'exclamation-octagon-fill text-danger' : 'clock-fill text-warning' }} flex-shrink-0"></i>
+                        <div class="flex-grow-1" style="min-width:0;">
+                            <span class="small fw-semibold d-block text-truncate text-dark">{{ $alerta['titulo'] }}</span>
+                            <small class="{{ $alerta['vencido'] ? 'text-danger fw-bold' : 'text-muted' }}" style="font-size:.7rem;">
+                                {{ $alerta['vencido'] ? 'Vencido' : 'Vence' }} {{ $alerta['prazo']->diffForHumans() }}
+                            </small>
+                        </div>
+                    </a>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
     <script>
         function dashboardData() {
             return {

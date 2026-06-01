@@ -3,11 +3,13 @@
 namespace App\Models\StrategicPlanning;
 
 use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\Agenda2030\ODS;
 use App\Models\PerformanceIndicators\Indicador;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable;
@@ -92,6 +94,30 @@ class Objetivo extends Model implements Auditable
     public function comentarios(): HasMany
     {
         return $this->hasMany(ObjetivoComentario::class, 'cod_objetivo', 'cod_objetivo');
+    }
+
+    /**
+     * Relacionamento: ODS da Agenda 2030 vinculados a este objetivo.
+     */
+    public function ods(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ODS::class,
+            'strategic_planning.rel_objetivo_ods',
+            'cod_objetivo',
+            'num_ods',
+            'cod_objetivo',
+            'num_ods'
+        )->withPivot('txt_contribuicao')->withTimestamps()
+         ->orderBy('strategic_planning.tab_ods.num_ods');
+    }
+
+    /**
+     * Verifica se o objetivo contribui para um ODS específico.
+     */
+    public function cobreOds(int $numOds): bool
+    {
+        return $this->ods->contains('num_ods', $numOds);
     }
 
     /**

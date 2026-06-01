@@ -2,9 +2,11 @@
 
 namespace App\Models\StrategicPlanning;
 
+use App\Models\Agenda2030\ODS;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -79,6 +81,22 @@ class PEI extends Model
     public function atividadesCadeiaValor(): HasMany
     {
         return $this->hasMany(AtividadeCadeiaValor::class, 'cod_pei', 'cod_pei');
+    }
+
+    /**
+     * Relacionamento: ODS aos quais o PEI adere institucionalmente (Agenda 2030).
+     */
+    public function ods(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ODS::class,
+            'strategic_planning.rel_pei_ods',
+            'cod_pei',
+            'num_ods',
+            'cod_pei',
+            'num_ods'
+        )->withPivot('txt_contribuicao', 'dsc_intensidade')->withTimestamps()
+         ->orderBy('strategic_planning.tab_ods.num_ods');
     }
 
     /**
