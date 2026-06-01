@@ -98,14 +98,22 @@ class Indicador extends Model implements Auditable
         'dsc_fonte',
         'dsc_periodo_medicao',
         'dsc_calculation_type',
+        'json_smart',
     ];
 
     /**
      * Casts
      */
     protected $casts = [
-        'num_peso' => 'integer',
+        'num_peso'   => 'integer',
+        'json_smart' => 'array',
     ];
+
+    public function isSmartValido(): bool
+    {
+        $smart = $this->json_smart ?? [];
+        return count(array_filter($smart)) === 5;
+    }
 
     /**
      * Relacionamento: Plano de Ação (opcional)

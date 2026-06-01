@@ -25,14 +25,25 @@ class AnaliseAmbiental extends Model
         'dsc_categoria',
         'dsc_item',
         'num_impacto',
+        'num_gravidade',
+        'num_urgencia',
+        'num_tendencia',
         'txt_observacao',
         'num_ordem',
     ];
 
     protected $casts = [
-        'num_impacto' => 'integer',
-        'num_ordem' => 'integer',
+        'num_impacto'   => 'integer',
+        'num_gravidade' => 'integer',
+        'num_urgencia'  => 'integer',
+        'num_tendencia' => 'integer',
+        'num_ordem'     => 'integer',
     ];
+
+    public function getGutScore(): int
+    {
+        return ($this->num_gravidade ?? 3) * ($this->num_urgencia ?? 3) * ($this->num_tendencia ?? 3);
+    }
 
     // Constantes para tipos de análise
     const TIPO_SWOT = 'SWOT';

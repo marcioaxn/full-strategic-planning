@@ -7,6 +7,7 @@
                     <i class="bi bi-compass-fill"></i>
                 </div>
                 <h1 class="h3 fw-bold mb-0">{{ __('Identidade Estratégica') }}</h1>
+                <div class="mt-1"><x-gppei-link :page="29" label="Referencial Estratégico" /></div>
             </div>
             <p class="text-muted mb-0">
                 @if($organizacaoNome)

@@ -2,100 +2,97 @@
 
 namespace Database\Seeders;
 
-use App\Models\RiskManagement\RiscoOcorrencia;
 use App\Models\RiskManagement\Risco;
-use App\Models\StrategicPlanning\PEI;
+use App\Models\RiskManagement\RiscoOcorrencia;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 class RiscoOcorrenciaSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        $peiAtivo = PEI::ativos()->first();
-        if (!$peiAtivo) {
-            $this->command->warn('Nenhum PEI ativo encontrado.');
-            return;
-        }
+        $this->command->info('Criando Ocorrências de Riscos...');
 
-        $riscos = Risco::where('cod_pei', $peiAtivo->cod_pei)->get();
+        $riscos = Risco::all();
 
         if ($riscos->isEmpty()) {
-            $this->command->warn('Nenhum risco encontrado.');
+            $this->command->warn('Riscos não encontrados. Pule o seeder de ocorrência.');
             return;
         }
 
-        // Limpar ocorrências existentes
-        DB::table('tab_risco_ocorrencia')
-            ->whereIn('cod_risco', $riscos->pluck('cod_risco'))
-            ->delete();
+        $descricoes = [
+            'Ocorrência de falha no servidor principal afetando disponibilidade de dados.',
+            'Atraso na entrega de recursos orçamentários por questões burocráticas.',
+            'Mudança imprevista na legislação regulatória do setor.',
+            'Identificação de vulnerabilidade de segurança crítica no sistema legado.',
+            'Aumento imprevisto de custos operacionais por flutuação de mercado.',
+            'Indisponibilidade de pessoal chave por licença médica não planejada.',
+            'Falha em processo de backup automatizado detectada em auditoria.',
+            'Instabilidade na rede local prejudicando atividades remotas.',
+            'Erro em cálculo de indicadores por inconsistência em dados de entrada.',
+            'Identificação de duplicidade em registros de planejamento estratégico.'
+        ];
 
-        $this->command->info('Criando Ocorrências de Riscos...');
+        $acoes = [
+            'Acionamento imediato da equipe de suporte técnico para restauração.',
+            'Abertura de chamado prioritário junto ao órgão competente.',
+            'Revisão dos fluxos de trabalho e adequação à nova realidade.',
+            'Execução de plano de contingência para mitigação de impactos.',
+            'Realização de reunião emergencial para realocação de recursos.',
+            'Implementação de correção emergencial de segurança (patch).',
+            'Comunicação aos stakeholders sobre atraso em prazos estimados.',
+            'Reforço de procedimentos de monitoramento e controle.',
+            'Adoção de solução temporária baseada em processos manuais.',
+            'Treinamento focado para equipes afetadas pela ocorrência.'
+        ];
+
+        $licoes = [
+            'Necessidade de redundância em infraestrutura crítica.',
+            'Melhorar comunicação entre áreas técnicas e administrativas.',
+            'Revisar periodicamente as matrizes de risco e controles.',
+            'Documentar procedimentos de resposta a incidentes críticos.',
+            'Manter backups testados e disponíveis fora da infraestrutura local.',
+            'Investir em automação de monitoramento de disponibilidade.',
+            'Capacitar mais de uma pessoa para processos chave (Job Rotation).',
+            'Estabelecer alertas de desvio de custo em tempo real.',
+            'Manter repositório de lições aprendidas atualizado e acessível.',
+            'Revisar políticas de conformidade com maior frequência.'
+        ];
 
         $ocorrencias = [];
 
-        // 30% dos riscos tiveram ocorrências
-        $riscosComOcorrencia = $riscos->random(min($riscos->count(), (int)($riscos->count() * 0.3)));
+        foreach ($riscos as $risco) {
+            // Apenas 30% dos riscos terão ocorrências
+            if (rand(1, 100) > 30) continue;
 
-        foreach ($riscosComOcorrencia as $risco) {
+            // Cada risco afetado tem entre 1 e 3 ocorrências
             $numOcorrencias = rand(1, 3);
-
-            for ($i = 1; $i <= $numOcorrencias; $i++) {
+            
+            for ($i = 0; $i < $numOcorrencias; $i++) {
+                $dteOcorrencia = now()->subDays(rand(1, 180));
+                
                 $ocorrencias[] = [
+                    'cod_ocorrencia' => strtolower((string) \Illuminate\Support\Str::uuid()),
                     'cod_risco' => $risco->cod_risco,
-                    'dte_ocorrencia' => now()->subDays(rand(1, 365)),
-                    'txt_descricao' => $this->gerarDescricaoOcorrencia(),
-                    'num_impacto_real' => rand(1, 5),
-                    'txt_acoes_tomadas' => $this->gerarAcoes(),
-                    'txt_licoes_aprendidas' => $this->gerarLicoes(),
-                    'created_at' => now()->subDays(rand(1, 365)),
+                    'dte_ocorrencia' => $dteOcorrencia,
+                    'txt_descricao_ocorrencia' => $descricoes[array_rand($descricoes)],
+                    'vlr_impacto_financeiro' => rand(0, 1) ? rand(500, 50000) : 0,
+                    'txt_acoes_tomadas' => $acoes[array_rand($acoes)],
+                    'txt_licoes_aprendidas' => $licoes[array_rand($licoes)],
+                    'created_at' => $dteOcorrencia,
                     'updated_at' => now(),
                 ];
             }
         }
 
-        // Inserir em lotes
-        foreach (array_chunk($ocorrencias, 100) as $chunk) {
-            RiscoOcorrencia::insert($chunk);
+        // Inserir em lotes de 50 para performance
+        foreach (array_chunk($ocorrencias, 50) as $chunk) {
+            DB::table('risk_management.tab_risco_ocorrencia')->insert($chunk);
         }
 
-        $this->command->info('✓ ' . count($ocorrencias) . ' Ocorrências de Riscos criadas com sucesso!');
-    }
-
-    private function gerarDescricaoOcorrencia(): string
-    {
-        $descricoes = [
-            'Materialização parcial do risco identificado, com impacto controlado nas operações. Situação monitorada pela equipe responsável.',
-            'Evento de risco ocorrido conforme cenário previsto na análise. Ações imediatas foram implementadas para contenção.',
-            'Ocorrência inesperada do risco, requerendo ativação do plano de contingência e mobilização de recursos adicionais.',
-            'Manifestação do risco em menor intensidade que a projetada, permitindo resposta efetiva com recursos disponíveis.',
-            'Concretização do risco com impacto significativo, demandando intervenção de múltiplas áreas e revisão de processos.',
-        ];
-
-        return $descricoes[array_rand($descricoes)];
-    }
-
-    private function gerarAcoes(): string
-    {
-        $acoes = [
-            'Ativação do comitê de crise; Comunicação imediata às partes interessadas; Implementação de medidas corretivas emergenciais; Reavaliação do plano de mitigação',
-            'Mobilização de equipe técnica especializada; Ajustes nos processos afetados; Realocação de recursos; Monitoramento intensificado',
-            'Execução do plano de contingência previamente estabelecido; Comunicação transparente com stakeholders; Documentação detalhada do evento; Análise de causa raiz',
-            'Contenção imediata do impacto; Acionamento de fornecedores alternativos; Revisão de controles internos; Implementação de melhorias preventivas',
-        ];
-
-        return $acoes[array_rand($acoes)];
-    }
-
-    private function gerarLicoes(): string
-    {
-        $licoes = [
-            'Importância de manter planos de contingência atualizados e testados periodicamente; Necessidade de comunicação efetiva e tempestiva; Valor do monitoramento contínuo de indicadores de alerta',
-            'Investimento em redundância de sistemas críticos justificado; Treinamento regular de equipes é fundamental; Documentação de processos facilita resposta rápida',
-            'Diversificação de fornecedores reduz vulnerabilidades; Cultura de gestão de riscos deve ser fortalecida; Revisão periódica da análise de riscos é essencial',
-            'Colaboração entre áreas acelera resposta a crises; Automação de processos críticos aumenta resiliência; Registro de lições aprendidas agrega valor organizacional',
-        ];
-
-        return $licoes[array_rand($licoes)];
+        $this->command->info('✓ ' . count($ocorrencias) . ' Ocorrências de riscos criadas!');
     }
 }

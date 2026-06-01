@@ -22,6 +22,7 @@
             <h4 class="mb-1">
                 <i class="bi bi-grid-3x3-gap me-2"></i>Análise SWOT
             </h4>
+            <div class="mt-1 mb-2"><x-gppei-link :page="66" label="Análise Ambiental" /></div>
             <p class="text-muted mb-0">
                 Forças, Fraquezas, Oportunidades e Ameaças
                 @if($organizacaoNome)
@@ -807,26 +808,41 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="num_impacto" class="form-label">Nível de Impacto <span class="text-danger">*</span></label>
+                                    <label class="form-label">Nível de Impacto</label>
                                     <div class="d-flex align-items-center gap-3">
-                                        <input type="range" wire:model.live="num_impacto" id="num_impacto" class="form-range flex-grow-1" min="1" max="5" step="1">
-                                        <span class="badge bg-secondary fs-6" style="min-width: 40px;">{{ $num_impacto }}</span>
+                                        <input type="range" wire:model.live="num_impacto" class="form-range flex-grow-1" min="1" max="5" step="1">
+                                        <span class="badge bg-secondary fs-6" style="min-width:40px;">{{ $num_impacto }}</span>
                                     </div>
-                                    <div class="d-flex justify-content-between text-muted small mt-1">
-                                        <span>1 - Muito Baixo</span>
-                                        <span>5 - Muito Alto</span>
+                                </div>
+
+                                {{-- Classificação GUT --}}
+                                <div class="card border-0 bg-light rounded-3 p-3 mb-3">
+                                    <p class="fw-bold small text-uppercase text-muted mb-2">
+                                        <i class="bi bi-bar-chart-steps me-1"></i>Classificação GUT
+                                        @php $gut = $num_gravidade * $num_urgencia * $num_tendencia; @endphp
+                                        <span class="badge ms-2 {{ $gut >= 64 ? 'bg-danger' : ($gut >= 27 ? 'bg-warning text-dark' : 'bg-success') }}">
+                                            Score: {{ $gut }}
+                                        </span>
+                                    </p>
+                                    <div class="row g-2">
+                                        <div class="col-4">
+                                            <label class="form-label small fw-bold mb-1">Gravidade <span class="badge bg-primary">{{ $num_gravidade }}</span></label>
+                                            <input type="range" wire:model.live="num_gravidade" class="form-range" min="1" max="5" step="1">
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="form-label small fw-bold mb-1">Urgência <span class="badge bg-warning text-dark">{{ $num_urgencia }}</span></label>
+                                            <input type="range" wire:model.live="num_urgencia" class="form-range" min="1" max="5" step="1">
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="form-label small fw-bold mb-1">Tendência <span class="badge bg-info text-dark">{{ $num_tendencia }}</span></label>
+                                            <input type="range" wire:model.live="num_tendencia" class="form-range" min="1" max="5" step="1">
+                                        </div>
                                     </div>
-                                    @error('num_impacto')
-                                        <div class="text-danger small">{{ $message }}</div>
-                                    @enderror
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="txt_observacao" class="form-label">Observações</label>
-                                    <textarea wire:model="txt_observacao" id="txt_observacao" class="form-control @error('txt_observacao') is-invalid @enderror" rows="2" placeholder="Observações adicionais (opcional)"></textarea>
-                                    @error('txt_observacao')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                    <label class="form-label">Observações</label>
+                                    <textarea wire:model="txt_observacao" class="form-control" rows="2" placeholder="Observações adicionais (opcional)"></textarea>
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -842,6 +858,238 @@
                 </div>
             </div>
             @endif
+
+            {{-- ── Partes Interessadas ─────────────────────────────────── --}}
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between py-3 px-4">
+                    <div>
+                        <h6 class="fw-bold mb-0"><i class="bi bi-people me-2 text-info"></i>Partes Interessadas (Stakeholders)</h6>
+                        <div class="mt-1"><x-gppei-link :page="89" label="Análise de Partes Interessadas" /></div>
+                    </div>
+                    <button wire:click="novaParte" class="btn btn-sm btn-outline-info rounded-pill px-3">
+                        <i class="bi bi-plus-lg me-1"></i>Adicionar
+                    </button>
+                </div>
+                <div class="card-body p-3">
+                    @if($partes->isEmpty())
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-people fs-1 opacity-25 d-block mb-2"></i>
+                            <p class="small mb-0">Nenhuma parte interessada cadastrada.</p>
+                        </div>
+                    @else
+                        {{-- Matriz Influência × Interesse --}}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead class="table-light text-muted text-uppercase">
+                                    <tr>
+                                        <th>Parte Interessada</th>
+                                        <th>Tipo</th>
+                                        <th class="text-center">Interesse</th>
+                                        <th class="text-center">Influência</th>
+                                        <th>Estratégia</th>
+                                        <th class="text-center">Quadrante</th>
+                                        <th class="text-end">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($partes as $parte)
+                                    <tr>
+                                        <td class="fw-semibold">{{ $parte->nom_parte }}</td>
+                                        <td><span class="badge {{ $parte->dsc_tipo === 'Interno' ? 'bg-primary-subtle text-primary' : 'bg-secondary-subtle text-secondary' }}">{{ $parte->dsc_tipo }}</span></td>
+                                        <td class="text-center">
+                                            <span class="badge bg-warning-subtle text-warning">{{ $parte->num_interesse }}/5</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-info-subtle text-info">{{ $parte->num_influencia }}/5</span>
+                                        </td>
+                                        <td class="text-muted">{{ Str::limit($parte->txt_estrategia_engajamento ?? '—', 50) }}</td>
+                                        <td class="text-center">
+                                            @php
+                                                $quadrante = $parte->getQuadrante();
+                                                $qClass = match($quadrante) {
+                                                    'Gerencie de Perto' => 'bg-danger-subtle text-danger',
+                                                    'Mantenha Satisfeito' => 'bg-warning-subtle text-warning',
+                                                    'Mantenha Informado' => 'bg-primary-subtle text-primary',
+                                                    default => 'bg-secondary-subtle text-secondary',
+                                                };
+                                            @endphp
+                                            <span class="badge {{ $qClass }}" style="font-size:.65rem;">{{ $quadrante }}</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <button wire:click="editarParte('{{ $parte->cod_parte }}')" class="btn btn-xs btn-outline-primary me-1"><i class="bi bi-pencil"></i></button>
+                                            <button wire:click="excluirParte('{{ $parte->cod_parte }}')" class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- ── Cenários Prospectivos ──────────────────────────────── --}}
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between py-3 px-4">
+                    <div>
+                        <h6 class="fw-bold mb-0"><i class="bi bi-binoculars me-2 text-secondary"></i>Cenários Prospectivos</h6>
+                        <div class="mt-1"><x-gppei-link :page="26" label="Análise de Cenários" /></div>
+                    </div>
+                    <button wire:click="novoCenario" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                        <i class="bi bi-plus-lg me-1"></i>Adicionar
+                    </button>
+                </div>
+                <div class="card-body p-3">
+                    @if($cenarios->isEmpty())
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-binoculars fs-1 opacity-25 d-block mb-2"></i>
+                            <p class="small mb-0">Nenhum cenário prospectivo cadastrado. Antecipe futuros possíveis (otimista, tendencial, pessimista) e as respostas estratégicas.</p>
+                        </div>
+                    @else
+                        <div class="row g-3">
+                            @foreach($cenarios as $cen)
+                            @php $cm = $tiposCenario[$cen->dsc_tipo] ?? ['icon' => 'circle', 'color' => 'secondary']; @endphp
+                            <div class="col-md-4">
+                                <div class="card border-{{ $cm['color'] }} border-opacity-25 h-100">
+                                    <div class="card-header bg-{{ $cm['color'] }}-subtle border-0 py-2 px-3 d-flex align-items-center justify-content-between">
+                                        <span class="fw-bold small text-{{ $cm['color'] }}">
+                                            <i class="bi bi-{{ $cm['icon'] }} me-1"></i>{{ $cen->dsc_tipo }}
+                                        </span>
+                                        <div class="d-flex gap-1">
+                                            <button wire:click="editarCenario('{{ $cen->cod_cenario }}')" class="btn btn-xs btn-link p-0 text-muted"><i class="bi bi-pencil" style="font-size:.7rem;"></i></button>
+                                            <button wire:click="excluirCenario('{{ $cen->cod_cenario }}')" class="btn btn-xs btn-link p-0 text-danger"><i class="bi bi-x" style="font-size:.8rem;"></i></button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <h6 class="fw-bold small mb-2">{{ $cen->nom_cenario }}</h6>
+                                        @if($cen->dsc_descricao)
+                                            <p class="text-muted small mb-2" style="line-height:1.5;">{{ Str::limit($cen->dsc_descricao, 120) }}</p>
+                                        @endif
+                                        @if($cen->txt_resposta_estrategica)
+                                            <div class="bg-light rounded-2 p-2 mb-2">
+                                                <span class="x-small fw-bold text-uppercase text-muted" style="font-size:.62rem;">Resposta Estratégica</span>
+                                                <p class="small mb-0">{{ Str::limit($cen->txt_resposta_estrategica, 100) }}</p>
+                                            </div>
+                                        @endif
+                                        <div class="d-flex gap-2 mt-2">
+                                            <span class="badge bg-secondary-subtle text-secondary" style="font-size:.65rem;">Prob.: {{ $cen->num_probabilidade }}/5</span>
+                                            <span class="badge bg-secondary-subtle text-secondary" style="font-size:.65rem;">Impacto: {{ $cen->num_impacto }}/5</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Modal: Cenário Prospectivo --}}
+            @if($showModalCenario)
+            <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.5);z-index:1060;">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-header gradient-theme-header text-white border-0 py-3 px-4">
+                            <h5 class="modal-title fw-bold"><i class="bi bi-binoculars me-2"></i>{{ $cenarioEditId ? 'Editar' : 'Novo' }} Cenário Prospectivo</h5>
+                            <button type="button" class="btn-close btn-close-white" wire:click="$set('showModalCenario',false)"></button>
+                        </div>
+                        <form wire:submit.prevent="salvarCenario">
+                            <div class="modal-body p-4">
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Nome do Cenário <span class="text-danger">*</span></label>
+                                        <input type="text" wire:model="formCenario.nom_cenario" class="form-control @error('formCenario.nom_cenario') is-invalid @enderror" placeholder="Ex.: Expansão acelerada da digitalização">
+                                        @error('formCenario.nom_cenario') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Tipo</label>
+                                        <select wire:model="formCenario.dsc_tipo" class="form-select">
+                                            @foreach($tiposCenario as $t => $m)
+                                                <option value="{{ $t }}">{{ $t }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Descrição do Cenário</label>
+                                        <textarea wire:model="formCenario.dsc_descricao" class="form-control" rows="2" placeholder="Descreva o futuro possível e seus principais elementos..."></textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Implicações para a Organização</label>
+                                        <textarea wire:model="formCenario.txt_implicacoes" class="form-control" rows="2" placeholder="Como este cenário afetaria a organização?"></textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Resposta Estratégica</label>
+                                        <textarea wire:model="formCenario.txt_resposta_estrategica" class="form-control" rows="2" placeholder="Que ações a organização deve preparar para este cenário?"></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Probabilidade <span class="badge bg-secondary">{{ $formCenario['num_probabilidade'] }}</span></label>
+                                        <input type="range" wire:model.live="formCenario.num_probabilidade" class="form-range" min="1" max="5">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Impacto <span class="badge bg-secondary">{{ $formCenario['num_impacto'] }}</span></label>
+                                        <input type="range" wire:model.live="formCenario.num_impacto" class="form-range" min="1" max="5">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 px-4 pb-4">
+                                <button type="button" class="btn btn-light rounded-pill px-4" wire:click="$set('showModalCenario',false)">Cancelar</button>
+                                <button type="submit" class="btn btn-primary gradient-theme-btn px-5 rounded-pill"><i class="bi bi-check-lg me-2"></i>Salvar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            {{-- Modal: Parte Interessada --}}
+            @if($showModalParte)
+            <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.5);z-index:1060;">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-header gradient-theme-header text-white border-0 py-3 px-4">
+                            <h5 class="modal-title fw-bold"><i class="bi bi-people me-2"></i>{{ $parteEditId ? 'Editar' : 'Nova' }} Parte Interessada</h5>
+                            <button type="button" class="btn-close btn-close-white" wire:click="$set('showModalParte',false)"></button>
+                        </div>
+                        <form wire:submit.prevent="salvarParte">
+                            <div class="modal-body p-4">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Nome <span class="text-danger">*</span></label>
+                                    <input type="text" wire:model="formParte.nom_parte" class="form-control @error('formParte.nom_parte') is-invalid @enderror" placeholder="Ex.: Ministério, Sindicato, Cidadãos...">
+                                    @error('formParte.nom_parte') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Tipo</label>
+                                        <select wire:model="formParte.dsc_tipo" class="form-select">
+                                            @foreach($tiposParte as $t)
+                                                <option value="{{ $t }}">{{ $t }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Interesse <span class="badge bg-warning text-dark">{{ $formParte['num_interesse'] }}</span></label>
+                                        <input type="range" wire:model.live="formParte.num_interesse" class="form-range" min="1" max="5">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Influência <span class="badge bg-info text-dark">{{ $formParte['num_influencia'] }}</span></label>
+                                        <input type="range" wire:model.live="formParte.num_influencia" class="form-range" min="1" max="5">
+                                    </div>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Estratégia de Engajamento</label>
+                                    <textarea wire:model="formParte.txt_estrategia_engajamento" class="form-control" rows="2" placeholder="Como engajar esta parte interessada..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 px-4 pb-4">
+                                <button type="button" class="btn btn-light rounded-pill px-4" wire:click="$set('showModalParte',false)">Cancelar</button>
+                                <button type="submit" class="btn btn-primary gradient-theme-btn px-5 rounded-pill"><i class="bi bi-check-lg me-2"></i>Salvar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            @endif
+
         @endif
     @endif
 </div>

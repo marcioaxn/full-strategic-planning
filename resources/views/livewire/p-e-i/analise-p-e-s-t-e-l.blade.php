@@ -22,6 +22,7 @@
             <h4 class="mb-1">
                 <i class="bi bi-globe2 me-2"></i>Análise PESTEL
             </h4>
+            <div class="mt-1 mb-2"><x-gppei-link :page="70" label="Análise PESTEL" /></div>
             <p class="text-muted mb-0">
                 Análise do Macroambiente - Fatores Externos
                 @if($organizacaoNome)

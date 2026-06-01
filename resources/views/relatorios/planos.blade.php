@@ -2,95 +2,131 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Planos de Acao</title>
-    <style>
-        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 11px; color: #333; }
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #1B408E; padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        th, td { border: 1px solid #dee2e6; padding: 6px; text-align: left; }
-        th { background: #f8f9fa; color: #1B408E; font-size: 10px; text-transform: uppercase; }
-        .status { padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: bold; }
-        .status-concluido { background: #d1e7dd; color: #0f5132; }
-        .status-andamento { background: #cfe2ff; color: #084298; }
-        .status-atrasado { background: #f8d7da; color: #842029; }
-        .status-nao-iniciado { background: #e2e3e5; color: #41464b; }
-        .footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 9px; color: #999; }
-        .progress-bar { background: #e9ecef; border-radius: 3px; height: 12px; overflow: hidden; }
-        .progress-fill { background: #198754; height: 100%; }
-    </style>
+    <title>Planos de Ação</title>
+    @include('relatorios.partials.estilos')
 </head>
 <body>
-    <div class="header">
-        <h2 style="margin: 0; color: #1B408E;">Relatório de Planos de Ação</h2>
-        
-        <!-- Bloco de Filtros Aplicados -->
-        <div style="margin-top: 10px; padding: 8px; background: #f8f9fa; border: 1px solid #dee2e6; display: inline-block; border-radius: 5px; font-size: 10px;">
-            <span style="margin-right: 15px;"><strong>Ano:</strong> {{ $ano }}</span>
-            <span style="margin-right: 15px;"><strong>Unidade:</strong> {{ $organizacao ? $organizacao->nom_organizacao : 'Todas' }}</span>
-            <span><strong>Data de Emissão:</strong> {{ now()->format('d/m/Y H:i') }}</span>
+    @include('relatorios.partials.cabecalho', [
+        'rptTitulo'    => 'Planos de Ação',
+        'rptEyebrow'   => 'Carteira de Iniciativas · Módulo 02 — Planejar',
+        'rptSubtitulo' => ($organizacao ? $organizacao->nom_organizacao : 'Todas as Unidades') . ' · Exercício ' . $ano,
+        'rptIcon'      => '&#10003;',
+    ])
+    @include('relatorios.partials.rodape')
+
+    <main>
+        <div class="rpt-filtros">
+            <span><strong>Exercício:</strong> {{ $ano }}</span>
+            <span><strong>Unidade:</strong> {{ $organizacao ? $organizacao->nom_organizacao : 'Todas' }}</span>
+            <span><strong>Emissão:</strong> {{ now()->format('d/m/Y H:i') }}</span>
         </div>
-    </div>
 
-    <table>
-        <thead>
+        {{-- KPIs --}}
+        <table class="kpi-grid">
             <tr>
-                <th style="width: 30%;">Plano de Acao</th>
-                <th style="width: 20%;">Objetivo</th>
-                <th style="text-align: center;">Inicio</th>
-                <th style="text-align: center;">Fim</th>
-                <th style="text-align: center;">Status</th>
-                <th style="text-align: center; width: 80px;">Progresso</th>
+                <td class="kpi-card" style="width:25%;">
+                    <p class="kpi-label">Total de Planos</p>
+                    <p class="kpi-value">{{ $resumo['total'] }}</p>
+                    <p class="kpi-sub">vigentes em {{ $ano }}</p>
+                </td>
+                <td class="kpi-card accent" style="width:25%;">
+                    <p class="kpi-label">Progresso Médio</p>
+                    <p class="kpi-value">{{ number_format($resumo['progresso_medio'], 0, ',', '.') }}<span style="font-size:13px;">%</span></p>
+                    <p class="kpi-sub">execução no exercício</p>
+                </td>
+                <td class="kpi-card success" style="width:25%;">
+                    <p class="kpi-label">Concluídos</p>
+                    <p class="kpi-value" style="color:#2e8b57;">{{ $resumo['concluidos'] }}</p>
+                    <p class="kpi-sub">de {{ $resumo['total'] }} planos</p>
+                </td>
+                <td class="kpi-card danger" style="width:25%;">
+                    <p class="kpi-label">Atrasados</p>
+                    <p class="kpi-value" style="color:#dc3545;">{{ $resumo['atrasados'] }}</p>
+                    <p class="kpi-sub">requerem atenção</p>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @forelse($planos as $plano)
-                @php
-                    $entregas = $plano->entregas->count();
-                    $entregasConcluidas = $plano->entregas->where('bln_concluida', true)->count();
-                    $progresso = $entregas > 0 ? round(($entregasConcluidas / $entregas) * 100, 1) : 0;
+        </table>
 
-                    $statusClass = match($plano->bln_status) {
-                        'Concluido' => 'status-concluido',
-                        'Em Andamento' => 'status-andamento',
-                        'Atrasado' => 'status-atrasado',
-                        default => 'status-nao-iniciado'
+        {{-- Distribuição por status --}}
+        <div style="margin-bottom:16px;">
+            @php
+                $segments = [
+                    ['n' => $resumo['concluidos'],   'c' => '#2e8b57', 'l' => 'Concluído'],
+                    ['n' => $resumo['andamento'],    'c' => '#1B408E', 'l' => 'Em Andamento'],
+                    ['n' => $resumo['atrasados'],    'c' => '#dc3545', 'l' => 'Atrasado'],
+                    ['n' => $resumo['nao_iniciado'], 'c' => '#94a3b8', 'l' => 'Não Iniciado'],
+                ];
+                $tot = max(1, $resumo['total']);
+            @endphp
+            <div class="progress-track" style="height:14px;">
+                @foreach($segments as $s)
+                    @if($s['n'] > 0)
+                        <div style="float:left; height:14px; width:{{ round($s['n'] / $tot * 100, 1) }}%; background:{{ $s['c'] }};"></div>
+                    @endif
+                @endforeach
+            </div>
+            <div style="margin-top:6px; font-size:8px; color:#718096;">
+                @foreach($segments as $s)
+                    <span style="margin-right:14px;"><span class="farol" style="background:{{ $s['c'] }};"></span> {{ $s['l'] }}: <strong>{{ $s['n'] }}</strong></span>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="secao-titulo">Detalhamento dos Planos</div>
+        <table class="rpt">
+            <thead>
+                <tr>
+                    <th style="width:30%;">Plano de Ação</th>
+                    <th>Objetivo Vinculado</th>
+                    <th class="text-center" style="width:62px;">Vigência</th>
+                    <th class="text-center" style="width:78px;">Status</th>
+                    <th class="text-center" style="width:90px;">Progresso</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($planos as $plano)
+                @php
+                    $prog = $plano->progresso_anual ?? 0;
+                    $st = $plano->status_anual ?? 'Não Iniciado';
+                    $stCfg = match($st) {
+                        'Concluído'    => ['pill' => 'pill-success', 'bar' => '#2e8b57'],
+                        'Em Andamento' => ['pill' => 'pill-info', 'bar' => '#1B408E'],
+                        'Atrasado'     => ['pill' => 'pill-danger', 'bar' => '#dc3545'],
+                        default        => ['pill' => 'pill-neutral', 'bar' => '#94a3b8'],
                     };
                 @endphp
                 <tr>
-                    <td style="font-weight: bold;">{{ $plano->dsc_plano_de_acao }}</td>
-                    <td style="font-size: 9px;">{{ $plano->objetivo?->nom_objetivo ?? '-' }}</td>
-                    <td style="text-align: center;">{{ $plano->dte_inicio?->format('d/m/Y') ?? '-' }}</td>
-                    <td style="text-align: center;">{{ $plano->dte_fim?->format('d/m/Y') ?? '-' }}</td>
-                    <td style="text-align: center;">
-                        <span class="status {{ $statusClass }}">{{ $plano->bln_status ?? 'N/D' }}</span>
-                    </td>
                     <td>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: {{ $progresso }}%;"></div>
+                        <span class="row-titulo">{{ $plano->dsc_plano_de_acao }}</span>
+                        @if($plano->tipoExecucao)
+                            <span class="pill pill-neutral" style="font-size:7px;">{{ $plano->tipoExecucao->dsc_tipo_execucao }}</span>
+                        @endif
+                    </td>
+                    <td class="row-desc">{{ $plano->objetivo?->nom_objetivo ?? '—' }}</td>
+                    <td class="text-center" style="font-size:8px;">
+                        {{ $plano->dte_inicio?->format('d/m/y') ?? '—' }}<br>
+                        <span style="color:#a0aec0;">a {{ $plano->dte_fim?->format('d/m/y') ?? '—' }}</span>
+                    </td>
+                    <td class="text-center"><span class="pill {{ $stCfg['pill'] }}">{{ $st }}</span></td>
+                    <td>
+                        <div style="text-align:center; font-weight:bold; font-size:9px; margin-bottom:3px;">{{ number_format($prog, 0, ',', '.') }}%</div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width:{{ min(100, max(0, $prog)) }}%; background:{{ $stCfg['bar'] }};"></div>
                         </div>
-                        <div style="text-align: center; font-size: 9px; margin-top: 2px;">{{ $progresso }}%</div>
                     </td>
                 </tr>
-            @empty
-                <tr>
-                    <td colspan="6" style="text-align: center; padding: 20px; color: #999;">
-                        Nenhum plano de acao encontrado para os filtros selecionados.
-                    </td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+                @empty
+                <tr><td colspan="5"><div class="vazio mb-0">Nenhum plano de ação vigente em {{ $ano }}.</div></td></tr>
+                @endforelse
+            </tbody>
+        </table>
 
-    <div style="margin-top: 20px; font-size: 10px; color: #666;">
-        <strong>Resumo:</strong>
-        Total de Planos: {{ $planos->count() }} |
-        Concluidos: {{ $planos->where('bln_status', 'Concluido')->count() }} |
-        Em Andamento: {{ $planos->where('bln_status', 'Em Andamento')->count() }} |
-        Atrasados: {{ $planos->where('bln_status', 'Atrasado')->count() }}
-    </div>
-
-    <div class="footer">
-        Gerado em {{ now()->format('d/m/Y H:i') }} | SPS
-    </div>
+        @if($resumo['orcamento_total'] > 0)
+        <div style="margin-top:14px; padding:10px 14px; background:#f7fafc; border-radius:6px; border-left:3px solid #e07b39; font-size:9px;">
+            <strong style="color:#1a3a5c;">Orçamento Previsto Total:</strong>
+            R$ {{ number_format($resumo['orcamento_total'], 2, ',', '.') }}
+        </div>
+        @endif
+    </main>
 </body>
 </html>

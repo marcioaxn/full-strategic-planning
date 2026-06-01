@@ -3,7 +3,7 @@
 use App\Livewire\LeadsTable;
 use Illuminate\Support\Facades\Route;
 
-Route::any('/', \App\Livewire\StrategicPlanning\MapaEstrategico::class)->name('welcome');
+Route::get('/', \App\Livewire\LandingPage::class)->name('welcome');
 
 // CSRF Token Refresh Endpoint
 Route::get('/refresh-csrf', function () {
@@ -19,6 +19,13 @@ Route::middleware([
 ])->group(function () {
     Route::get('/dashboard', \App\Livewire\Dashboard\Index::class)->name('dashboard');
 
+    // Documentos de referência metodológica
+    Route::get('/documentos/gppei', [\App\Http\Controllers\DocumentosController::class, 'gppei'])->name('documentos.gppei');
+    Route::get('/documentos/projetos/pdf', [\App\Http\Controllers\DocumentosController::class, 'projetosPdf'])->name('documentos.projetos.pdf');
+    Route::get('/documentos/projetos', [\App\Http\Controllers\DocumentosController::class, 'viewerProjetos'])->name('documentos.projetos');
+    Route::get('/guia-gppei', [\App\Http\Controllers\DocumentosController::class, 'viewerGppei'])->name('documentos.viewer-gppei');
+    Route::get('/licoes-aprendidas', \App\Livewire\ActionPlan\LicoesAprendidas::class)->name('licoes.index');
+
     Route::get('/trocar-senha', \App\Livewire\Auth\TrocarSenha::class)->name('auth.trocar-senha');
 
     Route::get('/leads', LeadsTable::class)->name('leads.index');
@@ -28,11 +35,20 @@ Route::middleware([
     Route::get('/organizacoes/{id}/detalhes', \App\Livewire\Organization\DetalharOrganizacao::class)->name('organizacoes.detalhes');
     Route::get('/usuarios', \App\Livewire\UserManagement\ListarUsuarios::class)->name('usuarios.index');
     Route::get('/usuarios/{id}/detalhes', \App\Livewire\UserManagement\DetalharUsuario::class)->name('usuarios.detalhes');
+
+    // Gestão de Perfis de Acesso e Impersonação (Administrador Geral)
+    Route::get('/admin/perfis', \App\Livewire\Admin\GestaoPerfis::class)->name('admin.perfis');
+    Route::get('/impersonate/{userId}', [\App\Http\Controllers\ImpersonateController::class, 'start'])->name('impersonate.start');
+    Route::get('/impersonate-stop', [\App\Http\Controllers\ImpersonateController::class, 'stop'])->name('impersonate.stop');
     Route::get('/configuracoes', \App\Livewire\Admin\ConfiguracaoSistema::class)->name('admin.configuracoes');
     Route::get('/graus-satisfacao', \App\Livewire\StrategicPlanning\ListarGrausSatisfacao::class)->name('graus-satisfacao.index');
     Route::get('/graus-satisfacao/{id}/detalhes', \App\Livewire\StrategicPlanning\DetalharGrauSatisfacao::class)->name('graus-satisfacao.detalhes');
     
     // Strategic Planning (PEI)
+    Route::get('/pei/inaugurar', \App\Livewire\StrategicPlanning\InaugurarIntegrar::class)->name('pei.inaugurar');
+    Route::get('/monitoramento/rae', \App\Livewire\StrategicPlanning\GerenciarRae::class)->name('monitoramento.rae');
+    Route::get('/pei/cadeia-valor', \App\Livewire\StrategicPlanning\CadeiaDeValor::class)->name('pei.cadeia-valor');
+    Route::get('/minhas-entregas', \App\Livewire\Deliverables\MinhasEntregas::class)->name('entregas.minhas');
     Route::get('/pei', \App\Livewire\StrategicPlanning\MissaoVisao::class)->name('pei.index');
     Route::get('/pei/identidade/{id}/detalhes', \App\Livewire\StrategicPlanning\DetalharIdentidade::class)->name('pei.identidade.detalhes');
     Route::get('/pei/ciclos', \App\Livewire\StrategicPlanning\ListarPeis::class)->name('pei.ciclos');
@@ -47,6 +63,9 @@ Route::middleware([
     Route::get('/objetivos', \App\Livewire\StrategicPlanning\ListarObjetivos::class)->name('objetivos.index');
     Route::get('/objetivos/{id}/detalhes', \App\Livewire\StrategicPlanning\DetalharObjetivo::class)->name('objetivos.detalhes');
     Route::get('/temas-norteadores', \App\Livewire\StrategicPlanning\GerenciarTemasNorteadores::class)->name('temas-norteadores.index');
+
+    // Agenda 2030 — Painel de contribuição aos ODS
+    Route::get('/agenda2030', \App\Livewire\Agenda2030\PainelODS::class)->name('agenda2030.index');
     Route::get('/objetivos/{objetivoId}/futuro', \App\Livewire\StrategicPlanning\GerenciarFuturoAlmejado::class)->name('objetivos.futuro');
     
     // Entregas (Board Style)
@@ -81,6 +100,7 @@ Route::middleware([
                             // Reports Menu
                             Route::get('/relatorios', \App\Livewire\Reports\ListarRelatorios::class)->name('relatorios.index');
                             Route::get('/relatorios/historico', \App\Livewire\Reports\HistoricoRelatorios::class)->name('relatorios.historico');
+                            Route::get('/relatorios/comunicacao', [\App\Http\Controllers\Reports\RelatorioController::class, 'comunicacao'])->name('relatorios.comunicacao');
 
                             // Reports PDF/Excel    
                 

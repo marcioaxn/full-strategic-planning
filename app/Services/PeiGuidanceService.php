@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\StrategicPlanning\InauguraPei;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\StrategicPlanning\Objetivo;
@@ -49,6 +50,18 @@ class PeiGuidanceService
         $phases['ciclo']['status'] = 'completed';
         $phases['ciclo']['label'] = 'Ciclo ' . $pei->num_ano_inicio_pei . '-' . $pei->num_ano_fim_pei;
         
+        // --- PHASE 1.5: Inaugurar e Integrar (Módulo 01 GPPEI) ---
+        try {
+            $inaugurou = InauguraPei::where('cod_pei', $pei->cod_pei)
+                ->whereNotNull('txt_equipe')
+                ->where('txt_equipe', '!=', '')
+                ->exists();
+            $phases['inaugurar']['status'] = $inaugurou ? 'completed' : 'active';
+        } catch (\Exception) {
+            // Tabela ainda não migrada — tratar como pendente sem bloquear
+            $phases['inaugurar']['status'] = 'active';
+        }
+
         // --- PHASE 2: Identidade (Missão, Visão, Valores) ---
         $identidade = $pei->identidadeEstrategica->first();
         $hasIdentity = $identidade && 
@@ -191,7 +204,7 @@ class PeiGuidanceService
 
     private function getNextStepInfo(string $currentPhase): ?array
     {
-        $order = ['ciclo', 'identidade', 'perspectivas', 'objetivos', 'graus', 'indicadores', 'planos', 'monitoramento'];
+        $order = ['ciclo', 'inaugurar', 'identidade', 'perspectivas', 'objetivos', 'graus', 'indicadores', 'planos', 'monitoramento'];
         $index = array_search($currentPhase, $order);
         
         if ($index !== false && isset($order[$index + 1])) {
@@ -213,8 +226,9 @@ class PeiGuidanceService
     private function getEmptyPhasesStructure(): array
     {
         return [
-            'ciclo' => ['name' => 'Ciclo PEI', 'status' => 'locked', 'icon' => 'calendar-range'],
-            'identidade' => ['name' => 'Identidade', 'status' => 'locked', 'icon' => 'fingerprint'],
+            'ciclo'       => ['name' => 'Ciclo PEI',          'status' => 'locked', 'icon' => 'calendar-range'],
+            'inaugurar'   => ['name' => 'Inaugurar e Integrar','status' => 'locked', 'icon' => 'flag-fill'],
+            'identidade'  => ['name' => 'Identidade',          'status' => 'locked', 'icon' => 'fingerprint'],
             'perspectivas' => ['name' => 'Perspectivas', 'status' => 'locked', 'icon' => 'layers'],
             'objetivos' => ['name' => 'Objetivos', 'status' => 'locked', 'icon' => 'bullseye'],
             'graus' => ['name' => 'Grau de Satisfação', 'status' => 'locked', 'icon' => 'palette'],

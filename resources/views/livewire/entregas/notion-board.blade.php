@@ -584,6 +584,28 @@
                             </div>
                         </div>
 
+                        {{-- 5W2H --}}
+                        <div class="px-4 pb-3">
+                            <div class="card border-0 bg-light rounded-3 p-3" x-data="{ show5w2h: false }">
+                                <button type="button" @click="show5w2h = !show5w2h" class="btn btn-link p-0 text-start text-decoration-none d-flex align-items-center gap-2">
+                                    <i class="bi bi-list-columns text-primary"></i>
+                                    <span class="small fw-bold text-dark">5W2H (opcional)</span>
+                                    <x-gppei-link :page="116" label="GPPEI p.116" />
+                                    <i class="bi ms-auto" :class="show5w2h ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                                </button>
+                                <div x-show="show5w2h" x-transition style="display:none;" class="mt-3">
+                                    <div class="row g-2">
+                                        @foreach(['what' => 'O quê (What)', 'why' => 'Por quê (Why)', 'who' => 'Quem (Who)', 'where' => 'Onde (Where)', 'when' => 'Quando (When)', 'how' => 'Como (How)', 'howmuch' => 'Quanto custa (How Much)'] as $k => $lbl)
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-muted mb-1">{{ $lbl }}</label>
+                                            <input type="text" wire:model="edit5w2h.{{ $k }}" class="form-control form-control-sm bg-white" placeholder="{{ $lbl }}...">
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {{-- Footer Premium --}}
                         <div class="modal-footer border-0 p-4 bg-white rounded-bottom-4 shadow-top-sm">
                             <button type="button" class="btn btn-light px-4 rounded-pill fw-bold text-muted" wire:click="closeEditModal">Cancelar</button>

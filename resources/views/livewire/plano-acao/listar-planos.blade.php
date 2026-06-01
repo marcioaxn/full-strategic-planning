@@ -12,6 +12,10 @@
             </div>
             <div class="d-flex align-items-center gap-2">
                 <h1 class="h3 fw-bold mb-0">Planos de Ação</h1>
+                <div class="mt-1 d-flex gap-2">
+                    <x-gppei-link :page="32" label="Carteira de Iniciativas" />
+                    <x-projetos-link :page="23" label="TAP e Kick-off" />
+                </div>
             </div>
         </div>
 
@@ -605,7 +609,16 @@
                                     </small>
                                 </td>
                                 <td class="text-end pe-4">
-                                    <div class="dropdown">
+                                    <div class="d-flex align-items-center justify-content-end gap-2">
+                                        {{-- Botão direto: Ver Entregas --}}
+                                        <a href="{{ route('planos.entregas', $plano->cod_plano_de_acao) }}"
+                                           wire:navigate
+                                           class="btn btn-sm btn-info text-white px-3"
+                                           data-bs-toggle="tooltip"
+                                           title="Gerenciar entregas e atividades deste plano">
+                                            <i class="bi bi-list-check me-1"></i> Ver Entregas
+                                        </a>
+                                        <div class="dropdown">
                                         <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown">
                                             <i class="bi bi-three-dots-vertical"></i>
                                         </button>
@@ -640,7 +653,8 @@
                                                 </button>
                                             </li>
                                         </ul>
-                                    </div>
+                                        </div>{{-- /dropdown --}}
+                                    </div>{{-- /d-flex --}}
                                 </td>
                             </tr>
                         @empty
@@ -817,9 +831,25 @@
                                                 <small class="text-muted mt-2 d-block lh-sm"><i class="bi bi-info-circle me-1"></i>O plano e suas entregas aparecerão para todas as unidades selecionadas.</small>
                                             </div>
 
-                                            <div class="mb-0">
+                                            <div class="mb-3">
                                                 <label class="form-label text-muted small text-uppercase fw-bold">Detalhamento da Iniciativa</label>
                                                 <textarea wire:model="txt_detalhamento" class="form-control bg-white border-0 shadow-sm" rows="4" placeholder="Descreva os objetivos técnicos e resultados esperados desta iniciativa..."></textarea>
+                                            </div>
+
+                                            {{-- Modelo Lógico --}}
+                                            <div class="mb-3 p-3 bg-light rounded-3 border">
+                                                <div class="d-flex align-items-center gap-2 mb-3">
+                                                    <h6 class="fw-bold mb-0 small"><i class="bi bi-diagram-3 me-1 text-primary"></i>Modelo Lógico (opcional)</h6>
+                                                    <x-gppei-link :page="86" label="Modelo Lógico GPPEI" />
+                                                </div>
+                                                <div class="row g-2">
+                                                    @foreach(['insumos' => 'Insumos (recursos necessários)', 'atividades' => 'Atividades previstas', 'resultados' => 'Resultados esperados', 'impacto' => 'Impacto esperado', 'pressupostos' => 'Pressupostos / Riscos'] as $k => $lbl)
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold text-muted">{{ $lbl }}</label>
+                                                        <textarea wire:model="modelo_logico.{{ $k }}" class="form-control form-control-sm bg-white" rows="2" placeholder="{{ $lbl }}..."></textarea>
+                                                    </div>
+                                                    @endforeach
+                                                </div>
                                             </div>
 
                                         <div class="row g-3">
