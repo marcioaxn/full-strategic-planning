@@ -11,6 +11,8 @@ use Database\Seeders\MIDRAnalysisSeeder;
 use Database\Seeders\MIDRBusinessSeeder;
 use Database\Seeders\MIDRRiskSeeder;
 use Database\Seeders\MIDRSupportSeeder;
+use Database\Seeders\OdsSeeder;
+use Database\Seeders\MIDRModulosGppeiSeeder;
 
 class SeedMIDREnvironment extends Command
 {
@@ -42,10 +44,12 @@ class SeedMIDREnvironment extends Command
             MIDROrganizationSeeder::class, // 1. Organizações (Base)
             MIDRSupportSeeder::class,      // 2. Usuários (Necessário para vínculos de responsabilidade)
             MIDRIdentitySeeder::class,     // 3. Ciclo PEI, Missão, Visão, Valores
-            MIDRStrategicSeeder::class,    // 4. Perspectivas e Objetivos Reais
-            MIDRAnalysisSeeder::class,     // 5. SWOT e PESTEL
-            MIDRBusinessSeeder::class,     // 6. Planos, Indicadores e Entregas (Tarefas + KPIs)
-            MIDRRiskSeeder::class,         // 7. Matriz de Riscos
+            OdsSeeder::class,              // 4. ODS de referência (Agenda 2030 — 18 ODS)
+            MIDRStrategicSeeder::class,    // 5. Perspectivas e Objetivos Reais
+            MIDRAnalysisSeeder::class,     // 6. SWOT e PESTEL
+            MIDRBusinessSeeder::class,     // 7. Planos, Indicadores e Entregas (Tarefas + KPIs)
+            MIDRRiskSeeder::class,         // 8. Matriz de Riscos
+            MIDRModulosGppeiSeeder::class, // 9. Módulos GPPEI novos (Agenda 2030, Inaugurar, Cadeia de Valor, Partes, Cenários, RAE, Lições, RACI, Modelo Lógico, Comunicação)
         ];
 
         foreach ($seeders as $seeder) {
