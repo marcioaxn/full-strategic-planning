@@ -2,462 +2,385 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Relatório Executivo Consolidado - SPS</title>
+    <title>Relatório Executivo — {{ $organizacao->nom_organizacao }}</title>
+    @include('relatorios.partials.estilos')
     <style>
-        @page { margin: 1cm; }
-        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 10px; color: #333; line-height: 1.4; }
-        
-        /* Cores e Identidade */
-        .text-primary { color: #1B408E; }
-        .bg-primary { background-color: #1B408E; color: white; }
-        .border-primary { border: 1px solid #1B408E; }
-        
-        /* Cabeçalho */
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #1B408E; padding-bottom: 10px; }
-        .header h1 { margin: 0; font-size: 18px; text-transform: uppercase; }
-        .header .org-name { font-size: 14px; font-weight: bold; margin-top: 5px; }
-        
-        /* Seções */
-        .section { margin-bottom: 25px; clear: both; }
-        .section-title { background: #f1f4f9; color: #1B408E; padding: 8px 12px; font-size: 12px; font-weight: bold; border-left: 4px solid #1B408E; margin-bottom: 12px; text-transform: uppercase; }
-        
-        /* Tabelas */
-        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        th, td { border: 1px solid #dee2e6; padding: 6px 8px; text-align: left; }
-        th { background: #f8f9fa; font-size: 9px; color: #1B408E; text-transform: uppercase; font-weight: bold; }
-        
-        /* Tags de Identidade */
-        .tag-container { margin-top: 10px; }
-        .tag { display: inline-block; padding: 3px 10px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; margin-right: 5px; margin-bottom: 5px; font-size: 9px; font-weight: bold; }
-        .tag-warning { background: #fffcf0; border-color: #ffe69c; color: #856404; }
-
-        /* Gráfico de Colunas (CSS Chart) */
-        .chart-container { width: 100%; height: 200px; margin-bottom: 30px; position: relative; border-bottom: 1px solid #ddd; margin-top: 20px; }
-        .column-wrapper { float: left; height: 100%; position: relative; text-align: center; }
-        .column-bar { position: absolute; bottom: 0; width: 40px; margin: 0 auto; left: 0; right: 0; border-radius: 3px 3px 0 0; }
-        .column-value { position: absolute; top: -15px; width: 100%; font-weight: bold; font-size: 8px; }
-        .column-label { position: absolute; bottom: -35px; width: 100%; font-size: 7px; height: 30px; line-height: 1.1; overflow: hidden; }
-
-        /* Matriz SWOT */
-        .swot-grid { width: 100%; border-collapse: separate; border-spacing: 5px; }
-        .swot-box { width: 50%; height: auto; min-height: 80px; padding: 10px; vertical-align: top; border-radius: 5px; }
-        .swot-s { background-color: #d1e7dd; border: 1px solid #a3cfbb; }
-        .swot-w { background-color: #f8d7da; border: 1px solid #f1aeb5; }
-        .swot-o { background-color: #cfe2ff; border: 1px solid #9ec5fe; }
-        .swot-t { background-color: #fff3cd; border: 1px solid #ffe69c; }
-        .swot-title { font-weight: bold; font-size: 11px; margin-bottom: 5px; display: block; }
-        .swot-list { margin: 0; padding-left: 15px; font-size: 9px; }
-
-        /* Barras de Progresso */
-        .progress-container { background: #eee; border-radius: 10px; height: 10px; width: 100%; position: relative; margin-top: 4px; }
-        .progress-bar { background: #1B408E; height: 100%; border-radius: 10px; }
-        
-        /* Status Badges */
-        .badge { padding: 2px 6px; border-radius: 4px; font-size: 8px; font-weight: bold; text-transform: uppercase; color: white; }
-        .bg-success { background-color: #429B22; }
-        .bg-warning { background-color: #F3C72B; color: #000; }
-        .bg-danger { background-color: #dc3545; }
-        .bg-info { background-color: #0dcaf0; color: #000; }
-        .bg-secondary { background-color: #475569; }
-        
-        /* Legendas */
-        .legend-box { margin-top: 5px; padding: 10px; background: #fff; border: 1px solid #eee; border-radius: 5px; }
-        .legend-item { display: inline-block; margin-right: 15px; font-size: 8px; }
-        .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
-
-        .footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 8px; color: #999; border-top: 1px solid #eee; padding-top: 5px; }
         .page-break { page-break-after: always; }
+        .swot-cell { width: 50%; vertical-align: top; padding: 10px; border-radius: 6px; }
+        .swot-cell strong { font-size: 10px; }
+        .swot-cell ul { margin: 6px 0 0 0; padding-left: 14px; font-size: 8.5px; line-height: 1.5; }
+        .ai-box { background: #f0f7ff; border-left: 4px solid #1B408E; border-radius: 6px; padding: 12px 14px; margin-top: 12px; }
+        .ai-box p { margin: 5px 0 0 0; font-style: italic; font-size: 9px; line-height: 1.5; }
     </style>
 </head>
 <body>
+    @include('relatorios.partials.cabecalho', [
+        'rptTitulo'    => 'Relatório Executivo',
+        'rptEyebrow'   => 'Gestão Estratégica Consolidada · GPPEI/MGI 2025',
+        'rptSubtitulo' => $organizacao->nom_organizacao . ' · Exercício ' . $filtros['ano'],
+        'rptIcon'      => '&#9733;',
+    ])
+    @include('relatorios.partials.rodape')
+
     @php
+        $ano       = $filtros['ano'];
+        $mesLimite = $filtros['mesLimite'];
+
         $getCorSatisfacao = function($percentual) use ($grausSatisfacao) {
             foreach ($grausSatisfacao as $grau) {
-                if ($percentual >= $grau->vlr_minimo && $percentual <= $grau->vlr_maximo) {
-                    return $grau->cor;
-                }
+                if ($percentual >= $grau->vlr_minimo && $percentual <= $grau->vlr_maximo) return $grau->cor;
             }
             return '#dee2e6';
         };
 
-        $ano = $filtros['ano'];
-        $mesLimite = $filtros['mesLimite'];
+        $coresNivel = [1 => '#475569', 2 => '#2e8b57', 3 => '#0891b2', 4 => '#d97706', 5 => '#1B408E'];
 
-        // Preparar dados para o gráfico de colunas
-        $dadosGrafico = [];
+        $totalObjetivos   = $perspectivas->sum(fn($p) => $p->objetivos->count());
+        $totalIndicadores = $perspectivas->sum(fn($p) => $p->objetivos->sum(fn($o) => $o->indicadores->count()));
+
+        $atingimentos = [];
         foreach($perspectivas as $p) {
-            $atingimentosPersp = [];
             foreach($p->objetivos as $obj) {
-                $atingimentosPersp[] = $obj->calcularAtingimentoConsolidado($ano, $mesLimite);
+                $atingimentos[] = $obj->calcularAtingimentoConsolidado($ano, $mesLimite);
             }
-            $mediaPersp = count($atingimentosPersp) > 0 ? array_sum($atingimentosPersp) / count($atingimentosPersp) : 0;
-            $dadosGrafico[] = [
-                'label' => $p->dsc_perspectiva,
-                'valor' => $mediaPersp,
-                'cor' => $getCorSatisfacao($mediaPersp)
-            ];
         }
+        $mediaAtingimento = count($atingimentos) > 0 ? array_sum($atingimentos) / count($atingimentos) : 0;
+
+        $totalPlanos     = $planos->count();
+        $planosConcluidos  = $planos->where('status_anual', 'Concluído')->count();
+        $planosEmAndamento = $planos->where('status_anual', 'Em Andamento')->count();
+        $planosAtrasados   = $planos->where('status_anual', 'Atrasado')->count();
+        $planosNaoIniciados = $planos->whereIn('status_anual', ['Não Iniciado', 'Sem Entregas'])->count();
+
+        $riscosCriticos = $riscosDetalhado->filter(fn($r) => $r->num_nivel_risco >= 16)->count();
+        $riscosAltos    = $riscosDetalhado->filter(fn($r) => $r->num_nivel_risco >= 10 && $r->num_nivel_risco < 16)->count();
+
+        $statusCfg = [
+            'Concluído'    => ['c' => '#2e8b57', 'pill' => 'pill-success'],
+            'Em Andamento' => ['c' => '#1B408E', 'pill' => 'pill-info'],
+            'Atrasado'     => ['c' => '#dc3545', 'pill' => 'pill-danger'],
+            'Não Iniciado' => ['c' => '#94a3b8', 'pill' => 'pill-neutral'],
+            'Sem Entregas' => ['c' => '#94a3b8', 'pill' => 'pill-neutral'],
+        ];
     @endphp
 
-    <!-- Cabeçalho -->
-    <div class="header">
-        <h1 class="text-primary">Relatório Executivo de Gestão Estratégica</h1>
-        <div class="org-name">{{ $organizacao->nom_organizacao }}</div>
-        
-        @if(isset($filtros))
-            <div style="margin-top: 10px; font-size: 9px; color: #555;">
-                <strong>Ano de Referência:</strong> {{ $ano }} | 
-                <strong>Período Analisado:</strong> {{ $filtros['periodo'] }} (até Mês {{ $mesLimite }}) | 
-                <strong>Filtro Perspectiva:</strong> {{ $filtros['perspectiva'] }}
-            </div>
-        @endif
-        <div style="font-size: 8px; color: #999; margin-top: 5px;">Gerado em {{ now()->format('d/m/Y H:i') }}</div>
+    <div class="rpt-filtros">
+        <span><strong>Período:</strong> {{ $filtros['periodo'] }}</span>
+        <span><strong>Exercício:</strong> {{ $ano }}</span>
+        <span><strong>Perspectiva:</strong> {{ $filtros['perspectiva'] }}</span>
+        <span><strong>Emissão:</strong> {{ now()->format('d/m/Y H:i') }}</span>
     </div>
 
-    <!-- 1. Identidade e Diagnóstico -->
-    <div class="section">
-        <div class="section-title">1. Identidade e Diagnóstico Estratégico</div>
-        
-        <table style="border: none; margin-bottom: 10px;">
-            <tr>
-                <td style="width: 50%; border: none; padding: 0 5px 0 0;">
-                    <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px solid #eee; min-height: 60px;">
-                        <strong class="text-primary" style="font-size: 9px;">MISSÃO</strong><br>
-                        <p style="font-style: italic; margin-top: 5px; font-size: 10px;">"{{ $identidade->dsc_missao ?: 'Não definida.' }}"</p>
-                    </div>
-                </td>
-                <td style="width: 50%; border: none; padding: 0 0 0 5px;">
-                    <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px solid #eee; min-height: 60px;">
-                        <strong class="text-primary" style="font-size: 9px;">VISÃO</strong><br>
-                        <p style="font-style: italic; margin-top: 5px; font-size: 10px;">"{{ $identidade->dsc_visao ?: 'Não definida.' }}"</p>
-                    </div>
-                </td>
-            </tr>
-        </table>
+    {{-- ══ KPIs ══ --}}
+    <table class="kpi-grid">
+        <tr>
+            <td class="kpi-card" style="width:25%;">
+                <p class="kpi-label">Objetivos BSC</p>
+                <p class="kpi-value">{{ $totalObjetivos }}</p>
+                <p class="kpi-sub">{{ $totalIndicadores }} indicadores vinculados</p>
+            </td>
+            <td class="kpi-card accent" style="width:25%;">
+                <p class="kpi-label">Atingimento Médio</p>
+                <p class="kpi-value">{{ number_format($mediaAtingimento, 0, ',', '.') }}<span style="font-size:14px;">%</span></p>
+                <p class="kpi-sub" style="color:{{ $getCorSatisfacao($mediaAtingimento) }};">desempenho geral</p>
+            </td>
+            <td class="kpi-card {{ $planosAtrasados > 0 ? 'warning' : 'success' }}" style="width:25%;">
+                <p class="kpi-label">Planos de Ação</p>
+                <p class="kpi-value">{{ $totalPlanos }}</p>
+                <p class="kpi-sub">{{ $planosConcluidos }} concluídos · {{ $planosAtrasados }} atrasados</p>
+            </td>
+            <td class="kpi-card {{ $riscosCriticos > 0 ? 'danger' : 'success' }}" style="width:25%;">
+                <p class="kpi-label">Riscos Críticos</p>
+                <p class="kpi-value" style="color:{{ $riscosCriticos > 0 ? '#dc3545' : '#2e8b57' }};">{{ $riscosCriticos }}</p>
+                <p class="kpi-sub">{{ $riscosAltos }} altos · {{ $riscosDetalhado->count() }} no total</p>
+            </td>
+        </tr>
+    </table>
 
-        <div>
-            <strong class="text-primary" style="font-size: 9px; text-transform: uppercase;">Valores Institucionais:</strong>
-            <div class="tag-container">
-                @forelse($valores as $valor)
-                    <span class="tag">{{ $valor->nom_valor }}</span>
-                @empty
-                    <span style="font-style: italic; color: #999; font-size: 9px;">Nenhum valor cadastrado.</span>
-                @endforelse
-            </div>
-        </div>
+    {{-- ══ IDENTIDADE ESTRATÉGICA ══ --}}
+    <div class="secao-titulo">Identidade Estratégica</div>
 
-        <div style="margin-top: 10px;">
-            <strong class="text-primary" style="font-size: 9px; text-transform: uppercase;">Temas Norteadores:</strong>
-            <div class="tag-container">
-                @forelse($temasNorteadores as $obj)
-                    <span class="tag tag-warning">{{ $obj->nom_tema_norteador }}</span>
-                @empty
-                    <span style="font-style: italic; color: #999; font-size: 9px;">Nenhum tema norteador cadastrado para esta unidade.</span>
-                @endforelse
-            </div>
-        </div>
+    <table style="width:100%; border-collapse:separate; border-spacing:6px 0; margin-bottom:8px;">
+        <tr>
+            <td style="width:50%; background:#fff; border:1px solid #e2e8f0; border-left:4px solid #1B408E; border-radius:8px; padding:12px; vertical-align:top;">
+                <div style="color:#1B408E; font-weight:bold; font-size:8px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px;">Missão</div>
+                <div style="font-style:italic; font-size:9.5px; line-height:1.5; color:#2d3748;">{{ $identidade->dsc_missao ?? 'Não definida' }}</div>
+            </td>
+            <td style="width:50%; background:#fff; border:1px solid #e2e8f0; border-left:4px solid #e07b39; border-radius:8px; padding:12px; vertical-align:top;">
+                <div style="color:#e07b39; font-weight:bold; font-size:8px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px;">Visão</div>
+                <div style="font-style:italic; font-size:9.5px; line-height:1.5; color:#2d3748;">{{ $identidade->dsc_visao ?? 'Não definida' }}</div>
+            </td>
+        </tr>
+    </table>
 
-        @if($swot->isNotEmpty())
-            <div style="margin-top: 15px; font-weight: bold; color: #666; margin-bottom: 5px; font-size: 9px; text-transform: uppercase;">Análise de Ambiente (SWOT):</div>
-            <table class="swot-grid">
-                <tr>
-                    <td class="swot-box swot-s">
-                        <span class="swot-title text-success">FORÇAS (Interno +)</span>
-                        <ul class="swot-list">
-                            @forelse($swot->get('Força', []) as $item) <li>{{ $item->dsc_item }}</li> @empty <li>-</li> @endforelse
-                        </ul>
-                    </td>
-                    <td class="swot-box swot-w">
-                        <span class="swot-title text-danger">FRAQUEZAS (Interno -)</span>
-                        <ul class="swot-list">
-                            @forelse($swot->get('Fraqueza', []) as $item) <li>{{ $item->dsc_item }}</li> @empty <li>-</li> @endforelse
-                        </ul>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="swot-box swot-o">
-                        <span class="swot-title text-primary">OPORTUNIDADES (Externo +)</span>
-                        <ul class="swot-list">
-                            @forelse($swot->get('Oportunidade', []) as $item) <li>{{ $item->dsc_item }}</li> @empty <li>-</li> @endforelse
-                        </ul>
-                    </td>
-                    <td class="swot-box swot-t">
-                        <span class="swot-title" style="color: #856404;">AMEAÇAS (Externo -)</span>
-                        <ul class="swot-list">
-                            @forelse($swot->get('Ameaça', []) as $item) <li>{{ $item->dsc_item }}</li> @empty <li>-</li> @endforelse
-                        </ul>
-                    </td>
-                </tr>
-            </table>
-        @endif
-    </div>
-
-    <!-- IA INSIGHTS: RESUMO E PREDIÇÃO -->
-    @if($aiSummary || $aiTrends)
-        <div class="section" style="background: #f8f9ff; padding: 15px; border-radius: 8px; border: 1px solid #e0e6f7;">
-            <div style="margin-bottom: 15px;">
-                <div style="color: #6976DE; font-weight: bold; font-size: 11px; text-transform: uppercase; margin-bottom: 8px;">
-                    <img src="https://cdn-icons-png.flaticon.com/512/2103/2103633.png" width="12" style="vertical-align: middle; margin-right: 5px;">
-                    Insights do Mentor de IA
-                </div>
-                
-                @if($aiSummary)
-                    <div style="margin-bottom: 12px;">
-                        <strong style="color: #1B408E; font-size: 9px; display: block; margin-bottom: 4px;">RESUMO EXECUTIVO (AI MINUTE):</strong>
-                        <p style="margin: 0; font-size: 10px; line-height: 1.5; color: #333;">
-                            {!! nl2br(e($aiSummary)) !!}
-                        </p>
-                    </div>
-                @endif
-
-                @if($aiTrends)
-                    <div style="padding-top: 10px; border-top: 1px dashed #cbd5e1;">
-                        <strong style="color: #9c27b0; font-size: 9px; display: block; margin-bottom: 4px;">ANÁLISE PREDITIVA E TENDÊNCIAS:</strong>
-                        <p style="margin: 0; font-size: 10px; line-height: 1.5; color: #333; font-style: italic;">
-                            {!! nl2br(e($aiTrends)) !!}
-                        </p>
-                    </div>
-                @endif
-            </div>
-            <div style="font-size: 7px; color: #94a3b8; text-align: right;">* Análise gerada automaticamente por inteligência artificial baseada nos dados vigentes.</div>
-        </div>
+    @if($valores->isNotEmpty() || $temasNorteadores->isNotEmpty())
+    <table style="width:100%; border-collapse:separate; border-spacing:6px 0; margin-bottom:14px;">
+        <tr>
+            @if($valores->isNotEmpty())
+            <td style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:10px; text-align:center; vertical-align:top;">
+                <div style="color:#718096; font-weight:bold; font-size:7.5px; text-transform:uppercase; margin-bottom:6px; letter-spacing:.5px;">Valores Institucionais</div>
+                @foreach($valores as $valor)
+                    <span class="pill pill-info" style="margin:2px;">{{ $valor->nom_valor }}</span>
+                @endforeach
+            </td>
+            @endif
+            @if($temasNorteadores->isNotEmpty())
+            <td style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:10px; text-align:center; vertical-align:top;">
+                <div style="color:#718096; font-weight:bold; font-size:7.5px; text-transform:uppercase; margin-bottom:6px; letter-spacing:.5px;">Temas Norteadores</div>
+                @foreach($temasNorteadores as $t)
+                    <span style="display:inline-block; background:#eef2f9; color:#1B408E; border:1px solid #c7d6ec; border-radius:999px; padding:4px 12px; margin:2px; font-size:8px; font-weight:bold;">{{ $t->nom_tema_norteador }}</span>
+                @endforeach
+            </td>
+            @endif
+        </tr>
+    </table>
     @endif
 
-    <!-- GRÁFICO DE DESEMPENHO (ANUNCIADO) -->
-    <div class="section">
-        <div class="section-title">Análise de Desempenho por Perspectiva</div>
-        <p style="font-size: 8px; color: #666; margin-bottom: 5px; font-style: italic;">Visualização consolidada do atingimento médio dos indicadores por perspectiva BSC.</p>
-        
-        <div class="chart-container">
-            @php $colWidth = 100 / max(count($dadosGrafico), 1); @endphp
-            @foreach($dadosGrafico as $item)
-                <div class="column-wrapper" style="width: {{ $colWidth }}%;">
-                    <div class="column-value" style="color: {{ $item['cor'] }};">{{ number_format($item['valor'], 1) }}%</div>
-                    <div class="column-bar" style="height: {{ min($item['valor'], 100) }}%; background-color: {{ $item['cor'] }};"></div>
-                    <div class="column-label">{{ $item['label'] }}</div>
-                </div>
-            @endforeach
-        </div>
-        <div style="height: 40px; clear: both;"></div> {{-- Espaçador para as labels do gráfico --}}
-    </div>
+    {{-- ══ DESEMPENHO BSC ══ --}}
+    <div class="secao-titulo">Desempenho Estratégico por Perspectiva (BSC)</div>
 
-    <!-- 2. Performance dos Objetivos -->
-    <div class="section">
-        <div class="section-title">2. Desempenho dos Objetivos (Indicadores)</div>
-        
-        {{-- Legenda de Indicadores --}}
-        <div class="legend-box" style="margin-bottom: 10px;">
-            <div style="margin-bottom: 5px;">
-                <strong style="font-size: 8px; color: #1B408E; text-transform: uppercase;">Legenda de Desempenho (Indicadores):</strong><br>
-                @foreach($grausSatisfacao as $grau)
-                    <div class="legend-item">
-                        <span class="legend-dot" style="background-color: {{ $grau->cor }};"></span>
-                        {{ $grau->dsc_grau_satisfcao }} ({{ number_format($grau->vlr_minimo, 0) }}% a {{ number_format($grau->vlr_maximo, 0) }}%)
-                    </div>
-                @endforeach
-            </div>
-            <div style="border-top: 1px dashed #eee; padding-top: 5px; margin-top: 5px; font-size: 7px; color: #666; font-style: italic;">
-                * O cálculo de atingimento considera a <strong>polaridade</strong> de cada indicador (Ex: Menor é melhor para custos/atrasos). Indicadores puramente informativos (Não Aplicáveis) são desconsiderados na média global.
-            </div>
-        </div>
-
-        @foreach($perspectivas as $p)
-            <div style="font-weight: bold; background: #1B408E; color: white; padding: 4px 10px; margin-top: 10px; font-size: 9px; border-radius: 3px 3px 0 0;">
-                {{ $p->dsc_perspectiva }}
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 60%;">Objetivo</th>
-                        <th style="width: 15%; text-align: center;">Indicadores</th>
-                        <th style="width: 25%; text-align: center;">Atingimento Global</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($p->objetivos as $obj)
-                        @php 
-                            $atingimento = $obj->calcularAtingimentoConsolidado($ano, $mesLimite);
-                            $cor = $getCorSatisfacao($atingimento);
-                            $qtdInd = $obj->indicadores->count();
-                        @endphp
-                        <tr>
-                            <td style="font-weight: bold;">{{ $obj->nom_objetivo }}</td>
-                            <td style="text-align: center;">{{ $qtdInd }}</td>
-                            <td>
-                                <div style="display: block; width: 100%;">
-                                    <div style="float: left; width: 70%;">
-                                        <div class="progress-container">
-                                            <div class="progress-bar" style="width: {{ min($atingimento, 100) }}%; background-color: {{ $cor }};"></div>
-                                        </div>
-                                    </div>
-                                    <div style="float: right; width: 30%; text-align: right; font-weight: bold; color: {{ $cor }};">
-                                        @brazil_percent($atingimento, 1)
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="3" style="text-align: center; color: #999;">Sem objetivos vinculados nesta perspectiva.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+    <div style="margin-bottom:10px; font-size:8px; color:#718096; background:#f7fafc; padding:6px 10px; border-radius:6px; border:1px solid #e2e8f0;">
+        <strong style="color:#1a3a5c;">Graus de Satisfação:</strong>
+        @foreach($grausSatisfacao as $grau)
+            <span style="margin-left:12px;">
+                <span class="farol" style="background:{{ $grau->cor }};"></span>
+                {{ $grau->dsc_grau_satisfcao ?? $grau->dsc_grau_satisfacao ?? '' }}
+                ({{ number_format($grau->vlr_minimo, 0) }}–{{ number_format($grau->vlr_maximo, 0) }}%)
+            </span>
         @endforeach
     </div>
 
-    <div class="page-break"></div>
-
-    <!-- 3. Status dos Planos de Ação -->
-    <div class="section">
-        <div class="section-title">3. Status de Execução dos Planos de Ação ({{ $ano }})</div>
-        
-        {{-- Legenda de Planos (Dinâmica) --}}
-        <div class="legend-box" style="margin-bottom: 10px;">
-            <strong style="font-size: 8px; color: #1B408E; text-transform: uppercase;">Legenda de Status (Planos de Ação):</strong><br>
-            @foreach(\App\Models\ActionPlan\PlanoDeAcao::getStatusLegend() as $item)
-                <div class="legend-item"><span class="legend-dot" style="background-color: {{ $item['color'] }};"></span> {{ $item['label'] }}</div>
-            @endforeach
-        </div>
-
-        <table style="width: 100%;">
-            <thead>
-                <tr>
-                    <th style="width: 20%;">Perspectiva / Objetivo</th>
-                    <th style="width: 45%;">Plano de Ação</th>
-                    <th style="width: 15%; text-align: center;">Status</th>
-                    <th style="width: 20%; text-align: center;">Progresso (Entregas)</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($planos as $plano)
-                    @php 
-                        // Usa valores calculados pelo Service (injetados no objeto)
-                        $prog = $plano->progresso_anual ?? 0;
-                        $statusCalculado = $plano->status_anual ?? 'Não Iniciado';
-                        $entregasCount = $plano->entregas_ano_count ?? 0;
-                        
-                        $perspectivaNome = $plano->objetivo?->perspectiva?->dsc_perspectiva ?? 'Não definida';
-                        $objetivoNome = $plano->objetivo?->nom_objetivo ?? 'Não definido';
-                        
-                        // Definir cor baseada no status calculado do ano
-                        $corStatus = match($statusCalculado) {
-                            'Concluído' => '#28a745', // Verde
-                            'Em Andamento' => '#007bff', // Azul
-                            'Atrasado' => '#dc3545', // Vermelho (se houver lógica de atraso no service futuro)
-                            'Suspenso' => '#ffc107', // Amarelo
-                            'Sem Entregas' => '#6c757d', // Cinza
-                            default => '#6c757d'
-                        };
-                        $textClass = 'color: #fff;';
-                    @endphp
-                    <tr>
-                        <td style="font-size: 8px; background: #fcfcfc;">
-                            <strong class="text-primary">{{ $perspectivaNome }}</strong><br>
-                            <span class="text-muted">{{ $objetivoNome }}</span>
-                        </td>
-                        <td>
-                            <div style="font-weight: bold;">{{ $plano->dsc_plano_de_acao }}</div>
-                            <div style="font-size: 8px; color: #777;">
-                                Vigência: {{ $plano->dte_inicio?->format('d/m/Y') }} a {{ $plano->dte_fim?->format('d/m/Y') }}
-                                @if($entregasCount == 0)
-                                    <span style="color: #dc3545; font-weight: bold;">(Sem entregas neste ano)</span>
-                                @else
-                                    <span style="color: #28a745;">({{ $entregasCount }} entregas no ano)</span>
-                                @endif
-                            </div>
-                        </td>
-                        <td style="text-align: center;">
-                            <span class="badge" style="background-color: {{ $corStatus }}; {{ $textClass }}">{{ $statusCalculado }}</span>
-                        </td>
-                        <td>
-                            <div class="progress-container" style="height: 6px;">
-                                <div class="progress-bar" style="width: {{ min($prog, 100) }}%; background-color: {{ $corStatus }};"></div>
-                            </div>
-                            <div style="text-align: right; font-weight: bold; font-size: 8px; margin-top: 2px;">@brazil_percent($prog, 1)</div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr><td colspan="4" style="text-align: center; color: #999;">Nenhum plano para o período.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <div class="page-break"></div>
-
-    <!-- 4. Panorama de Riscos -->
-    <div class="section">
-        <div class="section-title">4. Panorama de Riscos Estratégicos</div>
-        
-        <table style="width: 100%; border: none;">
-            <tr>
-                <td style="width: 30%; vertical-align: top; border: none; padding-right: 20px;">
-                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; border-radius: 5px; text-align: center;">
-                        <div style="font-size: 28px; font-weight: bold; color: #dc3545;">{{ $riscosSummary['Crítico'] ?? 0 }}</div>
-                        <div style="text-transform: uppercase; font-weight: bold; color: #dc3545; font-size: 10px;">Riscos Críticos</div>
-                        <p style="font-size: 7px; color: #777; margin-top: 10px;">Ações de mitigação imediatas são necessárias para estes itens.</p>
-                    </div>
-                </td>
-                <td style="width: 70%; vertical-align: top; border: none;">
-                    <p style="font-size: 9px; font-weight: bold; color: #666; margin-bottom: 10px;">DISTRIBUIÇÃO POR NÍVEL DE SEVERIDADE:</p>
-                    @foreach(['Alto' => '#fd7e14', 'Médio' => '#ffc107', 'Baixo' => '#198754'] as $nivel => $corRisco)
-                        @php $totalNivel = $riscosSummary[$nivel] ?? 0; @endphp
-                        <div style="margin-bottom: 12px;">
-                            <div style="display: block; width: 100%; font-size: 9px; margin-bottom: 3px;">
-                                <span style="float: left; font-weight: bold;">{{ $nivel }}</span>
-                                <span style="float: right;">{{ $totalNivel }} risco(s)</span>
-                            </div>
-                            <div style="clear: both;"></div>
-                            <div class="progress-container" style="height: 8px;">
-                                <div class="progress-bar" style="width: {{ min(($totalNivel) * 10, 100) }}%; background: {{ $corRisco }};"></div>
-                            </div>
-                        </div>
-                    @endforeach
-                </td>
-            </tr>
-        </table>
-
-        {{-- Tabela Detalhada de Riscos (NOVO) --}}
-        <div style="margin-top: 20px;">
-            <p style="font-size: 9px; font-weight: bold; color: #666; margin-bottom: 10px;">DETALHAMENTO DOS RISCOS IDENTIFICADOS:</p>
-            <table style="width: 100%;">
+    @foreach($perspectivas->sortByDesc('num_nivel_hierarquico_apresentacao') as $persp)
+        @php $corP = $coresNivel[$persp->num_nivel_hierarquico_apresentacao] ?? '#1B408E'; @endphp
+        <div style="margin-bottom:10px; page-break-inside:avoid;">
+            <div style="background:{{ $corP }}; color:#fff; padding:6px 12px; font-weight:bold; font-size:9px; border-radius:6px 6px 0 0; text-transform:uppercase; letter-spacing:.5px;">
+                {{ $persp->dsc_perspectiva }}
+            </div>
+            <table class="rpt" style="margin:0; border-radius:0 0 6px 6px;">
                 <thead>
                     <tr>
-                        <th style="width: 10%; text-align: center;">Código</th>
-                        <th style="width: 45%;">Título do Risco</th>
-                        <th style="width: 15%;">Categoria</th>
-                        <th style="width: 15%; text-align: center;">Nível (P x I)</th>
-                        <th style="width: 15%; text-align: center;">Status</th>
+                        <th style="width:55%;">Objetivo Estratégico</th>
+                        <th class="text-center" style="width:60px;">KPIs</th>
+                        <th class="text-center" style="width:120px;">Atingimento</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($riscosDetalhado as $risco)
+                    @forelse($persp->objetivos as $obj)
                         @php
-                            $nivelRisco = $risco->num_nivel_risco;
-                            $corNivel = $risco->getNivelRiscoCor();
-                            $labelNivel = $risco->getNivelRiscoLabel();
+                            $at  = $obj->calcularAtingimentoConsolidado($ano, $mesLimite);
+                            $cor = $getCorSatisfacao($at);
                         @endphp
                         <tr>
-                            <td style="text-align: center; font-family: monospace;">R-{{ str_pad($risco->num_codigo_risco, 3, '0', STR_PAD_LEFT) }}</td>
+                            <td class="row-titulo">
+                                {{ $obj->nom_objetivo }}
+                                @if($obj->ods->isNotEmpty())
+                                    <span style="white-space:nowrap;">
+                                        @foreach($obj->ods as $ods)
+                                            <span style="display:inline-block; background:{{ $ods->cod_cor }}; color:#fff; font-size:6.5px; font-weight:bold; padding:1px 4px; border-radius:3px; margin-left:2px;">ODS {{ $ods->num_ods }}</span>
+                                        @endforeach
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="text-center" style="font-size:8px; color:#718096;">{{ $obj->indicadores->count() }}</td>
                             <td>
-                                <div style="font-weight: bold;">{{ $risco->dsc_titulo }}</div>
+                                <table style="width:100%; border:none;"><tr style="border:none;">
+                                    <td style="border:none; width:72%; vertical-align:middle; padding:0 4px 0 0;">
+                                        <div class="progress-track">
+                                            <div class="progress-fill" style="width:{{ min(100, max(0, $at)) }}%; background:{{ $cor }};"></div>
+                                        </div>
+                                    </td>
+                                    <td style="border:none; width:28%; text-align:right; vertical-align:middle; font-weight:bold; font-size:9px; color:{{ $cor }}; padding:0;">
+                                        {{ number_format($at, 1, ',', '.') }}%
+                                    </td>
+                                </tr></table>
                             </td>
-                            <td>{{ $risco->dsc_categoria }}</td>
-                            <td style="text-align: center;">
-                                <span style="color: {{ $corNivel }}; font-weight: bold;">{{ $nivelRisco }}</span><br>
-                                <small style="font-size: 7px;">({{ $labelNivel }})</small>
-                            </td>
-                            <td style="text-align: center;">{{ $risco->dsc_status }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" style="text-align: center; color: #999;">Nenhum risco registrado para esta unidade.</td></tr>
+                        <tr><td colspan="3" class="text-center" style="color:#a0aec0; font-style:italic; padding:10px;">Sem objetivos nesta perspectiva.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+    @endforeach
+
+    @if($aiSummary)
+    <div class="ai-box">
+        <strong style="color:#1B408E; font-size:9px;">&#9733; INSIGHT ESTRATÉGICO (IA)</strong>
+        <p>{!! nl2br(e($aiSummary)) !!}</p>
+    </div>
+    @endif
+
+    <div class="page-break"></div>
+
+    {{-- ══ ANÁLISE SWOT ══ --}}
+    @if($swot->isNotEmpty())
+    <div class="secao-titulo">Análise de Ambiente — Matriz SWOT</div>
+    <table style="width:100%; border-collapse:separate; border-spacing:6px;">
+        <tr>
+            <td class="swot-cell" style="background:#e8f5e9;">
+                <strong style="color:#198754;">FORÇAS (Interno +)</strong>
+                <ul>
+                    @forelse($swot->get('Força', []) as $i)
+                        <li>{{ $i->dsc_item }}@if(($i->num_gravidade ?? 0)) <span style="color:#a0aec0; font-size:7.5px;">(GUT {{ $i->num_gravidade * $i->num_urgencia * $i->num_tendencia }})</span>@endif</li>
+                    @empty <li style="list-style:none; color:#a0aec0;">—</li> @endforelse
+                </ul>
+            </td>
+            <td class="swot-cell" style="background:#fbecec;">
+                <strong style="color:#dc3545;">FRAQUEZAS (Interno −)</strong>
+                <ul>
+                    @forelse($swot->get('Fraqueza', []) as $i)
+                        <li>{{ $i->dsc_item }}@if(($i->num_gravidade ?? 0)) <span style="color:#a0aec0; font-size:7.5px;">(GUT {{ $i->num_gravidade * $i->num_urgencia * $i->num_tendencia }})</span>@endif</li>
+                    @empty <li style="list-style:none; color:#a0aec0;">—</li> @endforelse
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td class="swot-cell" style="background:#e7f1ff;">
+                <strong style="color:#1B408E;">OPORTUNIDADES (Externo +)</strong>
+                <ul>
+                    @forelse($swot->get('Oportunidade', []) as $i)
+                        <li>{{ $i->dsc_item }}</li>
+                    @empty <li style="list-style:none; color:#a0aec0;">—</li> @endforelse
+                </ul>
+            </td>
+            <td class="swot-cell" style="background:#fff8e1;">
+                <strong style="color:#d97706;">AMEAÇAS (Externo −)</strong>
+                <ul>
+                    @forelse($swot->get('Ameaça', []) as $i)
+                        <li>{{ $i->dsc_item }}</li>
+                    @empty <li style="list-style:none; color:#a0aec0;">—</li> @endforelse
+                </ul>
+            </td>
+        </tr>
+    </table>
+    @endif
+
+    {{-- ══ PLANOS DE AÇÃO ══ --}}
+    <div class="secao-titulo">Carteira de Planos de Ação — {{ $ano }}</div>
+
+    @php $tot = max(1, $totalPlanos); @endphp
+    <div style="margin-bottom:10px;">
+        <div class="progress-track" style="height:14px; border-radius:4px;">
+            @foreach(['Concluído' => $planosConcluidos, 'Em Andamento' => $planosEmAndamento, 'Atrasado' => $planosAtrasados, 'Não Iniciado' => $planosNaoIniciados] as $s => $n)
+                @if($n > 0)
+                    <div style="float:left; height:14px; width:{{ round($n / $tot * 100, 1) }}%; background:{{ $statusCfg[$s]['c'] ?? '#94a3b8' }};"></div>
+                @endif
+            @endforeach
+        </div>
+        <div style="margin-top:5px; font-size:8px; color:#718096; clear:both;">
+            @foreach(['Concluído' => $planosConcluidos, 'Em Andamento' => $planosEmAndamento, 'Atrasado' => $planosAtrasados, 'Não Iniciado' => $planosNaoIniciados] as $s => $n)
+                <span style="margin-right:14px;"><span class="farol" style="background:{{ $statusCfg[$s]['c'] ?? '#94a3b8' }};"></span> {{ $s }}: <strong>{{ $n }}</strong></span>
+            @endforeach
+        </div>
     </div>
 
-    <div class="footer">
-        Relatório Gerencial Strategic Planning System | Gerado em {{ now()->format('d/m/Y H:i') }} | Página {{ isset($pdf) ? $pdf->get_canvas()->get_page_number() : '3' }}
+    <table class="rpt">
+        <thead>
+            <tr>
+                <th style="width:34%;">Plano de Ação</th>
+                <th>Perspectiva / Objetivo</th>
+                <th class="text-center" style="width:80px;">Status</th>
+                <th class="text-center" style="width:100px;">Progresso</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($planos as $plano)
+            @php
+                $prog = $plano->progresso_anual ?? 0;
+                $st   = $plano->status_anual ?? 'Não Iniciado';
+                $cfg  = $statusCfg[$st] ?? ['c' => '#94a3b8', 'pill' => 'pill-neutral'];
+            @endphp
+            <tr>
+                <td>
+                    <span class="row-titulo">{{ $plano->dsc_plano_de_acao }}</span>
+                    <div style="font-size:7.5px; color:#a0aec0; margin-top:2px;">
+                        {{ $plano->dte_inicio?->format('d/m/Y') }} a {{ $plano->dte_fim?->format('d/m/Y') }}
+                        &middot; {{ $plano->entregas_ano_count ?? 0 }} entrega(s) no exercício
+                    </div>
+                </td>
+                <td class="row-desc">
+                    <span style="font-size:8px; font-weight:bold; color:#1a3a5c;">{{ $plano->objetivo?->perspectiva?->dsc_perspectiva ?? '—' }}</span><br>
+                    {{ Str::limit($plano->objetivo?->nom_objetivo ?? '—', 55) }}
+                </td>
+                <td class="text-center"><span class="pill {{ $cfg['pill'] }}">{{ $st }}</span></td>
+                <td>
+                    <div style="text-align:center; font-weight:bold; font-size:9px; margin-bottom:2px; color:{{ $cfg['c'] }};">{{ number_format($prog, 0) }}%</div>
+                    <div class="progress-track">
+                        <div class="progress-fill" style="width:{{ min(100, max(0, $prog)) }}%; background:{{ $cfg['c'] }};"></div>
+                    </div>
+                </td>
+            </tr>
+            @empty
+            <tr><td colspan="4"><div class="vazio mb-0">Nenhum plano de ação vigente em {{ $ano }}.</div></td></tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    {{-- ══ RISCOS ══ --}}
+    @if($riscosDetalhado->count() > 0)
+    <div class="secao-titulo">Panorama de Riscos Estratégicos</div>
+
+    <table class="kpi-grid" style="margin-bottom:10px;">
+        <tr>
+            @foreach(['Crítico' => ['c' => '#dc2626', 'b' => 'danger'], 'Alto' => ['c' => '#f97316', 'b' => 'warning'], 'Médio' => ['c' => '#eab308', 'b' => 'warning'], 'Baixo' => ['c' => '#65a30d', 'b' => 'success']] as $nivel => $cfgR)
+            <td class="kpi-card {{ $cfgR['b'] }}" style="width:25%; border-top-color:{{ $cfgR['c'] }};">
+                <p class="kpi-label">{{ $nivel }}</p>
+                <p class="kpi-value" style="color:{{ $cfgR['c'] }}; font-size:20px;">{{ $riscosSummary[$nivel] ?? 0 }}</p>
+                <p class="kpi-sub">risco(s)</p>
+            </td>
+            @endforeach
+        </tr>
+    </table>
+
+    <table class="rpt">
+        <thead>
+            <tr>
+                <th style="width:5%; text-align:center;">Cód.</th>
+                <th style="width:32%;">Risco</th>
+                <th>Categoria</th>
+                <th class="text-center" style="width:40px;">P</th>
+                <th class="text-center" style="width:40px;">I</th>
+                <th class="text-center" style="width:48px;">P×I</th>
+                <th class="text-center" style="width:64px;">Nível</th>
+                <th class="text-center" style="width:52px;">Mitig.</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($riscosDetalhado as $risco)
+            @php
+                $nv     = $risco->num_nivel_risco;
+                $lbl    = $risco->getNivelRiscoLabel();
+                $corR   = $risco->getNivelRiscoCor();
+                $pillR  = $nv >= 16 ? 'pill-danger' : ($nv >= 10 ? 'pill-warning' : ($nv >= 5 ? 'pill-warning' : 'pill-success'));
+            @endphp
+            <tr>
+                <td class="text-center" style="font-family:monospace; font-size:8px; color:#718096;">R-{{ str_pad($risco->num_codigo_risco, 3, '0', STR_PAD_LEFT) }}</td>
+                <td class="row-titulo">{{ $risco->dsc_titulo }}</td>
+                <td class="row-desc">{{ $risco->dsc_categoria }}</td>
+                <td class="text-center">{{ $risco->num_probabilidade }}</td>
+                <td class="text-center">{{ $risco->num_impacto }}</td>
+                <td class="text-center" style="font-weight:bold; color:{{ $corR }};">{{ $nv }}</td>
+                <td class="text-center"><span class="pill {{ $pillR }}">{{ $lbl }}</span></td>
+                <td class="text-center">
+                    @if($risco->mitigacoes->count() > 0)
+                        <span class="pill pill-info">{{ $risco->mitigacoes->count() }}</span>
+                    @else
+                        <span style="color:#cbd5e0; font-size:8px;">—</span>
+                    @endif
+                </td>
+            </tr>
+            @empty
+            <tr><td colspan="8" class="text-center" style="color:#a0aec0; font-style:italic;">Nenhum risco registrado.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+    @endif
+
+    @if($aiTrends)
+    <div class="ai-box" style="border-left-color:#6a4c9c;">
+        <strong style="color:#6a4c9c; font-size:9px;">&#9733; ANÁLISE PREDITIVA (IA)</strong>
+        <p>{!! nl2br(e($aiTrends)) !!}</p>
     </div>
+    @endif
 </body>
 </html>

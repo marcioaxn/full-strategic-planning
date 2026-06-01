@@ -258,6 +258,27 @@
         @endif
     </div>
 
+    {{-- 5W2H --}}
+    @php $props = $entrega->json_propriedades ?? []; $w5h2 = $props['5w2h'] ?? []; @endphp
+    @if(!empty(array_filter($w5h2)))
+    <div class="notion-side-panel-section">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <h6 class="notion-section-header mb-0"><i class="bi bi-list-columns me-2"></i>5W2H</h6>
+            <x-gppei-link :page="116" label="5W2H GPPEI" />
+        </div>
+        <div class="row g-2 mt-1">
+            @foreach(['what' => 'O quê', 'why' => 'Por quê', 'who' => 'Quem', 'where' => 'Onde', 'when' => 'Quando', 'how' => 'Como', 'howmuch' => 'Quanto custa'] as $k => $lbl)
+                @if(!empty($w5h2[$k]))
+                <div class="col-12">
+                    <p class="text-muted x-small text-uppercase fw-bold mb-0">{{ $lbl }}</p>
+                    <p class="small mb-1">{{ $w5h2[$k] }}</p>
+                </div>
+                @endif
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     {{-- Comentários --}}
     <div class="notion-side-panel-section bg-light bg-opacity-25">
         <h6 class="notion-section-header mb-3"><i class="bi bi-chat-left-text me-2"></i>COMENTÁRIOS</h6>

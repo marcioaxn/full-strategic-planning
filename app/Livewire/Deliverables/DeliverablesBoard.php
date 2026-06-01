@@ -90,8 +90,9 @@ class DeliverablesBoard extends Component
     public string $editStatus = 'Não Iniciado';
     public string $editPrioridade = 'media';
     public ?string $editPrazo = null;
-    public array $editResponsaveis = []; // Mudado para array
+    public array $editResponsaveis = [];
     public string $editTipo = 'task';
+    public array $edit5w2h = ['what' => '', 'why' => '', 'who' => '', 'where' => '', 'when' => '', 'how' => '', 'howmuch' => ''];
 
     // ========================================
     // PROPRIEDADES DO MODAL DE LABELS
@@ -593,7 +594,9 @@ class DeliverablesBoard extends Component
             $this->editPrioridade = $entrega->cod_prioridade;
             $this->editPrazo = $entrega->dte_prazo?->format('Y-m-d');
             $this->editResponsaveis = $entrega->responsaveis->pluck('id')->toArray();
-            $this->editTipo = $entrega->dsc_tipo;
+            $this->editTipo  = $entrega->dsc_tipo;
+            $props = $entrega->json_propriedades ?? [];
+            $this->edit5w2h = array_merge(['what' => '', 'why' => '', 'who' => '', 'where' => '', 'when' => '', 'how' => '', 'howmuch' => ''], $props['5w2h'] ?? []);
         } else {
             $this->resetEditForm();
         }
@@ -616,6 +619,7 @@ class DeliverablesBoard extends Component
         $this->editPrazo = null;
         $this->editResponsaveis = [];
         $this->editTipo = 'task';
+        $this->edit5w2h = ['what' => '', 'why' => '', 'who' => '', 'where' => '', 'when' => '', 'how' => '', 'howmuch' => ''];
     }
 
     public function salvarEntrega(): void
@@ -632,13 +636,21 @@ class DeliverablesBoard extends Component
             'editTipo' => 'required|in:' . implode(',', array_keys(Entrega::TIPO_OPTIONS)),
         ]);
 
+        $w5h2Filtrado = array_filter($this->edit5w2h);
+        $propsExistentes = [];
+        if ($this->editEntregaId) {
+            $propsExistentes = Entrega::findOrFail($this->editEntregaId)->json_propriedades ?? [];
+        }
+        $novasProps = array_merge($propsExistentes, $w5h2Filtrado ? ['5w2h' => $this->edit5w2h] : []);
+
         $dados = [
-            'dsc_entrega' => $this->editTitulo,
-            'bln_status' => $this->editStatus,
-            'cod_prioridade' => $this->editPrioridade,
-            'dte_prazo' => $this->editPrazo,
-            'cod_responsavel' => !empty($this->editResponsaveis) ? $this->editResponsaveis[0] : null, // Mantém compatibilidade com o primeiro
-            'dsc_tipo' => $this->editTipo,
+            'dsc_entrega'      => $this->editTitulo,
+            'bln_status'       => $this->editStatus,
+            'cod_prioridade'   => $this->editPrioridade,
+            'dte_prazo'        => $this->editPrazo,
+            'cod_responsavel'  => !empty($this->editResponsaveis) ? $this->editResponsaveis[0] : null,
+            'dsc_tipo'         => $this->editTipo,
+            'json_propriedades'=> $novasProps ?: null,
         ];
 
         if ($this->editEntregaId) {

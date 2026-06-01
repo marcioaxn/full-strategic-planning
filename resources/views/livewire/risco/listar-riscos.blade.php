@@ -15,6 +15,10 @@
                     <i class="bi bi-shield-exclamation"></i>
                 </div>
                 <h2 class="h4 fw-bold mb-0">Riscos Estratégicos</h2>
+                <div class="mt-1 d-flex gap-2">
+                    <x-gppei-link :page="93" label="Matriz de Riscos" />
+                    <x-projetos-link :page="170" label="Mapeamento de Riscos" />
+                </div>
             </div>
         </div>
 

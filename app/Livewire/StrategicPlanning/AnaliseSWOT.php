@@ -3,6 +3,8 @@
 namespace App\Livewire\StrategicPlanning;
 
 use App\Models\StrategicPlanning\AnaliseAmbiental;
+use App\Models\StrategicPlanning\CenarioProspectivo;
+use App\Models\StrategicPlanning\ParteInteressada;
 use App\Models\StrategicPlanning\PEI;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -27,13 +29,43 @@ class AnaliseSWOT extends Component
     // Estado da Visualização
     public bool $modoVisualizacao = false;
 
-    // Modal
+    // Aba ativa
+    public string $abaAtiva = 'swot';
+
+    // Modal SWOT
     public bool $showModal = false;
     public $itemId;
     public $dsc_categoria;
     public $dsc_item = '';
-    public $num_impacto = 3;
+    public $num_impacto   = 3;
+    public $num_gravidade = 3;
+    public $num_urgencia  = 3;
+    public $num_tendencia = 3;
     public $txt_observacao = '';
+
+    // Partes Interessadas
+    public bool $showModalParte = false;
+    public ?string $parteEditId = null;
+    public array $formParte = [
+        'nom_parte'                  => '',
+        'dsc_tipo'                   => 'Externo',
+        'num_interesse'              => 3,
+        'num_influencia'             => 3,
+        'txt_estrategia_engajamento' => '',
+    ];
+
+    // Cenários Prospectivos
+    public bool $showModalCenario = false;
+    public ?string $cenarioEditId = null;
+    public array $formCenario = [
+        'nom_cenario'              => '',
+        'dsc_tipo'                 => 'Tendencial',
+        'dsc_descricao'            => '',
+        'txt_implicacoes'          => '',
+        'txt_resposta_estrategica' => '',
+        'num_probabilidade'        => 3,
+        'num_impacto'              => 3,
+    ];
 
     public bool $aiEnabled = false;
     public $aiSuggestion = '';
@@ -166,10 +198,13 @@ class AnaliseSWOT extends Component
     public function edit($id)
     {
         $item = AnaliseAmbiental::findOrFail($id);
-        $this->itemId = $id;
+        $this->itemId       = $id;
         $this->dsc_categoria = $item->dsc_categoria;
-        $this->dsc_item = $item->dsc_item;
-        $this->num_impacto = $item->num_impacto;
+        $this->dsc_item      = $item->dsc_item;
+        $this->num_impacto   = $item->num_impacto;
+        $this->num_gravidade = $item->num_gravidade ?? 3;
+        $this->num_urgencia  = $item->num_urgencia ?? 3;
+        $this->num_tendencia = $item->num_tendencia ?? 3;
         $this->txt_observacao = $item->txt_observacao;
         $this->showModal = true;
     }
@@ -177,19 +212,25 @@ class AnaliseSWOT extends Component
     public function save()
     {
         $this->validate([
-            'dsc_item' => 'required|string|max:500',
-            'num_impacto' => 'required|integer|min:1|max:5',
-            'txt_observacao' => 'nullable|string|max:1000',
+            'dsc_item'      => 'required|string|max:500',
+            'num_impacto'   => 'required|integer|min:1|max:5',
+            'num_gravidade' => 'required|integer|min:1|max:5',
+            'num_urgencia'  => 'required|integer|min:1|max:5',
+            'num_tendencia' => 'required|integer|min:1|max:5',
+            'txt_observacao'=> 'nullable|string|max:1000',
         ]);
 
         $data = [
-            'cod_pei' => $this->peiAtivo->cod_pei,
-            'cod_organizacao' => $this->organizacaoId,
+            'cod_pei'          => $this->peiAtivo->cod_pei,
+            'cod_organizacao'  => $this->organizacaoId,
             'dsc_tipo_analise' => AnaliseAmbiental::TIPO_SWOT,
-            'dsc_categoria' => $this->dsc_categoria,
-            'dsc_item' => $this->dsc_item,
-            'num_impacto' => $this->num_impacto,
-            'txt_observacao' => $this->txt_observacao,
+            'dsc_categoria'    => $this->dsc_categoria,
+            'dsc_item'         => $this->dsc_item,
+            'num_impacto'      => $this->num_impacto,
+            'num_gravidade'    => $this->num_gravidade,
+            'num_urgencia'     => $this->num_urgencia,
+            'num_tendencia'    => $this->num_tendencia,
+            'txt_observacao'   => $this->txt_observacao,
         ];
 
         if ($this->itemId) {
@@ -205,6 +246,108 @@ class AnaliseSWOT extends Component
         session()->flash('status', $message);
     }
 
+    // ── Partes Interessadas ──────────────────────────────────────────────────
+
+    public function novaParte(): void
+    {
+        $this->parteEditId = null;
+        $this->formParte   = ['nom_parte' => '', 'dsc_tipo' => 'Externo', 'num_interesse' => 3, 'num_influencia' => 3, 'txt_estrategia_engajamento' => ''];
+        $this->showModalParte = true;
+    }
+
+    public function editarParte(string $id): void
+    {
+        $p = ParteInteressada::findOrFail($id);
+        $this->parteEditId = $id;
+        $this->formParte   = [
+            'nom_parte'                  => $p->nom_parte,
+            'dsc_tipo'                   => $p->dsc_tipo,
+            'num_interesse'              => $p->num_interesse,
+            'num_influencia'             => $p->num_influencia,
+            'txt_estrategia_engajamento' => $p->txt_estrategia_engajamento ?? '',
+        ];
+        $this->showModalParte = true;
+    }
+
+    public function salvarParte(): void
+    {
+        $this->validate([
+            'formParte.nom_parte'     => 'required|string|max:150',
+            'formParte.num_interesse' => 'required|integer|min:1|max:5',
+            'formParte.num_influencia'=> 'required|integer|min:1|max:5',
+        ], ['formParte.nom_parte.required' => 'Informe o nome da parte interessada.']);
+
+        $data = array_merge($this->formParte, ['cod_pei' => $this->peiAtivo->cod_pei]);
+
+        $this->parteEditId
+            ? ParteInteressada::findOrFail($this->parteEditId)->update($data)
+            : ParteInteressada::create($data);
+
+        $this->showModalParte = false;
+        $this->parteEditId    = null;
+        $this->dispatch('notify', message: 'Parte interessada salva.', style: 'success');
+    }
+
+    public function excluirParte(string $id): void
+    {
+        ParteInteressada::findOrFail($id)->delete();
+        $this->dispatch('notify', message: 'Parte interessada removida.', style: 'warning');
+    }
+
+    // ── Cenários Prospectivos ─────────────────────────────────────────────────
+
+    public function novoCenario(): void
+    {
+        $this->cenarioEditId = null;
+        $this->formCenario = ['nom_cenario' => '', 'dsc_tipo' => 'Tendencial', 'dsc_descricao' => '', 'txt_implicacoes' => '', 'txt_resposta_estrategica' => '', 'num_probabilidade' => 3, 'num_impacto' => 3];
+        $this->showModalCenario = true;
+    }
+
+    public function editarCenario(string $id): void
+    {
+        $c = CenarioProspectivo::findOrFail($id);
+        $this->cenarioEditId = $id;
+        $this->formCenario = [
+            'nom_cenario'              => $c->nom_cenario,
+            'dsc_tipo'                 => $c->dsc_tipo,
+            'dsc_descricao'            => $c->dsc_descricao ?? '',
+            'txt_implicacoes'          => $c->txt_implicacoes ?? '',
+            'txt_resposta_estrategica' => $c->txt_resposta_estrategica ?? '',
+            'num_probabilidade'        => $c->num_probabilidade,
+            'num_impacto'              => $c->num_impacto,
+        ];
+        $this->showModalCenario = true;
+    }
+
+    public function salvarCenario(): void
+    {
+        $this->validate([
+            'formCenario.nom_cenario' => 'required|string|max:150',
+            'formCenario.dsc_tipo'    => 'required|in:Otimista,Tendencial,Pessimista',
+            'formCenario.num_probabilidade' => 'required|integer|min:1|max:5',
+            'formCenario.num_impacto'       => 'required|integer|min:1|max:5',
+        ], ['formCenario.nom_cenario.required' => 'Informe o nome do cenário.']);
+
+        $data = array_merge($this->formCenario, [
+            'cod_pei'         => $this->peiAtivo->cod_pei,
+            'cod_organizacao' => $this->organizacaoId,
+        ]);
+
+        $this->cenarioEditId
+            ? CenarioProspectivo::findOrFail($this->cenarioEditId)->update($data)
+            : CenarioProspectivo::create($data);
+
+        $this->showModalCenario = false;
+        $this->cenarioEditId    = null;
+        $this->dispatch('notify', message: 'Cenário prospectivo salvo.', style: 'success');
+    }
+
+    public function excluirCenario(string $id): void
+    {
+        CenarioProspectivo::findOrFail($id)->delete();
+        $this->dispatch('notify', message: 'Cenário removido.', style: 'warning');
+    }
+
     public function delete($id)
     {
         AnaliseAmbiental::findOrFail($id)->delete();
@@ -214,17 +357,32 @@ class AnaliseSWOT extends Component
 
     public function resetForm()
     {
-        $this->itemId = null;
+        $this->itemId        = null;
         $this->dsc_categoria = '';
-        $this->dsc_item = '';
-        $this->num_impacto = 3;
+        $this->dsc_item      = '';
+        $this->num_impacto   = 3;
+        $this->num_gravidade = 3;
+        $this->num_urgencia  = 3;
+        $this->num_tendencia = 3;
         $this->txt_observacao = '';
     }
 
     public function render()
     {
+        $partes = $this->peiAtivo
+            ? ParteInteressada::where('cod_pei', $this->peiAtivo->cod_pei)->orderBy('num_influencia', 'desc')->orderBy('num_interesse', 'desc')->get()
+            : collect();
+
+        $cenarios = $this->peiAtivo
+            ? CenarioProspectivo::where('cod_pei', $this->peiAtivo->cod_pei)->orderBy('num_ordem')->orderBy('dsc_tipo')->get()
+            : collect();
+
         return view('livewire.p-e-i.analise-s-w-o-t', [
-            'categorias' => AnaliseAmbiental::categoriasSWOT(),
+            'categorias'   => AnaliseAmbiental::categoriasSWOT(),
+            'partes'       => $partes,
+            'tiposParte'   => ParteInteressada::TIPOS,
+            'cenarios'     => $cenarios,
+            'tiposCenario' => CenarioProspectivo::TIPOS,
         ]);
     }
 }

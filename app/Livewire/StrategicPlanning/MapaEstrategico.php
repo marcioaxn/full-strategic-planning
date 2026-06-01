@@ -125,7 +125,7 @@ class MapaEstrategico extends Component
                     })->with(['entregas' => function($qEntrega) {
                         $qEntrega->where('bln_arquivado', false)->orderBy('dte_prazo');
                     }]);
-                }])->ordenadoPorNivel();
+                }, 'ods'])->ordenadoPorNivel();
             }])
             ->orderBy('num_nivel_hierarquico_apresentacao', 'desc')
             ->get()

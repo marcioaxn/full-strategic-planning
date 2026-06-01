@@ -12,6 +12,9 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+        <!-- Bootstrap Icons -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
         <!-- Styles / Scripts -->
         @vite(['resources/scss/app.scss', 'resources/js/app.js'])
         @livewireStyles
@@ -87,6 +90,14 @@
         </style>
     </head>
     <body>
+        {{-- Alternador de tema (claro/escuro/sistema) --}}
+        <div class="theme-switcher-guest">
+            <button id="guestThemeSwitcher" class="btn-theme-toggle-guest" type="button"
+                    data-bs-placement="left" title="Tema">
+                <i class="bi bi-circle-half"></i>
+            </button>
+        </div>
+
         <div class="min-vh-100 d-flex align-items-center justify-content-center guest-container">
             {{ $slot }}
         </div>
@@ -167,10 +178,12 @@
 
                     icon.className = `bi ${config.icon}`;
 
-                    const tooltipInstance = bootstrap.Tooltip.getInstance(themeSwitcher);
-                    if (tooltipInstance) {
-                        tooltipInstance.setContent({ '.tooltip-inner': config.label });
-                    }
+                    try {
+                        const tooltipInstance = window.bootstrap?.Tooltip?.getInstance(themeSwitcher);
+                        if (tooltipInstance) {
+                            tooltipInstance.setContent({ '.tooltip-inner': config.label });
+                        }
+                    } catch (e) { /* bootstrap ainda não carregado — ignora */ }
                 };
 
                 const cycleTheme = () => {
@@ -193,10 +206,16 @@
                 // Setup theme switcher button
                 const themeSwitcher = document.getElementById('guestThemeSwitcher');
                 if (themeSwitcher) {
-                    // Initialize tooltip
-                    new bootstrap.Tooltip(themeSwitcher);
-
+                    // Anexa o clique PRIMEIRO — não pode depender do bootstrap estar pronto
                     themeSwitcher.addEventListener('click', cycleTheme);
+
+                    // Tooltip é opcional: se o bootstrap ainda não carregou, ignora sem quebrar
+                    try {
+                        if (window.bootstrap?.Tooltip) {
+                            new bootstrap.Tooltip(themeSwitcher);
+                        }
+                    } catch (e) { /* ignora */ }
+
                     updateThemeButton();
                 }
             });
