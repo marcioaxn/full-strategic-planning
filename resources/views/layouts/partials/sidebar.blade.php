@@ -149,11 +149,38 @@
 
 <!-- Scripts -->
 <script>
+    const SIDEBAR_SCROLL_KEY = 'app.sidebarScrollTop';
+
+    // Mantém a posição de rolagem da sidebar entre navegações (wire:navigate),
+    // para que o item clicado permaneça visível após o refresh da página.
+    function persistSidebarScroll() {
+        document.querySelectorAll('.app-sidebar-scroll').forEach((el) => {
+            // Salva continuamente enquanto o usuário rola (uma vez por elemento)
+            if (!el.dataset.scrollBound) {
+                el.addEventListener('scroll', () => {
+                    sessionStorage.setItem(SIDEBAR_SCROLL_KEY, el.scrollTop);
+                }, { passive: true });
+                el.dataset.scrollBound = '1';
+            }
+            // Restaura a posição salva (o DOM é recriado a cada navegação)
+            const saved = sessionStorage.getItem(SIDEBAR_SCROLL_KEY);
+            if (saved !== null) el.scrollTop = parseInt(saved, 10);
+        });
+    }
+
+    // Garante o valor mais recente imediatamente antes de navegar
+    document.addEventListener('livewire:navigate', () => {
+        const el = document.querySelector('.app-sidebar-scroll');
+        if (el) sessionStorage.setItem(SIDEBAR_SCROLL_KEY, el.scrollTop);
+    });
+
     document.addEventListener('livewire:navigated', () => {
+        persistSidebarScroll();
         initTooltips();
     });
 
     document.addEventListener('DOMContentLoaded', () => {
+        persistSidebarScroll();
         initTooltips();
     });
 
