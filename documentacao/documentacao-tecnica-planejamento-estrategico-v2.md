@@ -1,6 +1,6 @@
 # Documentacao tecnica - Sistema de Planejamento Estrategico
 
-Data: 2026-05-23. Finalidade: subsidiar avaliacao tecnica e planejamento de upgrade do Sistema de Planejamento Estrategico.
+Data base: 2026-05-23. Atualização: 2026-06-01 — inclui os novos módulos e o redesenho de interface entregues após a versão base (ver seção **"Atualização técnica (2026-06) — Novos módulos e funcionalidades"**, logo após o sumário). Finalidade: subsidiar avaliação técnica, planejamento de upgrade e servir de base para o manual operacional do Sistema de Planejamento Estratégico.
 
 ## Controle de confianca
 
@@ -31,6 +31,156 @@ Verificado no codigo e no README: este repositorio implementa um Sistema de Plan
 - O mapa estrategico calcula atingimento hibrido por perspectiva combinando indicadores e planos/entregas com pesos configuraveis.
 - O banco real possui 56 tabelas em schemas PostgreSQL de dominio e infraestrutura.
 - A tabela `migrations` possui 67 migrations aplicadas; ha 67 arquivos de migration no disco.
+
+## Atualização técnica (2026-06) — Novos módulos e funcionalidades
+
+> Esta seção consolida tudo o que foi adicionado **após** a versão base (2026-05-23). É a referência mais atual e deve prevalecer sobre os inventários antigos abaixo quando houver divergência. Confiança: `Verificado no código` (arquivos, migrations e rotas no repositório). Os inventários originais (Models, Livewire, Rotas, Banco) seguem válidos para o núcleo, mas **não incluem** os itens listados aqui.
+
+### Visão geral das adições
+
+O sistema evoluiu de um núcleo PEI/BSC para uma plataforma alinhada de ponta a ponta ao **Guia Prático de PEI (GPPEI/MGI 2025)**, organizada nos três módulos metodológicos oficiais, com a inclusão transversal da **Agenda 2030 (ODS)** e um redesenho completo das telas públicas e do tema visual.
+
+| Tema | O que foi adicionado | Rota principal |
+|---|---|---|
+| Agenda 2030 (ODS) | Eixo transversal opcional: vínculo de ODS a objetivos e ao PEI, painel de cobertura, ícones oficiais | `/agenda2030` |
+| Módulo 01 — Inaugurar e Integrar | Planejamento do processo, integração com instrumentos (PPA/LOA/Planos), calendário de eventos | `/pei/inaugurar` |
+| Módulo 02 — Cadeia de Valor | Atividades finalísticas e de suporte com processos | `/pei/cadeia-valor` |
+| Módulo 02 — Análise de ambiente expandida | SWOT com GUT, PESTEL, Partes Interessadas, Cenários Prospectivos | `/pei/swot`, `/pei/pestel` |
+| Módulo 02 — Execução enriquecida | Modelo Lógico, Matriz RACI, Metas SMART, Plano de Comunicação | telas de planos/entregas |
+| Módulo 03 — Monitorar e Avaliar | RAE (Revisão e Avaliação da Estratégia), Lições Aprendidas | `/monitoramento/rae`, `/licoes-aprendidas` |
+| Área pessoal | Minhas Entregas (tarefas do usuário agrupadas por plano) | `/minhas-entregas` |
+| Relatórios | Reconstrução visual + Dossiê Estratégico Integrado + marcadores ODS | `/relatorios` |
+| Portal público | Landing page como painel público de transparência + Mapa Estratégico read-only | `/` |
+| Visualizadores de guias | GPPEI e Guia de Projetos com sumário navegável embutido | `/guia-gppei`, `/documentos/projetos` |
+| Administração | Gestão de Perfis de Acesso, Impersonação, barra de progresso do PEI | `/admin/perfis`, `/impersonate/*` |
+| Tema visual | Dark mode em landing/login/dashboard; sidebar reorganizada por módulos GPPEI | — |
+
+### Agenda 2030 (ODS) — eixo transversal
+
+Integração opcional e estruturada com a Agenda 2030. O gestor decide, ao criar/editar cada objetivo, se vincula ODS — não há obrigatoriedade. Existem **dois níveis** de vínculo, espelhando a metodologia de integração:
+
+- **Granular** — `strategic_planning.rel_objetivo_ods` (objetivo ↔ ODS, com `txt_contribuicao`). Limite recomendado de 3 ODS por objetivo.
+- **Institucional** — `strategic_planning.rel_pei_ods` (PEI ↔ ODS, com `txt_contribuicao` e `dsc_intensidade`: Alta/Média/Baixa). Declarado no módulo Inaugurar e Integrar.
+- **Referência** — `strategic_planning.tab_ods` com os **18 ODS** (17 da ONU + ODS 18 nacional brasileiro "Igualdade Étnico-Racial"). Colunas: `num_ods` (PK 1..18), `nom_ods`, `nom_ods_abreviado`, `dsc_ods`, `cod_cor` (hex oficial), `nom_icone`. Populada pelo `OdsSeeder` (idempotente).
+
+Artefatos: model `App\Models\Agenda2030\ODS`; relações `ods()` em `Objetivo` e `PEI`; componente Blade `<x-ods-badge>` (usa os ícones oficiais em PT-BR de `public/img/ods/ods-01.png`..`ods-18.png`, com fallback automático para badge colorido); painel `App\Livewire\Agenda2030\PainelODS` em `/agenda2030` (cobertura X/18, grade clicável, objetivos por ODS). Marcadores de ODS aparecem na listagem de objetivos, no mapa estratégico, no widget do dashboard e nos relatórios PDF.
+
+### Módulo 01 GPPEI — Inaugurar e Integrar
+
+Componente `App\Livewire\StrategicPlanning\InaugurarIntegrar` (`/pei/inaugurar`) com quatro abas: Planejar o Processo, Integração com Instrumentos, Agenda 2030 (aderência institucional do PEI aos ODS) e Calendário de Eventos.
+
+- `strategic_planning.tab_inaugurar_pei` — `cod_inaugurar` (PK), `cod_pei`, `txt_equipe`, `txt_diretrizes`, `txt_metodologia`, `txt_observacoes`, `dte_inicio_processo`, `dte_fim_previsto`, `bln_aprovado`. Model `InauguraPei`.
+- `strategic_planning.tab_integracao_instrumentos` — `cod_integracao` (PK), `cod_pei`, `dsc_instrumento`, `dsc_tipo_instrumento` (PPA/LOA/Plano Setorial/Outro), `txt_pontos_atencao`, `txt_tarefas`, `dsc_intensidade`, `num_ordem`. Model `IntegracaoInstrumento`.
+- `strategic_planning.tab_calendario_eventos_pei` — `cod_evento` (PK), `cod_pei`, `dsc_titulo`, `dsc_objetivo`, `dte_evento`, `dsc_participantes`, `dsc_tipo_evento`, `bln_realizado`. Model `CalendarioEventoPei`.
+
+### Módulo 02 — Cadeia de Valor
+
+Componente `App\Livewire\StrategicPlanning\CadeiaDeValor` (`/pei/cadeia-valor`). A tabela `tab_atividade_cadeia_valor` ganhou as colunas `dsc_tipo` (Finalística/Suporte) e `num_ordem`, permitindo separar atividades finalísticas das de suporte, cada uma com seus processos (entrada → transformação → saída).
+
+### Módulo 02 — Análise de ambiente expandida
+
+- **SWOT com GUT**: `tab_analise_ambiental` recebeu `num_gravidade`, `num_urgencia`, `num_tendencia` (priorização GUT dos itens). Componente `AnaliseSWOT`.
+- **PESTEL**: análise por dimensões (Política, Econômica, Social, Tecnológica, Ambiental, Legal) reutilizando `AnaliseAmbiental`. Componente `AnalisePESTEL`.
+- **Partes Interessadas** — `strategic_planning.tab_partes_interessadas`: `cod_parte` (PK), `cod_pei`, `nom_parte`, `dsc_tipo`, `num_interesse`, `num_influencia`, `txt_estrategia_engajamento`, `num_ordem`. Model `ParteInteressada` (com quadrante influência × interesse).
+- **Cenários Prospectivos** — `strategic_planning.tab_cenarios_prospectivos`: `cod_cenario` (PK), `cod_pei`, `cod_organizacao`, `nom_cenario`, `dsc_tipo` (Otimista/Tendencial/Pessimista), `dsc_descricao`, `txt_implicacoes`, `txt_resposta_estrategica`, `num_probabilidade`, `num_impacto`, `num_ordem`. Model `CenarioProspectivo`.
+
+### Módulo 02 — Execução enriquecida (planos e entregas)
+
+- **Modelo Lógico**: `tab_plano_de_acao` recebeu `json_modelo_logico` (insumos → atividades → produtos → resultados → impacto).
+- **Matriz RACI** — `action_plan.tab_raci`: `cod_raci` (PK), `cod_plano_de_acao`, `cod_entrega`, `user_id`, `dsc_papel` (Responsável/Aprovador/Consultado/Informado). Model `Raci`.
+- **Metas SMART**: `tab_indicador` recebeu `json_smart` (Específico, Mensurável, Atingível, Relevante, Temporal).
+- **Plano de Comunicação** — `action_plan.tab_plano_comunicacao`: `cod_comunicacao` (PK), `cod_plano_de_acao`, `nom_publico_alvo`, `dsc_mensagem_chave`, `dsc_canal`, `dsc_frequencia`, `nom_responsavel`, `num_ordem`. Model `PlanoComunicacao`. Relatório consolidado em `/relatorios/comunicacao`.
+
+### Módulo 03 — Monitorar e Avaliar
+
+- **RAE (Revisão e Avaliação da Estratégia)** — componente `GerenciarRae` (`/monitoramento/rae`); tabela `strategic_planning.tab_rae`: `cod_rae` (PK), `cod_pei`, `cod_organizacao`, `dte_referencia`, `dte_reuniao`, `txt_destaques_positivos`, `txt_problemas_identificados`, `txt_encaminhamentos`, `json_participantes`, `num_progresso_geral`, `dsc_tipo_reuniao`. Model `Rae`. Relatório dedicado em `relatorios/rae`.
+- **Lições Aprendidas** — componente `App\Livewire\ActionPlan\LicoesAprendidas` (`/licoes-aprendidas`); tabela `action_plan.tab_licoes_aprendidas`: `cod_licao` (PK), `cod_plano_de_acao`, `dsc_categoria`, `dsc_tipo` (Aprendizado/Problema/Melhoria/Boas Práticas), `txt_descricao`, `txt_recomendacao`, `num_ordem`. Model `LicaoAprendida`.
+
+### Minhas Entregas (área pessoal)
+
+Componente `App\Livewire\Deliverables\MinhasEntregas` (`/minhas-entregas`): lista as entregas não concluídas atribuídas ao usuário autenticado, agrupadas por plano de ação, com filtros (busca, status, prioridade), KPIs de resumo (pendentes, em andamento, atrasadas, planos), destaque de atrasadas e cores oficiais de prioridade/status. Interface redesenhada e compatível com dark mode.
+
+### Relatórios reconstruídos e Dossiê Estratégico Integrado
+
+`ReportGenerationService` e as views em `resources/views/relatorios/` foram reconstruídos sobre um sistema de design comum (partials `cabecalho`, `rodape`, `estilos`). Pontos principais:
+
+- Relatórios: executivo, mapa/identidade (paisagem), objetivos, indicadores (agrupados por perspectiva), planos, riscos (com matriz e mitigações), comunicação, RAE e cadeia de valor.
+- **Dossiê Estratégico Integrado** (`/relatorios/integrado`): documento consolidado em capítulos cobrindo identidade, inaugurar/integrar, cadeia de valor, análise de ambiente, mapa estratégico, indicadores, portfólio de planos com RACI/Modelo Lógico, riscos, comunicação, RAE, lições aprendidas e **contribuição à Agenda 2030**.
+- Ordem das perspectivas no mapa corrigida para o padrão BSC (base/sustentação na parte inferior).
+- Marcadores de ODS (chips coloridos) ao lado dos objetivos nos relatórios.
+
+### Landing page pública e redesenho de UI
+
+- **Landing page** (`App\Livewire\LandingPage`, rota `/`): deixou de ser vitrine de marketing e passou a ser um **painel público de transparência estratégica**. Quando há PEI configurado, exibe panorama BSC com atingimento, KPIs, riscos críticos e um **Mapa Estratégico read-only** (swimlanes de perspectivas com objetivos coloridos por farol) antes do CTA de acesso. Mantém abaixo a apresentação metodológica (módulos GPPEI, funcionalidades). Dados em cache de 5 min.
+- **Tema claro/escuro responsivo**: landing, login e dashboard com dark mode aderente; alternador de tema disponível nas páginas públicas (guest layout).
+- **Login** (`auth/login`): redesenhado no mesmo padrão visual da landing, com reatividade no botão de submit e dark mode.
+- **Sidebar** (`layouts/partials/sidebar`): reorganizada por módulos GPPEI (Inaugurar/Planejar/Monitorar), com separadores de seção, grupo "Meu Espaço", "Referências" e "Administração". Suporte a item externo (abrir em nova aba).
+
+### Visualizadores de guias
+
+`App\Http\Controllers\DocumentosController` serve o PDF e os viewers embutidos:
+
+- `/guia-gppei` (`documentos.viewer-gppei`) — Guia GPPEI com sumário lateral navegável por seção/página.
+- `/documentos/projetos` (`documentos.projetos`) — Guia Prático de Projetos com sumário por domínios; PDF bruto em `/documentos/projetos/pdf`.
+- Componentes Blade `<x-gppei-link>` e `<x-projetos-link>` para referências contextuais às páginas dos guias; `<x-module-header>` para cabeçalho padronizado dos módulos.
+
+### Administração e governança
+
+- **Gestão de Perfis de Acesso** — `App\Livewire\Admin\GestaoPerfis` (`/admin/perfis`).
+- **Impersonação** — `App\Http\Controllers\ImpersonateController` (`/impersonate/{userId}` e `/impersonate-stop`), com banner de modo impersonação no layout.
+- **Barra de progresso do PEI** — `App\Livewire\Shared\PeiProgressBar` no rodapé da sidebar, refletindo o avanço das fases metodológicas.
+
+### Novas tabelas no banco (resumo)
+
+`Verificado no código` (migrations no disco; lote `2026_05_30_*` e `2026_05_31_*`). Tabelas novas que ampliam o schema documentado na versão base:
+
+| Schema | Tabela | Propósito |
+|---|---|---|
+| `strategic_planning` | `tab_ods` | 18 ODS de referência (Agenda 2030) |
+| `strategic_planning` | `rel_objetivo_ods` | Vínculo objetivo ↔ ODS (granular) |
+| `strategic_planning` | `rel_pei_ods` | Aderência institucional PEI ↔ ODS |
+| `strategic_planning` | `tab_inaugurar_pei` | Planejamento do processo (Módulo 01) |
+| `strategic_planning` | `tab_integracao_instrumentos` | Integração com PPA/LOA/Planos |
+| `strategic_planning` | `tab_calendario_eventos_pei` | Calendário de eventos do PEI |
+| `strategic_planning` | `tab_partes_interessadas` | Stakeholders (influência × interesse) |
+| `strategic_planning` | `tab_cenarios_prospectivos` | Cenários prospectivos |
+| `strategic_planning` | `tab_rae` | Revisão e Avaliação da Estratégia |
+| `action_plan` | `tab_raci` | Matriz RACI de planos/entregas |
+| `action_plan` | `tab_licoes_aprendidas` | Lições aprendidas |
+| `action_plan` | `tab_plano_comunicacao` | Plano de comunicação |
+
+Colunas adicionadas a tabelas existentes: `tab_analise_ambiental` (`num_gravidade`, `num_urgencia`, `num_tendencia`); `tab_atividade_cadeia_valor` (`dsc_tipo`, `num_ordem`); `tab_plano_de_acao` (`json_modelo_logico`); `tab_indicador` (`json_smart`).
+
+### Novas rotas (resumo)
+
+`Verificado no código` em `routes/web.php`:
+
+| Rota | Nome | Componente/Controller |
+|---|---|---|
+| `/agenda2030` | `agenda2030.index` | `Agenda2030\PainelODS` |
+| `/pei/inaugurar` | `pei.inaugurar` | `StrategicPlanning\InaugurarIntegrar` |
+| `/pei/cadeia-valor` | `pei.cadeia-valor` | `StrategicPlanning\CadeiaDeValor` |
+| `/monitoramento/rae` | `monitoramento.rae` | `StrategicPlanning\GerenciarRae` |
+| `/licoes-aprendidas` | `licoes.index` | `ActionPlan\LicoesAprendidas` |
+| `/minhas-entregas` | `entregas.minhas` | `Deliverables\MinhasEntregas` |
+| `/temas-norteadores` | `temas-norteadores.index` | `StrategicPlanning\GerenciarTemasNorteadores` |
+| `/guia-gppei` | `documentos.viewer-gppei` | `DocumentosController@viewerGppei` |
+| `/documentos/projetos` | `documentos.projetos` | `DocumentosController@viewerProjetos` |
+| `/documentos/projetos/pdf` | `documentos.projetos.pdf` | `DocumentosController@projetosPdf` |
+| `/admin/perfis` | `admin.perfis` | `Admin\GestaoPerfis` |
+| `/impersonate/{userId}` | `impersonate.start` | `ImpersonateController@start` |
+| `/impersonate-stop` | `impersonate.stop` | `ImpersonateController@stop` |
+| `/relatorios/comunicacao` | `relatorios.comunicacao` | `Reports\RelatorioController@comunicacao` |
+
+### Novos models, componentes e seeders (resumo)
+
+- **Models**: `Agenda2030\ODS`; `StrategicPlanning\{InauguraPei, IntegracaoInstrumento, CalendarioEventoPei, ParteInteressada, CenarioProspectivo, Rae}`; `ActionPlan\{Raci, LicaoAprendida, PlanoComunicacao}`. Models existentes alterados: `Objetivo` e `PEI` (relação `ods()`), `AtividadeCadeiaValor`, `AnaliseAmbiental`, `Indicador`, `PlanoDeAcao`, `RiscoMitigacao`.
+- **Componentes Livewire**: `Agenda2030\PainelODS`, `LandingPage`, `Deliverables\MinhasEntregas`, `StrategicPlanning\{InaugurarIntegrar, CadeiaDeValor, GerenciarRae}`, `ActionPlan\LicoesAprendidas`, `Admin\GestaoPerfis`, `Shared\PeiProgressBar`.
+- **Componentes Blade**: `x-ods-badge`, `x-module-header`, `x-gppei-link`, `x-projetos-link`.
+- **Controllers**: `DocumentosController`, `ImpersonateController`.
+- **Seeders**: `OdsSeeder` (18 ODS), `BaseStrategicSeeder`, conjunto `MIDR*` (ambiente de demonstração) e `SeedMIDREnvironment` (command Artisan).
+
+---
 
 ## Runtime e dependencias
 

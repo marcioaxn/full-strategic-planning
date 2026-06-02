@@ -103,7 +103,7 @@ class ReportGenerationService
         $riscosSummary = Risco::where('cod_organizacao', $organizacaoId)
             ->selectRaw("
                 CASE
-                    WHEN (num_probabilidade * num_impacto) >= 15 THEN 'Crítico'
+                    WHEN (num_probabilidade * num_impacto) >= 16 THEN 'Crítico'
                     WHEN (num_probabilidade * num_impacto) >= 10 THEN 'Alto'
                     WHEN (num_probabilidade * num_impacto) >= 5 THEN 'Médio'
                     ELSE 'Baixo'
@@ -521,7 +521,7 @@ class ReportGenerationService
         $riscosSummary = Risco::where('cod_organizacao', $organizacaoId)
             ->selectRaw("
                 CASE
-                    WHEN (num_probabilidade * num_impacto) >= 15 THEN 'Crítico'
+                    WHEN (num_probabilidade * num_impacto) >= 16 THEN 'Crítico'
                     WHEN (num_probabilidade * num_impacto) >= 10 THEN 'Alto'
                     WHEN (num_probabilidade * num_impacto) >= 5 THEN 'Médio'
                     ELSE 'Baixo'
@@ -573,7 +573,7 @@ class ReportGenerationService
                     'totalObjetivos' => Objetivo::whereHas('perspectiva', fn($q) => $q->where('cod_pei', $pei?->cod_pei))->count(),
                     'totalIndicadores' => $indicadoresDetalhados->count(),
                     'totalPlanos' => $planos->count(),
-                    'riscosCriticos' => collect($riscosDetalhado)->where('num_nivel_risco', '>=', 15)->count(),
+                    'riscosCriticos' => collect($riscosDetalhado)->where('num_nivel_risco', '>=', 16)->count(),
                 ];
                 $aiSummary = $aiService->summarizeStrategy($stats, $organizacao->nom_organizacao);
             }
