@@ -1,624 +1,295 @@
-# Strategic Planning System with Laravel 12 + Livewire 3. Balanced Scorecard, KPIs, Risk Management, and Executive Dashboards.
+# Sistema de Planejamento Estratégico Institucional (PEI)
 
-**Strategic Planning System** is a comprehensive web application designed for Institutional Strategic Planning (PEI). It enables organizations to define, track, and manage their strategic goals using the Balanced Scorecard (BSC) methodology, Indicators (KPIs), Action Plans, and Risk Management.
+Plataforma web de gestão estratégica para **organizações públicas brasileiras**, construída sobre **Laravel 12 + Livewire 3**. Permite definir, executar e monitorar a estratégia institucional usando a metodologia **Balanced Scorecard (BSC)**, indicadores de desempenho (KPIs), planos de ação, entregas e gestão de riscos — alinhada ao **Guia Prático de Planejamento Estratégico Institucional (GPPEI / MGI 2025)** e à **Agenda 2030 / ODS**.
 
-This project was built upon the [Laravel Jetstream + Livewire + Bootstrap Starter Kit](https://github.com/marcioaxn/starter-kit-laravel-jetstream-livewire-bootstrap) by Marcio Alessandro Xavier Neto.
-
----
-
-## 📋 Table of Contents
-
-- [Overview](#-overview)
-- [Strategic Mentor & AI Intelligence](#-strategic-mentor--ai-intelligence-new)
-- [Key Features](#-key-features)
-- [Tech Stack](#-tech-stack)
-- [Requirements](#-requirements)
-- [Installation Guide](#-installation-guide)
-  - [Beginners](#-beginners-step-by-step)
-  - [Experienced Developers](#-experienced-developers-tldr)
-- [Database & Architecture](#-database--architecture)
-- [Legacy Transition](#-legacy-transition)
-- [Credits](#-credits)
-- [License](#-license)
+> Referência metodológica: `documentacao/pdf/Guia_PEI_VF.pdf`
+> Documento mestre do projeto: `documentacao/documento-mestre-evolucao-sistema-pei.md`
 
 ---
 
-## 🎯 Overview
+## 📋 Sumário
 
-The system provides a robust platform for organizations to execute their strategy. It moves beyond simple spreadsheets by integrating strategic objectives with real-time performance indicators, risk mitigation plans, and **Cutting-edge Artificial Intelligence**.
-
-The system is designed with a "Single Page Application" (SPA) feel using **Livewire 3** and **wire:navigate**, ensuring a smooth and responsive user experience. It now features a **Strategic Mentor** that proactively guides and celebrates your progress.
-
----
-
-## 🤖 Strategic Mentor & AI Intelligence (New!)
-
-The system features a state-of-the-art **Strategic Intelligence** module, transforming planning from a manual chore into a guided, high-performance experience.
-
-### 🧭 Strategic Mentor (Real-time Coaching)
-- **Proactive Guidance**: A professional dashboard widget that guides users through the 7 essential phases of the PEI (Cycle, Identity, Perspectives, Objectives, Satisfaction Levels, KPIs, Action Plans).
-- **Maturity Thresholds**: Advanced methodology that allows organizations to define different performance rules for each year of the cycle, enabling a dynamic and evolving "Traffic Light" system.
-- **Interactive Timeline**: Real-time completeness score with visual indicators and smart "Next Step" suggestions.
-- **Premium Feedback System**: Dynamic, interactive Toasts with progress bars and hover-pause logic that celebrate every strategic milestone.
-- **Graceful Completion**: An elegant "Mission Accomplished" state that minimizes the UI once 100% progress is reached, keeping the focus on results.
-
-### 🪄 AI-Powered Assistance Center
-- **Contextual Brainstorming**: Generate tailored Identity, Objectives, KPIs, and Risks based on your specific organizational context.
-- **Instant Action UX**: One-click application of AI suggestions directly into your planning—no copying or pasting required.
-- **SMART Preventive Audit**: Real-time AI analysis while you type, ensuring objectives and indicators meet the highest methodological standards (Specific, Measurable, Achievable, Relevant, Time-bound).
-- **Executive AI Minute**: A specialized feature for high management that generates human-like summaries of the entire strategic status in seconds.
-- **Predictive Reporting (PDF)**: The official Executive Report now features a dedicated AI section with **Trend Analytics**, projecting future performance based on historical KPI data and suggesting corrective actions.
-
-### 🔔 Strategic Alerts Center
-- **Persistent History**: A premium notification center (Bell icon) that tracks and stores every strategic achievement, warning, or system change.
-- **Real-time Updates**: Instant counters and an elegant dropdown for quick access to the latest organizational updates.
-
-### 🌐 Public Transparency Portal
-- **High-End Interface**: A specialized guest layout with **Glassmorphism** effects and premium gradients.
-- **Public Global Selectors**: Non-authenticated users can fully explore the strategic map by filtering by **Unit, Cycle (PEI), and Year**, ensuring absolute institutional transparency.
-- **Methodological Consistency**: Ensures that the general public sees the exact same calculated performance as internal users, respecting the maturity thresholds of each period.
-
-### ⚙️ Universal AI Configuration
-- **Multi-Provider Support**: Choose between **Google Gemini** and **OpenAI (GPT-4)** through a dedicated administrative interface.
-- **Real-time Connectivity Testing**: Built-in diagnostic tools to verify your API keys and provider status instantly.
-- **Enterprise-grade Security**: All sensitive API keys are stored using high-level database encryption.
+- [Cenário atual do projeto](#-cenário-atual-do-projeto)
+- [Stack tecnológica](#-stack-tecnológica)
+- [Requisitos](#-requisitos)
+- [Instalação](#-instalação)
+- [Arquitetura](#-arquitetura)
+- [Boas práticas de desenvolvimento](#-boas-práticas-de-desenvolvimento)
+- [Migração da versão anterior (v1 → v2)](#-migração-da-versão-anterior-v1--v2)
+- [Testes e qualidade](#-testes-e-qualidade)
+- [Documentação relacionada](#-documentação-relacionada)
+- [Licença e créditos](#-licença-e-créditos)
 
 ---
 
-## ✨ Key Features
+## 🎯 Cenário atual do projeto
 
-### 🧩 Strategic Planning (BSC)
-- **Strategic Mentor**: Smart coach for the entire planning lifecycle.
-- **Strategic Map**: Visual representation of the strategy (Perspectives, Objectives).
-- **AI-Assisted Identity**: Mission, Vision, and Values generation with instant application.
-- **Objectives**: CRUD for Strategic Objectives with AI-suggested goals and SMART auditing.
-- **Perspectives**: Automated "Down-Top" logic for Finance, Customer, Processes, and Growth.
-- **Satisfaction Levels**: Custom color-coded scales for strategic monitoring.
+O sistema está em operação evolutiva e cobre o ciclo completo do PEI. Os módulos abaixo estão implementados:
 
-### 📈 Performance Indicators (KPIs)
-- **Indicator Management**: Define formulas, frequencies, and data sources.
-- **Goals & Baselines**: Set targets for different periods.
-- **Evolution Tracking**: Upload evidence and track progress over time.
-- **Traffic Light System**: Automatic performance calculation (Green, Yellow, Red).
-- **Temporal Calculation**: Smart handling of Year-to-Date (YTD) vs. Full Year logic.
+| Módulo | O que entrega |
+|---|---|
+| **Planejamento Estratégico (BSC)** | Ciclos PEI, Identidade (Missão/Visão/Valores), Perspectivas, Objetivos, Mapa Estratégico, Graus de Satisfação |
+| **Análises de Ambiente** | SWOT e PESTEL |
+| **Indicadores (KPIs)** | Indicadores, metas por ano, linha de base, evolução, cálculo de farol (semáforo) e polaridade |
+| **Planos de Ação** | Planos vinculados a objetivos, tipos de execução, responsáveis |
+| **Entregas (modelo Notion)** | Quadro Kanban, Lista, Timeline e Calendário; subtarefas hierárquicas, rótulos, comentários, anexos, histórico e múltiplos responsáveis |
+| **Gestão de Riscos** | Matriz 5×5, mitigações e ocorrências |
+| **Agenda 2030 / ODS** | 17 ODS oficiais como eixo transversal, vínculo objetivo↔ODS e painel dedicado |
+| **Relatórios e Dashboard** | Dashboard executivo (Chart.js), relatórios em PDF e exportações em Excel |
+| **Organização** | Organizações hierárquicas, perfis de acesso |
+| **Auditoria** | Trilha de alterações (quem, o quê, quando) nas entidades de negócio |
+| **Administração** | Configurações sistêmicas e alertas estratégicos |
 
-### 📋 Action Plans
-- **Project Management**: Create action plans linked to objectives.
-- **Deliverables**: Track specific tasks and milestones.
-- **Responsibility**: Assign managers to plans.
-- **Gantt/Timeline**: Visual tracking of progress (via Audit trails).
-
-### 🛡️ Risk Management
-- **Risk Matrix (5x5)**: Heatmap visualization of Probability vs. Impact.
-- **Mitigation Plans**: Actions to reduce risk exposure.
-- **Occurrences**: Log materialized risks and their actual impact.
-
-### 📊 Reporting & Dashboard
-- **Executive Dashboard**: Real-time charts (Chart.js) and metrics.
-- **Intelligent PDF Reports**: High-quality exports with built-in **AI Summaries** and **Predictive Analysis**.
-- **Excel Exports**: Data extraction for offline analysis.
-- **Global Context**: Smart selector for "Year" and "Organization" that filters all data globally.
-
-### 🔒 Security & Audit
-- **Audit Trail**: Complete history of changes (Who, What, When) for critical entities.
-- **Role-Based Access**: Granular permissions (implicit via policies).
-- **Authentication**: Secure login via Jetstream.
+**Fluxo metodológico guiado** (`PeiGuidanceService`):
+`Ciclo PEI → Identidade → Perspectivas → Objetivos → Graus de Satisfação → Indicadores → Planos de Ação → Dashboard`.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Stack tecnológica
 
-- **Framework**: Laravel 11 (PHP 8.2+)
-- **Frontend**: Livewire 3 + AlpineJS + Bootstrap 5
-- **Intelligence**: Google Gemini & OpenAI API
-- **Security**: Database Encryption for sensitive AI settings
-- **Database**: PostgreSQL 13+
-- **Styling**: SCSS (Premium Theme with Interactive Gradients)
-- **CDN Redundancy**: Intelligent asset loading for high-availability environments (VPN/Enterprise)
-- **PDF Generation**: `barryvdh/laravel-dompdf`
-- **Excel**: `maatwebsite/excel`
-- **Auditing**: `owen-it/laravel-auditing`
-- **Build Tool**: Vite
+- **PHP** 8.2+ · **Laravel** 12 · **Livewire** 3 · **Alpine.js** 3
+- **Frontend**: Bootstrap 5.3 + Bootstrap Icons · **Build**: Vite 7
+- **Banco**: **PostgreSQL multi-schema** (6 schemas de domínio)
+- **Autenticação**: Fortify + Jetstream + Sanctum
+- **Fila / Cache / Sessão**: driver `database`
+- **Testes**: Pest 4 · **Lint**: Laravel Pint
+- **PDF**: `barryvdh/laravel-dompdf` · **Excel**: `maatwebsite/excel` · **Auditoria**: `owen-it/laravel-auditing` · **HTML**: `spatie/laravel-html`
 
 ---
 
-## 📦 Requirements
+## 📦 Requisitos
 
-Before installing, ensure your environment meets these criteria:
+1. **PHP 8.2+** — extensões: `pgsql`, `pdo_pgsql`, `intl`, `mbstring`, `gd`, `zip`, `xml`
+2. **Composer 2.x**
+3. **Node.js 20 LTS**
+4. **PostgreSQL 13+** (mínimo absoluto **9.4** para `jsonb` e `gen_random_uuid`)
 
-1.  **PHP 8.2+** (Extensions: `pgsql`, `pdo_pgsql`, `intl`, `gd`, `zip`, `xml`)
-2.  **Composer 2.x**
-3.  **Node.js 20 LTS**
-4.  **PostgreSQL 13+** (Required for specific schema features)
+> Ambiente de referência de desenvolvimento: Windows 10 + XAMPP, PostgreSQL local.
 
 ---
 
-## 🚀 Installation Guide
+## 🚀 Instalação
 
-### 🟢 Beginners (Step-by-Step)
+### Passo a passo
 
-If you are new to Laravel or command-line tools, follow these steps carefully:
-
-**1. Clone the Project**
-Open your terminal (Command Prompt, PowerShell, or Terminal) and run:
 ```bash
-git clone <repository_url> strategic-planning
-cd strategic-planning
-```
+# 1. Clonar
+git clone <url_do_repositorio> planejamento-estrategico
+cd planejamento-estrategico
 
-**2. Install Backend Dependencies**
-Download the PHP libraries required by the system:
-```bash
+# 2. Dependências
 composer install
-```
-*Note: This may take a few minutes.*
-
-**3. Install Frontend Dependencies**
-Download the JavaScript libraries for the interface:
-```bash
 npm install
-```
 
-**4. Configure Environment**
-Create your configuration file by copying the example:
-```bash
-cp .env.example .env
-```
-*Windows users might need to use `copy .env.example .env`*
-
-**5. Generate Security Key**
-```bash
-php artisan key:generate
-```
-
-**6. Setup Database**
-1.  Open your PostgreSQL tool (pgAdmin or DBeaver).
-2.  Create a new database named `strategic_db` (or any name you prefer).
-3.  Open the `.env` file in a text editor (like VS Code or Notepad).
-4.  Find the `DB_CONNECTION` section and update it:
-    ```env
-    DB_CONNECTION=pgsql
-    DB_HOST=127.0.0.1
-    DB_PORT=5432
-    DB_DATABASE=strategic_db
-    DB_USERNAME=postgres
-    DB_PASSWORD=your_password
-    ```
-
-**7. Run Migrations & Seeds**
-This command creates all tables and inserts the initial data (admin user, basic settings):
-```bash
-php artisan migrate --seed
-```
-
-**8. Build Assets**
-Compile the CSS and JavaScript files:
-```bash
-npm run build
-```
-
-**9. Start the Server**
-Launch the application:
-```bash
-php artisan serve
-```
-Access http://localhost:8000 in your browser.
-
----
-
-### 🟠 Experienced Developers (TL;DR)
-
-```bash
-# Clone
-git clone <repository_url> strategic-planning && cd strategic-planning
-
-# Install Deps
-composer install && npm install
-
-# Env Setup
-cp .env.example .env
+# 3. Ambiente
+cp .env.example .env          # Windows: copy .env.example .env
 php artisan key:generate
 
-# DB Config (Ensure PostgreSQL is running and DB exists)
-# Edit .env DB_CONNECTION=pgsql etc.
+# 4. Configurar o banco no .env
+#    DB_CONNECTION=pgsql
+#    DB_HOST=127.0.0.1
+#    DB_PORT=5432
+#    DB_DATABASE=planejamento_estrategico
+#    DB_USERNAME=postgres
+#    DB_PASSWORD=sua_senha
 
-# Migrate & Seed
+# 5. Migrations + dados iniciais
 php artisan migrate --seed
 
-# Build & Run
+# 6. Compilar assets e subir
 npm run build
 php artisan serve
 ```
 
-**Default Credentials:**
-- **Email:** `user_adm@user_adm.com`
-- **Password:** `1352@765@1452`
+Acesse `http://localhost:8000`.
+
+### Ambiente de desenvolvimento completo
+
+```bash
+composer dev   # server + queue:listen + Vite, em paralelo
+```
+
+### Credenciais iniciais (seed)
+
+- **E-mail:** `user_adm@user_adm.com`
+- **Senha:** `1352@765@1452`
+
+> ⚠️ **Troque essa senha imediatamente** em qualquer ambiente que não seja local de desenvolvimento.
 
 ---
 
-## 🏛️ Database & Architecture
+## 🏛️ Arquitetura
 
-This project implements a **Domain-Driven Design (DDD)** approach in both its file structure and database schema architecture. This ensures modularity, scalability, and better organization compared to monolithic legacy systems.
+O projeto adota **Domain-Driven Design (DDD)** tanto na estrutura de arquivos quanto no banco. Em vez de um único schema, os dados são segregados em **6 schemas PostgreSQL** por domínio.
 
-### Domain Schemas (PostgreSQL)
-
-Instead of a single `public` or `pei` schema, data is segregated into logical domains. This is transparent to the application code thanks to the `search_path` configuration in `config/database.php`.
+> ⚠️ **Nunca assuma que todas as tabelas estão em `public`.** Os Models declaram `$table` com o prefixo de schema explícito (ex.: `strategic_planning.tab_pei`).
 
 ```mermaid
 graph TD
-    DB[Database: strategic_db] --> SP[Schema: strategic_planning]
-    DB --> AP[Schema: action_plan]
-    DB --> PI[Schema: performance_indicators]
-    DB --> RM[Schema: risk_management]
-    DB --> ORG[Schema: organization]
-    DB --> PUB[Schema: public]
+    DB[Banco PostgreSQL] --> SP[strategic_planning]
+    DB --> AP[action_plan]
+    DB --> PI[performance_indicators]
+    DB --> RM[risk_management]
+    DB --> ORG[organization]
+    DB --> PUB[public]
 
-    SP --> T1[tab_pei]
-    SP --> T2[tab_objetivo]
-    SP --> T3[tab_perspectiva]
-
-    AP --> T4[tab_plano_de_acao]
-    AP --> T5[tab_entregas]
-
-    PI --> T6[tab_indicador]
-    PI --> T7[tab_evolucao_indicador]
-
-    RM --> T8[tab_risco]
-    RM --> T9[tab_risco_mitigacao]
-
-    ORG --> T10[tab_organizacoes]
-    ORG --> T11[tab_perfil_acesso]
-
-    PUB --> T12[users]
-    PUB --> T13[failed_jobs]
+    SP --> S1[tab_pei / tab_objetivo / tab_perspectiva]
+    AP --> A1[tab_plano_de_acao / tab_entregas]
+    PI --> P1[tab_indicador / tab_evolucao_indicador]
+    RM --> R1[tab_risco / tab_risco_mitigacao]
+    ORG --> O1[tab_organizacoes / tab_perfil_acesso]
+    PUB --> U1[users / auditoria / configurações]
 ```
 
-### File Structure Map
+| Schema | Propósito |
+|---|---|
+| `strategic_planning` | Ciclos PEI, perspectivas BSC, objetivos, identidade, cadeia de valor |
+| `action_plan` | Planos de ação, entregas, rótulos, comentários, histórico, anexos |
+| `performance_indicators` | Indicadores/KPIs, metas, linha de base, evolução |
+| `risk_management` | Riscos, mitigações, ocorrências |
+| `organization` | Organizações hierárquicas, perfis de acesso |
+| `public` | Usuários, auditoria, relatórios, alertas, configurações, análise ambiental |
 
-The application code mirrors the database structure:
+### Estrutura de pastas
 
 ```text
 app/
-├── Models/
-│   ├── ActionPlan/          (PlanoDeAcao, Entrega...)
-│   ├── StrategicPlanning/   (PEI, Objetivo, Perspectiva...)
-│   ├── PerformanceIndicators/ (Indicador, Meta...)
-│   ├── RiskManagement/      (Risco, Mitigacao...)
-│   ├── Organization/        (Organization, Perfil...)
-│   └── User.php             (Auth - Public Domain)
-├── Livewire/
-│   ├── ActionPlan/
-│   ├── StrategicPlanning/
-│   ├── PerformanceIndicators/
-│   ├── RiskManagement/
-│   └── ...
+├── Livewire/              # Componentes por domínio (StrategicPlanning, ActionPlan,
+│                          #   Deliverables, PerformanceIndicators, RiskManagement,
+│                          #   Organization, Reports, Audit, Admin, Dashboard)
+├── Models/                # Eloquent com schema qualificado explícito
+├── Services/              # PeiGuidanceService, IndicadorCalculoService, ReportGenerationService
+├── Policies/              # Organizacao, PlanoDeAcao, Indicador, Risco
+└── Observers/             # EntregaObserver (recálculo automático de indicadores)
+
+resources/views/livewire/  # Views Blade por domínio
+database/
+├── migrations/            # Organizadas por subpastas de domínio
+└── seeders/               # OdsSeeder, BaseStrategicSeeder, PEIDataSeeder
 ```
 
----
+### Stack de middleware (rotas protegidas)
 
-## 🔄 Legacy Transition & Migration Strategy
-
-This project evolved from a legacy structure (available at [marcioaxn/planejamento-estrategico](https://github.com/marcioaxn/planejamento-estrategico)) through a carefully planned migration strategy that preserves **100% data integrity** while modernizing the architecture.
-
-### Evolution Timeline
-
-```mermaid
-graph LR
-    A[Legacy System<br/>2021-2024] --> B[Schema Migration<br/>Jan 2026]
-    B --> C[Deliverables Refactor<br/>Dec 2025]
-    C --> D[Current System<br/>Jan 2026]
-
-    style A fill:#f9f,stroke:#333
-    style D fill:#9f9,stroke:#333
-```
-
-### Legacy vs. Current Architecture
-
-| Feature | Legacy System | Current System |
-| :--- | :--- | :--- |
-| **Schema** | Monolithic (`pei` or `public`) | **Domain-Segregated** (`strategic_planning`, `action_plan`, etc.) |
-| **Models** | All in `App\Models` or `App\Models\PEI` | **Domain Folders** (`App\Models\ActionPlan`, etc.) |
-| **Organization** | Mixed responsibilities | **Separation of Concerns** (DDD) |
-| **Naming** | `strategic_planning.tab_tabela` (Hardcoded) | `tab_tabela` (Using specific schemas) |
-| **Deliverables** | Simple hierarchical list | **Notion-like Board** (Kanban, Timeline, Calendar, List) |
-| **Data Structure** | Fixed columns | **Flexible JSON properties** + Rich metadata |
+`auth:sanctum` → `jetstream.auth_session` → `verified` → `CheckPasswordChange`
 
 ---
 
-## 📦 Migration Strategy Overview
+## ✅ Boas práticas de desenvolvimento
 
-The migration strategy was designed as a **zero-downtime, backward-compatible** transition path with multiple layers:
+### Convenções
 
-### Layer 1: Domain Schema Segregation
+- **Idioma**: variáveis, comentários e mensagens em **Português do Brasil**.
+- **Livewire**: componente PHP em `app/Livewire/<Domínio>/`, view correspondente em `resources/views/livewire/`, nomes em kebab-case no Blade.
+- **Models**: sempre declarar `$table` com prefixo de schema (ex.: `action_plan.tab_plano_de_acao`).
+- **Chaves primárias**: UUID com `gen_random_uuid()` como default, `$incrementing = false`, `$keyType = 'string'`.
+- **Soft delete**: usar `deleted_at` nas tabelas de negócio.
+- **UI**: Bootstrap 5 + Bootstrap Icons, seguindo o padrão visual existente (tema claro + dark mode).
+- **Commits**: em PT-BR, com prefixo `feat | fix | refactor | chore | docs`.
 
-**Migration:** `2026_01_02_000001_migrate_legacy_tables_to_domain_schemas.php`
+### Banco de dados e migrations
 
-**Purpose:** Restructure the database from a monolithic schema into domain-specific schemas following DDD principles.
+- ✅ Migrations são sempre **novas** — **jamais** altere uma migration já aplicada.
+- ✅ Crie novas migrations na **subpasta do domínio** correspondente.
+- ✅ Em manutenção pontual, prefira execução **específica**: `php artisan migrate --path=...` (arquivo) e `--class=...` (seeder), evitando comandos globais.
+- ❌ **Nunca** rode `php artisan migrate` sem necessidade clara, nem `migrate:fresh` / `migrate:rollback` em produção.
+- ❌ **Nunca** edite `.env` ou `config/database.php` diretamente.
 
-**What it does:**
-1. Creates 5 new PostgreSQL schemas:
-   - `strategic_planning` - PEI, objectives, perspectives, BSC components
-   - `action_plan` - Action plans, deliverables, execution types
-   - `performance_indicators` - KPIs, goals, baselines, evolutions
-   - `risk_management` - Risks, mitigations, occurrences
-   - `organization` - Organizations, profiles, user relationships
+### Protocolo de edição de código
 
-2. Safely moves existing tables from `pei` and `public` schemas to their new domains using:
-   ```sql
-   ALTER TABLE old_schema.table_name SET SCHEMA new_schema;
-   ```
+1. Ler o arquivo-alvo do disco antes de editar.
+2. Confirmar dependências reais: rotas, componentes Livewire, includes Blade, Models referenciados.
+3. Após alterar PHP, validar sintaxe: `php -l caminho/do/arquivo.php`.
+4. Rodar o lint no que mudou: `vendor/bin/pint --dirty`.
 
-3. **Safety Features:**
-   - Uses `IF EXISTS` checks before moving tables
-   - Preserves all data, indexes, and constraints
-   - Works on both fresh installs and legacy upgrades
-   - No data loss, no downtime
-
-**Tables Migrated:**
-
-<details>
-<summary><b>Strategic Planning Schema (14 tables)</b></summary>
-
-- `tab_pei` - Strategic planning cycles
-- `tab_missao_visao_valores` - Mission & Vision
-- `tab_valores` - Organizational values
-- `tab_perspectiva` - BSC perspectives
-- `tab_objetivo` - Strategic objectives
-- `tab_objetivo_estrategico` - Legacy objectives (renamed)
-- `tab_futuro_almejado_objetivo` - Future state per objective
-- `tab_nivel_hierarquico` - Hierarchical levels
-- `tab_grau_satisfacao` - Performance satisfaction degrees
-- `tab_arquivos` - Evidence attachments
-- `tab_atividade_cadeia_valor` - Value chain activities
-- `tab_processos_atividade_cadeia_valor` - Value chain processes
-- `tab_analise_ambiental` - Environmental analysis (SWOT)
-</details>
-
-<details>
-<summary><b>Action Plan Schema (9 tables)</b></summary>
-
-- `tab_plano_de_acao` - Action plans
-- `tab_entregas` - Deliverables (main table)
-- `tab_entrega_comentarios` - Comments on deliverables
-- `tab_entrega_labels` - Tags/labels for categorization
-- `rel_entrega_labels` - Many-to-many pivot
-- `tab_entrega_anexos` - File attachments
-- `tab_entrega_historico` - Activity history/audit trail
-- `rel_entrega_users_responsaveis` - Assigned users
-- `tab_tipo_execucao` - Execution types (Action, Initiative, Project)
-- `acoes` - Legacy actions log
-</details>
-
-<details>
-<summary><b>Performance Indicators Schema (5 tables)</b></summary>
-
-- `tab_indicador` - Performance indicators (KPIs)
-- `tab_evolucao_indicador` - Monthly evolution tracking
-- `tab_linha_base_indicador` - Baseline per year
-- `tab_meta_por_ano` - Annual goals
-- `rel_indicador_objetivo_organizacao` - Indicator ↔ Organization
-</details>
-
-<details>
-<summary><b>Risk Management Schema (4 tables)</b></summary>
-
-- `tab_risco` - Strategic risks (5×5 matrix)
-- `tab_risco_objetivo` - Risks ↔ Objectives pivot
-- `tab_risco_mitigacao` - Mitigation plans
-- `tab_risco_ocorrencia` - Risk occurrence log
-</details>
-
-<details>
-<summary><b>Organization Schema (5 tables)</b></summary>
-
-- `tab_organizacoes` - Organizational units
-- `tab_perfil_acesso` - Access profiles (roles)
-- `rel_users_tab_organizacoes` - Users ↔ Organizations
-- `rel_organizacao` - Organizational hierarchy
-- `rel_users_tab_organizacoes_tab_perfil_acesso` - Full access control
-</details>
-
----
-
-### Layer 2: Deliverables Modernization (Notion-like Interface)
-
-**Migration Set:** `2025_12_27_180000` through `2025_12_27_193000` (7 migrations)
-
-**Purpose:** Transform the simple deliverables system into a powerful, Notion-like project management interface with multiple views and rich metadata.
-
-#### 2.1 Core Table Enhancement
-
-**Migration:** `2025_12_27_180000_alter_pei_tab_entregas_add_notion_fields.php`
-
-**New Fields Added:**
-- `cod_entrega_pai` (UUID) - Parent deliverable for hierarchical subtasks
-- `dsc_tipo` (VARCHAR) - Block type: task, heading, text, divider, checklist
-- `json_propriedades` (JSONB) - Custom properties (colors, icons, metadata)
-- `dte_prazo` (DATE) - Due date
-- `cod_responsavel` (UUID) - Assigned user
-- `cod_prioridade` (VARCHAR) - Priority: low, medium, high, urgent
-- `num_ordem` (INTEGER) - Sort order for drag-and-drop
-- `bln_arquivado` (BOOLEAN) - Archived flag (soft archive, not deleted)
-
-**Data Migration:**
-```sql
--- Migrates existing data from num_nivel_hierarquico_apresentacao to num_ordem
-UPDATE strategic_planning.tab_entregas
-SET
-    num_ordem = COALESCE(num_nivel_hierarquico_apresentacao, 0),
-    dsc_tipo = 'task',
-    cod_prioridade = 'media',
-    bln_arquivado = false,
-    json_propriedades = '{}'::jsonb
-WHERE num_ordem = 0 OR num_ordem IS NULL;
-```
-
-#### 2.2 Supporting Tables
-
-**`tab_entrega_comentarios`** - Discussion threads on deliverables
-- Rich text comments with markdown support
-- @mentions via JSON (`json_mencoes`)
-- Threaded replies (via parent_id added in migration `2025_12_27_193000`)
-
-**`tab_entrega_labels`** - Color-coded tags per action plan
-- Customizable colors (HEX format)
-- Optional icons (Bootstrap Icons)
-- Sortable for organization
-
-**`rel_entrega_labels`** - Many-to-many pivot for tagging deliverables
-
-**`tab_entrega_anexos`** - File attachments
-- Supports images, documents, any MIME type
-- Stores thumbnails for preview
-- Tracks file size and metadata
-
-**`tab_entrega_historico`** - Complete audit trail
-- Tracks all changes (created, updated, deleted, restored, status_changed)
-- Stores before/after values in JSONB
-- Human-readable descriptions
-
-**`rel_entrega_users_responsaveis`** - Multiple assignees per deliverable
-
-**Features Enabled:**
-- ✅ **4 Views:** Kanban, List, Timeline/Gantt, Calendar
-- ✅ **Drag-and-drop** reordering within and across columns
-- ✅ **Inline editing** of titles and properties
-- ✅ **Hierarchical subtasks** with unlimited nesting
-- ✅ **Rich comments** with @mentions
-- ✅ **File attachments** with preview
-- ✅ **Color-coded labels** for visual categorization
-- ✅ **Complete history** of all changes
-- ✅ **Multiple assignees** per task
-- ✅ **Priority levels** with visual indicators
-
----
-
-### Layer 3: Strategic Objectives Restructuring
-
-**Migrations:**
-- `2025_12_28_185851_rename_objetivo_estrategico_to_objetivo.php`
-- `2025_12_28_203425_create_new_tab_objetivo_estrategico.php`
-
-**Purpose:** Simplify and standardize objective naming while maintaining backward compatibility.
-
-**Changes:**
-1. Renamed tables:
-   - `tab_objetivo_estrategico` → `tab_objetivo` (main working table)
-   - `tab_futuro_almejado_objetivo_estrategico` → `tab_futuro_almejado_objetivo`
-   - `rel_indicador_objetivo_estrategico_organizacao` → `rel_indicador_objetivo_organizacao`
-
-2. Created new `tab_objetivo_estrategico` in `strategic_planning` schema for new architecture
-
-**Why:** The term "objetivo_estrategico" was redundant - all objectives in PEI are strategic by definition. The renaming simplifies code and database queries.
-
----
-
-### Layer 4: Data Quality Fixes
-
-**Migration:** `2026_01_02_000002_fix_grau_satisfacao_table.php`
-
-**Purpose:** Fix historical typos and ensure data consistency.
-
-**Corrections:**
-- `tab_grau_satisfcao` (typo) → `tab_grau_satisfacao` (correct Portuguese)
-- Handles multiple scenarios:
-  1. Table stuck in `pei` schema with wrong name
-  2. Table stuck in `pei` schema with correct name
-  3. Table already moved to `strategic_planning` but with wrong name
-
-**Safety:** Uses existence checks to handle all possible states gracefully.
-
----
-
-## 🚀 Upgrading from Legacy System
-
-### For Existing Installations
-
-If you have an existing database from the legacy system:
+### Comandos essenciais
 
 ```bash
-# 1. Backup your database first (CRITICAL!)
-pg_dump -U postgres strategic_db > backup_$(date +%Y%m%d).sql
-
-# 2. Pull the latest code
-git pull origin main
-
-# 3. Run migrations
-php artisan migrate
-
-# Expected output:
-# ✓ Creating schemas (strategic_planning, action_plan...)
-# ✓ Moving tables to new schemas
-# ✓ Adding Notion-like fields to deliverables
-# ✓ Creating supporting tables
-# ✓ Fixing table names
+composer dev                          # server + queue + Vite em paralelo
+php artisan test                      # Pest / PHPUnit
+php artisan test --filter=NomeTeste   # teste filtrado
+vendor/bin/pint --dirty               # lint do que mudou
+php artisan optimize:clear            # limpar caches
+php artisan route:list                # inspecionar rotas
 ```
 
-**The migrations are:**
-- ✅ **Idempotent** - Safe to run multiple times
-- ✅ **Non-destructive** - Zero data loss
-- ✅ **Backward compatible** - Old code continues working during transition
+> 💡 Em ambiente local com Apache/OPcache (XAMPP), **evite** `config:cache` e `optimize` — eles podem deixar a aplicação web servindo um config sem `APP_KEY` (erro 500 `MissingAppKey` global), resolvido reiniciando o Apache.
 
-### For Fresh Installations
+---
 
-Simply run:
+## 🔄 Migração da versão anterior (v1 → v2)
+
+> Esta seção é **dedicada aos usuários e organizações que utilizavam a versão anterior** do sistema (repositório [`marcioaxn/planejamento-estrategico`](https://github.com/marcioaxn/planejamento-estrategico), construído em Laravel 8, com todos os dados no schema `pei`).
+
+**Você não precisa redigitar nada.** A migração dos dados existentes é feita por um **único comando Artisan**, que orquestra todo o processo no **mesmo banco PostgreSQL**, preservando os identificadores (UUIDs) originais — ou seja, todos os vínculos entre registros permanecem válidos.
+
+### Como funciona
+
+O comando opera em fases auditáveis e **reversíveis até a etapa final**:
+
+| Fase | Ação | Reversível? |
+|---|---|---|
+| 0 — Pré-checagem | Versão do PostgreSQL (≥ 9.4), confirmação de backup, estado do banco | — |
+| 1 — Quarentena | `pei` → `legacy_pei` (preserva 100% do legado sob outro nome) | ✅ |
+| 2 — Construção | Cria os 6 schemas e tabelas da v2 (`migrate`) | ✅ |
+| 3 — Transferência | Copia os dados legados → v2, **preservando UUIDs** | ✅ (legado intacto) |
+| 4 — Validação | Compara contagens origem × destino | — |
+| 5 — Descarte | Remove o legado **somente** sob confirmação explícita | ⚠️ irreversível |
+
+### Execução
+
 ```bash
-php artisan migrate --seed
+# 1. Backup completo (OBRIGATÓRIO)
+pg_dump -U <usuario> -F c -b -f backup_v1.dump <banco>
+
+# 2. Simulação — não grava nada, apenas relatório de contagens
+php artisan migracao:v1-para-v2 --dry-run
+
+# 3. Execução real
+php artisan migracao:v1-para-v2
+
+# 4. Após validar tudo, descartar o legado (opcional, irreversível)
+php artisan migracao:v1-para-v2 --descartar-legado
 ```
 
-All tables will be created directly in their final domain schemas.
+> O comando é um **assistente interativo**: antes de gravar, mostra uma pré-visualização dos volumes e as decisões aplicadas, e faz apenas perguntas **operacionais por seleção** (backup, `pgcrypto`, prosseguir, destino do legado) — nunca texto livre. Use `--force` para execução não-interativa (automação). Flags de ajuste: `--migrar-auditoria`, `--status-entrega-padrao="..."`.
+
+### O que muda e o que não migra
+
+- **UUIDs**: preservados 1:1 (gerados por código na v1) — FKs continuam válidas.
+- **Senhas**: hashes migrados como estão (bcrypt compatível); o sistema força a troca no primeiro acesso quando aplicável.
+- **Entregas**: o modelo mudou para o estilo Notion. Campos sem equivalente direto (unidade de medida, item entregue, quantidade prevista) são **preservados** em `json_propriedades` — nada se perde.
+- **Auditoria** (`audits` / `tab_audit`): **não é migrada** por decisão de projeto — o histórico permanece apenas no backup.
+- **Módulos novos da v2** (Riscos, Temas Norteadores, Agenda 2030): nascem vazios, pois não existiam na v1.
+
+📖 **Documentos de apoio:**
+- **Runbook do executor** (passo a passo para analistas de infraestrutura): `documentacao/runbook-migracao-v1-para-v2.md`
+- **Mapa De→Para campo a campo**: `documentacao/migracao-legado-v1-para-v2-mapa-de-para.md`
 
 ---
 
-## 🔙 Rollback Considerations
+## 🧪 Testes e qualidade
 
-**⚠️ Important:** Rolling back schema migrations in production is **not recommended** due to:
-1. Complexity of moving tables back to original schemas
-2. Potential foreign key conflicts
-3. Risk to data integrity
-
-**Best Practice:**
-- Always test migrations in **development** first
-- Keep database backups before migrating
-- Use Laravel's migration status: `php artisan migrate:status`
-
-**Emergency Rollback:**
 ```bash
-# Only in development/staging!
-php artisan migrate:rollback --step=1
+php artisan test            # suíte completa (Pest)
+vendor/bin/pint --dirty     # padronização de estilo (PSR-12)
 ```
 
 ---
 
-## 📊 Migration Impact Summary
+## 📚 Documentação relacionada
 
-| Aspect | Before | After |
-|--------|--------|-------|
-| **Schemas** | 2 (`public`, `pei`) | 6 (including `strategic_planning`, `action_plan`, etc.) |
-| **Total Tables** | 37 | 47 (+10 for Notion-like features) |
-| **Deliverables Fields** | 12 basic | 20+ with rich metadata |
-| **Audit Capability** | Limited | Full history + comments + attachments |
-| **User Experience** | Basic list | 4 interactive views (Kanban/List/Timeline/Calendar) |
-
----
-
-## 📝 Related Documentation
-
-For detailed information about the migration system:
-- **Migration Summary:** See `MIGRATIONS_SUMMARY.md`
-- **Deliverables Roadmap:** See `ai/20251227_roadmap_sistema_entregas_notion.md`
-- **Architecture Details:** See `ai/PROJECT_STATE.md`
+- **Documento mestre / roadmap**: `documentacao/documento-mestre-evolucao-sistema-pei.md`
+- **Documentação técnica (v2)**: `documentacao/documentacao-tecnica-planejamento-estrategico-v2.md`
+- **Manual operacional**: `documentacao/manual-operacional-planejamento-estrategico-v1.md`
+- **Dicionário de dados (PostgreSQL)**: `documentacao/dicionario-dados-postgresql-planejamento-estrategico.md`
+- **Agenda 2030 / ODS**: `documentacao/agenda_2030_ods_agregado_ao_planejamento_estrategico.md`
+- **Guia GPPEI (MGI 2025)**: `documentacao/pdf/Guia_PEI_VF.pdf`
 
 ---
 
-## 📜 License
+## 📜 Licença e créditos
 
-This project is proprietary software customized for specific institutional needs. However, the underlying starter kit is open-source under the MIT license.
+Software proprietário, customizado para necessidades institucionais específicas. O starter kit de base é open-source sob licença MIT.
 
----
-
-## 👏 Credits
-
-- **Base Project:** [Starter Kit Laravel Jetstream Livewire Bootstrap](https://github.com/marcioaxn/starter-kit-laravel-jetstream-livewire-bootstrap)
-- **Author:** Marcio Alessandro Xavier Neto
-- **AI Assistance:** Developed with the aid of advanced AI agents (Gemini, Claude) for rapid prototyping and refactoring.
+- **Projeto base**: [Starter Kit Laravel Jetstream Livewire Bootstrap](https://github.com/marcioaxn/starter-kit-laravel-jetstream-livewire-bootstrap)
+- **Autor**: Marcio Alessandro Xavier Neto
