@@ -38,3 +38,11 @@ Thumbs.db
 ~$*
 *.tmp
 *.bak
+# Arquivos/pastas fora do padrao Laravel (mantidos apenas no ambiente local)
+/.agent
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+MIGRATIONS_SUMMARY.md
+README_ORIGINAL.md
+/debug_calc.php
