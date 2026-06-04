@@ -167,18 +167,22 @@ O `.env` guarda as configurações sensíveis (banco, e-mail, etc.). **Aqui mora
 
 ### 7.1 Estratégia recomendada
 
-1. Crie o `.env` do projeto novo a partir do modelo que vem com ele:
+Como você vem da v1, **já possui um `.env` em `...-LEGADO/.env`**. O caminho mais seguro é partir dele:
+
+1. Copie o `.env` do projeto antigo para o projeto novo:
 
    **Linux/macOS:**
    ```bash
-   cp .env.example .env
+   cp ../planejamento-estrategico-LEGADO/.env .env
    ```
    **Windows (PowerShell):**
    ```powershell
-   Copy-Item .env.example .env
+   Copy-Item "..\planejamento-estrategico-LEGADO\.env" .env
    ```
 
-2. Abra **lado a lado** o `.env` antigo (em `...-LEGADO/.env`) e o `.env` novo, e **transfira apenas os valores reais** — principalmente os do **banco de dados**, que devem ser **idênticos** aos do projeto antigo (afinal, é o mesmo banco):
+   > Se preferir criar do zero, use o **modelo da seção 7.4** como base.
+
+2. Garanta que os dados do **banco** apontem para o **mesmo banco da v1** (não altere host/porta/nome/usuário, pois é o mesmo banco):
 
    ```env
    DB_CONNECTION=pgsql
@@ -210,13 +214,58 @@ Se você optar por copiar o `.env` antigo, **renomeie/ajuste** estas chaves, poi
 | (não existia) | `SESSION_DRIVER=database` | a v2 usa sessão em banco |
 | (não existia) | `QUEUE_CONNECTION=database` | a v2 usa fila em banco |
 
-> **Regra prática:** quando em dúvida, mantenha o **nome da variável do `.env.example` novo** e apenas preencha o **valor** com o que vinha do antigo.
+> **Regra prática:** quando em dúvida, use os **nomes de variável do modelo da seção 7.4** e apenas preencha o **valor** com o que vinha do antigo.
 
 ### 7.3 Sobre a chave da aplicação (`APP_KEY`)
 
 - **Não copie** a `APP_KEY` do projeto antigo. Você vai gerar uma nova no próximo passo.
 - As senhas dos usuários usam **bcrypt** e **não dependem** da `APP_KEY` — portanto, gerar uma chave nova **não invalida os logins**.
 - Sessões e tokens antigos serão recriados (as respectivas tabelas são reconstruídas pela v2), então não há nada a preservar aqui.
+
+### 7.4 Modelo de `.env` (para criar do zero, se necessário)
+
+Caso prefira não partir do `.env` antigo, crie um arquivo `.env` na raiz do projeto novo com o conteúdo abaixo e ajuste os valores marcados:
+
+```env
+APP_NAME="Planejamento Estratégico"
+APP_ENV=production
+APP_KEY=
+APP_DEBUG=false
+APP_URL=https://seu-dominio-ou-ip/caminho
+
+APP_LOCALE=en
+APP_FALLBACK_LOCALE=en
+APP_FAKER_LOCALE=en_US
+
+BCRYPT_ROUNDS=12
+
+LOG_CHANNEL=stack
+LOG_LEVEL=error
+
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=NOME_DO_BANCO_DA_V1
+DB_USERNAME=SEU_USUARIO
+DB_PASSWORD=SUA_SENHA
+
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+FILESYSTEM_DISK=local
+BROADCAST_CONNECTION=log
+
+MAIL_MAILER=log
+MAIL_HOST=127.0.0.1
+MAIL_PORT=2525
+MAIL_FROM_ADDRESS="nao-responder@seu-dominio"
+MAIL_FROM_NAME="${APP_NAME}"
+
+VITE_APP_NAME="${APP_NAME}"
+```
+
+> O `APP_KEY` fica **vazio de propósito** — ele é preenchido automaticamente pelo `php artisan key:generate` (Passo 6).
 
 ---
 

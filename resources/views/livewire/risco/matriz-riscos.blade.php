@@ -1,18 +1,22 @@
-<div>
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('riscos.index') }}" class="text-decoration-none">Riscos</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Matriz de Exposição</li>
-                    </ol>
-                </nav>
-                <h2 class="h4 fw-bold mb-0">Mapa de Calor de Riscos (Heatmap)</h2>
-            </div>
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('riscos.index') }}" wire:navigate class="text-decoration-none">Gestão de Riscos</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Matriz de Riscos</li>
+                </ol>
+            </nav>
+            <h2 class="h3 fw-bold mb-0">
+                <i class="bi bi-grid-3x3-gap me-2 text-danger"></i>Matriz Visual de Riscos (5×5)
+            </h2>
         </div>
-    </x-slot>
+        <a href="{{ route('riscos.index') }}" wire:navigate class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Voltar aos Riscos
+        </a>
+    </div>
 
     <div class="card border-0 shadow-sm overflow-hidden">
         <div class="card-header bg-white py-3 border-bottom text-center">

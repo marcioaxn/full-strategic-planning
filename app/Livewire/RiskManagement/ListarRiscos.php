@@ -23,6 +23,7 @@ class ListarRiscos extends Component
     public $filtroNivel = '';
     public $filtroCategoria = '';
     public $organizacaoId;
+    public $peiAtivo;
 
     public bool $showModal = false;
     public bool $showDeleteModal = false;
@@ -237,6 +238,10 @@ class ListarRiscos extends Component
             $this->showSuccessModal = true;
 
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro ao salvar risco', [
+                'mensagem' => $e->getMessage(),
+                'arquivo'  => $e->getFile() . ':' . $e->getLine(),
+            ]);
             $this->errorMessage = "Não foi possível processar o registro do risco. Por favor, revise as informações e tente novamente.";
             $this->showErrorModal = true;
         }
