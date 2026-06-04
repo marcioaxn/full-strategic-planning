@@ -1,19 +1,23 @@
-<div>
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('indicadores.index') }}" class="text-decoration-none">Indicadores</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Lançar Evolução</li>
-                    </ol>
-                </nav>
-                <h2 class="h4 fw-bold mb-0">Lançamento de Resultados</h2>
-                <p class="text-muted small mb-0">{{ $indicador->nom_indicador }} ({{ $indicador->dsc_unidade_medida }})</p>
-            </div>
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('indicadores.index') }}" wire:navigate class="text-decoration-none">Indicadores</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Lançar Evolução</li>
+                </ol>
+            </nav>
+            <h2 class="h3 fw-bold mb-0">
+                <i class="bi bi-graph-up-arrow me-2 text-primary"></i>Lançamento de Resultados
+            </h2>
+            <p class="text-muted mb-0">{{ $indicador->nom_indicador }} · {{ $indicador->dsc_unidade_medida }}</p>
         </div>
-    </x-slot>
+        <a href="{{ route('indicadores.index') }}" wire:navigate class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Voltar
+        </a>
+    </div>
 
     @if (session()->has('status'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">

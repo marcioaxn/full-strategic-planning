@@ -1,22 +1,28 @@
-<div>
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('riscos.index') }}" class="text-decoration-none">Riscos</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Mitigação</li>
-                    </ol>
-                </nav>
-                <h2 class="h4 fw-bold mb-0">Planos de Mitigação</h2>
-                <p class="text-muted small mb-0">{{ $risco->dsc_titulo }}</p>
-            </div>
-            <button wire:click="create" class="btn btn-success gradient-theme-btn">
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('riscos.index') }}" wire:navigate class="text-decoration-none">Gestão de Riscos</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Planos de Mitigação</li>
+                </ol>
+            </nav>
+            <h2 class="h3 fw-bold mb-0">
+                <i class="bi bi-shield-plus me-2 text-success"></i>Planos de Mitigação
+            </h2>
+            <p class="text-muted mb-0">{{ $risco->dsc_titulo }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ route('riscos.index') }}" wire:navigate class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar
+            </a>
+            <button wire:click="create" class="btn btn-success gradient-theme">
                 <i class="bi bi-shield-plus me-2"></i>Novo Plano
             </button>
         </div>
-    </x-slot>
+    </div>
 
     @if (session()->has('status'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">

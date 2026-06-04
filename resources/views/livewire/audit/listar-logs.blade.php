@@ -1,22 +1,21 @@
-<div>
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Auditoria</li>
-                    </ol>
-                </nav>
-                <h2 class="h4 fw-bold mb-0">Logs de Auditoria do Sistema</h2>
-            </div>
-            <div class="d-flex gap-2">
-                <button wire:click="exportar" class="btn btn-outline-success shadow-sm">
-                    <i class="bi bi-file-earmark-excel me-1"></i> Exportar CSV
-                </button>
-            </div>
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Auditoria</li>
+                </ol>
+            </nav>
+            <h2 class="h3 fw-bold mb-0">
+                <i class="bi bi-journal-text me-2 text-primary"></i>Logs de Auditoria do Sistema
+            </h2>
         </div>
-    </x-slot>
+        <button wire:click="exportar" class="btn btn-outline-success shadow-sm">
+            <i class="bi bi-file-earmark-excel me-1"></i> Exportar CSV
+        </button>
+    </div>
 
     <!-- Filtros Avançados -->
     <div class="card border-0 shadow-sm mb-4">
