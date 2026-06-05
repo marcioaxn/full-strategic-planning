@@ -5,6 +5,7 @@ namespace App\Livewire\UserManagement;
 use App\Models\User;
 use App\Models\Organization;
 use App\Models\PerfilAcesso;
+use App\Notifications\WelcomeSetPasswordNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -37,7 +38,7 @@ class ListarUsuarios extends Component
         'vinculos' => [], // Array de ['org_id' => ..., 'perfil_id' => ...]
     ];
 
-    // Modo de definicao da senha inicial no cadastro administrativo.
+    // Modo de criacao do acesso inicial no cadastro administrativo.
     public string $modoSenhaInicial = 'enviar_link';
 
     // Dados auxiliares para o modal
@@ -282,9 +283,9 @@ class ListarUsuarios extends Component
                 'trocarsenha' => $this->form['trocarsenha'],
             ];
 
-            // Determinar a senha inicial conforme o ritual escolhido.
+            // Preparar acesso inicial conforme o ritual escolhido.
             if ($isNovoUsuario && $this->modoSenhaInicial === 'enviar_link') {
-                $data['password'] = Hash::make(Str::password(32));
+                $data['password'] = Hash::make(Str::random(80));
                 $data['trocarsenha'] = 1;
             } elseif (!empty($this->form['password'])) {
                 $data['password'] = Hash::make($this->form['password']);
@@ -301,8 +302,9 @@ class ListarUsuarios extends Component
                 $message = __('Usuário criado com sucesso.');
 
                 if ($this->modoSenhaInicial === 'enviar_link') {
-                    Password::broker()->sendResetLink(['email' => $user->email]);
-                    $message .= ' Link para definicao de senha enviado por e-mail.';
+                    $token = Password::broker()->createToken($user);
+                    $user->notify(new WelcomeSetPasswordNotification($token));
+                    $message .= ' Boas-vindas com link para cadastro de senha enviadas por e-mail.';
                 } else {
                     $message .= ' Senha inicial definida pelo gestor.';
                 }
