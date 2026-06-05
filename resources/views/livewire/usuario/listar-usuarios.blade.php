@@ -599,4 +599,30 @@
             </x-danger-button>
         </x-slot>
     </x-confirmation-modal>
+
+    <x-dialog-modal wire:key="user-transaction-modal" wire:model.live="showTransactionModal" maxWidth="md">
+        <x-slot name="title">
+            <div class="modal-header-modern">
+                <div class="icon-circle-mini {{ $transactionStyle === 'success' ? 'modal-icon-primary' : 'modal-icon-danger' }}">
+                    <i class="bi bi-{{ $transactionStyle === 'success' ? 'check-circle' : 'exclamation-triangle' }}"></i>
+                </div>
+                <div>
+                    <h5 class="mb-1 fw-bold">{{ $transactionTitle }}</h5>
+                    <p class="text-muted small mb-0">
+                        {{ $transactionStyle === 'success' ? __('Operacao confirmada pelo sistema') : __('A operacao nao foi concluida') }}
+                    </p>
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="content">
+            <p class="mb-0">{{ $transactionMessage }}</p>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-button type="button" wire:click="$set('showTransactionModal', false)" class="btn-save-modern">
+                {{ __('Entendi') }}
+            </x-button>
+        </x-slot>
+    </x-dialog-modal>
 </div>
