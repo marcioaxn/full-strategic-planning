@@ -3,13 +3,13 @@
 namespace Tests\Feature\UserManagement;
 
 use App\Livewire\UserManagement\ListarUsuarios;
-use App\Mail\WelcomeUserMail;
 use App\Models\Organization;
 use App\Models\PerfilAcesso;
 use App\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -31,7 +31,7 @@ class ListarUsuariosCadastroSemTruncateTest extends TestCase
 
     public function test_administrador_cadastra_usuario_com_vinculo_e_email_sem_truncar_tabelas(): void
     {
-        Mail::fake();
+        Notification::fake();
 
         $admin = User::create([
             'name' => 'Administrador Teste Cadastro',
@@ -56,8 +56,7 @@ class ListarUsuariosCadastroSemTruncateTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(ListarUsuarios::class)
-            ->set('gerarSenhaAutomatica', true)
-            ->set('enviarEmailBoasVindas', true)
+            ->set('modoSenhaInicial', 'enviar_link')
             ->set('form.name', 'Usuario Teste Cadastro')
             ->set('form.email', $email)
             ->set('form.ativo', true)
@@ -97,11 +96,74 @@ class ListarUsuariosCadastroSemTruncateTest extends TestCase
             'cod_perfil' => $perfil->cod_perfil,
         ]);
 
-        Mail::assertQueued(WelcomeUserMail::class, function (WelcomeUserMail $mail) use ($usuario): bool {
-            return $mail->user->is($usuario)
-                && strlen($mail->password) >= 12
-                && Hash::check($mail->password, $usuario->password);
-        });
+        Notification::assertSentTo($usuario, ResetPassword::class);
+    }
+
+    public function test_administrador_cadastra_usuario_com_senha_manual_sem_enviar_email_e_sem_truncar_tabelas(): void
+    {
+        Notification::fake();
+
+        $admin = User::create([
+            'name' => 'Administrador Teste Cadastro Manual',
+            'email' => 'admin.cadastro.manual.'.Str::uuid().'@example.test',
+            'password' => Hash::make('SenhaForte!123'),
+            'ativo' => true,
+            'adm' => true,
+            'trocarsenha' => 0,
+        ]);
+
+        $this->trackCreatedUser($admin);
+
+        $organizacao = Organization::query()->first();
+        $perfil = PerfilAcesso::query()->first();
+
+        if (! $organizacao || ! $perfil) {
+            $this->markTestSkipped('O banco precisa ter ao menos uma organizacao e um perfil de acesso cadastrados.');
+        }
+
+        $email = 'usuario.cadastro.manual.'.Str::uuid().'@example.test';
+        $senha = 'SenhaManual!123';
+        $this->createdEmails[] = $email;
+
+        Livewire::actingAs($admin)
+            ->test(ListarUsuarios::class)
+            ->set('modoSenhaInicial', 'senha_manual')
+            ->set('form.name', 'Usuario Teste Cadastro Manual')
+            ->set('form.email', $email)
+            ->set('form.password', $senha)
+            ->set('form.password_confirmation', $senha)
+            ->set('form.ativo', true)
+            ->set('form.trocarsenha', 0)
+            ->set('form.vinculos', [[
+                'org_id' => $organizacao->cod_organizacao,
+                'perfil_id' => $perfil->cod_perfil,
+                'org_label' => $organizacao->sgl_organizacao,
+                'perfil_label' => $perfil->dsc_perfil,
+            ]])
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $usuario = User::query()->where('email', $email)->first();
+
+        $this->assertNotNull($usuario);
+        $this->trackCreatedUser($usuario);
+
+        $this->assertSame('Usuario Teste Cadastro Manual', $usuario->name);
+        $this->assertTrue(Hash::check($senha, $usuario->password));
+        $this->assertSame(0, (int) $usuario->trocarsenha);
+
+        $this->assertDatabaseHas('rel_users_tab_organizacoes', [
+            'user_id' => $usuario->id,
+            'cod_organizacao' => $organizacao->cod_organizacao,
+        ]);
+
+        $this->assertDatabaseHas('rel_users_tab_organizacoes_tab_perfil_acesso', [
+            'user_id' => $usuario->id,
+            'cod_organizacao' => $organizacao->cod_organizacao,
+            'cod_perfil' => $perfil->cod_perfil,
+        ]);
+
+        Notification::assertNotSentTo($usuario, ResetPassword::class);
     }
 
     private function trackCreatedUser(User $user): void
@@ -132,6 +194,7 @@ class ListarUsuariosCadastroSemTruncateTest extends TestCase
         }
 
         if ($emails !== []) {
+            DB::table('password_reset_tokens')->whereIn('email', $emails)->delete();
             DB::table('users')->whereIn('email', $emails)->delete();
         }
     }

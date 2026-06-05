@@ -345,52 +345,94 @@
                             @enderror
                         </div>
 
-                        <div class="col-12 col-lg-6">
-                            <label for="password" class="form-label-modern">
-                                {{ __('Senha') }}
-                                @if($editing)
-                                    <span class="text-muted fw-normal small">(Deixe em branco para manter)</span>
-                                @elseif(!$gerarSenhaAutomatica)
-                                    <span class="text-danger">*</span>
-                                @endif
+                        <div class="col-12">
+                            <label class="form-label-modern">
+                                {{ __('Definicao da Senha Inicial') }}
                             </label>
-                            <input
-                                id="password"
-                                type="password"
-                                class="form-control form-control-modern @error('form.password') is-invalid @enderror"
-                                placeholder="{{ $gerarSenhaAutomatica && !$editing ? 'Será gerada automaticamente' : '********' }}"
-                                wire:model.live="form.password"
-                                @if($gerarSenhaAutomatica && !$editing) disabled @endif
-                            >
-                            @error('form.password')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-
-                            @if(!$gerarSenhaAutomatica || $editing)
-                                <x-password-strength :password="$form['password'] ?? ''" />
-                            @endif
 
                             @if(!$editing)
-                                <div class="mt-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="gerarSenhaAutomatica" wire:model.live="gerarSenhaAutomatica">
-                                        <label class="form-check-label small" for="gerarSenhaAutomatica">
-                                            <i class="bi bi-magic me-1"></i>{{ __('Gerar senha automática') }}
-                                            <x-tooltip title="Sistema cria senha segura e envia por e-mail" />
+                                <div class="row g-2 mb-3">
+                                    <div class="col-12 col-lg-6">
+                                        <label class="form-check border rounded-3 p-3 h-100 {{ $modoSenhaInicial === 'enviar_link' ? 'border-primary bg-primary bg-opacity-10' : 'bg-light' }}" for="modoSenhaEnviarLink">
+                                            <input class="form-check-input" type="radio" id="modoSenhaEnviarLink" value="enviar_link" wire:model.live="modoSenhaInicial">
+                                            <span class="form-check-label fw-semibold">
+                                                <i class="bi bi-envelope-check me-1"></i>{{ __('Enviar link por e-mail') }}
+                                            </span>
+                                            <span class="d-block text-muted small mt-1">
+                                                {{ __('O usuario recebe um link com validade para definir a propria senha.') }}
+                                            </span>
                                         </label>
                                     </div>
-                                    @if($gerarSenhaAutomatica)
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="enviarEmailBoasVindas" wire:model="enviarEmailBoasVindas">
-                                            <label class="form-check-label small" for="enviarEmailBoasVindas">
-                                                <i class="bi bi-envelope me-1"></i>{{ __('Enviar e-mail de boas-vindas com credenciais') }}
-                                            </label>
-                                        </div>
-                                    @endif
+
+                                    <div class="col-12 col-lg-6">
+                                        <label class="form-check border rounded-3 p-3 h-100 {{ $modoSenhaInicial === 'senha_manual' ? 'border-primary bg-primary bg-opacity-10' : 'bg-light' }}" for="modoSenhaManual">
+                                            <input class="form-check-input" type="radio" id="modoSenhaManual" value="senha_manual" wire:model.live="modoSenhaInicial">
+                                            <span class="form-check-label fw-semibold">
+                                                <i class="bi bi-key me-1"></i>{{ __('Definir senha no cadastro') }}
+                                            </span>
+                                            <span class="d-block text-muted small mt-1">
+                                                {{ __('Use quando desenvolvimento ou homologacao nao permitir envio de e-mail.') }}
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                @if($modoSenhaInicial === 'enviar_link')
+                                    <div class="alert alert-light border small mb-0">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        {{ __('O sistema criara a conta e enviara o link para o usuario cadastrar a senha pela tela segura de redefinicao.') }}
+                                    </div>
+                                @endif
+                            @endif
+
+                            @if($editing || $modoSenhaInicial === 'senha_manual')
+                                <div class="row g-3">
+                                    <div class="col-12 col-lg-6">
+                                        <label for="password" class="form-label-modern">
+                                            {{ $editing ? __('Nova senha') : __('Senha inicial') }}
+                                            @if($editing)
+                                                <span class="text-muted fw-normal small">(Deixe em branco para manter)</span>
+                                            @else
+                                                <span class="text-danger">*</span>
+                                            @endif
+                                        </label>
+                                        <input
+                                            id="password"
+                                            type="password"
+                                            class="form-control form-control-modern @error('form.password') is-invalid @enderror"
+                                            placeholder="********"
+                                            wire:model.blur="form.password"
+                                        >
+                                        @error('form.password')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-12 col-lg-6">
+                                        <label for="password_confirmation" class="form-label-modern">
+                                            {{ __('Confirmar senha') }}
+                                            @unless($editing)
+                                                <span class="text-danger">*</span>
+                                            @endunless
+                                        </label>
+                                        <input
+                                            id="password_confirmation"
+                                            type="password"
+                                            class="form-control form-control-modern @error('form.password_confirmation') is-invalid @enderror"
+                                            placeholder="********"
+                                            wire:model.blur="form.password_confirmation"
+                                        >
+                                        @error('form.password_confirmation')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-12">
+                                        <x-password-strength :password="$form['password'] ?? ''" />
+                                    </div>
                                 </div>
                             @endif
                         </div>
-
                         <div class="col-12 col-lg-3">
                             <label for="ativo" class="form-label-modern">{{ __('Status da Conta') }}</label>
                             <div class="form-check form-switch mt-1">
