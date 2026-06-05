@@ -347,7 +347,7 @@
 
                         <div class="col-12">
                             <label class="form-label-modern">
-                                {{ __('Definicao da Senha Inicial') }}
+                                {{ __('Acesso inicial') }}
                             </label>
 
                             @if(!$editing)
@@ -356,10 +356,10 @@
                                         <label class="form-check border rounded-3 p-3 h-100 {{ $modoSenhaInicial === 'enviar_link' ? 'border-primary bg-primary bg-opacity-10' : 'bg-light' }}" for="modoSenhaEnviarLink">
                                             <input class="form-check-input" type="radio" id="modoSenhaEnviarLink" value="enviar_link" wire:model.live="modoSenhaInicial">
                                             <span class="form-check-label fw-semibold">
-                                                <i class="bi bi-envelope-check me-1"></i>{{ __('Enviar link por e-mail') }}
+                                                <i class="bi bi-envelope-check me-1"></i>{{ __('Enviar boas-vindas com link') }}
                                             </span>
                                             <span class="d-block text-muted small mt-1">
-                                                {{ __('O usuario recebe um link com validade para definir a propria senha.') }}
+                                                {{ __('O usuario recebe uma mensagem de boas-vindas e cadastra a propria senha pelo link.') }}
                                             </span>
                                         </label>
                                     </div>
@@ -380,7 +380,7 @@
                                 @if($modoSenhaInicial === 'enviar_link')
                                     <div class="alert alert-light border small mb-0">
                                         <i class="bi bi-info-circle me-1"></i>
-                                        {{ __('O sistema criara a conta e enviara o link para o usuario cadastrar a senha pela tela segura de redefinicao.') }}
+                                        {{ __('O e-mail nao inclui senha. Ele contem apenas a mensagem de boas-vindas e o link seguro para cadastro da senha.') }}
                                     </div>
                                 @endif
                             @endif

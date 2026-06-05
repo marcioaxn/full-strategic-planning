@@ -6,7 +6,7 @@ use App\Livewire\UserManagement\ListarUsuarios;
 use App\Models\Organization;
 use App\Models\PerfilAcesso;
 use App\Models\User;
-use Illuminate\Auth\Notifications\ResetPassword;
+use App\Notifications\WelcomeSetPasswordNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
@@ -96,7 +96,7 @@ class ListarUsuariosCadastroSemTruncateTest extends TestCase
             'cod_perfil' => $perfil->cod_perfil,
         ]);
 
-        Notification::assertSentTo($usuario, ResetPassword::class);
+        Notification::assertSentTo($usuario, WelcomeSetPasswordNotification::class);
     }
 
     public function test_administrador_cadastra_usuario_com_senha_manual_sem_enviar_email_e_sem_truncar_tabelas(): void
@@ -163,7 +163,7 @@ class ListarUsuariosCadastroSemTruncateTest extends TestCase
             'cod_perfil' => $perfil->cod_perfil,
         ]);
 
-        Notification::assertNotSentTo($usuario, ResetPassword::class);
+        Notification::assertNotSentTo($usuario, WelcomeSetPasswordNotification::class);
     }
 
     private function trackCreatedUser(User $user): void
