@@ -1,5 +1,5 @@
 <x-guest-layout>
-<div class="lp-login">
+<div class="lp-login lp-reset-password-page">
 
     @include('auth.partials.auth-left-panel', [
         'tituloHtml' => 'Cadastre sua senha<br>com <span>seguranca</span><br>e clareza.',
