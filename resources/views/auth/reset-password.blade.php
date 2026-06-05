@@ -6,7 +6,7 @@
         'lead' => 'Este link confirma sua identidade e permite criar a senha pessoal de acesso. A senha e validada em tempo real com os mesmos criterios usados no cadastro institucional.',
     ])
 
-    <div class="lp-login-right d-flex align-items-center justify-content-center p-4 p-lg-5">
+    <div class="lp-login-right lp-reset-right d-flex justify-content-center p-4 p-lg-5">
         <div class="lp-login-card">
 
             <div class="d-xl-none text-center mb-4">
