@@ -8,10 +8,13 @@ use App\Models\PerfilAcesso;
 use App\Notifications\WelcomeSetPasswordNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Throwable;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -54,6 +57,10 @@ class ListarUsuarios extends Component
 
     public ?string $flashMessage = null;
     public string $flashStyle = 'success';
+    public bool $showTransactionModal = false;
+    public string $transactionTitle = '';
+    public string $transactionMessage = '';
+    public string $transactionStyle = 'success';
 
     protected string $paginationTheme = 'bootstrap';
 
@@ -78,16 +85,19 @@ class ListarUsuarios extends Component
         ];
 
         if (!$this->editing) {
-            // Se gerar senha automática, não precisa informar senha manual
-            if ($this->modoSenhaInicial === 'enviar_link') {
-                $rules['form.password'] = array_merge(['nullable'], $this->strongPasswordRules());
-            } else {
+            // No modo por link, a senha nunca e informada durante o cadastro.
+            if ($this->modoSenhaInicial === 'senha_manual') {
                 $rules['form.password'] = array_merge(['required'], $this->strongPasswordRules());
                 $rules['form.password_confirmation'] = ['required', 'string'];
             }
         } else {
-            $rules['form.password'] = array_merge(['nullable'], $this->strongPasswordRules());
-            $rules['form.password_confirmation'] = ['nullable', 'string'];
+            $passwordInformada = trim((string) ($this->form['password'] ?? '')) !== ''
+                || trim((string) ($this->form['password_confirmation'] ?? '')) !== '';
+
+            if ($passwordInformada) {
+                $rules['form.password'] = array_merge(['required'], $this->strongPasswordRules());
+                $rules['form.password_confirmation'] = ['required', 'string'];
+            }
         }
 
         return $rules;
@@ -115,6 +125,12 @@ class ListarUsuarios extends Component
 
     public function updated(string $propertyName): void
     {
+        if ($propertyName === 'modoSenhaInicial' && $this->modoSenhaInicial === 'enviar_link') {
+            $this->form['password'] = '';
+            $this->form['password_confirmation'] = '';
+            $this->resetValidation(['form.password', 'form.password_confirmation']);
+        }
+
         if (! array_key_exists($propertyName, $this->rules())) {
             return;
         }
@@ -271,11 +287,12 @@ class ListarUsuarios extends Component
 
     public function save(): void
     {
-        $this->validate();
+        try {
+            $this->validate();
 
-        $isNovoUsuario = !$this->editing;
+            $isNovoUsuario = !$this->editing;
 
-        DB::transaction(function () use ($isNovoUsuario) {
+            DB::transaction(function () use ($isNovoUsuario) {
             $data = [
                 'name' => $this->form['name'],
                 'email' => $this->form['email'],
@@ -303,7 +320,7 @@ class ListarUsuarios extends Component
 
                 if ($this->modoSenhaInicial === 'enviar_link') {
                     $token = Password::broker()->createToken($user);
-                    $user->notify(new WelcomeSetPasswordNotification($token));
+                    Notification::sendNow($user, new WelcomeSetPasswordNotification($token));
                     $message .= ' Boas-vindas com link para cadastro de senha enviadas por e-mail.';
                 } else {
                     $message .= ' Senha inicial definida pelo gestor.';
@@ -332,8 +349,25 @@ class ListarUsuarios extends Component
             $this->notify($message);
         });
 
-        $this->closeFormModal();
-        $this->resetPage();
+            $this->closeFormModal();
+            $this->resetPage();
+        } catch (ValidationException $exception) {
+            $this->notify(
+                'O cadastro nao foi concluido. Revise os campos destacados e tente novamente.',
+                'danger',
+                'Cadastro nao concluido'
+            );
+
+            throw $exception;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $this->notify(
+                'Nao foi possivel concluir o cadastro. Nenhuma confirmacao de sucesso foi emitida. Verifique a configuracao de e-mail, os dados informados e tente novamente.',
+                'danger',
+                'Falha na transacao'
+            );
+        }
     }
 
     public function confirmDelete(string $id): void
@@ -390,10 +424,14 @@ class ListarUsuarios extends Component
         $this->editing = null;
     }
 
-    protected function notify(string $message, string $style = 'success'): void
+    protected function notify(string $message, string $style = 'success', ?string $title = null): void
     {
         $this->flashMessage = $message;
         $this->flashStyle = $style;
+        $this->transactionMessage = $message;
+        $this->transactionStyle = $style;
+        $this->transactionTitle = $title ?? ($style === 'success' ? 'Transacao concluida' : 'Aviso da transacao');
+        $this->showTransactionModal = true;
     }
 
     protected function strongPasswordRules(): array

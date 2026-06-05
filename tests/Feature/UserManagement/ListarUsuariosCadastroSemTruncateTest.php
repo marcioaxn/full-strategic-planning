@@ -68,7 +68,9 @@ class ListarUsuariosCadastroSemTruncateTest extends TestCase
                 'perfil_label' => $perfil->dsc_perfil,
             ]])
             ->call('save')
-            ->assertHasNoErrors();
+            ->assertHasNoErrors()
+            ->assertSet('showTransactionModal', true)
+            ->assertSet('transactionStyle', 'success');
 
         $usuario = User::query()->where('email', $email)->first();
 
@@ -141,7 +143,9 @@ class ListarUsuariosCadastroSemTruncateTest extends TestCase
                 'perfil_label' => $perfil->dsc_perfil,
             ]])
             ->call('save')
-            ->assertHasNoErrors();
+            ->assertHasNoErrors()
+            ->assertSet('showTransactionModal', true)
+            ->assertSet('transactionStyle', 'success');
 
         $usuario = User::query()->where('email', $email)->first();
 
