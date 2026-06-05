@@ -51,6 +51,7 @@
 .lp-login-title { font-size: clamp(1.85rem, 2.8vw, 2.75rem); font-weight: 800; line-height: 1.15; color: #16306b; letter-spacing: -.03em; }
 .lp-login-title span { background: linear-gradient(90deg, #1B408E, #e07b39); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .lp-login-lead  { font-size: .98rem; color: #3f5170; line-height: 1.75; max-width: 400px; }
+.lp-reset-password-page .lp-login-lead { max-width: 560px; }
 .lp-login-bname { font-size: 1rem; letter-spacing: -.02em; color: #16306b; font-weight: 700; }
 .lp-login-bsub  { font-size: .6rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #64748b; }
 .lp-login-modcard { background: #fff; border: 1px solid rgba(27,64,142,.1); box-shadow: 0 6px 18px rgba(27,64,142,.08); }
