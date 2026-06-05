@@ -5,12 +5,11 @@ namespace App\Livewire\UserManagement;
 use App\Models\User;
 use App\Models\Organization;
 use App\Models\PerfilAcesso;
-use App\Mail\WelcomeUserMail;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -31,15 +30,15 @@ class ListarUsuarios extends Component
     public array $form = [
         'name' => '',
         'email' => '',
+        'password_confirmation' => '',
         'password' => '', // Opcional na edição
         'ativo' => true,
         'trocarsenha' => 0,
         'vinculos' => [], // Array de ['org_id' => ..., 'perfil_id' => ...]
     ];
 
-    // Opções para geração automática de senha
-    public bool $gerarSenhaAutomatica = true;
-    public bool $enviarEmailBoasVindas = true;
+    // Modo de definicao da senha inicial no cadastro administrativo.
+    public string $modoSenhaInicial = 'enviar_link';
 
     // Dados auxiliares para o modal
     public $vinculoTemporario = [
@@ -74,20 +73,52 @@ class ListarUsuarios extends Component
             'form.ativo' => ['boolean'],
             'form.trocarsenha' => ['integer', 'in:0,1,2'],
             'form.vinculos' => ['array'],
+            'modoSenhaInicial' => ['required', 'in:enviar_link,senha_manual'],
         ];
 
         if (!$this->editing) {
             // Se gerar senha automática, não precisa informar senha manual
-            if ($this->gerarSenhaAutomatica) {
-                $rules['form.password'] = ['nullable', 'string', 'min:8'];
+            if ($this->modoSenhaInicial === 'enviar_link') {
+                $rules['form.password'] = array_merge(['nullable'], $this->strongPasswordRules());
             } else {
-                $rules['form.password'] = ['required', 'string', 'min:8'];
+                $rules['form.password'] = array_merge(['required'], $this->strongPasswordRules());
+                $rules['form.password_confirmation'] = ['required', 'string'];
             }
         } else {
-            $rules['form.password'] = ['nullable', 'string', 'min:8'];
+            $rules['form.password'] = array_merge(['nullable'], $this->strongPasswordRules());
+            $rules['form.password_confirmation'] = ['nullable', 'string'];
         }
 
         return $rules;
+    }
+
+    protected function messages(): array
+    {
+        return [
+            'form.name.required' => 'Informe o nome completo do usuario.',
+            'form.name.max' => 'O nome deve ter no maximo 255 caracteres.',
+            'form.email.required' => 'Informe o e-mail institucional do usuario.',
+            'form.email.email' => 'Informe um e-mail valido para o usuario.',
+            'form.email.unique' => 'Ja existe um usuario cadastrado com este e-mail.',
+            'form.password.required' => 'Defina a senha inicial do usuario.',
+            'form.password.confirmed' => 'A confirmacao da senha nao confere.',
+            'form.password.min' => 'A senha deve ter no minimo 8 caracteres.',
+            'form.password.regex' => 'A senha deve conter letra maiuscula, letra minuscula, numero e caractere especial.',
+            'form.password_confirmation.required' => 'Confirme a senha inicial do usuario.',
+            'form.trocarsenha.in' => 'Selecione uma opcao valida para a troca de senha.',
+            'modoSenhaInicial.in' => 'Selecione uma forma valida de definicao da senha inicial.',
+            'vinculoTemporario.org_id.required' => 'Selecione a organizacao do vinculo.',
+            'vinculoTemporario.perfil_id.required' => 'Selecione o perfil de acesso do vinculo.',
+        ];
+    }
+
+    public function updated(string $propertyName): void
+    {
+        if (! array_key_exists($propertyName, $this->rules())) {
+            return;
+        }
+
+        $this->validateOnly($propertyName);
     }
 
     public function updatingSearch(): void
@@ -183,6 +214,7 @@ class ListarUsuarios extends Component
         $this->form = [
             'name' => $this->editing->name,
             'email' => $this->editing->email,
+            'password_confirmation' => '',
             'password' => '', // Não carrega senha
             'ativo' => (bool)$this->editing->ativo,
             'trocarsenha' => (int)$this->editing->trocarsenha,
@@ -240,10 +272,9 @@ class ListarUsuarios extends Component
     {
         $this->validate();
 
-        $senhaGerada = null;
         $isNovoUsuario = !$this->editing;
 
-        DB::transaction(function () use (&$senhaGerada, $isNovoUsuario) {
+        DB::transaction(function () use ($isNovoUsuario) {
             $data = [
                 'name' => $this->form['name'],
                 'email' => $this->form['email'],
@@ -251,12 +282,9 @@ class ListarUsuarios extends Component
                 'trocarsenha' => $this->form['trocarsenha'],
             ];
 
-            // Determinar a senha
-            if ($isNovoUsuario && $this->gerarSenhaAutomatica) {
-                // Gerar senha automática segura (12 caracteres)
-                $senhaGerada = Str::password(12);
-                $data['password'] = Hash::make($senhaGerada);
-                // Forçar troca de senha no primeiro acesso
+            // Determinar a senha inicial conforme o ritual escolhido.
+            if ($isNovoUsuario && $this->modoSenhaInicial === 'enviar_link') {
+                $data['password'] = Hash::make(Str::password(32));
                 $data['trocarsenha'] = 1;
             } elseif (!empty($this->form['password'])) {
                 $data['password'] = Hash::make($this->form['password']);
@@ -272,10 +300,11 @@ class ListarUsuarios extends Component
                 $user = User::create($data);
                 $message = __('Usuário criado com sucesso.');
 
-                // Enviar e-mail de boas-vindas se configurado
-                if ($this->enviarEmailBoasVindas && $senhaGerada) {
-                    Mail::to($user->email)->queue(new WelcomeUserMail($user, $senhaGerada));
-                    $message .= ' E-mail de boas-vindas enviado.';
+                if ($this->modoSenhaInicial === 'enviar_link') {
+                    Password::broker()->sendResetLink(['email' => $user->email]);
+                    $message .= ' Link para definicao de senha enviado por e-mail.';
+                } else {
+                    $message .= ' Senha inicial definida pelo gestor.';
                 }
             }
 
@@ -348,14 +377,14 @@ class ListarUsuarios extends Component
             'name' => '',
             'email' => '',
             'password' => '',
+            'password_confirmation' => '',
             'ativo' => true,
             'trocarsenha' => 0,
             'vinculos' => [],
         ];
 
         $this->vinculoTemporario = ['org_id' => '', 'perfil_id' => ''];
-        $this->gerarSenhaAutomatica = true;
-        $this->enviarEmailBoasVindas = true;
+        $this->modoSenhaInicial = 'enviar_link';
         $this->editing = null;
     }
 
@@ -363,5 +392,18 @@ class ListarUsuarios extends Component
     {
         $this->flashMessage = $message;
         $this->flashStyle = $style;
+    }
+
+    protected function strongPasswordRules(): array
+    {
+        return [
+            'string',
+            'confirmed',
+            'min:8',
+            'regex:/[a-z]/',
+            'regex:/[A-Z]/',
+            'regex:/[0-9]/',
+            'regex:/[^A-Za-z0-9]/',
+        ];
     }
 }
