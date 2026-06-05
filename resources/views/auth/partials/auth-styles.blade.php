@@ -36,6 +36,8 @@
     box-shadow: 0 24px 56px rgba(27,64,142,.16), 0 8px 24px rgba(27,64,142,.10), 0 0 0 1px rgba(27,64,142,.05);
     animation: lp-slide-up .45s cubic-bezier(.22,1,.36,1) both;
 }
+.lp-reset-right { align-items: flex-start; padding-top: clamp(1.5rem, 4vh, 3rem) !important; padding-bottom: clamp(1.5rem, 4vh, 3rem) !important; }
+.lp-reset-right .lp-login-card { margin-top: 0; margin-bottom: auto; }
 @keyframes lp-slide-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ── Painel esquerdo ──────────────────────────────────────────────────────── */
@@ -180,6 +182,7 @@
 @media (max-width: 575.98px) {
     .lp-login-card { padding: 1.5rem; border-radius: 1.25rem; }
     .lp-login-right { padding: 1rem !important; }
+    .lp-reset-right { padding-top: .875rem !important; padding-bottom: .875rem !important; }
     .lp-form-title { font-size: 1.4rem; }
     .lp-field-input { padding: .8rem .9rem .8rem 2.6rem; }
 }
