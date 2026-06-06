@@ -24,7 +24,13 @@ class CreateNewUser implements CreatesNewUsers
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => $this->passwordRules(),
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
-        ])->validate();
+        ], array_merge($this->passwordMessages(), [
+            'name.required'   => 'O nome é obrigatório.',
+            'email.required'  => 'O e-mail é obrigatório.',
+            'email.email'     => 'Informe um e-mail válido.',
+            'email.unique'    => 'Este e-mail já está cadastrado.',
+            'terms.accepted'  => 'Você precisa aceitar os termos para continuar.',
+        ]))->validate();
 
         return User::create([
             'name' => $input['name'],

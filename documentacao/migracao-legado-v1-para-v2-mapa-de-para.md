@@ -64,7 +64,7 @@ Legenda de tipo: **1:1** (cópia direta, muda só schema) · **REN** (renomeia t
 |---|---|---|---|---|
 | 1 | `public.tab_organizacoes` | `organization.tab_organizacoes` | 1:1 | colunas idênticas (`cod_organizacao`, `sgl_organizacao`, `nom_organizacao`, `rel_cod_organizacao`) |
 | 2 | `public.tab_perfil_acesso` | `organization.tab_perfil_acesso` | 1:1 | `cod_perfil`, `dsc_perfil`, `dsc_permissao` |
-| 3 | `public.users` | `public.users` | 1:1 +DEF | colunas-chave iguais; v2 acrescenta `theme_color` (default), `current_team_id`, `profile_photo_path` (nullable) |
+| 3 | `public.users` | `public.users` | 1:1 +DEF | colunas-chave iguais; v2 acrescenta `theme_color` (default), `current_team_id`, `profile_photo_path` (nullable). **Super Admin na v2 é definido pelo PERFIL** (`PerfilAcesso::SUPER_ADMIN`), não pelo campo `adm`; após a carga, o ETL sincroniza `adm` como espelho do perfil (1=Super Admin, senão 0; default da coluna = 0) — ver Seção 8 |
 | 4 | `public.rel_users_tab_organizacoes` | `organization.rel_users_tab_organizacoes` | 1:1 | pivô usuário↔organização |
 | 5 | `public.rel_users_tab_organizacoes_tab_perfil_acesso` | `organization.rel_users_tab_organizacoes_tab_perfil_acesso` | 1:1 | v2 torna `cod_plano` nullable |
 | 6 | `public.rel_organizacao` | `public.rel_organizacao` | 1:1 | hierarquia de organizações |
@@ -134,7 +134,7 @@ Não há dado a migrar — criadas e deixadas vazias para preenchimento na nova 
 
 ## 8. Ordem de carga (topológica — respeita FKs)
 
-1. `tab_organizacoes` → `rel_organizacao` → `tab_perfil_acesso` → `users` → pivôs de usuário
+1. `tab_organizacoes` → `rel_organizacao` → `tab_perfil_acesso` → `users` → pivôs de usuário → *(etapa derivada)* sincronizar `users.adm` pelo perfil Super Administrador
 2. `tab_pei`
 3. `tab_missao_visao_valores`, `tab_valores`, `tab_perspectiva`, `tab_nivel_hierarquico`, `tab_grau_satisfacao`
 4. `tab_objetivo` → `tab_futuro_almejado_objetivo`

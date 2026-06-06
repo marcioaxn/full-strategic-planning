@@ -401,6 +401,10 @@ Antes de liberar para os usuários, confirme que tudo está correto:
 
 5. **Entregas:** confira que as entregas aparecem no novo quadro (Kanban/Lista/Timeline). Os campos que não existiam na v2 (unidade de medida, item entregue, quantidade prevista) foram **preservados** dentro das propriedades da entrega (`json_propriedades`) — não se perderam.
 
+6. **Permissões e Super Administrador:** na v2, ter acesso total (Super Admin) é determinado pelo **perfil de acesso** vinculado ao usuário (perfil "Super Administrador"), e **não** mais pelo campo `adm`. A migração sincroniza o campo `adm` automaticamente como espelho desse perfil. Após migrar:
+   - Confirme em **/usuarios** que cada usuário tem o **perfil correto** vinculado à sua organização.
+   - Garanta que **pelo menos um** usuário tenha o perfil **"Super Administrador"**. Se a migração avisar que nenhum super admin foi encontrado, atribua o perfil a um usuário pela própria tela de Usuários — caso contrário o sistema ficará sem administrador com acesso total.
+
 > Enquanto a validação não estiver concluída, **não descarte o legado**. Ele é a sua rede de segurança.
 
 ---

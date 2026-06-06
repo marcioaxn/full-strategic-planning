@@ -95,6 +95,7 @@ Durante a execução, o assistente faz estas perguntas **de seleção** (respond
 1. Leia a tabela de validação no fim da execução: coluna **OK** deve estar `✓` em todas as linhas com status `OK`.
 2. Acesse a aplicação e confira visualmente: PEI, Objetivos, Indicadores, Planos, Entregas.
 3. Teste login com um usuário conhecido (as senhas foram preservadas; se `trocarsenha` estiver ativo, o sistema pedirá troca no primeiro acesso — comportamento esperado).
+4. **Permissões / Super Admin:** na v2, o acesso total é definido pelo **perfil** "Super Administrador" (não pelo campo `adm`). Observe, no fim da execução, a linha `users.adm sincronizado pelo perfil — Super Admins: N`. Se **N = 0**, o serviço emite um alerta: atribua o perfil "Super Administrador" a um usuário em **/usuarios**, senão o sistema ficará sem administrador com acesso total. Confira também se os demais usuários têm o perfil correto por organização.
 
 > Enquanto a conferência não terminar, **não descarte o legado**. Ele continua disponível em `legacy_pei` / `legacy_public` como rede de segurança.
 

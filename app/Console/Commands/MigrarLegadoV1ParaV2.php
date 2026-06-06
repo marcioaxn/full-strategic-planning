@@ -280,6 +280,7 @@ class MigrarLegadoV1ParaV2 extends Command
     {
         $this->comment("\n▶ Decisões aplicadas nesta migração");
         $this->line('  • UUIDs preservados 1:1 (vínculos entre registros permanecem válidos).');
+        $this->line('  • Super Admin: definido pelo PERFIL (Super Administrador); o campo users.adm é sincronizado como espelho.');
         $this->line('  • Entregas: campos sem equivalente preservados em json_propriedades.');
         $this->line('  • Status de entrega não reconhecido → "'.$this->statusPadrao().'".');
         $this->line('  • Auditoria (audits/tab_audit): '
@@ -405,6 +406,9 @@ class MigrarLegadoV1ParaV2 extends Command
 
         // Etapa derivada: pivô plano↔organização (a v2 usa N:N)
         $this->popularRelPlanoOrganizacao($dry);
+
+        // Etapa derivada: alinhar o flag users.adm à nova regra de Super Admin (por perfil).
+        $this->sincronizarFlagAdmPorPerfil($dry);
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -518,6 +522,45 @@ class MigrarLegadoV1ParaV2 extends Command
             $row['num_ano'] = $row['num_ano'] ?? $pei->num_ano_inicio_pei;
         }
         return $row;
+    }
+
+    /**
+     * Alinha o flag legado users.adm à regra de Super Admin da v2.
+     *
+     * Na v2, ser Super Administrador é determinado pelo PERFIL vinculado
+     * (PerfilAcesso::SUPER_ADMIN), e não mais pelo campo "adm". Para evitar que o
+     * valor de "adm" herdado da v1 fique dessincronizado, este passo o reescreve
+     * como espelho do perfil: 1 para quem tem o perfil Super Administrador, 0 para
+     * os demais. Caso a migração não produza nenhum Super Admin, emite alerta
+     * para o operador atribuir o perfil — evitando o sistema ficar sem administrador.
+     */
+    private function sincronizarFlagAdmPorPerfil(bool $dry): void
+    {
+        if (! $this->tabelaDestinoExiste('public.users')
+            || ! $this->tabelaDestinoExiste('organization.rel_users_tab_organizacoes_tab_perfil_acesso')) {
+            return;
+        }
+
+        if ($dry) {
+            $this->line('  • [dry-run] users.adm seria sincronizado conforme o perfil Super Administrador.');
+            return;
+        }
+
+        $idsSuper = DB::table('organization.rel_users_tab_organizacoes_tab_perfil_acesso')
+            ->where('cod_perfil', \App\Models\PerfilAcesso::SUPER_ADMIN)
+            ->pluck('user_id')->unique()->all();
+
+        DB::table('public.users')->update(['adm' => 0]);
+        if (! empty($idsSuper)) {
+            DB::table('public.users')->whereIn('id', $idsSuper)->update(['adm' => 1]);
+        }
+
+        $this->line('  • users.adm sincronizado pelo perfil — Super Admins: '.count($idsSuper).'.');
+
+        if (count($idsSuper) === 0) {
+            $this->warn('  ⚠ Nenhum usuário com o perfil "Super Administrador" após a migração.');
+            $this->warn('    Atribua esse perfil a um usuário em /usuarios (ou o sistema ficará sem administrador).');
+        }
     }
 
     /** Popula o pivô N:N action_plan.rel_plano_organizacao a partir do cod_organizacao do plano legado. */

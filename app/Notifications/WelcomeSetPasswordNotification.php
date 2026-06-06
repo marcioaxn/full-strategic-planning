@@ -29,12 +29,16 @@ class WelcomeSetPasswordNotification extends Notification
             'email' => $notifiable->getEmailForPasswordReset(),
         ]);
 
+        // Validade do link, em minutos, conforme a configuração de reset de senha.
+        $broker = config('auth.defaults.passwords', 'users');
+        $minutos = (int) config("auth.passwords.{$broker}.expire", 60);
+
         return (new MailMessage)
-            ->subject('Bem-vindo ao Sistema de Planejamento Estrategico')
-            ->greeting('Bem-vindo, '.$notifiable->name)
-            ->line('Seu cadastro foi criado no Sistema de Planejamento Estrategico.')
-            ->line('Para concluir o acesso, cadastre sua senha pelo link abaixo. O link tem validade limitada por seguranca.')
-            ->action('Cadastrar minha senha', $url)
-            ->line('Se voce nao esperava este convite, ignore esta mensagem.');
+            ->subject('Bem-vindo ao Sistema de Planejamento Estratégico Integrado (PEI)')
+            ->markdown('emails.welcome-set-password', [
+                'nome'    => $notifiable->name,
+                'url'     => $url,
+                'minutos' => $minutos,
+            ]);
     }
 }

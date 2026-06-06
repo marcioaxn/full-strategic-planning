@@ -30,6 +30,7 @@ class ListarUsuarios extends Component
     
     // Filtros
     public string $filtroAtivo = 'todos'; // todos, ativos, inativos
+    public string $filtroOrganizacao = ''; // '' = todas as organizações
     
     public array $form = [
         'name' => '',
@@ -66,6 +67,8 @@ class ListarUsuarios extends Component
 
     protected $queryString = [
         'search' => ['except' => ''],
+        'filtroAtivo' => ['except' => 'todos'],
+        'filtroOrganizacao' => ['except' => ''],
         'page' => ['except' => 1],
     ];
 
@@ -80,7 +83,9 @@ class ListarUsuarios extends Component
             'form.email' => ['required', 'email', 'max:255', 'unique:users,email' . ($this->editing ? ',' . $this->editing->id : '')],
             'form.ativo' => ['boolean'],
             'form.trocarsenha' => ['integer', 'in:0,1,2'],
-            'form.vinculos' => ['array'],
+            'form.vinculos' => ['required', 'array', 'min:1'],
+            'form.vinculos.*.org_id' => ['required'],
+            'form.vinculos.*.perfil_id' => ['required'],
             'modoSenhaInicial' => ['required', 'in:enviar_link,senha_manual'],
         ];
 
@@ -120,6 +125,10 @@ class ListarUsuarios extends Component
             'modoSenhaInicial.in' => 'Selecione uma forma valida de definicao da senha inicial.',
             'vinculoTemporario.org_id.required' => 'Selecione a organizacao do vinculo.',
             'vinculoTemporario.perfil_id.required' => 'Selecione o perfil de acesso do vinculo.',
+            'form.vinculos.required' => 'O usuário precisa de pelo menos um vínculo: selecione uma organização e um perfil de acesso e clique em "Adicionar vínculo".',
+            'form.vinculos.min' => 'O usuário precisa de pelo menos um vínculo: selecione uma organização e um perfil de acesso e clique em "Adicionar vínculo".',
+            'form.vinculos.*.org_id.required' => 'Há um vínculo sem organização. Remova-o ou selecione a organização.',
+            'form.vinculos.*.perfil_id.required' => 'Há um vínculo sem perfil de acesso. Remova-o ou selecione o perfil.',
         ];
     }
 
@@ -143,10 +152,21 @@ class ListarUsuarios extends Component
         $this->resetPage();
     }
 
+    public function updatingFiltroAtivo(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFiltroOrganizacao(): void
+    {
+        $this->resetPage();
+    }
+
     public function resetFilters(): void
     {
         $this->search = '';
         $this->filtroAtivo = 'todos';
+        $this->filtroOrganizacao = '';
         $this->resetPage();
     }
 
@@ -170,11 +190,12 @@ class ListarUsuarios extends Component
         $query = User::query()->with(['organizacoes', 'perfisAcesso']);
         $search = trim($this->search);
 
-        // Filtro por Organização Selecionada Globalmente
-        $orgId = session('organizacao_selecionada_id');
-        if ($orgId) {
-            $query->whereHas('organizacoes', function ($q) use ($orgId) {
-                $q->where('tab_organizacoes.cod_organizacao', $orgId);
+        // Filtro de organização EXPLÍCITO (controlado na própria tela).
+        // Por padrão ('') lista todos os usuários — assim um usuário recém-criado
+        // sempre aparece, independentemente da organização selecionada no cabeçalho.
+        if ($this->filtroOrganizacao !== '') {
+            $query->whereHas('organizacoes', function ($q) {
+                $q->where('tab_organizacoes.cod_organizacao', $this->filtroOrganizacao);
             });
         }
 
@@ -242,6 +263,16 @@ class ListarUsuarios extends Component
         $this->resetValidation();
     }
 
+    /**
+     * Indica se há um vínculo selecionado nos campos mas ainda não adicionado à lista.
+     * Usado para alertar o usuário na interface (validação reativa).
+     */
+    public function getTemVinculoPendenteProperty(): bool
+    {
+        return ($this->vinculoTemporario['org_id'] ?? '') !== ''
+            && ($this->vinculoTemporario['perfil_id'] ?? '') !== '';
+    }
+
     public function adicionarVinculo()
     {
         $this->validate([
@@ -268,8 +299,45 @@ class ListarUsuarios extends Component
             'perfil_label' => $perfil->dsc_perfil
         ];
 
-        // Limpar temporário
+        // Limpar temporário e o erro de obrigatoriedade de vínculos
         $this->vinculoTemporario = ['org_id' => '', 'perfil_id' => ''];
+        $this->resetValidation(['form.vinculos', 'vinculoTemporario']);
+    }
+
+    /**
+     * Se o gestor selecionou organização e perfil mas não clicou em "Adicionar vínculo",
+     * incorpora automaticamente essa seleção pendente antes de salvar — evitando que o
+     * usuário seja gravado sem nenhum vínculo por esquecimento de um clique.
+     */
+    protected function incorporarVinculoPendente(): void
+    {
+        $orgId = $this->vinculoTemporario['org_id'] ?? '';
+        $perfilId = $this->vinculoTemporario['perfil_id'] ?? '';
+
+        if ($orgId === '' || $perfilId === '') {
+            return;
+        }
+
+        // Evita duplicar um vínculo já presente na lista.
+        foreach ($this->form['vinculos'] as $v) {
+            if ($v['org_id'] == $orgId && $v['perfil_id'] == $perfilId) {
+                $this->vinculoTemporario = ['org_id' => '', 'perfil_id' => ''];
+                return;
+            }
+        }
+
+        $org = Organization::find($orgId);
+        $perfil = PerfilAcesso::find($perfilId);
+
+        if ($org && $perfil) {
+            $this->form['vinculos'][] = [
+                'org_id' => $orgId,
+                'perfil_id' => $perfilId,
+                'org_label' => $org->sgl_organizacao,
+                'perfil_label' => $perfil->dsc_perfil,
+            ];
+            $this->vinculoTemporario = ['org_id' => '', 'perfil_id' => ''];
+        }
     }
 
     public function removerVinculo($index)
@@ -288,6 +356,9 @@ class ListarUsuarios extends Component
     public function save(): void
     {
         try {
+            // Aproveita uma seleção de vínculo ainda não adicionada à lista.
+            $this->incorporarVinculoPendente();
+
             $this->validate();
 
             $isNovoUsuario = !$this->editing;
@@ -345,6 +416,12 @@ class ListarUsuarios extends Component
 
             // Manter sincronizada a tabela simples para compatibilidade
             $user->organizacoes()->sync(collect($this->form['vinculos'])->pluck('org_id')->unique());
+
+            // Sincroniza o flag "adm" conforme o perfil: só é Super Admin quem
+            // tiver o perfil PerfilAcesso::SUPER_ADMIN entre os vínculos.
+            $ehSuperAdmin = collect($this->form['vinculos'])
+                ->contains(fn ($v) => ($v['perfil_id'] ?? null) === PerfilAcesso::SUPER_ADMIN);
+            $user->forceFill(['adm' => $ehSuperAdmin ? 1 : 0])->save();
 
             $this->notify($message);
         });
