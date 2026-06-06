@@ -17,7 +17,17 @@ class TrocarSenha extends Component
     {
         return [
             'senhaAtual' => ['required', 'current_password'],
-            'novaSenha' => ['required', 'string', 'min:8', 'confirmed', 'different:senhaAtual'],
+            'novaSenha' => [
+                'required',
+                'string',
+                'confirmed',
+                'min:8',
+                'different:senhaAtual',
+                'regex:/[a-z]/',          // letra minúscula
+                'regex:/[A-Z]/',          // letra maiúscula
+                'regex:/[0-9]/',          // número
+                'regex:/[^A-Za-z0-9]/',   // caractere especial
+            ],
         ];
     }
 
@@ -28,6 +38,7 @@ class TrocarSenha extends Component
         'novaSenha.min' => 'A nova senha deve ter no mínimo 8 caracteres.',
         'novaSenha.confirmed' => 'A confirmação da nova senha não confere.',
         'novaSenha.different' => 'A nova senha deve ser diferente da senha atual.',
+        'novaSenha.regex' => 'A senha deve conter letra maiúscula, letra minúscula, número e caractere especial.',
     ];
 
     public function trocarSenha()

@@ -9,6 +9,9 @@
         'lg' => 'max-width: 32rem;',
         'xl' => 'max-width: 36rem;',
         '2xl' => 'max-width: 42rem;',
+        '3xl' => 'max-width: 48rem;',
+        '4xl' => 'max-width: 56rem;',
+        '5xl' => 'max-width: 64rem;',
     ];
 
     $dialogWidth = $maxWidths[$maxWidth ?? '2xl'] ?? $maxWidths['2xl'];
