@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -40,6 +40,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('organization.rel_users_tab_organizacoes_tab_perfil_acesso');
+        DB::statement('DROP TABLE IF EXISTS "organization"."rel_users_tab_organizacoes_tab_perfil_acesso" CASCADE');
     }
 };

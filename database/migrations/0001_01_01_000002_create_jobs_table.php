@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -50,8 +51,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.jobs');
-        Schema::dropIfExists('pei.job_batches');
-        Schema::dropIfExists('pei.failed_jobs');
+        DB::statement('DROP TABLE IF EXISTS "pei"."jobs" CASCADE');
+        DB::statement('DROP TABLE IF EXISTS "pei"."job_batches" CASCADE');
+        DB::statement('DROP TABLE IF EXISTS "pei"."failed_jobs" CASCADE');
     }
 };

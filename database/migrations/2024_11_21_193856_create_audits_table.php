@@ -44,6 +44,6 @@ return new class extends Migration
         $connection = config('audit.drivers.database.connection', config('database.default'));
         $table = config('audit.drivers.database.table', 'pei.audits');
 
-        Schema::connection($connection)->dropIfExists($table);
+        DB::connection($connection)->statement("DROP TABLE IF EXISTS \"{$table}\" CASCADE");
     }
 };
