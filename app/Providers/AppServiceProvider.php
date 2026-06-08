@@ -25,7 +25,9 @@ class AppServiceProvider extends ServiceProvider
         'migrate:fresh',
         'migrate:refresh',
         'migrate:reset',
+        'migrate:rollback',
         'migrate:install',
+        'migrate:status',
         'migrate:run',
     ];
 
