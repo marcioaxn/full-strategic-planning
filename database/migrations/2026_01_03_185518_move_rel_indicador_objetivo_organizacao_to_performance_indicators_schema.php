@@ -6,12 +6,13 @@ use Illuminate\Support\Facades\DB;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Garante que rel_indicador_objetivo_organizacao esteja em performance_indicators.
+     * Em bancos novos a tabela já é criada lá diretamente; em migrações legadas (v1)
+     * ela podia estar no schema pei — nesse caso move-a para o schema correto.
      */
     public function up(): void
     {
-        // Verifica se a tabela existe no schema pei
-        $exists = DB::select("
+        $inPei = DB::select("
             SELECT EXISTS (
                 SELECT FROM information_schema.tables
                 WHERE table_schema = 'pei'
@@ -19,29 +20,22 @@ return new class extends Migration
             )
         ")[0]->exists;
 
-        if ($exists) {
-            // Move a tabela do schema pei para performance_indicators
-            DB::statement("ALTER TABLE performance_indicators.rel_indicador_objetivo_organizacao SET SCHEMA performance_indicators");
+        if ($inPei) {
+            DB::statement('ALTER TABLE pei.rel_indicador_objetivo_organizacao SET SCHEMA performance_indicators');
         }
+        // Já em performance_indicators → no-op intencional.
     }
 
     /**
-     * Reverse the migrations.
+     * Reverte apenas se up() realmente moveu a tabela de pei → performance_indicators.
+     * Em bancos novos a tabela nunca esteve em pei, portanto down() é no-op aqui;
+     * a migration de criação (drop) se encarregará de removê-la ao continuar o rollback.
      */
     public function down(): void
     {
-        // Verifica se a tabela existe no schema performance_indicators
-        $exists = DB::select("
-            SELECT EXISTS (
-                SELECT FROM information_schema.tables
-                WHERE table_schema = 'performance_indicators'
-                AND table_name = 'rel_indicador_objetivo_organizacao'
-            )
-        ")[0]->exists;
-
-        if ($exists) {
-            // Move a tabela de volta para o schema pei
-            DB::statement("ALTER TABLE performance_indicators.rel_indicador_objetivo_organizacao SET SCHEMA pei");
-        }
+        // Nada a fazer: se up() foi no-op (banco novo), a tabela deve permanecer em
+        // performance_indicators para que a migration anterior de criação possa removê-la.
+        // Se up() moveu de pei → performance_indicators (banco legado), não reverter aqui
+        // pois a migration de criação (down) também apaga de performance_indicators.
     }
 };
