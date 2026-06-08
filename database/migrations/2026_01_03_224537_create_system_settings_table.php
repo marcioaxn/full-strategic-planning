@@ -59,6 +59,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.system_settings');
+        DB::statement('DROP TABLE IF EXISTS "pei"."system_settings" CASCADE');
     }
 };

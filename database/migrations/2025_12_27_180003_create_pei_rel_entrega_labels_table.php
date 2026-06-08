@@ -50,6 +50,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('action_plan.rel_entrega_labels');
+        DB::statement('DROP TABLE IF EXISTS "action_plan"."rel_entrega_labels" CASCADE');
     }
 };

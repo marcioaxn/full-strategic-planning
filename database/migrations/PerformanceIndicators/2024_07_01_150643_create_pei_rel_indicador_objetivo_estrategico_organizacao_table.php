@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -31,6 +32,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('performance_indicators.rel_indicador_objetivo_estrategico_organizacao');
+        // Trata ambos os nomes: o original e o renomeado pela migration 2025_12_28_185851
+        DB::statement('DROP TABLE IF EXISTS "performance_indicators"."rel_indicador_objetivo_estrategico_organizacao" CASCADE');
+        DB::statement('DROP TABLE IF EXISTS "performance_indicators"."rel_indicador_objetivo_organizacao" CASCADE');
     }
 };

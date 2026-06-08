@@ -43,6 +43,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('performance_indicators.tab_indicador');
+        DB::statement('DROP TABLE IF EXISTS "performance_indicators"."tab_indicador" CASCADE');
     }
 };

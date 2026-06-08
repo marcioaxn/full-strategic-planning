@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -29,7 +30,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.cache');
-        Schema::dropIfExists('pei.cache_locks');
+        DB::statement('DROP TABLE IF EXISTS "pei"."cache" CASCADE');
+        DB::statement('DROP TABLE IF EXISTS "pei"."cache_locks" CASCADE');
     }
 };
