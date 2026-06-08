@@ -21,7 +21,7 @@ return new class extends Migration
                   ->nullOnDelete();
             $table->foreignUuid('user_id')
                   ->references('id')
-                  ->on('public.users')
+                  ->on('pei.users')
                   ->cascadeOnDelete();
             $table->char('dsc_papel', 1);
             $table->timestamps();
