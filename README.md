@@ -70,6 +70,15 @@ O sistema está em operação evolutiva e cobre o ciclo completo do PEI. Os mód
 
 ## 🚀 Instalação
 
+### Pré-requisito: banco PostgreSQL criado
+
+O projeto usa **múltiplos schemas** dentro de um único banco PostgreSQL (`pei`, `strategic_planning`, `action_plan`, `performance_indicators`, `risk_management`, `organization`). O banco em si deve existir antes do primeiro `migrate`, mas **os schemas são criados automaticamente** pelo próprio `php artisan migrate`.
+
+```sql
+-- Execute no PostgreSQL antes de prosseguir (apenas o banco; os schemas ficam por conta do sistema):
+CREATE DATABASE nome_do_banco;
+```
+
 ### Passo a passo
 
 ```bash
@@ -77,22 +86,22 @@ O sistema está em operação evolutiva e cobre o ciclo completo do PEI. Os mód
 git clone <url_do_repositorio> planejamento-estrategico
 cd planejamento-estrategico
 
-# 2. Dependências
+# 2. Dependências PHP e Node
 composer install
 npm install
 
-# 3. Crie o arquivo .env na raiz e configure ao menos a conexão do banco:
-#    DB_CONNECTION=pgsql
-#    DB_HOST=127.0.0.1
-#    DB_PORT=5432
-#    DB_DATABASE=planejamento_estrategico
-#    DB_USERNAME=postgres
-#    DB_PASSWORD=sua_senha
+# 3. Configurar o ambiente
+cp .env.example .env
+# Edite o .env e preencha obrigatoriamente:
+#   APP_URL, APP_KEY (gerada no passo 4), SESSION_DOMAIN,
+#   DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD
 
-# 4. Gerar a chave da aplicação (requer o .env já criado)
+# 4. Gerar a chave da aplicação
 php artisan key:generate
 
 # 5. Migrations + dados iniciais
+#    Os schemas PostgreSQL são criados automaticamente antes das migrations.
+#    Não é necessário criá-los manualmente.
 php artisan migrate --seed
 
 # 6. Compilar assets e subir
@@ -100,7 +109,9 @@ npm run build
 php artisan serve
 ```
 
-Acesse `http://localhost:8000`.
+Acesse `http://localhost:8000` (ou a URL configurada em `APP_URL`).
+
+> **Sobre `APP_URL` e `SESSION_DOMAIN`:** se o sistema estiver em uma subpasta do servidor web (ex.: Apache com `/fs-v1/public`), consulte os comentários do `.env.example` — configuração incorreta dessas variáveis impede o Livewire de funcionar.
 
 ### Ambiente de desenvolvimento completo
 
