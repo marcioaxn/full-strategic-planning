@@ -45,7 +45,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.users');
-        Schema::dropIfExists('pei.password_reset_tokens');
+        DB::statement('DROP TABLE IF EXISTS "pei"."users" CASCADE');
+        DB::statement('DROP TABLE IF EXISTS "pei"."password_reset_tokens" CASCADE');
     }
 };

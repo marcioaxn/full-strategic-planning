@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('strategic_planning.tab_futuro_almejado_objetivo_estrategico');
+        DB::statement('DROP TABLE IF EXISTS "strategic_planning"."tab_futuro_almejado_objetivo_estrategico" CASCADE');
     }
 };

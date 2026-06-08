@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -37,6 +37,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('risk_management.tab_risco_mitigacao');
+        DB::statement('DROP TABLE IF EXISTS "risk_management"."tab_risco_mitigacao" CASCADE');
     }
 };

@@ -34,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('risk_management.tab_risco_ocorrencia');
+        DB::statement('DROP TABLE IF EXISTS "risk_management"."tab_risco_ocorrencia" CASCADE');
     }
 };

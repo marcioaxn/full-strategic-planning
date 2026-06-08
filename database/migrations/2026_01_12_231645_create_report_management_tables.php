@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -42,7 +43,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pei.tab_relatorios_gerados');
-        Schema::dropIfExists('pei.tab_relatorios_agendados');
+        DB::statement('DROP TABLE IF EXISTS "pei"."tab_relatorios_gerados" CASCADE');
+        DB::statement('DROP TABLE IF EXISTS "pei"."tab_relatorios_agendados" CASCADE');
     }
 };

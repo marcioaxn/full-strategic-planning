@@ -33,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('strategic_planning.tab_nivel_hierarquico');
+        DB::statement('DROP TABLE IF EXISTS "strategic_planning"."tab_nivel_hierarquico" CASCADE');
     }
 };
