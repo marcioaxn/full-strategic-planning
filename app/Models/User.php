@@ -1,4 +1,4 @@
-<?php
+?php
 
 namespace App\Models;
 
@@ -24,7 +24,7 @@ class User extends Authenticatable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'users';
+    protected $table = 'pei.users';
 
     /**
      * Chave primária

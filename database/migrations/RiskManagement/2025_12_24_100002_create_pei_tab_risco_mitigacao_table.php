@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignUuid('cod_risco')->references('cod_risco')->on('risk_management.tab_risco')->cascadeOnDelete();
             $table->string('dsc_tipo_mitigacao', 50)->nullable(false); // Prevenir, Reduzir, Transferir, Aceitar
             $table->text('txt_acao_mitigacao')->nullable(false);
-            $table->foreignUuid('cod_responsavel')->nullable()->references('id')->on('users')->nullOnDelete();
+            $table->foreignUuid('cod_responsavel')->nullable()->references('id')->on('pei.users')->nullOnDelete();
             $table->date('dte_prazo')->nullable(true);
             $table->string('dsc_status', 50)->nullable(false); // Planejada, Em Andamento, Concluída, Cancelada
             $table->text('txt_observacoes')->nullable(true);

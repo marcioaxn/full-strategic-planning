@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('organization.rel_users_tab_organizacoes', function (Blueprint $table) {
             $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
-            $table->foreignUuid('user_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->foreignUuid('user_id')->references('id')->on('pei.users')->cascadeOnDelete();
             $table->foreignUuid('cod_organizacao')->references('cod_organizacao')->on('organization.tab_organizacoes')->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();

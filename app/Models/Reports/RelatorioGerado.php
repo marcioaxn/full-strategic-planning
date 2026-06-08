@@ -1,4 +1,4 @@
-<?php
+?php
 
 namespace App\Models\Reports;
 
@@ -12,7 +12,7 @@ class RelatorioGerado extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $table = 'tab_relatorios_gerados';
+    protected $table = 'pei.tab_relatorios_gerados';
     protected $primaryKey = 'cod_relatorio_gerado';
     public $incrementing = false;
     protected $keyType = 'string';

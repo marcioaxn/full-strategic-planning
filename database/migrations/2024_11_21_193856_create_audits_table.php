@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         $connection = config('audit.drivers.database.connection', config('database.default'));
-        $table = config('audit.drivers.database.table', 'audits');
+        $table = config('audit.drivers.database.table', 'pei.audits');
 
         Schema::connection($connection)->create($table, function (Blueprint $table) {
             $morphPrefix = config('audit.user.morph_prefix', 'user');
@@ -42,7 +42,7 @@ return new class extends Migration
     public function down(): void
     {
         $connection = config('audit.drivers.database.connection', config('database.default'));
-        $table = config('audit.drivers.database.table', 'audits');
+        $table = config('audit.drivers.database.table', 'pei.audits');
 
         Schema::connection($connection)->dropIfExists($table);
     }

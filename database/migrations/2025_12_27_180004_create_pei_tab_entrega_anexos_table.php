@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -33,7 +33,7 @@ return new class extends Migration
             // FK para usuário que fez upload
             $table->uuid('cod_usuario')
                   ->references('id')
-                  ->on('users');
+                  ->on('pei.users');
             
             // Nome original do arquivo
             $table->string('dsc_nome_arquivo', 255);

@@ -15,35 +15,52 @@ class ListarGrausSatisfacao extends Component
 
     // Campos do formulario
     public $cod_grau_satisfacao;
+
     public $cod_pei;
+
     public $num_ano;
+
     public $dsc_grau_satisfacao = '';
+
     public $cor = '';
+
     public $vlr_minimo = '';
+
     public $vlr_maximo = '';
 
     // Controle do modal
     public $showModal = false;
+
     public $showDeleteModal = false;
+
     public $isEditing = false;
+
     public $grauId = null; // Alterado de deleteId para grauId para consistência
 
     // Busca
     public $search = '';
+
     public bool $aiEnabled = false;
+
     public $aiSuggestion = '';
 
     // Success Modal Properties
     public bool $showSuccessModal = false;
+
     public bool $showErrorModal = false;
+
     public string $successMessage = '';
+
     public string $errorMessage = '';
+
     public string $createdGrauName = '';
 
     protected $paginationTheme = 'bootstrap';
 
     public function mount()
     {
+        abort_unless(auth()->user()?->isSuperAdmin(), 403, 'Acesso restrito ao Super Administrador.');
+
         $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
     }
 
@@ -62,18 +79,22 @@ class ListarGrausSatisfacao extends Component
 
     public function pedirAjudaIA()
     {
-        if (!$this->aiEnabled) return;
+        if (! $this->aiEnabled) {
+            return;
+        }
 
         $aiService = \App\Services\AI\AiServiceFactory::make();
-        if (!$aiService) return;
+        if (! $aiService) {
+            return;
+        }
 
         $this->aiSuggestion = 'Pensando...';
-        
+
         $prompt = "Sugira uma escala de 4 a 5 Graus de Satisfação padrão para monitoramento estratégico. 
         A escala deve cobrir de 0 a 100%. 
         Para cada nível forneça: Descrição (ex: Crítico, Excelente), Cor (Hexadecimal vibrante), Valor Mínimo e Valor Máximo.
         Responda OBRIGATORIAMENTE em formato JSON puro, contendo um array de objetos com os campos 'nome', 'cor', 'min' e 'max'.";
-        
+
         $response = $aiService->suggest($prompt);
         $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
 
@@ -91,15 +112,17 @@ class ListarGrausSatisfacao extends Component
         $this->cor = $cor;
         $this->vlr_minimo = $min;
         $this->vlr_maximo = $max;
-        
+
         $this->save();
-        
+
         // Remove da lista
         if (is_array($this->aiSuggestion)) {
-            $this->aiSuggestion = array_filter($this->aiSuggestion, function($item) use ($nome) {
+            $this->aiSuggestion = array_filter($this->aiSuggestion, function ($item) use ($nome) {
                 return $item['nome'] !== $nome;
             });
-            if (empty($this->aiSuggestion)) $this->aiSuggestion = '';
+            if (empty($this->aiSuggestion)) {
+                $this->aiSuggestion = '';
+            }
         }
     }
 
@@ -172,11 +195,11 @@ class ListarGrausSatisfacao extends Component
                 $grau = GrauSatisfacao::find($this->cod_grau_satisfacao);
                 if ($grau) {
                     $grau->update($data);
-                    $this->successMessage = "As alterações no grau de satisfação foram salvas com sucesso.";
+                    $this->successMessage = 'As alterações no grau de satisfação foram salvas com sucesso.';
                 }
             } else {
                 GrauSatisfacao::create($data);
-                $this->successMessage = "O novo grau de satisfação foi registrado e já está disponível para uso no sistema.";
+                $this->successMessage = 'O novo grau de satisfação foi registrado e já está disponível para uso no sistema.';
             }
 
             $this->createdGrauName = $this->dsc_grau_satisfacao;
@@ -184,7 +207,7 @@ class ListarGrausSatisfacao extends Component
             $this->showSuccessModal = true;
 
         } catch (\Exception $e) {
-            $this->errorMessage = "Ocorreu um erro técnico ao processar sua solicitação. Por favor, verifique os dados e tente novamente.";
+            $this->errorMessage = 'Ocorreu um erro técnico ao processar sua solicitação. Por favor, verifique os dados e tente novamente.';
             $this->showErrorModal = true;
         }
     }
@@ -219,7 +242,7 @@ class ListarGrausSatisfacao extends Component
             if ($grau) {
                 $nome = $grau->dsc_grau_satisfacao;
                 $grau->delete();
-                
+
                 $alert = \App\Services\NotificationService::sendMentorAlert(
                     'Grau Removido',
                     "A faixa <strong>{$nome}</strong> foi excluída com sucesso.",
@@ -245,12 +268,14 @@ class ListarGrausSatisfacao extends Component
         $peiId = session('pei_selecionado_id');
 
         $graus = GrauSatisfacao::query()
-            ->where(function($q) use ($peiId) {
-                if ($peiId) $q->where('cod_pei', $peiId)->orWhereNull('cod_pei');
+            ->where(function ($q) use ($peiId) {
+                if ($peiId) {
+                    $q->where('cod_pei', $peiId)->orWhereNull('cod_pei');
+                }
             })
-            ->when($this->search, function($query) {
-                $query->where('dsc_grau_satisfacao', 'ilike', '%' . $this->search . '%')
-                      ->orWhere('cor', 'ilike', '%' . $this->search . '%');
+            ->when($this->search, function ($query) {
+                $query->where('dsc_grau_satisfacao', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('cor', 'ilike', '%'.$this->search.'%');
             })
             ->orderBy('num_ano', 'asc') // Agrupa por ano (maturidade)
             ->orderBy('vlr_minimo', 'asc')
@@ -258,7 +283,7 @@ class ListarGrausSatisfacao extends Component
 
         return view('livewire.p-e-i.listar-graus-satisfacao', [
             'graus' => $graus,
-            'availablePeis' => PEI::orderBy('num_ano_inicio_pei', 'desc')->get()
+            'availablePeis' => PEI::orderBy('num_ano_inicio_pei', 'desc')->get(),
         ]);
     }
 }

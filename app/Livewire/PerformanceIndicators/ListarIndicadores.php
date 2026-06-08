@@ -2,50 +2,64 @@
 
 namespace App\Livewire\PerformanceIndicators;
 
-use App\Models\PerformanceIndicators\Indicador;
-use App\Models\StrategicPlanning\PEI;
-use App\Models\StrategicPlanning\Objetivo;
 use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\Organization;
+use App\Models\PerformanceIndicators\Indicador;
 use App\Models\PerformanceIndicators\LinhaBaseIndicador;
 use App\Models\PerformanceIndicators\MetaPorAno;
-use App\Models\Organization;
+use App\Models\StrategicPlanning\Objetivo;
+use App\Models\StrategicPlanning\PEI;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Session;
 
 #[Layout('layouts.app')]
 class ListarIndicadores extends Component
 {
-    use WithPagination;
     use AuthorizesRequests;
+    use WithPagination;
 
     public $search = '';
+
     public $filtroVinculo = '';
+
     public $filtroObjetivo = '';
+
     public $organizacaoId;
+
     public $peiAtivo;
 
     // IA e Mentor
     public bool $aiEnabled = false;
+
     public $aiSuggestion = '';
+
     public $smartFeedback = '';
 
     // Modais
     public bool $showModal = false;
+
     public bool $showDeleteModal = false;
+
     public bool $showMetasModal = false;
+
     public bool $showLinhaBaseModal = false;
-    
+
     public $indicadorId;
+
     public $indicadorSelecionado;
 
     // Success Modal Properties
     public bool $showSuccessModal = false;
+
     public bool $showErrorModal = false;
+
     public string $successMessage = '';
+
     public string $errorMessage = '';
+
     public string $createdIndicadorName = '';
 
     // Form Indicador
@@ -73,18 +87,28 @@ class ListarIndicadores extends Component
 
     // Form Metas/Linha Base
     public $metaAno;
+
     public $metaValor;
+
     public $linhaBaseAno;
+
     public $linhaBaseValor;
 
     // Listas Auxiliares
     public $objetivosAgrupados = [];
+
     public $planosAgrupados = [];
+
     public $organizacoesOptions = [];
+
     public $unidadesMedida = [];
+
     public $polaridades = [];
+
     public $calculationTypes = [];
+
     public $periodosOptions = ['Mensal', 'Bimestral', 'Trimestral', 'Semestral', 'Anual'];
+
     public $grausSatisfacao = [];
 
     protected $queryString = [
@@ -96,13 +120,13 @@ class ListarIndicadores extends Component
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
-        'peiSelecionado' => 'atualizarPEI'
+        'peiSelecionado' => 'atualizarPEI',
     ];
 
     public function mount()
     {
         $this->organizacaoId = Session::get('organizacao_selecionada_id');
-        
+
         if ($this->filtroObjetivo) {
             $obj = Objetivo::with('perspectiva.pei')->find($this->filtroObjetivo);
             if ($obj) {
@@ -110,12 +134,12 @@ class ListarIndicadores extends Component
             }
         }
 
-        if (!$this->peiAtivo) {
+        if (! $this->peiAtivo) {
             $this->peiAtivo = PEI::find(Session::get('pei_selecionado_id')) ?? PEI::ativos()->first();
         }
-        
+
         $this->carregarListasAuxiliares();
-        
+
         $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
     }
 
@@ -142,33 +166,33 @@ class ListarIndicadores extends Component
 
         if ($this->peiAtivo) {
             // Agrupar objetivos por perspectiva para o select
-            $objetivos = Objetivo::whereHas('perspectiva', function($q) {
+            $objetivos = Objetivo::whereHas('perspectiva', function ($q) {
                 $q->where('cod_pei', $this->peiAtivo->cod_pei);
             })->with('perspectiva')->get();
 
-            $this->objetivosAgrupados = $objetivos->groupBy(function($obj) {
+            $this->objetivosAgrupados = $objetivos->groupBy(function ($obj) {
                 return $obj->perspectiva->dsc_perspectiva;
-            })->map(function($group) {
-                return $group->map(function($obj) {
+            })->map(function ($group) {
+                return $group->map(function ($obj) {
                     return [
                         'cod_objetivo' => $obj->cod_objetivo,
-                        'nom_objetivo' => $obj->nom_objetivo
+                        'nom_objetivo' => $obj->nom_objetivo,
                     ];
                 });
             })->toArray();
 
             // Agrupar planos por objetivo
-            $planos = PlanoDeAcao::whereHas('objetivo.perspectiva', function($q) {
+            $planos = PlanoDeAcao::whereHas('objetivo.perspectiva', function ($q) {
                 $q->where('cod_pei', $this->peiAtivo->cod_pei);
             })->with('objetivo')->get();
 
-            $this->planosAgrupados = $planos->groupBy(function($plano) {
+            $this->planosAgrupados = $planos->groupBy(function ($plano) {
                 return $plano->objetivo->nom_objetivo ?? 'Sem Objetivo';
-            })->map(function($group) {
-                return $group->map(function($plano) {
+            })->map(function ($group) {
+                return $group->map(function ($plano) {
                     return [
                         'cod_plano_de_acao' => $plano->cod_plano_de_acao,
-                        'dsc_plano_de_acao' => $plano->dsc_plano_de_acao
+                        'dsc_plano_de_acao' => $plano->dsc_plano_de_acao,
                     ];
                 });
             })->toArray();
@@ -210,7 +234,7 @@ class ListarIndicadores extends Component
             'dsc_referencial_comparativo' => $indicador->dsc_referencial_comparativo,
             'dsc_atributos' => $indicador->dsc_atributos,
             'organizacoes_ids' => $indicador->organizacoes->pluck('cod_organizacao')->toArray(),
-            'smart'            => $indicador->json_smart ?? ['especifico' => false, 'mensuravel' => false, 'atingivel' => false, 'relevante' => false, 'temporal' => false],
+            'smart' => $indicador->json_smart ?? ['especifico' => false, 'mensuravel' => false, 'atingivel' => false, 'relevante' => false, 'temporal' => false],
         ];
         $this->showModal = true;
     }
@@ -228,7 +252,7 @@ class ListarIndicadores extends Component
         // Validação condicional: Se tipo é Plano E cálculo é automático, plano é obrigatório
         if ($this->form['dsc_tipo'] === 'Plano') {
             $rules['form.cod_plano_de_acao'] = 'required|uuid|exists:tab_planos_acao,cod_plano_de_acao';
-            
+
             // Se cálculo automático, reforçar mensagem
             if ($this->form['dsc_calculation_type'] === 'action_plan') {
                 $rules['form.cod_plano_de_acao'] = 'required|uuid|exists:tab_planos_acao,cod_plano_de_acao';
@@ -251,11 +275,11 @@ class ListarIndicadores extends Component
             $data['json_smart'] = $data['smart'] ?? [];
             unset($data['smart']);
 
-            if ($data['dsc_tipo'] === 'Objetivo') { 
+            if ($data['dsc_tipo'] === 'Objetivo') {
                 $data['cod_plano_de_acao'] = null;
                 $data['dsc_calculation_type'] = 'manual'; // Objetivo sempre manual
-            } else { 
-                $data['cod_objetivo'] = null; 
+            } else {
+                $data['cod_objetivo'] = null;
             }
 
             if ($this->indicadorId) {
@@ -263,12 +287,12 @@ class ListarIndicadores extends Component
                 $this->authorize('update', $indicador);
                 $indicador->update($data);
                 $indicador->organizacoes()->sync($orgIds);
-                $this->successMessage = "As configurações do indicador foram atualizadas com sucesso e as organizações vinculadas já refletem as mudanças.";
+                $this->successMessage = 'As configurações do indicador foram atualizadas com sucesso e as organizações vinculadas já refletem as mudanças.';
             } else {
                 $this->authorize('create', Indicador::class);
                 $indicador = Indicador::create($data);
                 $indicador->organizacoes()->sync($orgIds);
-                $this->successMessage = "O novo indicador foi registrado com sucesso e vinculado às unidades organizacionais selecionadas.";
+                $this->successMessage = 'O novo indicador foi registrado com sucesso e vinculado às unidades organizacionais selecionadas.';
             }
 
             $this->createdIndicadorName = $this->form['nom_indicador'];
@@ -276,7 +300,7 @@ class ListarIndicadores extends Component
             $this->showSuccessModal = true;
 
         } catch (\Exception $e) {
-            $this->errorMessage = "Não foi possível processar o registro do indicador. Por favor, revise as informações e tente novamente.";
+            $this->errorMessage = 'Não foi possível processar o registro do indicador. Por favor, revise as informações e tente novamente.';
             $this->showErrorModal = true;
         }
     }
@@ -353,10 +377,12 @@ class ListarIndicadores extends Component
 
     public function delete()
     {
-        Indicador::findOrFail($this->indicadorId)->delete();
+        $indicador = Indicador::findOrFail($this->indicadorId);
+        $this->authorize('delete', $indicador);
+        $indicador->delete();
         $this->showDeleteModal = false;
-        
-        $this->dispatch('mentor-notification', 
+
+        $this->dispatch('mentor-notification',
             title: 'Indicador Removido',
             message: 'O KPI foi excluído com sucesso.',
             icon: 'bi-trash',
@@ -421,19 +447,19 @@ class ListarIndicadores extends Component
         if ($this->filtroObjetivo) {
             // Busca indicadores diretamente vinculados ao objetivo
             // OU vinculados a planos de ação desse objetivo
-            $query->where(function($q) {
+            $query->where(function ($q) {
                 $q->where('cod_objetivo', $this->filtroObjetivo)
-                  ->orWhereHas('planoDeAcao', function($sub) {
-                      $sub->where('cod_objetivo', $this->filtroObjetivo);
-                  });
+                    ->orWhereHas('planoDeAcao', function ($sub) {
+                        $sub->where('cod_objetivo', $this->filtroObjetivo);
+                    });
             });
         } elseif ($this->organizacaoId) {
             // Filtro por organização considerando multivinculação
-            $query->where(function($q) {
-                $q->whereHas('organizacoes', function($sub) {
+            $query->where(function ($q) {
+                $q->whereHas('organizacoes', function ($sub) {
                     $sub->where('tab_organizacoes.cod_organizacao', $this->organizacaoId);
-                })->orWhereHas('planoDeAcao', function($sub) {
-                    $sub->whereHas('organizacoes', function($subOrg) {
+                })->orWhereHas('planoDeAcao', function ($sub) {
+                    $sub->whereHas('organizacoes', function ($subOrg) {
                         $subOrg->where('tab_organizacoes.cod_organizacao', $this->organizacaoId);
                     });
                 });
@@ -441,7 +467,7 @@ class ListarIndicadores extends Component
         }
 
         if ($this->search) {
-            $query->where('nom_indicador', 'ilike', '%' . $this->search . '%');
+            $query->where('nom_indicador', 'ilike', '%'.$this->search.'%');
         }
 
         if ($this->filtroVinculo === 'Objetivo') {
@@ -451,7 +477,7 @@ class ListarIndicadores extends Component
         }
 
         return view('livewire.indicador.listar-indicadores', [
-            'indicadores' => $query->paginate(10)
+            'indicadores' => $query->paginate(10),
         ]);
     }
 }

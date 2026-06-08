@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -124,7 +124,7 @@ return new class extends Migration
         Schema::table('action_plan.tab_entregas', function (Blueprint $table) {
             $table->foreign('cod_responsavel', 'fk_entregas_responsavel')
                   ->references('id')
-                  ->on('users')
+                  ->on('pei.users')
                   ->nullOnDelete();
         });
         
