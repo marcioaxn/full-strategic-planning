@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -34,10 +35,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('strategic_planning.tab_grau_satisfacao', function (Blueprint $table) {
-            $table->dropForeign(['cod_pei']);
-            $table->dropIndex('idx_grau_satisfacao_pei_ano');
-            $table->dropColumn(['cod_pei', 'num_ano']);
-        });
+        DB::statement('DROP INDEX IF EXISTS strategic_planning.idx_grau_satisfacao_pei_ano');
+        // CASCADE remove a FK vinculada à coluna automaticamente
+        DB::statement('ALTER TABLE strategic_planning.tab_grau_satisfacao DROP COLUMN IF EXISTS cod_pei CASCADE');
+        DB::statement('ALTER TABLE strategic_planning.tab_grau_satisfacao DROP COLUMN IF EXISTS num_ano');
     }
 };
