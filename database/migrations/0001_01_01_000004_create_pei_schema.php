@@ -27,12 +27,17 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
+     *
+     * O schema "pei" é intencionalmente excluído do DROP porque contém a
+     * tabela "migrations" que o Laravel precisa para registrar o rollback
+     * desta própria migration. Remover "pei" aqui causaria
+     * SQLSTATE[42P01] na tentativa de deletar o registro da migration.
+     * As tabelas dentro de "pei" já foram removidas pelas down() individuais;
+     * o schema vazio pode ser descartado manualmente se necessário.
      */
     public function down(): void
     {
-        // Remover schemas (CASCADE para remover todas as tabelas dentro deles)
         $schemas = [
-            'pei',
             'strategic_planning',
             'action_plan',
             'performance_indicators',
@@ -41,7 +46,7 @@ return new class extends Migration
         ];
 
         foreach ($schemas as $schema) {
-            DB::statement("DROP SCHEMA IF EXISTS $schema CASCADE;");
+            DB::statement("DROP SCHEMA IF EXISTS {$schema} CASCADE;");
         }
     }
 };
