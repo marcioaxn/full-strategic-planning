@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 class PlanosExport implements FromCollection, WithHeadings, WithMapping
 {
     protected $organizacaoId;
+
     protected $ano;
 
     public function __construct($organizacaoId, $ano = null)
@@ -20,15 +21,17 @@ class PlanosExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        $query = PlanoDeAcao::query()->with(['objetivo', 'entregas', 'responsaveis']);
+        // 'responsaveis' é um accessor derivado de entregas->responsaveis, não uma relação.
+        // Eager-load aninhado evita N+1 e alimenta o accessor getResponsaveisAttribute().
+        $query = PlanoDeAcao::query()->with(['objetivo', 'entregas.responsaveis']);
 
         if ($this->organizacaoId) {
             $query->where('cod_organizacao', $this->organizacaoId);
         }
 
-        $query->where(function($q) {
+        $query->where(function ($q) {
             $q->whereYear('dte_inicio', $this->ano)
-              ->orWhereYear('dte_fim', $this->ano);
+                ->orWhereYear('dte_fim', $this->ano);
         });
 
         return $query->orderBy('dte_fim')->get();

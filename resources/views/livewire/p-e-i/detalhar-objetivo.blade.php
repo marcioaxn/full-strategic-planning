@@ -111,20 +111,23 @@
                     <h5 class="fw-bold mb-3">{{ $objetivo->nom_objetivo }}</h5>
                     <p class="text-secondary mb-4">{{ $objetivo->dsc_objetivo }}</p>
 
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold text-info small text-uppercase mb-0">
+                            <i class="bi bi-stars me-1"></i>Futuro Almejado
+                        </h6>
+                        <a href="{{ route('objetivos.futuro', $objetivo->cod_objetivo) }}" wire:navigate class="btn btn-sm btn-outline-info">
+                            <i class="bi bi-pencil me-1"></i>Gerenciar
+                        </a>
+                    </div>
                     @if($objetivo->futuroAlmejado->isNotEmpty())
                         <div class="p-3 bg-light rounded border-start border-4 border-info">
-                            <h6 class="fw-bold text-info small text-uppercase mb-2">
-                                <i class="bi bi-stars me-1"></i>Futuro Almejado
-                            </h6>
                             @foreach($objetivo->futuroAlmejado as $futuro)
-                                <p class="mb-0 text-muted fst-italic">{{ $futuro->dsc_futuro_almejado }}</p>
+                                <p class="mb-1 text-muted fst-italic">{{ $futuro->dsc_futuro_almejado }}</p>
                             @endforeach
                         </div>
                     @else
                         <div class="text-center p-3 border border-dashed rounded text-muted">
-                            <small>Nenhum "Futuro Almejado" definido para este objetivo.</small>
-                            <br>
-                            <a href="#" class="btn btn-link btn-sm p-0">Definir agora</a>
+                            <small>Nenhum futuro almejado definido para este objetivo.</small>
                         </div>
                     @endif
                 </div>

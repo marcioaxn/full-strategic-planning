@@ -5,13 +5,16 @@ namespace App\Livewire\UserManagement;
 use App\Models\User;
 use App\Models\Organization;
 use App\Models\PerfilAcesso;
-use App\Mail\WelcomeUserMail;
+use App\Notifications\WelcomeSetPasswordNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Throwable;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -27,19 +30,20 @@ class ListarUsuarios extends Component
     
     // Filtros
     public string $filtroAtivo = 'todos'; // todos, ativos, inativos
+    public string $filtroOrganizacao = ''; // '' = todas as organizações
     
     public array $form = [
         'name' => '',
         'email' => '',
+        'password_confirmation' => '',
         'password' => '', // Opcional na edição
         'ativo' => true,
         'trocarsenha' => 0,
         'vinculos' => [], // Array de ['org_id' => ..., 'perfil_id' => ...]
     ];
 
-    // Opções para geração automática de senha
-    public bool $gerarSenhaAutomatica = true;
-    public bool $enviarEmailBoasVindas = true;
+    // Modo de criacao do acesso inicial no cadastro administrativo.
+    public string $modoSenhaInicial = 'enviar_link';
 
     // Dados auxiliares para o modal
     public $vinculoTemporario = [
@@ -54,11 +58,17 @@ class ListarUsuarios extends Component
 
     public ?string $flashMessage = null;
     public string $flashStyle = 'success';
+    public bool $showTransactionModal = false;
+    public string $transactionTitle = '';
+    public string $transactionMessage = '';
+    public string $transactionStyle = 'success';
 
     protected string $paginationTheme = 'bootstrap';
 
     protected $queryString = [
         'search' => ['except' => ''],
+        'filtroAtivo' => ['except' => 'todos'],
+        'filtroOrganizacao' => ['except' => ''],
         'page' => ['except' => 1],
     ];
 
@@ -73,24 +83,81 @@ class ListarUsuarios extends Component
             'form.email' => ['required', 'email', 'max:255', 'unique:users,email' . ($this->editing ? ',' . $this->editing->id : '')],
             'form.ativo' => ['boolean'],
             'form.trocarsenha' => ['integer', 'in:0,1,2'],
-            'form.vinculos' => ['array'],
+            'form.vinculos' => ['required', 'array', 'min:1'],
+            'form.vinculos.*.org_id' => ['required'],
+            'form.vinculos.*.perfil_id' => ['required'],
+            'modoSenhaInicial' => ['required', 'in:enviar_link,senha_manual'],
         ];
 
         if (!$this->editing) {
-            // Se gerar senha automática, não precisa informar senha manual
-            if ($this->gerarSenhaAutomatica) {
-                $rules['form.password'] = ['nullable', 'string', 'min:8'];
-            } else {
-                $rules['form.password'] = ['required', 'string', 'min:8'];
+            // No modo por link, a senha nunca e informada durante o cadastro.
+            if ($this->modoSenhaInicial === 'senha_manual') {
+                $rules['form.password'] = array_merge(['required'], $this->strongPasswordRules());
+                $rules['form.password_confirmation'] = ['required', 'string'];
             }
         } else {
-            $rules['form.password'] = ['nullable', 'string', 'min:8'];
+            $passwordInformada = trim((string) ($this->form['password'] ?? '')) !== ''
+                || trim((string) ($this->form['password_confirmation'] ?? '')) !== '';
+
+            if ($passwordInformada) {
+                $rules['form.password'] = array_merge(['required'], $this->strongPasswordRules());
+                $rules['form.password_confirmation'] = ['required', 'string'];
+            }
         }
 
         return $rules;
     }
 
+    protected function messages(): array
+    {
+        return [
+            'form.name.required' => 'Informe o nome completo do usuario.',
+            'form.name.max' => 'O nome deve ter no maximo 255 caracteres.',
+            'form.email.required' => 'Informe o e-mail institucional do usuario.',
+            'form.email.email' => 'Informe um e-mail valido para o usuario.',
+            'form.email.unique' => 'Ja existe um usuario cadastrado com este e-mail.',
+            'form.password.required' => 'Defina a senha inicial do usuario.',
+            'form.password.confirmed' => 'A confirmacao da senha nao confere.',
+            'form.password.min' => 'A senha deve ter no minimo 8 caracteres.',
+            'form.password.regex' => 'A senha deve conter letra maiuscula, letra minuscula, numero e caractere especial.',
+            'form.password_confirmation.required' => 'Confirme a senha inicial do usuario.',
+            'form.trocarsenha.in' => 'Selecione uma opcao valida para a troca de senha.',
+            'modoSenhaInicial.in' => 'Selecione uma forma valida de definicao da senha inicial.',
+            'vinculoTemporario.org_id.required' => 'Selecione a organizacao do vinculo.',
+            'vinculoTemporario.perfil_id.required' => 'Selecione o perfil de acesso do vinculo.',
+            'form.vinculos.required' => 'O usuário precisa de pelo menos um vínculo: selecione uma organização e um perfil de acesso e clique em "Adicionar vínculo".',
+            'form.vinculos.min' => 'O usuário precisa de pelo menos um vínculo: selecione uma organização e um perfil de acesso e clique em "Adicionar vínculo".',
+            'form.vinculos.*.org_id.required' => 'Há um vínculo sem organização. Remova-o ou selecione a organização.',
+            'form.vinculos.*.perfil_id.required' => 'Há um vínculo sem perfil de acesso. Remova-o ou selecione o perfil.',
+        ];
+    }
+
+    public function updated(string $propertyName): void
+    {
+        if ($propertyName === 'modoSenhaInicial' && $this->modoSenhaInicial === 'enviar_link') {
+            $this->form['password'] = '';
+            $this->form['password_confirmation'] = '';
+            $this->resetValidation(['form.password', 'form.password_confirmation']);
+        }
+
+        if (! array_key_exists($propertyName, $this->rules())) {
+            return;
+        }
+
+        $this->validateOnly($propertyName);
+    }
+
     public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFiltroAtivo(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFiltroOrganizacao(): void
     {
         $this->resetPage();
     }
@@ -99,6 +166,7 @@ class ListarUsuarios extends Component
     {
         $this->search = '';
         $this->filtroAtivo = 'todos';
+        $this->filtroOrganizacao = '';
         $this->resetPage();
     }
 
@@ -122,11 +190,12 @@ class ListarUsuarios extends Component
         $query = User::query()->with(['organizacoes', 'perfisAcesso']);
         $search = trim($this->search);
 
-        // Filtro por Organização Selecionada Globalmente
-        $orgId = session('organizacao_selecionada_id');
-        if ($orgId) {
-            $query->whereHas('organizacoes', function ($q) use ($orgId) {
-                $q->where('tab_organizacoes.cod_organizacao', $orgId);
+        // Filtro de organização EXPLÍCITO (controlado na própria tela).
+        // Por padrão ('') lista todos os usuários — assim um usuário recém-criado
+        // sempre aparece, independentemente da organização selecionada no cabeçalho.
+        if ($this->filtroOrganizacao !== '') {
+            $query->whereHas('organizacoes', function ($q) {
+                $q->where('tab_organizacoes.cod_organizacao', $this->filtroOrganizacao);
             });
         }
 
@@ -183,6 +252,7 @@ class ListarUsuarios extends Component
         $this->form = [
             'name' => $this->editing->name,
             'email' => $this->editing->email,
+            'password_confirmation' => '',
             'password' => '', // Não carrega senha
             'ativo' => (bool)$this->editing->ativo,
             'trocarsenha' => (int)$this->editing->trocarsenha,
@@ -191,6 +261,16 @@ class ListarUsuarios extends Component
         
         $this->showFormModal = true;
         $this->resetValidation();
+    }
+
+    /**
+     * Indica se há um vínculo selecionado nos campos mas ainda não adicionado à lista.
+     * Usado para alertar o usuário na interface (validação reativa).
+     */
+    public function getTemVinculoPendenteProperty(): bool
+    {
+        return ($this->vinculoTemporario['org_id'] ?? '') !== ''
+            && ($this->vinculoTemporario['perfil_id'] ?? '') !== '';
     }
 
     public function adicionarVinculo()
@@ -219,8 +299,45 @@ class ListarUsuarios extends Component
             'perfil_label' => $perfil->dsc_perfil
         ];
 
-        // Limpar temporário
+        // Limpar temporário e o erro de obrigatoriedade de vínculos
         $this->vinculoTemporario = ['org_id' => '', 'perfil_id' => ''];
+        $this->resetValidation(['form.vinculos', 'vinculoTemporario']);
+    }
+
+    /**
+     * Se o gestor selecionou organização e perfil mas não clicou em "Adicionar vínculo",
+     * incorpora automaticamente essa seleção pendente antes de salvar — evitando que o
+     * usuário seja gravado sem nenhum vínculo por esquecimento de um clique.
+     */
+    protected function incorporarVinculoPendente(): void
+    {
+        $orgId = $this->vinculoTemporario['org_id'] ?? '';
+        $perfilId = $this->vinculoTemporario['perfil_id'] ?? '';
+
+        if ($orgId === '' || $perfilId === '') {
+            return;
+        }
+
+        // Evita duplicar um vínculo já presente na lista.
+        foreach ($this->form['vinculos'] as $v) {
+            if ($v['org_id'] == $orgId && $v['perfil_id'] == $perfilId) {
+                $this->vinculoTemporario = ['org_id' => '', 'perfil_id' => ''];
+                return;
+            }
+        }
+
+        $org = Organization::find($orgId);
+        $perfil = PerfilAcesso::find($perfilId);
+
+        if ($org && $perfil) {
+            $this->form['vinculos'][] = [
+                'org_id' => $orgId,
+                'perfil_id' => $perfilId,
+                'org_label' => $org->sgl_organizacao,
+                'perfil_label' => $perfil->dsc_perfil,
+            ];
+            $this->vinculoTemporario = ['org_id' => '', 'perfil_id' => ''];
+        }
     }
 
     public function removerVinculo($index)
@@ -238,12 +355,15 @@ class ListarUsuarios extends Component
 
     public function save(): void
     {
-        $this->validate();
+        try {
+            // Aproveita uma seleção de vínculo ainda não adicionada à lista.
+            $this->incorporarVinculoPendente();
 
-        $senhaGerada = null;
-        $isNovoUsuario = !$this->editing;
+            $this->validate();
 
-        DB::transaction(function () use (&$senhaGerada, $isNovoUsuario) {
+            $isNovoUsuario = !$this->editing;
+
+            DB::transaction(function () use ($isNovoUsuario) {
             $data = [
                 'name' => $this->form['name'],
                 'email' => $this->form['email'],
@@ -251,12 +371,9 @@ class ListarUsuarios extends Component
                 'trocarsenha' => $this->form['trocarsenha'],
             ];
 
-            // Determinar a senha
-            if ($isNovoUsuario && $this->gerarSenhaAutomatica) {
-                // Gerar senha automática segura (12 caracteres)
-                $senhaGerada = Str::password(12);
-                $data['password'] = Hash::make($senhaGerada);
-                // Forçar troca de senha no primeiro acesso
+            // Preparar acesso inicial conforme o ritual escolhido.
+            if ($isNovoUsuario && $this->modoSenhaInicial === 'enviar_link') {
+                $data['password'] = Hash::make(Str::random(80));
                 $data['trocarsenha'] = 1;
             } elseif (!empty($this->form['password'])) {
                 $data['password'] = Hash::make($this->form['password']);
@@ -272,10 +389,12 @@ class ListarUsuarios extends Component
                 $user = User::create($data);
                 $message = __('Usuário criado com sucesso.');
 
-                // Enviar e-mail de boas-vindas se configurado
-                if ($this->enviarEmailBoasVindas && $senhaGerada) {
-                    Mail::to($user->email)->queue(new WelcomeUserMail($user, $senhaGerada));
-                    $message .= ' E-mail de boas-vindas enviado.';
+                if ($this->modoSenhaInicial === 'enviar_link') {
+                    $token = Password::broker()->createToken($user);
+                    Notification::sendNow($user, new WelcomeSetPasswordNotification($token));
+                    $message .= ' Boas-vindas com link para cadastro de senha enviadas por e-mail.';
+                } else {
+                    $message .= ' Senha inicial definida pelo gestor.';
                 }
             }
 
@@ -298,11 +417,34 @@ class ListarUsuarios extends Component
             // Manter sincronizada a tabela simples para compatibilidade
             $user->organizacoes()->sync(collect($this->form['vinculos'])->pluck('org_id')->unique());
 
+            // Sincroniza o flag "adm" conforme o perfil: só é Super Admin quem
+            // tiver o perfil PerfilAcesso::SUPER_ADMIN entre os vínculos.
+            $ehSuperAdmin = collect($this->form['vinculos'])
+                ->contains(fn ($v) => ($v['perfil_id'] ?? null) === PerfilAcesso::SUPER_ADMIN);
+            $user->forceFill(['adm' => $ehSuperAdmin ? 1 : 0])->save();
+
             $this->notify($message);
         });
 
-        $this->closeFormModal();
-        $this->resetPage();
+            $this->closeFormModal();
+            $this->resetPage();
+        } catch (ValidationException $exception) {
+            $this->notify(
+                'O cadastro nao foi concluido. Revise os campos destacados e tente novamente.',
+                'danger',
+                'Cadastro nao concluido'
+            );
+
+            throw $exception;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $this->notify(
+                'Nao foi possivel concluir o cadastro. Nenhuma confirmacao de sucesso foi emitida. Verifique a configuracao de e-mail, os dados informados e tente novamente.',
+                'danger',
+                'Falha na transacao'
+            );
+        }
     }
 
     public function confirmDelete(string $id): void
@@ -348,20 +490,37 @@ class ListarUsuarios extends Component
             'name' => '',
             'email' => '',
             'password' => '',
+            'password_confirmation' => '',
             'ativo' => true,
             'trocarsenha' => 0,
             'vinculos' => [],
         ];
 
         $this->vinculoTemporario = ['org_id' => '', 'perfil_id' => ''];
-        $this->gerarSenhaAutomatica = true;
-        $this->enviarEmailBoasVindas = true;
+        $this->modoSenhaInicial = 'enviar_link';
         $this->editing = null;
     }
 
-    protected function notify(string $message, string $style = 'success'): void
+    protected function notify(string $message, string $style = 'success', ?string $title = null): void
     {
         $this->flashMessage = $message;
         $this->flashStyle = $style;
+        $this->transactionMessage = $message;
+        $this->transactionStyle = $style;
+        $this->transactionTitle = $title ?? ($style === 'success' ? 'Transacao concluida' : 'Aviso da transacao');
+        $this->showTransactionModal = true;
+    }
+
+    protected function strongPasswordRules(): array
+    {
+        return [
+            'string',
+            'confirmed',
+            'min:8',
+            'regex:/[a-z]/',
+            'regex:/[A-Z]/',
+            'regex:/[0-9]/',
+            'regex:/[^A-Za-z0-9]/',
+        ];
     }
 }

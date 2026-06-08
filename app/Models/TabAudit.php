@@ -1,4 +1,4 @@
-<?php
+?php
 
 namespace App\Models;
 
@@ -15,7 +15,7 @@ class TabAudit extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_audit';
+    protected $table = 'pei.tab_audit';
 
     /**
      * Chave primária

@@ -29,18 +29,18 @@ class ImpersonateController extends Controller
         }
 
         Log::warning('[IMPERSONATE] Início', [
-            'admin_id'    => $admin->id,
+            'admin_id' => $admin->id,
             'admin_email' => $admin->email,
-            'alvo_id'     => $alvo->id,
-            'alvo_email'  => $alvo->email,
-            'timestamp'   => now()->toIso8601String(),
+            'alvo_id' => $alvo->id,
+            'alvo_email' => $alvo->email,
+            'timestamp' => now()->toIso8601String(),
         ]);
 
         session(['impersonator_id' => $admin->id]);
 
-        Auth::login($alvo);
+        Auth::guard('web')->login($alvo);
 
-        return redirect()->route('dashboard')->with('status', 'Você está agora visualizando o sistema como ' . $alvo->name . '.');
+        return redirect()->route('dashboard')->with('status', 'Você está agora visualizando o sistema como '.$alvo->name.'.');
     }
 
     /**
@@ -56,16 +56,16 @@ class ImpersonateController extends Controller
         $admin = User::findOrFail($impersonatorId);
 
         Log::warning('[IMPERSONATE] Fim', [
-            'admin_id'         => $admin->id,
-            'admin_email'      => $admin->email,
-            'impersonado_id'   => $impersonado?->id,
+            'admin_id' => $admin->id,
+            'admin_email' => $admin->email,
+            'impersonado_id' => $impersonado?->id,
             'impersonado_email' => $impersonado?->email,
-            'timestamp'        => now()->toIso8601String(),
+            'timestamp' => now()->toIso8601String(),
         ]);
 
         session()->forget('impersonator_id');
 
-        Auth::login($admin);
+        Auth::guard('web')->login($admin);
 
         return redirect()->route('admin.perfis')->with('status', 'Impersonação encerrada. Você voltou à sua identidade.');
     }

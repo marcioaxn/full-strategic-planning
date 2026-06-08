@@ -95,6 +95,7 @@ Durante a execução, o assistente faz estas perguntas **de seleção** (respond
 1. Leia a tabela de validação no fim da execução: coluna **OK** deve estar `✓` em todas as linhas com status `OK`.
 2. Acesse a aplicação e confira visualmente: PEI, Objetivos, Indicadores, Planos, Entregas.
 3. Teste login com um usuário conhecido (as senhas foram preservadas; se `trocarsenha` estiver ativo, o sistema pedirá troca no primeiro acesso — comportamento esperado).
+4. **Permissões / Super Admin:** na v2, o acesso total é definido pelo **perfil** "Super Administrador" (não pelo campo `adm`). Observe, no fim da execução, a linha `users.adm sincronizado pelo perfil — Super Admins: N`. Se **N = 0**, o serviço emite um alerta: atribua o perfil "Super Administrador" a um usuário em **/usuarios**, senão o sistema ficará sem administrador com acesso total. Confira também se os demais usuários têm o perfil correto por organização.
 
 > Enquanto a conferência não terminar, **não descarte o legado**. Ele continua disponível em `legacy_pei` / `legacy_public` como rede de segurança.
 
@@ -119,7 +120,8 @@ Isso remove **definitivamente** `legacy_pei` e `legacy_public`. **Irreversível*
 
 ```sql
 -- desfaz a Fase 1 (apenas se a v2 ainda NÃO foi populada/precisar reverter)
-DROP SCHEMA IF EXISTS strategic_planning CASCADE;   -- e os demais schemas v2, se criados
+DROP SCHEMA IF EXISTS pei CASCADE;              -- schema v2 recém-criado pelo migrate
+DROP SCHEMA IF EXISTS strategic_planning CASCADE;
 DROP SCHEMA IF EXISTS action_plan CASCADE;
 DROP SCHEMA IF EXISTS performance_indicators CASCADE;
 DROP SCHEMA IF EXISTS risk_management CASCADE;
@@ -127,6 +129,8 @@ DROP SCHEMA IF EXISTS organization CASCADE;
 ALTER SCHEMA legacy_pei RENAME TO pei;
 -- mover de volta as tabelas de legacy_public para public, uma a uma:
 -- ALTER TABLE legacy_public.<tabela> SET SCHEMA public;
+-- Nota: na v2, as tabelas de infraestrutura ficam no schema "pei" (não em "public").
+--       Se a v1 usava "public", apenas o schema "pei" precisa ser recriado — não "public".
 ```
 
 - Em qualquer dúvida, **restaure o `.dump` do passo 1** — o estado original volta integralmente.

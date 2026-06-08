@@ -1,31 +1,35 @@
-<div>
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('planos.index') }}" class="text-decoration-none">Planos de Ação</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Detalhes</li>
-                    </ol>
-                </nav>
-                <h2 class="h4 fw-bold mb-0">Ficha Técnica do Plano</h2>
-                <div class="d-flex gap-2 mt-1">
-                    <x-projetos-link :page="23" label="TAP/Kick-off" />
-                    <x-projetos-link :page="36" label="EAP" />
-                    <x-projetos-link :page="89" label="RACI" />
-                </div>
-            </div>
-            <div class="d-flex gap-2">
-                <a href="{{ route('planos.entregas', $plano->cod_plano_de_acao) }}" class="btn btn-outline-info rounded-pill px-3">
-                    <i class="bi bi-list-check me-1"></i> Entregas
-                </a>
-                <a href="{{ route('planos.responsaveis', $plano->cod_plano_de_acao) }}" class="btn btn-outline-warning rounded-pill px-3">
-                    <i class="bi bi-people me-1"></i> Gestores
-                </a>
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('planos.index') }}" wire:navigate class="text-decoration-none">Planos de Ação</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Ficha Técnica</li>
+                </ol>
+            </nav>
+            <h2 class="h3 fw-bold mb-0">
+                <i class="bi bi-file-earmark-text me-2 text-primary"></i>Ficha Técnica do Plano
+            </h2>
+            <div class="d-flex gap-2 mt-1">
+                <x-projetos-link :page="23" label="TAP/Kick-off" />
+                <x-projetos-link :page="36" label="EAP" />
+                <x-projetos-link :page="89" label="RACI" />
             </div>
         </div>
-    </x-slot>
+        <div class="d-flex gap-2">
+            <a href="{{ route('planos.index') }}" wire:navigate class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar
+            </a>
+            <a href="{{ route('planos.entregas', $plano->cod_plano_de_acao) }}" wire:navigate class="btn btn-outline-info rounded-pill px-3">
+                <i class="bi bi-list-check me-1"></i> Entregas
+            </a>
+            <a href="{{ route('planos.responsaveis', $plano->cod_plano_de_acao) }}" wire:navigate class="btn btn-outline-warning rounded-pill px-3">
+                <i class="bi bi-people me-1"></i> Gestores
+            </a>
+        </div>
+    </div>
 
     <div class="row g-4">
         <!-- Coluna Esquerda: Geral e Entregas -->

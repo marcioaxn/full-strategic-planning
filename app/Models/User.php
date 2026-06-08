@@ -1,4 +1,4 @@
-<?php
+?php
 
 namespace App\Models;
 
@@ -24,7 +24,7 @@ class User extends Authenticatable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'users';
+    protected $table = 'pei.users';
 
     /**
      * Chave primária
@@ -136,11 +136,20 @@ class User extends Authenticatable
      */
 
     /**
-     * Verifica se usuário é Super Administrador
+     * Verifica se usuário é Super Administrador.
+     *
+     * A fonte de verdade é o PERFIL de acesso vinculado: o usuário é Super
+     * Administrador quando possui o perfil PerfilAcesso::SUPER_ADMIN. O antigo
+     * campo "adm" deixou de determinar isso (mantido apenas por compatibilidade,
+     * sincronizado no cadastro).
      */
     public function isSuperAdmin(): bool
     {
-        return $this->adm === true;
+        if (! $this->relationLoaded('perfisAcesso')) {
+            $this->load('perfisAcesso');
+        }
+
+        return $this->perfisAcesso->contains('cod_perfil', PerfilAcesso::SUPER_ADMIN);
     }
 
     /**
@@ -216,11 +225,13 @@ class User extends Authenticatable
     }
 
     /**
-     * Scope: Apenas administradores
+     * Scope: Apenas Super Administradores (pelo perfil vinculado).
      */
     public function scopeAdministradores($query)
     {
-        return $query->where('adm', true);
+        return $query->whereHas('perfisAcesso', function ($q) {
+            $q->where('tab_perfil_acesso.cod_perfil', PerfilAcesso::SUPER_ADMIN);
+        });
     }
 
     /**

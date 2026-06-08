@@ -3,7 +3,6 @@
 namespace App\Livewire\StrategicPlanning;
 
 use App\Models\StrategicPlanning\GrauSatisfacao;
-use App\Models\PerformanceIndicators\Indicador;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -11,18 +10,21 @@ use Livewire\Component;
 class DetalharGrauSatisfacao extends Component
 {
     public $grau;
+
     public $indicadoresNaFaixa = [];
 
     public function mount($id)
     {
+        abort_unless(auth()->user()?->isSuperAdmin(), 403, 'Acesso restrito ao Super Administrador.');
+
         $this->grau = GrauSatisfacao::with('pei')->findOrFail($id);
-        
+
         // Calcular quais indicadores caem nesta faixa atualmente
         // Isso é pesado, então vamos limitar ou fazer apenas count
         // Preciso iterar sobre todos os indicadores do PEI e calcular atingimento.
         // Se for global, todos os PEIs.
-        
-        // Vou deixar placeholder por enquanto para não travar a performance, 
+
+        // Vou deixar placeholder por enquanto para não travar a performance,
         // ou buscar apenas alguns para exemplo.
         $this->indicadoresNaFaixa = collect();
     }

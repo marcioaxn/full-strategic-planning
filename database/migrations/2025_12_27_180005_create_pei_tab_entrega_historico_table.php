@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -34,7 +34,7 @@ return new class extends Migration
             $table->uuid('cod_usuario')
                   ->nullable()
                   ->references('id')
-                  ->on('users')
+                  ->on('pei.users')
                   ->nullOnDelete();
             
             // Tipo de ação: created, updated, deleted, restored, status_changed, etc.

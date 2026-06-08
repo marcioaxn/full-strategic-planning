@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(php artisan *)",
+      "Bash(php -l *)",
+      "Bash(php -v)",
+      "Bash(php *)",
+      "Bash(vendor/bin/pint*)",
+      "Bash(vendor/bin/pest*)",
+      "Bash(composer *)",
+      "Bash(npm *)",
+      "Bash(git *)",
+      "Bash(python *)",
+      "Bash(python3 *)",
+      "Read(**)",
+      "Write(**)",
+      "Edit(**)",
+      "PowerShell(php artisan migrate*)",
+      "PowerShell(php artisan *)",
+      "PowerShell(php -l *)",
+      "PowerShell(php *)",
+      "PowerShell(git *)",
+      "PowerShell(composer *)",
+      "PowerShell(npm *)",
+      "PowerShell(python *)",
+      "PowerShell(cd *)"
+    ],
+    "deny": [
+      "Bash(php artisan migrate*)",
+      "Bash(php artisan db:*)",
+      "Bash(php artisan make:migration*)",
+      "Bash(rm -rf*)",
+      "Bash(sudo*)",
+      "Write(.env*)",
+      "Write(config/database.php)",
+      "Write(config/auth.php)",
+      "Edit(.env*)",
+      "Edit(config/database.php)",
+      "Edit(config/auth.php)"
+    ]
+  }
+}

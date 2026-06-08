@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         // Tabela de Relatórios Agendados
-        Schema::create('tab_relatorios_agendados', function (Blueprint $table) {
+        Schema::create('pei.tab_relatorios_agendados', function (Blueprint $table) {
             $table->uuid('cod_agendamento')->primary();
-            $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignUuid('user_id')->constrained('pei.users')->onDelete('cascade');
             $table->string('dsc_tipo_relatorio'); // ex: executivo, objetivos, indicadores, planos, riscos
             $table->string('dsc_frequencia'); // diario, semanal, mensal
             $table->jsonb('txt_filtros')->nullable(); // filtros aplicados (organizacao_id, ano, etc)
@@ -25,9 +25,9 @@ return new class extends Migration
         });
 
         // Tabela de Histórico de Relatórios Gerados
-        Schema::create('tab_relatorios_gerados', function (Blueprint $table) {
+        Schema::create('pei.tab_relatorios_gerados', function (Blueprint $table) {
             $table->uuid('cod_relatorio_gerado')->primary();
-            $table->foreignUuid('user_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignUuid('user_id')->nullable()->constrained('pei.users')->onDelete('set null');
             $table->string('dsc_tipo_relatorio');
             $table->string('dsc_caminho_arquivo');
             $table->string('dsc_formato'); // pdf, excel
@@ -42,7 +42,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tab_relatorios_gerados');
-        Schema::dropIfExists('tab_relatorios_agendados');
+        Schema::dropIfExists('pei.tab_relatorios_gerados');
+        Schema::dropIfExists('pei.tab_relatorios_agendados');
     }
 };

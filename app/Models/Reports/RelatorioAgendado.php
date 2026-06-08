@@ -1,4 +1,4 @@
-<?php
+?php
 
 namespace App\Models\Reports;
 
@@ -13,7 +13,7 @@ class RelatorioAgendado extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
 
-    protected $table = 'tab_relatorios_agendados';
+    protected $table = 'pei.tab_relatorios_agendados';
     protected $primaryKey = 'cod_agendamento';
     public $incrementing = false;
     protected $keyType = 'string';

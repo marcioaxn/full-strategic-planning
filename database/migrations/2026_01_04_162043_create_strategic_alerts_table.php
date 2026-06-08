@@ -8,9 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('strategic_alerts', function (Blueprint $table) {
+        Schema::create('pei.strategic_alerts', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('user_id')->constrained('pei.users')->onDelete('cascade');
             $table->uuid('cod_organizacao')->nullable();
             $table->string('title');
             $table->text('message');
@@ -23,6 +23,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('strategic_alerts');
+        Schema::dropIfExists('pei.strategic_alerts');
     }
 };
