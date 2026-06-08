@@ -58,6 +58,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('organization.tab_perfil_acesso');
+        DB::statement('DROP TABLE IF EXISTS "organization"."tab_perfil_acesso" CASCADE');
     }
 };
