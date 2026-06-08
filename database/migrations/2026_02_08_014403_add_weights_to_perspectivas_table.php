@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('tab_perspectiva', function (Blueprint $table) {
+        Schema::table('strategic_planning.tab_perspectiva', function (Blueprint $table) {
             $table->integer('num_peso_indicadores')->default(100)->after('dsc_perspectiva');
             $table->integer('num_peso_planos')->default(0)->after('num_peso_indicadores');
         });
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('tab_perspectiva', function (Blueprint $table) {
+        Schema::table('strategic_planning.tab_perspectiva', function (Blueprint $table) {
             $table->dropColumn(['num_peso_indicadores', 'num_peso_planos']);
         });
     }

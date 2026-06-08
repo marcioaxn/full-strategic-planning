@@ -65,9 +65,9 @@ class MigrarLegadoV1ParaV2 extends Command
     {
         $mapa = [
             ['origem' => ['tab_organizacoes'], 'destino' => 'organization.tab_organizacoes'],
-            ['origem' => ['rel_organizacao'], 'destino' => 'public.rel_organizacao'],
+            ['origem' => ['rel_organizacao'], 'destino' => 'organization.rel_organizacao'],
             ['origem' => ['tab_perfil_acesso'], 'destino' => 'organization.tab_perfil_acesso'],
-            ['origem' => ['users'], 'destino' => 'public.users'],
+            ['origem' => ['users'], 'destino' => 'pei.users'],
             ['origem' => ['rel_users_tab_organizacoes'], 'destino' => 'organization.rel_users_tab_organizacoes'],
             ['origem' => ['rel_users_tab_organizacoes_tab_perfil_acesso'], 'destino' => 'organization.rel_users_tab_organizacoes_tab_perfil_acesso'],
 
@@ -112,14 +112,14 @@ class MigrarLegadoV1ParaV2 extends Command
             ['origem' => ['tab_entregas'], 'destino' => 'action_plan.tab_entregas',
                 'transform' => 'transformEntrega'],
 
-            ['origem' => ['tab_status'], 'destino' => 'public.tab_status'],
+            ['origem' => ['tab_status'], 'destino' => 'pei.tab_status'],
             ['origem' => ['acoes'], 'destino' => 'action_plan.acoes'],
         ];
 
         // Decisão de negócio (flag): auditoria só entra se explicitamente solicitada.
         if ($this->option('migrar-auditoria')) {
-            $mapa[] = ['origem' => ['audits'], 'destino' => 'public.audits'];
-            $mapa[] = ['origem' => ['tab_audit'], 'destino' => 'public.tab_audit'];
+            $mapa[] = ['origem' => ['audits'], 'destino' => 'pei.audits'];
+            $mapa[] = ['origem' => ['tab_audit'], 'destino' => 'pei.tab_audit'];
         }
 
         return $mapa;
@@ -302,18 +302,27 @@ class MigrarLegadoV1ParaV2 extends Command
         }
 
         DB::transaction(function () {
-            // 1) schema "pei" inteiro → legacy_pei (todas as tabelas vão junto)
+            // 1) schema "pei" inteiro → legacy_pei (todas as tabelas vão junto).
+            // Na v1 o schema "pei" continha as tabelas de negócio; na v2 o schema "pei"
+            // abriga as tabelas de infraestrutura (users, sessions, jobs etc.). A quarentena
+            // preserva o schema legado antes de o migrate recriá-lo com a estrutura v2.
             if ($this->schemaExiste('pei')) {
                 DB::statement('ALTER SCHEMA pei RENAME TO '.self::Q_PEI);
                 $this->line('  • schema "pei" → '.self::Q_PEI);
             }
 
-            // 2) tabelas de "public" do cliente → legacy_public (libera o public para a v2)
-            DB::statement('CREATE SCHEMA IF NOT EXISTS '.self::Q_PUB);
-            foreach ($this->tabelasDoSchema('public') as $t) {
-                DB::statement("ALTER TABLE public.\"$t\" SET SCHEMA ".self::Q_PUB);
+            // 2) tabelas de "public" do v1 → legacy_public (o "public" do banco não é usado
+            // pelo v2 — as tabelas de infraestrutura foram movidas para o schema "pei").
+            $tabelasPublic = $this->tabelasDoSchema('public');
+            if (! empty($tabelasPublic)) {
+                DB::statement('CREATE SCHEMA IF NOT EXISTS '.self::Q_PUB);
+                foreach ($tabelasPublic as $t) {
+                    DB::statement("ALTER TABLE public.\"$t\" SET SCHEMA ".self::Q_PUB);
+                }
+                $this->line('  • '.count($tabelasPublic).' tabela(s) de "public" movidas para '.self::Q_PUB);
+            } else {
+                $this->line('  • "public" sem tabelas — nada a mover para '.self::Q_PUB);
             }
-            $this->line('  • tabelas de "public" movidas para '.self::Q_PUB);
         });
 
         $this->info('  ✓ Legado em quarentena (preservado, reversível).');
@@ -536,7 +545,7 @@ class MigrarLegadoV1ParaV2 extends Command
      */
     private function sincronizarFlagAdmPorPerfil(bool $dry): void
     {
-        if (! $this->tabelaDestinoExiste('public.users')
+        if (! $this->tabelaDestinoExiste('pei.users')
             || ! $this->tabelaDestinoExiste('organization.rel_users_tab_organizacoes_tab_perfil_acesso')) {
             return;
         }
@@ -550,9 +559,9 @@ class MigrarLegadoV1ParaV2 extends Command
             ->where('cod_perfil', \App\Models\PerfilAcesso::SUPER_ADMIN)
             ->pluck('user_id')->unique()->all();
 
-        DB::table('public.users')->update(['adm' => 0]);
+        DB::table('pei.users')->update(['adm' => 0]);
         if (! empty($idsSuper)) {
-            DB::table('public.users')->whereIn('id', $idsSuper)->update(['adm' => 1]);
+            DB::table('pei.users')->whereIn('id', $idsSuper)->update(['adm' => 1]);
         }
 
         $this->line('  • users.adm sincronizado pelo perfil — Super Admins: '.count($idsSuper).'.');
@@ -636,7 +645,8 @@ class MigrarLegadoV1ParaV2 extends Command
      */
     private function resolverOrigem(array $candidatos): ?string
     {
-        foreach ([self::Q_PEI, self::Q_PUB, 'pei'] as $schema) {
+        // Ordem: quarentena (pós-Fase 1) → schema legado pré-quarentena → public (v1 com tabelas em public)
+        foreach ([self::Q_PEI, self::Q_PUB, 'pei', 'public'] as $schema) {
             foreach ($candidatos as $tab) {
                 $existe = DB::selectOne(
                     'select 1 from information_schema.tables where table_schema = ? and table_name = ?',

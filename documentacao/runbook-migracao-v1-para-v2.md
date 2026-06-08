@@ -120,7 +120,8 @@ Isso remove **definitivamente** `legacy_pei` e `legacy_public`. **Irreversível*
 
 ```sql
 -- desfaz a Fase 1 (apenas se a v2 ainda NÃO foi populada/precisar reverter)
-DROP SCHEMA IF EXISTS strategic_planning CASCADE;   -- e os demais schemas v2, se criados
+DROP SCHEMA IF EXISTS pei CASCADE;              -- schema v2 recém-criado pelo migrate
+DROP SCHEMA IF EXISTS strategic_planning CASCADE;
 DROP SCHEMA IF EXISTS action_plan CASCADE;
 DROP SCHEMA IF EXISTS performance_indicators CASCADE;
 DROP SCHEMA IF EXISTS risk_management CASCADE;
@@ -128,6 +129,8 @@ DROP SCHEMA IF EXISTS organization CASCADE;
 ALTER SCHEMA legacy_pei RENAME TO pei;
 -- mover de volta as tabelas de legacy_public para public, uma a uma:
 -- ALTER TABLE legacy_public.<tabela> SET SCHEMA public;
+-- Nota: na v2, as tabelas de infraestrutura ficam no schema "pei" (não em "public").
+--       Se a v1 usava "public", apenas o schema "pei" precisa ser recriado — não "public".
 ```
 
 - Em qualquer dúvida, **restaure o `.dump` do passo 1** — o estado original volta integralmente.

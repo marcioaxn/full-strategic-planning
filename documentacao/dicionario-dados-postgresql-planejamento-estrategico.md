@@ -50,24 +50,24 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | `performance_indicators.tab_indicador` | Indicadores de desempenho | 17 | `App\Models\PerformanceIndicators\Indicador` | Indicadores/KPIs vinculados a objetivos ou planos. |
 | `performance_indicators.tab_linha_base_indicador` | Indicadores de desempenho | 17 | `App\Models\PerformanceIndicators\LinhaBaseIndicador` | Linhas de base anuais de indicadores. |
 | `performance_indicators.tab_meta_por_ano` | Indicadores de desempenho | 17 | `App\Models\PerformanceIndicators\MetaPorAno` | Metas anuais de indicadores. |
-| `public.audits` | Auditoria | 1 | Nao identificado | Tabela do pacote owen-it/laravel-auditing. |
-| `public.cache` | Infraestrutura Laravel/autenticacao | 14 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
-| `public.cache_locks` | Infraestrutura Laravel/autenticacao | 0 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
-| `public.failed_jobs` | Infraestrutura Laravel/autenticacao | 0 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
-| `public.job_batches` | Infraestrutura Laravel/autenticacao | 0 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
-| `public.jobs` | Infraestrutura Laravel/autenticacao | 0 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
-| `public.migrations` | Infraestrutura Laravel/autenticacao | 67 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
-| `public.password_reset_tokens` | Infraestrutura Laravel/autenticacao | 0 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
-| `public.personal_access_tokens` | Infraestrutura Laravel/autenticacao | 0 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
-| `public.sessions` | Infraestrutura Laravel/autenticacao | 2 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
-| `public.strategic_alerts` | Suporte funcional | 1 | `App\Models\StrategicAlert` | Alertas estrategicos persistentes exibidos ao usuario. |
-| `public.system_settings` | Suporte funcional | 6 | `App\Models\SystemSetting` | Configuracoes sistemicas, incluindo provedores de IA. |
-| `public.tab_analise_ambiental` | Suporte funcional | 90 | `App\Models\StrategicPlanning\AnaliseAmbiental` | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
-| `public.tab_audit` | Auditoria | 1 | `App\Models\TabAudit` | Tabela de auditoria/logs propria ou legada. |
-| `public.tab_relatorios_agendados` | Relatorios | 0 | `App\Models\Reports\RelatorioAgendado` | Agendamentos de geracao de relatorios. |
-| `public.tab_relatorios_gerados` | Relatorios | 0 | `App\Models\Reports\RelatorioGerado` | Historico de relatorios gerados. |
-| `public.tab_status` | Suporte funcional | 6 | `App\Models\TabStatus` | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
-| `public.users` | Infraestrutura Laravel/autenticacao | 5 | `App\Models\User` | Usuarios autenticados do sistema, com flags de administrador, ativo, troca de senha e preferencias. |
+| `pei.audits` | Auditoria | 1 | Nao identificado | Tabela do pacote owen-it/laravel-auditing. |
+| `pei.cache` | Infraestrutura Laravel/autenticacao | 14 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
+| `pei.cache_locks` | Infraestrutura Laravel/autenticacao | 0 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
+| `pei.failed_jobs` | Infraestrutura Laravel/autenticacao | 0 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
+| `pei.job_batches` | Infraestrutura Laravel/autenticacao | 0 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
+| `pei.jobs` | Infraestrutura Laravel/autenticacao | 0 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
+| `pei.migrations` | Infraestrutura Laravel/autenticacao | 67 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
+| `pei.password_reset_tokens` | Infraestrutura Laravel/autenticacao | 0 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
+| `pei.personal_access_tokens` | Infraestrutura Laravel/autenticacao | 0 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
+| `pei.sessions` | Infraestrutura Laravel/autenticacao | 2 | Nao identificado | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
+| `pei.strategic_alerts` | Suporte funcional | 1 | `App\Models\StrategicAlert` | Alertas estrategicos persistentes exibidos ao usuario. |
+| `pei.system_settings` | Suporte funcional | 6 | `App\Models\SystemSetting` | Configuracoes sistemicas, incluindo provedores de IA. |
+| `strategic_planning.tab_analise_ambiental` | Suporte funcional | 90 | `App\Models\StrategicPlanning\AnaliseAmbiental` | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
+| `pei.tab_audit` | Auditoria | 1 | `App\Models\TabAudit` | Tabela de auditoria/logs propria ou legada. |
+| `pei.tab_relatorios_agendados` | Relatorios | 0 | `App\Models\Reports\RelatorioAgendado` | Agendamentos de geracao de relatorios. |
+| `pei.tab_relatorios_gerados` | Relatorios | 0 | `App\Models\Reports\RelatorioGerado` | Historico de relatorios gerados. |
+| `pei.tab_status` | Suporte funcional | 6 | `App\Models\TabStatus` | Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais. |
+| `pei.users` | Infraestrutura Laravel/autenticacao | 5 | `App\Models\User` | Usuarios autenticados do sistema, com flags de administrador, ativo, troca de senha e preferencias. |
 | `risk_management.tab_risco` | Gestao de riscos | 30 | `App\Models\RiskManagement\Risco` | Riscos identificados por PEI/organizacao. |
 | `risk_management.tab_risco_mitigacao` | Gestao de riscos | 30 | `App\Models\RiskManagement\RiscoMitigacao` | Medidas/planos de mitigacao de riscos. |
 | `risk_management.tab_risco_objetivo` | Gestao de riscos | 40 | `App\Models\RiskManagement\RiscoObjetivo` | Pivot entre riscos e objetivos estrategicos. |
@@ -90,11 +90,11 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 | Origem | Coluna | Destino | Constraint | ON UPDATE | ON DELETE |
 |---|---|---|---|---|---|
-| `action_plan.acoes` | `user_id` | `public.users.id` | `action_plan_acoes_user_id_foreign` | `NO ACTION` | `CASCADE` |
+| `action_plan.acoes` | `user_id` | `pei.users.id` | `action_plan_acoes_user_id_foreign` | `NO ACTION` | `CASCADE` |
 | `action_plan.rel_entrega_labels` | `cod_entrega` | `action_plan.tab_entregas.cod_entrega` | `action_plan_rel_entrega_labels_cod_entrega_foreign` | `NO ACTION` | `CASCADE` |
 | `action_plan.rel_entrega_labels` | `cod_label` | `action_plan.tab_entrega_labels.cod_label` | `action_plan_rel_entrega_labels_cod_label_foreign` | `NO ACTION` | `CASCADE` |
 | `action_plan.rel_entrega_users_responsaveis` | `cod_entrega` | `action_plan.tab_entregas.cod_entrega` | `action_plan_rel_entrega_users_responsaveis_cod_entrega_foreign` | `NO ACTION` | `CASCADE` |
-| `action_plan.rel_entrega_users_responsaveis` | `cod_usuario` | `public.users.id` | `action_plan_rel_entrega_users_responsaveis_cod_usuario_foreign` | `NO ACTION` | `CASCADE` |
+| `action_plan.rel_entrega_users_responsaveis` | `cod_usuario` | `pei.users.id` | `action_plan_rel_entrega_users_responsaveis_cod_usuario_foreign` | `NO ACTION` | `CASCADE` |
 | `action_plan.rel_plano_organizacao` | `cod_organizacao` | `organization.tab_organizacoes.cod_organizacao` | `action_plan_rel_plano_organizacao_cod_organizacao_foreign` | `NO ACTION` | `CASCADE` |
 | `action_plan.rel_plano_organizacao` | `cod_plano_de_acao` | `action_plan.tab_plano_de_acao.cod_plano_de_acao` | `action_plan_rel_plano_organizacao_cod_plano_de_acao_foreign` | `NO ACTION` | `CASCADE` |
 | `action_plan.tab_entrega_anexos` | `cod_entrega` | `action_plan.tab_entregas.cod_entrega` | `action_plan_tab_entrega_anexos_cod_entrega_foreign` | `NO ACTION` | `CASCADE` |
@@ -104,18 +104,18 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | `action_plan.tab_entrega_labels` | `cod_plano_de_acao` | `action_plan.tab_plano_de_acao.cod_plano_de_acao` | `action_plan_tab_entrega_labels_cod_plano_de_acao_foreign` | `NO ACTION` | `CASCADE` |
 | `action_plan.tab_entregas` | `cod_plano_de_acao` | `action_plan.tab_plano_de_acao.cod_plano_de_acao` | `action_plan_tab_entregas_cod_plano_de_acao_foreign` | `NO ACTION` | `CASCADE` |
 | `action_plan.tab_entregas` | `cod_entrega_pai` | `action_plan.tab_entregas.cod_entrega` | `fk_entregas_entrega_pai` | `NO ACTION` | `SET NULL` |
-| `action_plan.tab_entregas` | `cod_responsavel` | `public.users.id` | `fk_entregas_responsavel` | `NO ACTION` | `SET NULL` |
+| `action_plan.tab_entregas` | `cod_responsavel` | `pei.users.id` | `fk_entregas_responsavel` | `NO ACTION` | `SET NULL` |
 | `action_plan.tab_plano_de_acao` | `cod_objetivo` | `strategic_planning.tab_objetivo.cod_objetivo` | `action_plan_tab_plano_de_acao_cod_objetivo_foreign` | `NO ACTION` | `CASCADE` |
 | `action_plan.tab_plano_de_acao` | `cod_organizacao` | `organization.tab_organizacoes.cod_organizacao` | `action_plan_tab_plano_de_acao_cod_organizacao_foreign` | `NO ACTION` | `CASCADE` |
 | `action_plan.tab_plano_de_acao` | `cod_tipo_execucao` | `action_plan.tab_tipo_execucao.cod_tipo_execucao` | `action_plan_tab_plano_de_acao_cod_tipo_execucao_foreign` | `NO ACTION` | `CASCADE` |
 | `organization.rel_organizacao` | `cod_organizacao` | `organization.tab_organizacoes.cod_organizacao` | `organization_rel_organizacao_cod_organizacao_foreign` | `NO ACTION` | `CASCADE` |
 | `organization.rel_organizacao` | `rel_cod_organizacao` | `organization.tab_organizacoes.cod_organizacao` | `organization_rel_organizacao_rel_cod_organizacao_foreign` | `NO ACTION` | `CASCADE` |
 | `organization.rel_users_tab_organizacoes` | `cod_organizacao` | `organization.tab_organizacoes.cod_organizacao` | `organization_rel_users_tab_organizacoes_cod_organizacao_foreign` | `NO ACTION` | `CASCADE` |
-| `organization.rel_users_tab_organizacoes` | `user_id` | `public.users.id` | `organization_rel_users_tab_organizacoes_user_id_foreign` | `NO ACTION` | `CASCADE` |
+| `organization.rel_users_tab_organizacoes` | `user_id` | `pei.users.id` | `organization_rel_users_tab_organizacoes_user_id_foreign` | `NO ACTION` | `CASCADE` |
 | `organization.rel_users_tab_organizacoes_tab_perfil_acesso` | `cod_organizacao` | `organization.tab_organizacoes.cod_organizacao` | `fk_uopp_org` | `NO ACTION` | `CASCADE` |
 | `organization.rel_users_tab_organizacoes_tab_perfil_acesso` | `cod_perfil` | `organization.tab_perfil_acesso.cod_perfil` | `fk_uopp_perfil` | `NO ACTION` | `CASCADE` |
 | `organization.rel_users_tab_organizacoes_tab_perfil_acesso` | `cod_plano_de_acao` | `action_plan.tab_plano_de_acao.cod_plano_de_acao` | `fk_uopp_plano` | `NO ACTION` | `CASCADE` |
-| `organization.rel_users_tab_organizacoes_tab_perfil_acesso` | `user_id` | `public.users.id` | `fk_uopp_user` | `NO ACTION` | `CASCADE` |
+| `organization.rel_users_tab_organizacoes_tab_perfil_acesso` | `user_id` | `pei.users.id` | `fk_uopp_user` | `NO ACTION` | `CASCADE` |
 | `performance_indicators.rel_indicador_objetivo_organizacao` | `cod_indicador` | `performance_indicators.tab_indicador.cod_indicador` | `fk_rioo_indicador` | `NO ACTION` | `CASCADE` |
 | `performance_indicators.rel_indicador_objetivo_organizacao` | `cod_organizacao` | `organization.tab_organizacoes.cod_organizacao` | `fk_rioo_org` | `NO ACTION` | `CASCADE` |
 | `performance_indicators.tab_evolucao_indicador` | `cod_indicador` | `performance_indicators.tab_indicador.cod_indicador` | `performance_indicators_tab_evolucao_indicador_cod_indicador_for` | `NO ACTION` | `CASCADE` |
@@ -123,16 +123,16 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | `performance_indicators.tab_indicador` | `cod_plano_de_acao` | `action_plan.tab_plano_de_acao.cod_plano_de_acao` | `performance_indicators_tab_indicador_cod_plano_de_acao_foreign` | `NO ACTION` | `CASCADE` |
 | `performance_indicators.tab_linha_base_indicador` | `cod_indicador` | `performance_indicators.tab_indicador.cod_indicador` | `performance_indicators_tab_linha_base_indicador_cod_indicador_f` | `CASCADE` | `CASCADE` |
 | `performance_indicators.tab_meta_por_ano` | `cod_indicador` | `performance_indicators.tab_indicador.cod_indicador` | `performance_indicators_tab_meta_por_ano_cod_indicador_foreign` | `NO ACTION` | `CASCADE` |
-| `public.strategic_alerts` | `user_id` | `public.users.id` | `strategic_alerts_user_id_foreign` | `NO ACTION` | `CASCADE` |
-| `public.tab_analise_ambiental` | `cod_organizacao` | `organization.tab_organizacoes.cod_organizacao` | `tab_analise_ambiental_cod_organizacao_foreign` | `NO ACTION` | `CASCADE` |
-| `public.tab_analise_ambiental` | `cod_pei` | `strategic_planning.tab_pei.cod_pei` | `tab_analise_ambiental_cod_pei_foreign` | `NO ACTION` | `CASCADE` |
-| `public.tab_audit` | `user_id` | `public.users.id` | `tab_audit_user_id_foreign` | `NO ACTION` | `CASCADE` |
-| `public.tab_relatorios_agendados` | `user_id` | `public.users.id` | `tab_relatorios_agendados_user_id_foreign` | `NO ACTION` | `CASCADE` |
-| `public.tab_relatorios_gerados` | `user_id` | `public.users.id` | `tab_relatorios_gerados_user_id_foreign` | `NO ACTION` | `SET NULL` |
+| `pei.strategic_alerts` | `user_id` | `pei.users.id` | `strategic_alerts_user_id_foreign` | `NO ACTION` | `CASCADE` |
+| `strategic_planning.tab_analise_ambiental` | `cod_organizacao` | `organization.tab_organizacoes.cod_organizacao` | `tab_analise_ambiental_cod_organizacao_foreign` | `NO ACTION` | `CASCADE` |
+| `strategic_planning.tab_analise_ambiental` | `cod_pei` | `strategic_planning.tab_pei.cod_pei` | `tab_analise_ambiental_cod_pei_foreign` | `NO ACTION` | `CASCADE` |
+| `pei.tab_audit` | `user_id` | `pei.users.id` | `tab_audit_user_id_foreign` | `NO ACTION` | `CASCADE` |
+| `pei.tab_relatorios_agendados` | `user_id` | `pei.users.id` | `tab_relatorios_agendados_user_id_foreign` | `NO ACTION` | `CASCADE` |
+| `pei.tab_relatorios_gerados` | `user_id` | `pei.users.id` | `tab_relatorios_gerados_user_id_foreign` | `NO ACTION` | `SET NULL` |
 | `risk_management.tab_risco` | `cod_organizacao` | `organization.tab_organizacoes.cod_organizacao` | `risk_management_tab_risco_cod_organizacao_foreign` | `NO ACTION` | `CASCADE` |
 | `risk_management.tab_risco` | `cod_pei` | `strategic_planning.tab_pei.cod_pei` | `risk_management_tab_risco_cod_pei_foreign` | `NO ACTION` | `CASCADE` |
-| `risk_management.tab_risco` | `cod_responsavel_monitoramento` | `public.users.id` | `risk_management_tab_risco_cod_responsavel_monitoramento_foreign` | `NO ACTION` | `SET NULL` |
-| `risk_management.tab_risco_mitigacao` | `cod_responsavel` | `public.users.id` | `risk_management_tab_risco_mitigacao_cod_responsavel_foreign` | `NO ACTION` | `SET NULL` |
+| `risk_management.tab_risco` | `cod_responsavel_monitoramento` | `pei.users.id` | `risk_management_tab_risco_cod_responsavel_monitoramento_foreign` | `NO ACTION` | `SET NULL` |
+| `risk_management.tab_risco_mitigacao` | `cod_responsavel` | `pei.users.id` | `risk_management_tab_risco_mitigacao_cod_responsavel_foreign` | `NO ACTION` | `SET NULL` |
 | `risk_management.tab_risco_mitigacao` | `cod_risco` | `risk_management.tab_risco.cod_risco` | `risk_management_tab_risco_mitigacao_cod_risco_foreign` | `NO ACTION` | `CASCADE` |
 | `risk_management.tab_risco_objetivo` | `cod_objetivo` | `strategic_planning.tab_objetivo.cod_objetivo` | `risk_management_tab_risco_objetivo_cod_objetivo_foreign` | `NO ACTION` | `CASCADE` |
 | `risk_management.tab_risco_objetivo` | `cod_risco` | `risk_management.tab_risco.cod_risco` | `risk_management_tab_risco_objetivo_cod_risco_foreign` | `NO ACTION` | `CASCADE` |
@@ -146,7 +146,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | `strategic_planning.tab_missao_visao_valores` | `cod_pei` | `strategic_planning.tab_pei.cod_pei` | `strategic_planning_tab_missao_visao_valores_cod_pei_foreign` | `NO ACTION` | `CASCADE` |
 | `strategic_planning.tab_objetivo` | `cod_perspectiva` | `strategic_planning.tab_perspectiva.cod_perspectiva` | `strategic_planning_tab_objetivo_estrategico_cod_perspectiva_for` | `NO ACTION` | `CASCADE` |
 | `strategic_planning.tab_objetivo_comentarios` | `cod_objetivo` | `strategic_planning.tab_objetivo.cod_objetivo` | `strategic_planning_tab_objetivo_comentarios_cod_objetivo_foreig` | `NO ACTION` | `CASCADE` |
-| `strategic_planning.tab_objetivo_comentarios` | `user_id` | `public.users.id` | `strategic_planning_tab_objetivo_comentarios_user_id_foreign` | `NO ACTION` | `CASCADE` |
+| `strategic_planning.tab_objetivo_comentarios` | `user_id` | `pei.users.id` | `strategic_planning_tab_objetivo_comentarios_user_id_foreign` | `NO ACTION` | `CASCADE` |
 | `strategic_planning.tab_perspectiva` | `cod_pei` | `strategic_planning.tab_pei.cod_pei` | `strategic_planning_tab_perspectiva_cod_pei_foreign` | `NO ACTION` | `CASCADE` |
 | `strategic_planning.tab_processos_atividade_cadeia_valor` | `cod_atividade_cadeia_valor` | `strategic_planning.tab_atividade_cadeia_valor.cod_atividade_cadeia_valor` | `strategic_planning_tab_processos_atividade_cadeia_valor_cod_ati` | `NO ACTION` | `CASCADE` |
 | `strategic_planning.tab_tema_norteador` | `cod_organizacao` | `organization.tab_organizacoes.cod_organizacao` | `strategic_planning_tab_objetivo_estrategico_cod_organizacao_for` | `NO ACTION` | `CASCADE` |
@@ -179,7 +179,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 |---:|---|---|---|---|---|
 | 1 | `id` | `uuid / uuid` | `NO` | `gen_random_uuid()` | PK; UUID/default |
 | 2 | `table_id` | `character varying / varchar(191)` | `NO` | `` |  |
-| 3 | `user_id` | `uuid / uuid` | `NO` | `` | FK para public.users.id |
+| 3 | `user_id` | `uuid / uuid` | `NO` | `` | FK para pei.users.id |
 | 4 | `table` | `character varying / varchar(191)` | `NO` | `` |  |
 | 5 | `acao` | `text / text` | `NO` | `` |  |
 | 6 | `created_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
@@ -188,7 +188,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Constraints
 
-- `FOREIGN KEY` `action_plan_acoes_user_id_foreign` coluna `user_id` -> public.users.id
+- `FOREIGN KEY` `action_plan_acoes_user_id_foreign` coluna `user_id` -> pei.users.id
 - `PRIMARY KEY` `acoes_pkey` coluna `id`
 
 #### Indices
@@ -235,14 +235,14 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | Ordem | Coluna | Tipo fisico | Nulo | Default | Observacao |
 |---:|---|---|---|---|---|
 | 1 | `cod_entrega` | `uuid / uuid` | `NO` | `` | PK; FK para action_plan.tab_entregas.cod_entrega |
-| 2 | `cod_usuario` | `uuid / uuid` | `NO` | `` | PK; FK para public.users.id |
+| 2 | `cod_usuario` | `uuid / uuid` | `NO` | `` | PK; FK para pei.users.id |
 | 3 | `created_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
 | 4 | `updated_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
 
 #### Constraints
 
 - `FOREIGN KEY` `action_plan_rel_entrega_users_responsaveis_cod_entrega_foreign` coluna `cod_entrega` -> action_plan.tab_entregas.cod_entrega
-- `FOREIGN KEY` `action_plan_rel_entrega_users_responsaveis_cod_usuario_foreign` coluna `cod_usuario` -> public.users.id
+- `FOREIGN KEY` `action_plan_rel_entrega_users_responsaveis_cod_usuario_foreign` coluna `cod_usuario` -> pei.users.id
 - `PRIMARY KEY` `rel_entrega_users_responsaveis_pkey` coluna `cod_entrega`
 - `PRIMARY KEY` `rel_entrega_users_responsaveis_pkey` coluna `cod_usuario`
 
@@ -435,7 +435,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | 11 | `dsc_tipo` | `character varying / varchar(50)` | `NO` | `'task'::character varying` |  |
 | 12 | `json_propriedades` | `jsonb / jsonb` | `YES` | `` |  |
 | 13 | `dte_prazo` | `date / date` | `YES` | `` |  |
-| 14 | `cod_responsavel` | `uuid / uuid` | `YES` | `` | FK para public.users.id |
+| 14 | `cod_responsavel` | `uuid / uuid` | `YES` | `` | FK para pei.users.id |
 | 15 | `cod_prioridade` | `character varying / varchar(20)` | `NO` | `'media'::character varying` |  |
 | 16 | `num_ordem` | `integer / int4(32,0)` | `NO` | `0` |  |
 | 17 | `bln_arquivado` | `boolean / bool` | `NO` | `false` |  |
@@ -445,7 +445,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 - `FOREIGN KEY` `action_plan_tab_entregas_cod_plano_de_acao_foreign` coluna `cod_plano_de_acao` -> action_plan.tab_plano_de_acao.cod_plano_de_acao
 - `FOREIGN KEY` `fk_entregas_entrega_pai` coluna `cod_entrega_pai` -> action_plan.tab_entregas.cod_entrega
-- `FOREIGN KEY` `fk_entregas_responsavel` coluna `cod_responsavel` -> public.users.id
+- `FOREIGN KEY` `fk_entregas_responsavel` coluna `cod_responsavel` -> pei.users.id
 - `PRIMARY KEY` `tab_entregas_pkey` coluna `cod_entrega`
 
 #### Indices
@@ -571,7 +571,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | Ordem | Coluna | Tipo fisico | Nulo | Default | Observacao |
 |---:|---|---|---|---|---|
 | 1 | `id` | `uuid / uuid` | `NO` | `gen_random_uuid()` | PK; UUID/default |
-| 2 | `user_id` | `uuid / uuid` | `NO` | `` | FK para public.users.id; UNIQUE |
+| 2 | `user_id` | `uuid / uuid` | `NO` | `` | FK para pei.users.id; UNIQUE |
 | 3 | `cod_organizacao` | `uuid / uuid` | `NO` | `` | FK para organization.tab_organizacoes.cod_organizacao; UNIQUE |
 | 4 | `created_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
 | 5 | `updated_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
@@ -580,7 +580,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 #### Constraints
 
 - `FOREIGN KEY` `organization_rel_users_tab_organizacoes_cod_organizacao_foreign` coluna `cod_organizacao` -> organization.tab_organizacoes.cod_organizacao
-- `FOREIGN KEY` `organization_rel_users_tab_organizacoes_user_id_foreign` coluna `user_id` -> public.users.id
+- `FOREIGN KEY` `organization_rel_users_tab_organizacoes_user_id_foreign` coluna `user_id` -> pei.users.id
 - `PRIMARY KEY` `rel_users_tab_organizacoes_pkey` coluna `id`
 - `UNIQUE` `organization_rel_users_tab_organizacoes_user_id_cod_organizacao` coluna `user_id`
 - `UNIQUE` `organization_rel_users_tab_organizacoes_user_id_cod_organizacao` coluna `cod_organizacao`
@@ -602,7 +602,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | Ordem | Coluna | Tipo fisico | Nulo | Default | Observacao |
 |---:|---|---|---|---|---|
 | 1 | `id` | `uuid / uuid` | `NO` | `gen_random_uuid()` | PK; UUID/default |
-| 2 | `user_id` | `uuid / uuid` | `NO` | `` | FK para public.users.id; UNIQUE |
+| 2 | `user_id` | `uuid / uuid` | `NO` | `` | FK para pei.users.id; UNIQUE |
 | 3 | `cod_organizacao` | `uuid / uuid` | `NO` | `` | FK para organization.tab_organizacoes.cod_organizacao; UNIQUE |
 | 4 | `cod_plano_de_acao` | `uuid / uuid` | `YES` | `` | FK para action_plan.tab_plano_de_acao.cod_plano_de_acao; UNIQUE |
 | 5 | `cod_perfil` | `uuid / uuid` | `NO` | `` | FK para organization.tab_perfil_acesso.cod_perfil; UNIQUE |
@@ -615,7 +615,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 - `FOREIGN KEY` `fk_uopp_org` coluna `cod_organizacao` -> organization.tab_organizacoes.cod_organizacao
 - `FOREIGN KEY` `fk_uopp_perfil` coluna `cod_perfil` -> organization.tab_perfil_acesso.cod_perfil
 - `FOREIGN KEY` `fk_uopp_plano` coluna `cod_plano_de_acao` -> action_plan.tab_plano_de_acao.cod_plano_de_acao
-- `FOREIGN KEY` `fk_uopp_user` coluna `user_id` -> public.users.id
+- `FOREIGN KEY` `fk_uopp_user` coluna `user_id` -> pei.users.id
 - `PRIMARY KEY` `rel_users_tab_organizacoes_tab_perfil_acesso_pkey` coluna `id`
 - `UNIQUE` `rel_uopp_unique` coluna `user_id`
 - `UNIQUE` `rel_uopp_unique` coluna `cod_organizacao`
@@ -848,7 +848,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 - `performance_indicators_tab_meta_por_ano_cod_indicador_num_ano_i`: `CREATE INDEX performance_indicators_tab_meta_por_ano_cod_indicador_num_ano_i ON performance_indicators.tab_meta_por_ano USING btree (cod_indicador, num_ano)`
 - `tab_meta_por_ano_pkey`: `CREATE UNIQUE INDEX tab_meta_por_ano_pkey ON performance_indicators.tab_meta_por_ano USING btree (cod_meta_por_ano)`
 
-### `public.audits`
+### `pei.audits`
 
 - Modulo: Auditoria.
 - Finalidade: Tabela do pacote owen-it/laravel-auditing.
@@ -880,11 +880,11 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Indices
 
-- `audits_auditable_id_auditable_type_index`: `CREATE INDEX audits_auditable_id_auditable_type_index ON public.audits USING btree (auditable_id, auditable_type)`
-- `audits_pkey`: `CREATE UNIQUE INDEX audits_pkey ON public.audits USING btree (id)`
-- `audits_user_id_user_type_index`: `CREATE INDEX audits_user_id_user_type_index ON public.audits USING btree (user_id, user_type)`
+- `audits_auditable_id_auditable_type_index`: `CREATE INDEX audits_auditable_id_auditable_type_index ON pei.audits USING btree (auditable_id, auditable_type)`
+- `audits_pkey`: `CREATE UNIQUE INDEX audits_pkey ON pei.audits USING btree (id)`
+- `audits_user_id_user_type_index`: `CREATE INDEX audits_user_id_user_type_index ON pei.audits USING btree (user_id, user_type)`
 
-### `public.cache`
+### `pei.cache`
 
 - Modulo: Infraestrutura Laravel/autenticacao.
 - Finalidade: Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais.
@@ -905,9 +905,9 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Indices
 
-- `cache_pkey`: `CREATE UNIQUE INDEX cache_pkey ON public.cache USING btree (key)`
+- `cache_pkey`: `CREATE UNIQUE INDEX cache_pkey ON pei.cache USING btree (key)`
 
-### `public.cache_locks`
+### `pei.cache_locks`
 
 - Modulo: Infraestrutura Laravel/autenticacao.
 - Finalidade: Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais.
@@ -928,9 +928,9 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Indices
 
-- `cache_locks_pkey`: `CREATE UNIQUE INDEX cache_locks_pkey ON public.cache_locks USING btree (key)`
+- `cache_locks_pkey`: `CREATE UNIQUE INDEX cache_locks_pkey ON pei.cache_locks USING btree (key)`
 
-### `public.failed_jobs`
+### `pei.failed_jobs`
 
 - Modulo: Infraestrutura Laravel/autenticacao.
 - Finalidade: Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais.
@@ -956,10 +956,10 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Indices
 
-- `failed_jobs_pkey`: `CREATE UNIQUE INDEX failed_jobs_pkey ON public.failed_jobs USING btree (id)`
-- `failed_jobs_uuid_unique`: `CREATE UNIQUE INDEX failed_jobs_uuid_unique ON public.failed_jobs USING btree (uuid)`
+- `failed_jobs_pkey`: `CREATE UNIQUE INDEX failed_jobs_pkey ON pei.failed_jobs USING btree (id)`
+- `failed_jobs_uuid_unique`: `CREATE UNIQUE INDEX failed_jobs_uuid_unique ON pei.failed_jobs USING btree (uuid)`
 
-### `public.job_batches`
+### `pei.job_batches`
 
 - Modulo: Infraestrutura Laravel/autenticacao.
 - Finalidade: Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais.
@@ -987,9 +987,9 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Indices
 
-- `job_batches_pkey`: `CREATE UNIQUE INDEX job_batches_pkey ON public.job_batches USING btree (id)`
+- `job_batches_pkey`: `CREATE UNIQUE INDEX job_batches_pkey ON pei.job_batches USING btree (id)`
 
-### `public.jobs`
+### `pei.jobs`
 
 - Modulo: Infraestrutura Laravel/autenticacao.
 - Finalidade: Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais.
@@ -1014,10 +1014,10 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Indices
 
-- `jobs_pkey`: `CREATE UNIQUE INDEX jobs_pkey ON public.jobs USING btree (id)`
-- `jobs_queue_index`: `CREATE INDEX jobs_queue_index ON public.jobs USING btree (queue)`
+- `jobs_pkey`: `CREATE UNIQUE INDEX jobs_pkey ON pei.jobs USING btree (id)`
+- `jobs_queue_index`: `CREATE INDEX jobs_queue_index ON pei.jobs USING btree (queue)`
 
-### `public.migrations`
+### `pei.migrations`
 
 - Modulo: Infraestrutura Laravel/autenticacao.
 - Finalidade: Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais.
@@ -1038,9 +1038,9 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Indices
 
-- `migrations_pkey`: `CREATE UNIQUE INDEX migrations_pkey ON public.migrations USING btree (id)`
+- `migrations_pkey`: `CREATE UNIQUE INDEX migrations_pkey ON pei.migrations USING btree (id)`
 
-### `public.password_reset_tokens`
+### `pei.password_reset_tokens`
 
 - Modulo: Infraestrutura Laravel/autenticacao.
 - Finalidade: Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais.
@@ -1061,9 +1061,9 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Indices
 
-- `password_reset_tokens_pkey`: `CREATE UNIQUE INDEX password_reset_tokens_pkey ON public.password_reset_tokens USING btree (email)`
+- `password_reset_tokens_pkey`: `CREATE UNIQUE INDEX password_reset_tokens_pkey ON pei.password_reset_tokens USING btree (email)`
 
-### `public.personal_access_tokens`
+### `pei.personal_access_tokens`
 
 - Modulo: Infraestrutura Laravel/autenticacao.
 - Finalidade: Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais.
@@ -1092,12 +1092,12 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Indices
 
-- `personal_access_tokens_expires_at_index`: `CREATE INDEX personal_access_tokens_expires_at_index ON public.personal_access_tokens USING btree (expires_at)`
-- `personal_access_tokens_pkey`: `CREATE UNIQUE INDEX personal_access_tokens_pkey ON public.personal_access_tokens USING btree (id)`
-- `personal_access_tokens_token_unique`: `CREATE UNIQUE INDEX personal_access_tokens_token_unique ON public.personal_access_tokens USING btree (token)`
-- `personal_access_tokens_tokenable_type_tokenable_id_index`: `CREATE INDEX personal_access_tokens_tokenable_type_tokenable_id_index ON public.personal_access_tokens USING btree (tokenable_type, tokenable_id)`
+- `personal_access_tokens_expires_at_index`: `CREATE INDEX personal_access_tokens_expires_at_index ON pei.personal_access_tokens USING btree (expires_at)`
+- `personal_access_tokens_pkey`: `CREATE UNIQUE INDEX personal_access_tokens_pkey ON pei.personal_access_tokens USING btree (id)`
+- `personal_access_tokens_token_unique`: `CREATE UNIQUE INDEX personal_access_tokens_token_unique ON pei.personal_access_tokens USING btree (token)`
+- `personal_access_tokens_tokenable_type_tokenable_id_index`: `CREATE INDEX personal_access_tokens_tokenable_type_tokenable_id_index ON pei.personal_access_tokens USING btree (tokenable_type, tokenable_id)`
 
-### `public.sessions`
+### `pei.sessions`
 
 - Modulo: Infraestrutura Laravel/autenticacao.
 - Finalidade: Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais.
@@ -1121,11 +1121,11 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Indices
 
-- `sessions_last_activity_index`: `CREATE INDEX sessions_last_activity_index ON public.sessions USING btree (last_activity)`
-- `sessions_pkey`: `CREATE UNIQUE INDEX sessions_pkey ON public.sessions USING btree (id)`
-- `sessions_user_id_index`: `CREATE INDEX sessions_user_id_index ON public.sessions USING btree (user_id)`
+- `sessions_last_activity_index`: `CREATE INDEX sessions_last_activity_index ON pei.sessions USING btree (last_activity)`
+- `sessions_pkey`: `CREATE UNIQUE INDEX sessions_pkey ON pei.sessions USING btree (id)`
+- `sessions_user_id_index`: `CREATE INDEX sessions_user_id_index ON pei.sessions USING btree (user_id)`
 
-### `public.strategic_alerts`
+### `pei.strategic_alerts`
 
 - Modulo: Suporte funcional.
 - Finalidade: Alertas estrategicos persistentes exibidos ao usuario.
@@ -1137,7 +1137,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | Ordem | Coluna | Tipo fisico | Nulo | Default | Observacao |
 |---:|---|---|---|---|---|
 | 1 | `id` | `uuid / uuid` | `NO` | `` | PK |
-| 2 | `user_id` | `uuid / uuid` | `NO` | `` | FK para public.users.id |
+| 2 | `user_id` | `uuid / uuid` | `NO` | `` | FK para pei.users.id |
 | 3 | `cod_organizacao` | `uuid / uuid` | `YES` | `` |  |
 | 4 | `title` | `character varying / varchar(191)` | `NO` | `` |  |
 | 5 | `message` | `text / text` | `NO` | `` |  |
@@ -1149,14 +1149,14 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Constraints
 
-- `FOREIGN KEY` `strategic_alerts_user_id_foreign` coluna `user_id` -> public.users.id
+- `FOREIGN KEY` `strategic_alerts_user_id_foreign` coluna `user_id` -> pei.users.id
 - `PRIMARY KEY` `strategic_alerts_pkey` coluna `id`
 
 #### Indices
 
-- `strategic_alerts_pkey`: `CREATE UNIQUE INDEX strategic_alerts_pkey ON public.strategic_alerts USING btree (id)`
+- `strategic_alerts_pkey`: `CREATE UNIQUE INDEX strategic_alerts_pkey ON pei.strategic_alerts USING btree (id)`
 
-### `public.system_settings`
+### `pei.system_settings`
 
 - Modulo: Suporte funcional.
 - Finalidade: Configuracoes sistemicas, incluindo provedores de IA.
@@ -1183,10 +1183,10 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Indices
 
-- `system_settings_key_unique`: `CREATE UNIQUE INDEX system_settings_key_unique ON public.system_settings USING btree (key)`
-- `system_settings_pkey`: `CREATE UNIQUE INDEX system_settings_pkey ON public.system_settings USING btree (id)`
+- `system_settings_key_unique`: `CREATE UNIQUE INDEX system_settings_key_unique ON pei.system_settings USING btree (key)`
+- `system_settings_pkey`: `CREATE UNIQUE INDEX system_settings_pkey ON pei.system_settings USING btree (id)`
 
-### `public.tab_analise_ambiental`
+### `strategic_planning.tab_analise_ambiental`
 
 - Modulo: Suporte funcional.
 - Finalidade: Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais.
@@ -1218,12 +1218,12 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Indices
 
-- `tab_analise_ambiental_cod_organizacao_index`: `CREATE INDEX tab_analise_ambiental_cod_organizacao_index ON public.tab_analise_ambiental USING btree (cod_organizacao)`
-- `tab_analise_ambiental_cod_pei_index`: `CREATE INDEX tab_analise_ambiental_cod_pei_index ON public.tab_analise_ambiental USING btree (cod_pei)`
-- `tab_analise_ambiental_dsc_tipo_analise_dsc_categoria_index`: `CREATE INDEX tab_analise_ambiental_dsc_tipo_analise_dsc_categoria_index ON public.tab_analise_ambiental USING btree (dsc_tipo_analise, dsc_categoria)`
-- `tab_analise_ambiental_pkey`: `CREATE UNIQUE INDEX tab_analise_ambiental_pkey ON public.tab_analise_ambiental USING btree (cod_analise)`
+- `tab_analise_ambiental_cod_organizacao_index`: `CREATE INDEX tab_analise_ambiental_cod_organizacao_index ON strategic_planning.tab_analise_ambiental USING btree (cod_organizacao)`
+- `tab_analise_ambiental_cod_pei_index`: `CREATE INDEX tab_analise_ambiental_cod_pei_index ON strategic_planning.tab_analise_ambiental USING btree (cod_pei)`
+- `tab_analise_ambiental_dsc_tipo_analise_dsc_categoria_index`: `CREATE INDEX tab_analise_ambiental_dsc_tipo_analise_dsc_categoria_index ON strategic_planning.tab_analise_ambiental USING btree (dsc_tipo_analise, dsc_categoria)`
+- `tab_analise_ambiental_pkey`: `CREATE UNIQUE INDEX tab_analise_ambiental_pkey ON strategic_planning.tab_analise_ambiental USING btree (cod_analise)`
 
-### `public.tab_audit`
+### `pei.tab_audit`
 
 - Modulo: Auditoria.
 - Finalidade: Tabela de auditoria/logs propria ou legada.
@@ -1243,7 +1243,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | 7 | `data_type` | `character varying / varchar(191)` | `YES` | `` |  |
 | 8 | `table_id` | `character varying / varchar(191)` | `NO` | `` |  |
 | 9 | `ip` | `character varying / varchar(191)` | `NO` | `` |  |
-| 10 | `user_id` | `uuid / uuid` | `NO` | `` | FK para public.users.id |
+| 10 | `user_id` | `uuid / uuid` | `NO` | `` | FK para pei.users.id |
 | 11 | `dte_expired_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
 | 12 | `created_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
 | 13 | `updated_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
@@ -1251,17 +1251,17 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Constraints
 
-- `FOREIGN KEY` `tab_audit_user_id_foreign` coluna `user_id` -> public.users.id
+- `FOREIGN KEY` `tab_audit_user_id_foreign` coluna `user_id` -> pei.users.id
 - `PRIMARY KEY` `tab_audit_pkey` coluna `id`
 
 #### Indices
 
-- `tab_audit_acao_index`: `CREATE INDEX tab_audit_acao_index ON public.tab_audit USING btree (acao)`
-- `tab_audit_pkey`: `CREATE UNIQUE INDEX tab_audit_pkey ON public.tab_audit USING btree (id)`
-- `tab_audit_table_table_id_index`: `CREATE INDEX tab_audit_table_table_id_index ON public.tab_audit USING btree ("table", table_id)`
-- `tab_audit_user_id_index`: `CREATE INDEX tab_audit_user_id_index ON public.tab_audit USING btree (user_id)`
+- `tab_audit_acao_index`: `CREATE INDEX tab_audit_acao_index ON pei.tab_audit USING btree (acao)`
+- `tab_audit_pkey`: `CREATE UNIQUE INDEX tab_audit_pkey ON pei.tab_audit USING btree (id)`
+- `tab_audit_table_table_id_index`: `CREATE INDEX tab_audit_table_table_id_index ON pei.tab_audit USING btree ("table", table_id)`
+- `tab_audit_user_id_index`: `CREATE INDEX tab_audit_user_id_index ON pei.tab_audit USING btree (user_id)`
 
-### `public.tab_relatorios_agendados`
+### `pei.tab_relatorios_agendados`
 
 - Modulo: Relatorios.
 - Finalidade: Agendamentos de geracao de relatorios.
@@ -1273,7 +1273,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | Ordem | Coluna | Tipo fisico | Nulo | Default | Observacao |
 |---:|---|---|---|---|---|
 | 1 | `cod_agendamento` | `uuid / uuid` | `NO` | `` | PK |
-| 2 | `user_id` | `uuid / uuid` | `NO` | `` | FK para public.users.id |
+| 2 | `user_id` | `uuid / uuid` | `NO` | `` | FK para pei.users.id |
 | 3 | `dsc_tipo_relatorio` | `character varying / varchar(191)` | `NO` | `` |  |
 | 4 | `dsc_frequencia` | `character varying / varchar(191)` | `NO` | `` |  |
 | 5 | `txt_filtros` | `jsonb / jsonb` | `YES` | `` |  |
@@ -1285,14 +1285,14 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Constraints
 
-- `FOREIGN KEY` `tab_relatorios_agendados_user_id_foreign` coluna `user_id` -> public.users.id
+- `FOREIGN KEY` `tab_relatorios_agendados_user_id_foreign` coluna `user_id` -> pei.users.id
 - `PRIMARY KEY` `tab_relatorios_agendados_pkey` coluna `cod_agendamento`
 
 #### Indices
 
-- `tab_relatorios_agendados_pkey`: `CREATE UNIQUE INDEX tab_relatorios_agendados_pkey ON public.tab_relatorios_agendados USING btree (cod_agendamento)`
+- `tab_relatorios_agendados_pkey`: `CREATE UNIQUE INDEX tab_relatorios_agendados_pkey ON pei.tab_relatorios_agendados USING btree (cod_agendamento)`
 
-### `public.tab_relatorios_gerados`
+### `pei.tab_relatorios_gerados`
 
 - Modulo: Relatorios.
 - Finalidade: Historico de relatorios gerados.
@@ -1304,7 +1304,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | Ordem | Coluna | Tipo fisico | Nulo | Default | Observacao |
 |---:|---|---|---|---|---|
 | 1 | `cod_relatorio_gerado` | `uuid / uuid` | `NO` | `` | PK |
-| 2 | `user_id` | `uuid / uuid` | `YES` | `` | FK para public.users.id |
+| 2 | `user_id` | `uuid / uuid` | `YES` | `` | FK para pei.users.id |
 | 3 | `dsc_tipo_relatorio` | `character varying / varchar(191)` | `NO` | `` |  |
 | 4 | `dsc_caminho_arquivo` | `character varying / varchar(191)` | `NO` | `` |  |
 | 5 | `dsc_formato` | `character varying / varchar(191)` | `NO` | `` |  |
@@ -1315,14 +1315,14 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Constraints
 
-- `FOREIGN KEY` `tab_relatorios_gerados_user_id_foreign` coluna `user_id` -> public.users.id
+- `FOREIGN KEY` `tab_relatorios_gerados_user_id_foreign` coluna `user_id` -> pei.users.id
 - `PRIMARY KEY` `tab_relatorios_gerados_pkey` coluna `cod_relatorio_gerado`
 
 #### Indices
 
-- `tab_relatorios_gerados_pkey`: `CREATE UNIQUE INDEX tab_relatorios_gerados_pkey ON public.tab_relatorios_gerados USING btree (cod_relatorio_gerado)`
+- `tab_relatorios_gerados_pkey`: `CREATE UNIQUE INDEX tab_relatorios_gerados_pkey ON pei.tab_relatorios_gerados USING btree (cod_relatorio_gerado)`
 
-### `public.tab_status`
+### `pei.tab_status`
 
 - Modulo: Suporte funcional.
 - Finalidade: Finalidade inferida pelo nome, schema, model e relacionamentos; validar com regra de negocio antes de alteracoes estruturais.
@@ -1342,9 +1342,9 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Indices
 
-- `tab_status_pkey`: `CREATE UNIQUE INDEX tab_status_pkey ON public.tab_status USING btree (cod_status)`
+- `tab_status_pkey`: `CREATE UNIQUE INDEX tab_status_pkey ON pei.tab_status USING btree (cod_status)`
 
-### `public.users`
+### `pei.users`
 
 - Modulo: Infraestrutura Laravel/autenticacao.
 - Finalidade: Usuarios autenticados do sistema, com flags de administrador, ativo, troca de senha e preferencias.
@@ -1380,8 +1380,8 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Indices
 
-- `users_email_unique`: `CREATE UNIQUE INDEX users_email_unique ON public.users USING btree (email)`
-- `users_pkey`: `CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id)`
+- `users_email_unique`: `CREATE UNIQUE INDEX users_email_unique ON pei.users USING btree (email)`
+- `users_pkey`: `CREATE UNIQUE INDEX users_pkey ON pei.users USING btree (id)`
 
 ### `risk_management.tab_risco`
 
@@ -1407,7 +1407,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | 11 | `num_nivel_risco` | `smallint / int2(16,0)` | `NO` | `` |  |
 | 12 | `txt_causas` | `text / text` | `YES` | `` |  |
 | 13 | `txt_consequencias` | `text / text` | `YES` | `` |  |
-| 14 | `cod_responsavel_monitoramento` | `uuid / uuid` | `YES` | `` | FK para public.users.id |
+| 14 | `cod_responsavel_monitoramento` | `uuid / uuid` | `YES` | `` | FK para pei.users.id |
 | 15 | `created_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
 | 16 | `updated_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
 | 17 | `deleted_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
@@ -1419,7 +1419,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 - `CHECK` `chk_probabilidade` coluna `num_probabilidade`
 - `FOREIGN KEY` `risk_management_tab_risco_cod_organizacao_foreign` coluna `cod_organizacao` -> organization.tab_organizacoes.cod_organizacao
 - `FOREIGN KEY` `risk_management_tab_risco_cod_pei_foreign` coluna `cod_pei` -> strategic_planning.tab_pei.cod_pei
-- `FOREIGN KEY` `risk_management_tab_risco_cod_responsavel_monitoramento_foreign` coluna `cod_responsavel_monitoramento` -> public.users.id
+- `FOREIGN KEY` `risk_management_tab_risco_cod_responsavel_monitoramento_foreign` coluna `cod_responsavel_monitoramento` -> pei.users.id
 - `PRIMARY KEY` `tab_risco_pkey` coluna `cod_risco`
 
 #### Indices
@@ -1447,7 +1447,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | 2 | `cod_risco` | `uuid / uuid` | `NO` | `` | FK para risk_management.tab_risco.cod_risco |
 | 3 | `dsc_tipo_mitigacao` | `character varying / varchar(50)` | `NO` | `` |  |
 | 4 | `txt_acao_mitigacao` | `text / text` | `NO` | `` |  |
-| 5 | `cod_responsavel` | `uuid / uuid` | `YES` | `` | FK para public.users.id |
+| 5 | `cod_responsavel` | `uuid / uuid` | `YES` | `` | FK para pei.users.id |
 | 6 | `dte_prazo` | `date / date` | `YES` | `` |  |
 | 7 | `dsc_status` | `character varying / varchar(50)` | `NO` | `` |  |
 | 8 | `txt_observacoes` | `text / text` | `YES` | `` |  |
@@ -1457,7 +1457,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 #### Constraints
 
-- `FOREIGN KEY` `risk_management_tab_risco_mitigacao_cod_responsavel_foreign` coluna `cod_responsavel` -> public.users.id
+- `FOREIGN KEY` `risk_management_tab_risco_mitigacao_cod_responsavel_foreign` coluna `cod_responsavel` -> pei.users.id
 - `FOREIGN KEY` `risk_management_tab_risco_mitigacao_cod_risco_foreign` coluna `cod_risco` -> risk_management.tab_risco.cod_risco
 - `PRIMARY KEY` `tab_risco_mitigacao_pkey` coluna `cod_mitigacao`
 
@@ -1748,7 +1748,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 |---:|---|---|---|---|---|
 | 1 | `cod_comentario` | `uuid / uuid` | `NO` | `` | PK |
 | 2 | `cod_objetivo` | `uuid / uuid` | `NO` | `` | FK para strategic_planning.tab_objetivo.cod_objetivo |
-| 3 | `user_id` | `uuid / uuid` | `NO` | `` | FK para public.users.id |
+| 3 | `user_id` | `uuid / uuid` | `NO` | `` | FK para pei.users.id |
 | 4 | `dsc_comentario` | `text / text` | `NO` | `` |  |
 | 5 | `cod_comentario_pai` | `uuid / uuid` | `YES` | `` |  |
 | 6 | `created_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
@@ -1758,7 +1758,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 #### Constraints
 
 - `FOREIGN KEY` `strategic_planning_tab_objetivo_comentarios_cod_objetivo_foreig` coluna `cod_objetivo` -> strategic_planning.tab_objetivo.cod_objetivo
-- `FOREIGN KEY` `strategic_planning_tab_objetivo_comentarios_user_id_foreign` coluna `user_id` -> public.users.id
+- `FOREIGN KEY` `strategic_planning_tab_objetivo_comentarios_user_id_foreign` coluna `user_id` -> pei.users.id
 - `PRIMARY KEY` `tab_objetivo_comentarios_pkey` coluna `cod_comentario`
 
 #### Indices
@@ -1929,14 +1929,14 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | `App\Models\PerformanceIndicators\Indicador` | `tab_indicador` | `cod_indicador` | sim, via tabela performance_indicators.tab_indicador | Auditable |
 | `App\Models\PerformanceIndicators\LinhaBaseIndicador` | `tab_linha_base_indicador` | `cod_linha_base` | sim, via tabela performance_indicators.tab_linha_base_indicador |  |
 | `App\Models\PerformanceIndicators\MetaPorAno` | `tab_meta_por_ano` | `cod_meta_por_ano` | sim, via tabela performance_indicators.tab_meta_por_ano |  |
-| `App\Models\Reports\RelatorioAgendado` | `tab_relatorios_agendados` | `cod_agendamento` | sim, via tabela public.tab_relatorios_agendados |  |
-| `App\Models\Reports\RelatorioGerado` | `tab_relatorios_gerados` | `cod_relatorio_gerado` | sim, via tabela public.tab_relatorios_gerados |  |
+| `App\Models\Reports\RelatorioAgendado` | `tab_relatorios_agendados` | `cod_agendamento` | sim, via tabela pei.tab_relatorios_agendados |  |
+| `App\Models\Reports\RelatorioGerado` | `tab_relatorios_gerados` | `cod_relatorio_gerado` | sim, via tabela pei.tab_relatorios_gerados |  |
 | `App\Models\RiskManagement\Risco` | `tab_risco` | `cod_risco` | sim, via tabela risk_management.tab_risco | Auditable |
 | `App\Models\RiskManagement\RiscoMitigacao` | `tab_risco_mitigacao` | `cod_mitigacao` | sim, via tabela risk_management.tab_risco_mitigacao | Auditable |
 | `App\Models\RiskManagement\RiscoObjetivo` | `tab_risco_objetivo` | `cod_risco_objetivo` | sim, via tabela risk_management.tab_risco_objetivo |  |
 | `App\Models\RiskManagement\RiscoOcorrencia` | `tab_risco_ocorrencia` | `cod_ocorrencia` | sim, via tabela risk_management.tab_risco_ocorrencia | Auditable |
-| `App\Models\StrategicAlert` | `strategic_alerts` | `convencao` | sim, via tabela public.strategic_alerts |  |
-| `App\Models\StrategicPlanning\AnaliseAmbiental` | `tab_analise_ambiental` | `cod_analise` | sim, via tabela public.tab_analise_ambiental |  |
+| `App\Models\StrategicAlert` | `strategic_alerts` | `convencao` | sim, via tabela pei.strategic_alerts |  |
+| `App\Models\StrategicPlanning\AnaliseAmbiental` | `tab_analise_ambiental` | `cod_analise` | sim, via tabela strategic_planning.tab_analise_ambiental |  |
 | `App\Models\StrategicPlanning\Arquivo` | `tab_arquivos` | `cod_arquivo` | sim, via tabela strategic_planning.tab_arquivos |  |
 | `App\Models\StrategicPlanning\AtividadeCadeiaValor` | `tab_atividade_cadeia_valor` | `cod_atividade_cadeia_valor` | sim, via tabela strategic_planning.tab_atividade_cadeia_valor |  |
 | `App\Models\StrategicPlanning\FuturoAlmejado` | `tab_futuro_almejado_objetivo` | `cod_futuro_almejado` | sim, via tabela strategic_planning.tab_futuro_almejado_objetivo |  |
@@ -1949,10 +1949,10 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | `App\Models\StrategicPlanning\ProcessoAtividadeCadeiaValor` | `tab_processos_atividade_cadeia_valor` | `cod_processo_atividade_cadeia_valor` | sim, via tabela strategic_planning.tab_processos_atividade_cadeia_valor |  |
 | `App\Models\StrategicPlanning\TemaNorteador` | `strategic_planning.tab_tema_norteador` | `cod_tema_norteador` | sim, nome qualificado | Auditable |
 | `App\Models\StrategicPlanning\Valor` | `tab_valores` | `cod_valor` | sim, via tabela strategic_planning.tab_valores | Auditable |
-| `App\Models\SystemSetting` | `system_settings` | `convencao` | sim, via tabela public.system_settings |  |
-| `App\Models\TabAudit` | `tab_audit` | `id` | sim, via tabela public.tab_audit |  |
-| `App\Models\TabStatus` | `tab_status` | `cod_status` | sim, via tabela public.tab_status |  |
-| `App\Models\User` | `users` | `id` | sim, via tabela public.users |  |
+| `App\Models\SystemSetting` | `system_settings` | `convencao` | sim, via tabela pei.system_settings |  |
+| `App\Models\TabAudit` | `tab_audit` | `id` | sim, via tabela pei.tab_audit |  |
+| `App\Models\TabStatus` | `tab_status` | `cod_status` | sim, via tabela pei.tab_status |  |
+| `App\Models\User` | `users` | `id` | sim, via tabela pei.users |  |
 
 ## Observacoes de upgrade e governanca de dados
 

@@ -1,4 +1,4 @@
-<?php
+?php
 
 namespace App\Models;
 
@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Crypt;
 
 class SystemSetting extends Model
 {
-    protected $table = 'system_settings';
+    protected $table = 'pei.system_settings';
 
     protected $fillable = [
         'key',

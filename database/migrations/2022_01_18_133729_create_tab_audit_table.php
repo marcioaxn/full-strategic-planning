@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tab_audit', function (Blueprint $table) {
+        Schema::create('pei.tab_audit', function (Blueprint $table) {
             $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->string('acao')->nullable(false);
             $table->text('antes')->nullable(true);
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('data_type')->nullable(true);
             $table->string('table_id')->nullable(false);
             $table->string('ip')->nullable(false);
-            $table->foreignUuid('user_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->foreignUuid('user_id')->references('id')->on('pei.users')->cascadeOnDelete();
             $table->timestamp('dte_expired_at')->nullable(true);
             $table->timestamps();
             $table->softDeletes();
@@ -39,6 +39,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tab_audit');
+        Schema::dropIfExists('pei.tab_audit');
     }
 };

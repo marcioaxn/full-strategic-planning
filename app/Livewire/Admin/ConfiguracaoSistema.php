@@ -10,16 +10,22 @@ use Livewire\Component;
 class ConfiguracaoSistema extends Component
 {
     public bool $aiEnabled = true;
+
     public string $aiProvider = 'gemini';
+
     public string $aiApiKey = '';
-    
+
     // Controle de UI
     public bool $showKey = false;
+
     public string $connectionStatus = '';
+
     public string $connectionMessage = '';
 
     public function mount()
     {
+        abort_unless(auth()->user()?->isSuperAdmin(), 403, 'Acesso restrito ao Super Administrador.');
+
         $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
         $this->aiProvider = SystemSetting::getValue('ai_provider', 'gemini');
         $hasKey = SystemSetting::where('key', 'ai_api_key')->whereNotNull('value')->exists();
@@ -39,10 +45,11 @@ class ConfiguracaoSistema extends Component
         if (empty($keyToTest)) {
             $this->connectionStatus = 'error';
             $this->connectionMessage = 'Forneça uma chave de API para testar.';
+
             return;
         }
 
-        $provider = match($this->aiProvider) {
+        $provider = match ($this->aiProvider) {
             'gemini' => new \App\Services\AI\GeminiProvider($keyToTest),
             'openai' => new \App\Services\AI\OpenAiProvider($keyToTest),
             default => new \App\Services\AI\GeminiProvider($keyToTest),
@@ -64,19 +71,21 @@ class ConfiguracaoSistema extends Component
         if ($this->aiEnabled) {
             if (empty($this->aiProvider)) {
                 $this->addError('aiProvider', 'Selecione um provedor de IA.');
+
                 return;
             }
 
             if (empty($this->aiApiKey)) {
                 $this->addError('aiApiKey', 'A chave de API é obrigatória para habilitar a IA.');
+
                 return;
             }
         }
 
         SystemSetting::setValue('ai_enabled', $this->aiEnabled);
         SystemSetting::setValue('ai_provider', $this->aiProvider);
-        
-        if ($this->aiApiKey !== '********' && !empty($this->aiApiKey)) {
+
+        if ($this->aiApiKey !== '********' && ! empty($this->aiApiKey)) {
             SystemSetting::setValue('ai_api_key', $this->aiApiKey);
         }
 

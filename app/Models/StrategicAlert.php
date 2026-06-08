@@ -1,4 +1,4 @@
-<?php
+?php
 
 namespace App\Models;
 
@@ -10,7 +10,7 @@ class StrategicAlert extends Model
 {
     use HasUuids;
 
-    protected $table = 'strategic_alerts';
+    protected $table = 'pei.strategic_alerts';
 
     protected $fillable = [
         'user_id',

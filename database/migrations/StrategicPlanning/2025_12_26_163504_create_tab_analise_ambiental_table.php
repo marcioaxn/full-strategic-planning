@@ -12,9 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tab_analise_ambiental', function (Blueprint $table) {
+        Schema::create('strategic_planning.tab_analise_ambiental', function (Blueprint $table) {
             $table->uuid('cod_analise')->primary()->default(DB::raw('gen_random_uuid()'));
-            $table->foreignUuid('cod_pei')->references('cod_pei')->on('tab_pei')->cascadeOnDelete();
+            $table->foreignUuid('cod_pei')->references('cod_pei')->on('strategic_planning.tab_pei')->cascadeOnDelete();
             $table->foreignUuid('cod_organizacao')->nullable()->references('cod_organizacao')->on('organization.tab_organizacoes')->cascadeOnDelete();
 
             // Tipo de análise: SWOT ou PESTEL
@@ -52,6 +52,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tab_analise_ambiental');
+        Schema::dropIfExists('strategic_planning.tab_analise_ambiental');
     }
 };

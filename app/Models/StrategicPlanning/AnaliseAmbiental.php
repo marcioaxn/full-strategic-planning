@@ -1,4 +1,4 @@
-<?php
+?php
 
 namespace App\Models\StrategicPlanning;
 
@@ -13,7 +13,7 @@ class AnaliseAmbiental extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
 
-    protected $table = 'tab_analise_ambiental';
+    protected $table = 'strategic_planning.tab_analise_ambiental';
     protected $primaryKey = 'cod_analise';
     protected $keyType = 'string';
     public $incrementing = false;

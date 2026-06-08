@@ -64,10 +64,10 @@ Legenda de tipo: **1:1** (cópia direta, muda só schema) · **REN** (renomeia t
 |---|---|---|---|---|
 | 1 | `public.tab_organizacoes` | `organization.tab_organizacoes` | 1:1 | colunas idênticas (`cod_organizacao`, `sgl_organizacao`, `nom_organizacao`, `rel_cod_organizacao`) |
 | 2 | `public.tab_perfil_acesso` | `organization.tab_perfil_acesso` | 1:1 | `cod_perfil`, `dsc_perfil`, `dsc_permissao` |
-| 3 | `public.users` | `public.users` | 1:1 +DEF | colunas-chave iguais; v2 acrescenta `theme_color` (default), `current_team_id`, `profile_photo_path` (nullable). **Super Admin na v2 é definido pelo PERFIL** (`PerfilAcesso::SUPER_ADMIN`), não pelo campo `adm`; após a carga, o ETL sincroniza `adm` como espelho do perfil (1=Super Admin, senão 0; default da coluna = 0) — ver Seção 8 |
+| 3 | `public.users` | `pei.users` | 1:1 +DEF | colunas-chave iguais; v2 acrescenta `theme_color` (default), `current_team_id`, `profile_photo_path` (nullable). **Super Admin na v2 é definido pelo PERFIL** (`PerfilAcesso::SUPER_ADMIN`), não pelo campo `adm`; após a carga, o ETL sincroniza `adm` como espelho do perfil (1=Super Admin, senão 0; default da coluna = 0) — ver Seção 8 |
 | 4 | `public.rel_users_tab_organizacoes` | `organization.rel_users_tab_organizacoes` | 1:1 | pivô usuário↔organização |
 | 5 | `public.rel_users_tab_organizacoes_tab_perfil_acesso` | `organization.rel_users_tab_organizacoes_tab_perfil_acesso` | 1:1 | v2 torna `cod_plano` nullable |
-| 6 | `public.rel_organizacao` | `public.rel_organizacao` | 1:1 | hierarquia de organizações |
+| 6 | `public.rel_organizacao` | `organization.rel_organizacao` | 1:1 | hierarquia de organizações |
 | 7 | `pei.tab_pei` | `strategic_planning.tab_pei` | 1:1 | `cod_pei`, `dsc_pei`, `num_ano_inicio_pei`, `num_ano_fim_pei` |
 | 8 | `pei.tab_missao_visao_valores` | `strategic_planning.tab_missao_visao_valores` | 1:1 | `dsc_missao`, `dsc_visao`, `cod_pei`, `cod_organizacao` |
 | 9 | `pei.tab_valores` (`valores`) | `strategic_planning.tab_valores` | 1:1 | `cod_valor`, `nom_valor`, `dsc_valor`, `cod_pei`, `cod_organizacao` |
@@ -87,7 +87,7 @@ Legenda de tipo: **1:1** (cópia direta, muda só schema) · **REN** (renomeia t
 | 23 | `pei.tab_atividade_cadeia_valor` | `strategic_planning.tab_atividade_cadeia_valor` | 1:1 +DEF | v2 acrescenta `dsc_tipo` (default 'Finalística') e `num_ordem` (default sequencial) |
 | 24 | `pei.tab_processos_atividade_cadeia_valor` | `strategic_planning.tab_processos_atividade_cadeia_valor` | 1:1 | `dsc_entrada`, `dsc_transformacao`, `dsc_saida` |
 | 25 | `public.acoes` | `action_plan.acoes` | 1:1 | confirmar uso real no domínio |
-| 26 | `public.tab_status` | `public.tab_status` | 1:1 | `cod_status`, `dsc_status` |
+| 26 | `public.tab_status` | `pei.tab_status` | 1:1 | `cod_status`, `dsc_status` |
 | 27 | `public.tab_audit` / `public.audits` | — | **NÃO MIGRA** | ❌ decisão de projeto: auditoria histórica não é transferida (fica apenas no backup) |
 | 28 | `public.tab_entregas` | `action_plan.tab_entregas` | **TRANSF +DEF** | ⚠️ ver Seção 6 — modelo mudou radicalmente |
 
