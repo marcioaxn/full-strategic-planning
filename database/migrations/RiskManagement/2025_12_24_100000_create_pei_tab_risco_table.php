@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->smallInteger('num_nivel_risco')->nullable(false); // Calculado: probabilidade * impacto (1-25)
             $table->text('txt_causas')->nullable(true);
             $table->text('txt_consequencias')->nullable(true);
-            $table->foreignUuid('cod_responsavel_monitoramento')->nullable()->references('id')->on('users')->nullOnDelete();
+            $table->foreignUuid('cod_responsavel_monitoramento')->nullable()->references('id')->on('pei.users')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
 

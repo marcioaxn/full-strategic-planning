@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('tab_plano_de_acao', function (Blueprint $table) {
+        Schema::table('action_plan.tab_plano_de_acao', function (Blueprint $table) {
             $table->text('txt_detalhamento')->nullable()->comment('Descrição detalhada ou justificativa do plano de ação');
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('tab_plano_de_acao', function (Blueprint $table) {
+        Schema::table('action_plan.tab_plano_de_acao', function (Blueprint $table) {
             $table->dropColumn('txt_detalhamento');
         });
     }

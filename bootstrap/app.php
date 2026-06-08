@@ -60,7 +60,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'message' => 'Sessão expirada. Redirecionando para login...',
                     'redirect' => route('login'),
-                    'session_expired' => true
+                    'session_expired' => true,
                 ], 419);
             }
 
@@ -76,7 +76,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json(['message' => 'Acesso negado.'], 403);
             }
 
-            if (!auth()->check()) {
+            if (! auth()->check()) {
                 return redirect()
                     ->route('welcome')
                     ->with('error', 'Você não tem permissão para acessar este recurso.');
@@ -93,7 +93,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json(['message' => 'Recurso não encontrado.'], 404);
             }
 
-            if (!auth()->check()) {
+            if (! auth()->check()) {
                 return redirect()
                     ->route('welcome')
                     ->with('error', 'A página que você está procurando não foi encontrada.');
@@ -104,12 +104,19 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Handle Database Query Exceptions (Integridade Referencial)
         $exceptions->render(function (\Illuminate\Database\QueryException $e, Request $request) {
+            $sqlState = $e->errorInfo[0] ?? null;
             $errorCode = $e->errorInfo[1] ?? 0;
+
+            // Postgres invalid_text_representation (22P02): ID malformado em coluna UUID.
+            // Ex.: /organizacoes/0/detalhes — trata como "não encontrado" (404), nunca 500.
+            if ($sqlState === '22P02') {
+                throw new NotFoundHttpException('Recurso não encontrado.', $e);
+            }
 
             // Postgres Foreign Key Violation (23503)
             if ($errorCode == 23503) {
                 $message = 'Não é possível excluir ou alterar este registro pois ele está vinculado a outros dados do sistema.';
-                
+
                 if ($request->expectsJson()) {
                     return response()->json(['message' => $message], 422);
                 }
@@ -126,7 +133,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            if (!auth()->check() && app()->environment('production')) {
+            if (! auth()->check() && app()->environment('production')) {
                 // Se for erro de servidor 500+, redireciona para welcome amigável
                 if (method_exists($e, 'getStatusCode') && $e->getStatusCode() >= 500) {
                     return redirect()

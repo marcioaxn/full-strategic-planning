@@ -2,29 +2,26 @@
     {{-- Polling discreto --}}
     <div wire:poll.60s="carregarMapa"></div>
 
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none" wire:navigate>Dashboard</a></li>
-                        <li class="breadcrumb-item active opacity-75" aria-current="page">Mapa Estratégico</li>
-                    </ol>
-                </nav>
-                <h2 class="h4 fw-bold mb-0 text-body">Mapa Estratégico Institucional</h2>
-                <div class="mt-1"><x-gppei-link :page="30" label="Mapa Estratégico BSC" /></div>
-                <p class="text-muted small mb-0"><i class="bi bi-building me-1"></i>{{ $organizacaoNome }}</p>
-            </div>
-
-            <div class="d-flex align-items-center gap-3">
-                <div class="text-end border-start ps-3">
-                    <span class="badge bg-body text-primary border shadow-sm px-3 py-2 rounded-pill">
-                        <i class="bi bi-calendar3 me-2"></i>Ciclo: {{ $peiAtivo?->dsc_pei ?? 'N/A' }}
-                    </span>
-                </div>
-            </div>
+    @auth
+    <div class="d-flex justify-content-between align-items-center mb-4 px-4 pt-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item active opacity-75" aria-current="page">Mapa Estratégico</li>
+                </ol>
+            </nav>
+            <h2 class="h3 fw-bold mb-0 text-body">Mapa Estratégico</h2>
+            <div class="mt-1"><x-gppei-link :page="30" label="Mapa Estratégico BSC" /></div>
+            <p class="text-muted small mb-0"><i class="bi bi-building me-1"></i>{{ $organizacaoNome }}</p>
         </div>
-    </x-slot>
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-body text-primary border shadow-sm px-3 py-2 rounded-pill">
+                <i class="bi bi-calendar3 me-2"></i>Ciclo: {{ $peiAtivo?->dsc_pei ?? 'N/A' }}
+            </span>
+        </div>
+    </div>
+    @endauth
 
     @guest
     <div class="container mt-4 mb-4 pt-4 pb-4">

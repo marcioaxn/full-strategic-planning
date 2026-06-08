@@ -1,23 +1,27 @@
-<div>
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('indicadores.index') }}" class="text-decoration-none">Indicadores</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Ficha Técnica</li>
-                    </ol>
-                </nav>
-                <h2 class="h4 fw-bold mb-0">{{ $indicador->nom_indicador }}</h2>
-            </div>
-            <div class="d-flex gap-2">
-                <a href="{{ route('indicadores.evolucao', $indicador->cod_indicador) }}" class="btn btn-success rounded-pill px-3 shadow-sm">
-                    <i class="bi bi-graph-up-arrow me-1"></i> Lançar Resultados
-                </a>
-            </div>
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('indicadores.index') }}" wire:navigate class="text-decoration-none">Indicadores</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Ficha Técnica</li>
+                </ol>
+            </nav>
+            <h2 class="h3 fw-bold mb-0">
+                <i class="bi bi-graph-up me-2 text-primary"></i>{{ $indicador->nom_indicador }}
+            </h2>
         </div>
-    </x-slot>
+        <div class="d-flex gap-2">
+            <a href="{{ route('indicadores.index') }}" wire:navigate class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar
+            </a>
+            <a href="{{ route('indicadores.evolucao', $indicador->cod_indicador) }}" wire:navigate class="btn btn-success rounded-pill px-3">
+                <i class="bi bi-graph-up-arrow me-1"></i> Lançar Resultados
+            </a>
+        </div>
+    </div>
 
     <div class="row g-4">
         <!-- Coluna Esquerda: Ficha Técnica -->

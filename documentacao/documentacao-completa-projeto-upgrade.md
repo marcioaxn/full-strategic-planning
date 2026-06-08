@@ -127,24 +127,24 @@ Ponto critico para upgrade: o banco real foi acessado e a tabela `migrations` po
 - `performance_indicators.tab_indicador` - 21 colunas.
 - `performance_indicators.tab_linha_base_indicador` - 7 colunas.
 - `performance_indicators.tab_meta_por_ano` - 7 colunas.
-- `public.audits` - 14 colunas.
-- `public.cache` - 3 colunas.
-- `public.cache_locks` - 3 colunas.
-- `public.failed_jobs` - 7 colunas.
-- `public.job_batches` - 10 colunas.
-- `public.jobs` - 7 colunas.
-- `public.migrations` - 3 colunas.
-- `public.password_reset_tokens` - 3 colunas.
-- `public.personal_access_tokens` - 10 colunas.
-- `public.sessions` - 6 colunas.
-- `public.strategic_alerts` - 10 colunas.
-- `public.system_settings` - 8 colunas.
-- `public.tab_analise_ambiental` - 12 colunas.
-- `public.tab_audit` - 14 colunas.
-- `public.tab_relatorios_agendados` - 10 colunas.
-- `public.tab_relatorios_gerados` - 9 colunas.
-- `public.tab_status` - 2 colunas.
-- `public.users` - 17 colunas.
+- `pei.audits` - 14 colunas.
+- `pei.cache` - 3 colunas.
+- `pei.cache_locks` - 3 colunas.
+- `pei.failed_jobs` - 7 colunas.
+- `pei.job_batches` - 10 colunas.
+- `pei.jobs` - 7 colunas.
+- `pei.migrations` - 3 colunas.
+- `pei.password_reset_tokens` - 3 colunas.
+- `pei.personal_access_tokens` - 10 colunas.
+- `pei.sessions` - 6 colunas.
+- `pei.strategic_alerts` - 10 colunas.
+- `pei.system_settings` - 8 colunas.
+- `strategic_planning.tab_analise_ambiental` - 12 colunas.
+- `pei.tab_audit` - 14 colunas.
+- `pei.tab_relatorios_agendados` - 10 colunas.
+- `pei.tab_relatorios_gerados` - 9 colunas.
+- `pei.tab_status` - 2 colunas.
+- `pei.users` - 17 colunas.
 - `risk_management.tab_risco` - 17 colunas.
 - `risk_management.tab_risco_mitigacao` - 11 colunas.
 - `risk_management.tab_risco_objetivo` - 5 colunas.
@@ -851,7 +851,7 @@ Indices:
 - `performance_indicators_tab_meta_por_ano_cod_indicador_num_ano_i`: `CREATE INDEX performance_indicators_tab_meta_por_ano_cod_indicador_num_ano_i ON performance_indicators.tab_meta_por_ano USING btree (cod_indicador, num_ano)`
 - `tab_meta_por_ano_pkey`: `CREATE UNIQUE INDEX tab_meta_por_ano_pkey ON performance_indicators.tab_meta_por_ano USING btree (cod_meta_por_ano)`
 
-#### `public.audits`
+#### `pei.audits`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -875,14 +875,14 @@ Constraints:
 - `CHECK` `2200_599859_4_not_null` coluna ``
 - `CHECK` `2200_599859_5_not_null` coluna ``
 - `CHECK` `2200_599859_6_not_null` coluna ``
-- `PRIMARY KEY` `audits_pkey` coluna `id` -> public.audits.id
+- `PRIMARY KEY` `audits_pkey` coluna `id` -> pei.audits.id
 
 Indices:
-- `audits_auditable_id_auditable_type_index`: `CREATE INDEX audits_auditable_id_auditable_type_index ON public.audits USING btree (auditable_id, auditable_type)`
-- `audits_pkey`: `CREATE UNIQUE INDEX audits_pkey ON public.audits USING btree (id)`
-- `audits_user_id_user_type_index`: `CREATE INDEX audits_user_id_user_type_index ON public.audits USING btree (user_id, user_type)`
+- `audits_auditable_id_auditable_type_index`: `CREATE INDEX audits_auditable_id_auditable_type_index ON pei.audits USING btree (auditable_id, auditable_type)`
+- `audits_pkey`: `CREATE UNIQUE INDEX audits_pkey ON pei.audits USING btree (id)`
+- `audits_user_id_user_type_index`: `CREATE INDEX audits_user_id_user_type_index ON pei.audits USING btree (user_id, user_type)`
 
-#### `public.cache`
+#### `pei.cache`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -894,12 +894,12 @@ Constraints:
 - `CHECK` `2200_599404_1_not_null` coluna ``
 - `CHECK` `2200_599404_2_not_null` coluna ``
 - `CHECK` `2200_599404_3_not_null` coluna ``
-- `PRIMARY KEY` `cache_pkey` coluna `key` -> public.cache.key
+- `PRIMARY KEY` `cache_pkey` coluna `key` -> pei.cache.key
 
 Indices:
-- `cache_pkey`: `CREATE UNIQUE INDEX cache_pkey ON public.cache USING btree (key)`
+- `cache_pkey`: `CREATE UNIQUE INDEX cache_pkey ON pei.cache USING btree (key)`
 
-#### `public.cache_locks`
+#### `pei.cache_locks`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -911,12 +911,12 @@ Constraints:
 - `CHECK` `2200_599412_1_not_null` coluna ``
 - `CHECK` `2200_599412_2_not_null` coluna ``
 - `CHECK` `2200_599412_3_not_null` coluna ``
-- `PRIMARY KEY` `cache_locks_pkey` coluna `key` -> public.cache_locks.key
+- `PRIMARY KEY` `cache_locks_pkey` coluna `key` -> pei.cache_locks.key
 
 Indices:
-- `cache_locks_pkey`: `CREATE UNIQUE INDEX cache_locks_pkey ON public.cache_locks USING btree (key)`
+- `cache_locks_pkey`: `CREATE UNIQUE INDEX cache_locks_pkey ON pei.cache_locks USING btree (key)`
 
-#### `public.failed_jobs`
+#### `pei.failed_jobs`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -936,14 +936,14 @@ Constraints:
 - `CHECK` `2200_599439_5_not_null` coluna ``
 - `CHECK` `2200_599439_6_not_null` coluna ``
 - `CHECK` `2200_599439_7_not_null` coluna ``
-- `PRIMARY KEY` `failed_jobs_pkey` coluna `id` -> public.failed_jobs.id
-- `UNIQUE` `failed_jobs_uuid_unique` coluna `uuid` -> public.failed_jobs.uuid
+- `PRIMARY KEY` `failed_jobs_pkey` coluna `id` -> pei.failed_jobs.id
+- `UNIQUE` `failed_jobs_uuid_unique` coluna `uuid` -> pei.failed_jobs.uuid
 
 Indices:
-- `failed_jobs_pkey`: `CREATE UNIQUE INDEX failed_jobs_pkey ON public.failed_jobs USING btree (id)`
-- `failed_jobs_uuid_unique`: `CREATE UNIQUE INDEX failed_jobs_uuid_unique ON public.failed_jobs USING btree (uuid)`
+- `failed_jobs_pkey`: `CREATE UNIQUE INDEX failed_jobs_pkey ON pei.failed_jobs USING btree (id)`
+- `failed_jobs_uuid_unique`: `CREATE UNIQUE INDEX failed_jobs_uuid_unique ON pei.failed_jobs USING btree (uuid)`
 
-#### `public.job_batches`
+#### `pei.job_batches`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -966,12 +966,12 @@ Constraints:
 - `CHECK` `2200_599429_5_not_null` coluna ``
 - `CHECK` `2200_599429_6_not_null` coluna ``
 - `CHECK` `2200_599429_9_not_null` coluna ``
-- `PRIMARY KEY` `job_batches_pkey` coluna `id` -> public.job_batches.id
+- `PRIMARY KEY` `job_batches_pkey` coluna `id` -> pei.job_batches.id
 
 Indices:
-- `job_batches_pkey`: `CREATE UNIQUE INDEX job_batches_pkey ON public.job_batches USING btree (id)`
+- `job_batches_pkey`: `CREATE UNIQUE INDEX job_batches_pkey ON pei.job_batches USING btree (id)`
 
-#### `public.jobs`
+#### `pei.jobs`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -990,13 +990,13 @@ Constraints:
 - `CHECK` `2200_599419_4_not_null` coluna ``
 - `CHECK` `2200_599419_6_not_null` coluna ``
 - `CHECK` `2200_599419_7_not_null` coluna ``
-- `PRIMARY KEY` `jobs_pkey` coluna `id` -> public.jobs.id
+- `PRIMARY KEY` `jobs_pkey` coluna `id` -> pei.jobs.id
 
 Indices:
-- `jobs_pkey`: `CREATE UNIQUE INDEX jobs_pkey ON public.jobs USING btree (id)`
-- `jobs_queue_index`: `CREATE INDEX jobs_queue_index ON public.jobs USING btree (queue)`
+- `jobs_pkey`: `CREATE UNIQUE INDEX jobs_pkey ON pei.jobs USING btree (id)`
+- `jobs_queue_index`: `CREATE INDEX jobs_queue_index ON pei.jobs USING btree (queue)`
 
-#### `public.migrations`
+#### `pei.migrations`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -1008,12 +1008,12 @@ Constraints:
 - `CHECK` `2200_599379_1_not_null` coluna ``
 - `CHECK` `2200_599379_2_not_null` coluna ``
 - `CHECK` `2200_599379_3_not_null` coluna ``
-- `PRIMARY KEY` `migrations_pkey` coluna `id` -> public.migrations.id
+- `PRIMARY KEY` `migrations_pkey` coluna `id` -> pei.migrations.id
 
 Indices:
-- `migrations_pkey`: `CREATE UNIQUE INDEX migrations_pkey ON public.migrations USING btree (id)`
+- `migrations_pkey`: `CREATE UNIQUE INDEX migrations_pkey ON pei.migrations USING btree (id)`
 
-#### `public.password_reset_tokens`
+#### `pei.password_reset_tokens`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -1024,12 +1024,12 @@ Indices:
 Constraints:
 - `CHECK` `2200_599399_1_not_null` coluna ``
 - `CHECK` `2200_599399_2_not_null` coluna ``
-- `PRIMARY KEY` `password_reset_tokens_pkey` coluna `email` -> public.password_reset_tokens.email
+- `PRIMARY KEY` `password_reset_tokens_pkey` coluna `email` -> pei.password_reset_tokens.email
 
 Indices:
-- `password_reset_tokens_pkey`: `CREATE UNIQUE INDEX password_reset_tokens_pkey ON public.password_reset_tokens USING btree (email)`
+- `password_reset_tokens_pkey`: `CREATE UNIQUE INDEX password_reset_tokens_pkey ON pei.password_reset_tokens USING btree (email)`
 
-#### `public.personal_access_tokens`
+#### `pei.personal_access_tokens`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -1050,16 +1050,16 @@ Constraints:
 - `CHECK` `2200_599879_3_not_null` coluna ``
 - `CHECK` `2200_599879_4_not_null` coluna ``
 - `CHECK` `2200_599879_5_not_null` coluna ``
-- `PRIMARY KEY` `personal_access_tokens_pkey` coluna `id` -> public.personal_access_tokens.id
-- `UNIQUE` `personal_access_tokens_token_unique` coluna `token` -> public.personal_access_tokens.token
+- `PRIMARY KEY` `personal_access_tokens_pkey` coluna `id` -> pei.personal_access_tokens.id
+- `UNIQUE` `personal_access_tokens_token_unique` coluna `token` -> pei.personal_access_tokens.token
 
 Indices:
-- `personal_access_tokens_expires_at_index`: `CREATE INDEX personal_access_tokens_expires_at_index ON public.personal_access_tokens USING btree (expires_at)`
-- `personal_access_tokens_pkey`: `CREATE UNIQUE INDEX personal_access_tokens_pkey ON public.personal_access_tokens USING btree (id)`
-- `personal_access_tokens_token_unique`: `CREATE UNIQUE INDEX personal_access_tokens_token_unique ON public.personal_access_tokens USING btree (token)`
-- `personal_access_tokens_tokenable_type_tokenable_id_index`: `CREATE INDEX personal_access_tokens_tokenable_type_tokenable_id_index ON public.personal_access_tokens USING btree (tokenable_type, tokenable_id)`
+- `personal_access_tokens_expires_at_index`: `CREATE INDEX personal_access_tokens_expires_at_index ON pei.personal_access_tokens USING btree (expires_at)`
+- `personal_access_tokens_pkey`: `CREATE UNIQUE INDEX personal_access_tokens_pkey ON pei.personal_access_tokens USING btree (id)`
+- `personal_access_tokens_token_unique`: `CREATE UNIQUE INDEX personal_access_tokens_token_unique ON pei.personal_access_tokens USING btree (token)`
+- `personal_access_tokens_tokenable_type_tokenable_id_index`: `CREATE INDEX personal_access_tokens_tokenable_type_tokenable_id_index ON pei.personal_access_tokens USING btree (tokenable_type, tokenable_id)`
 
-#### `public.sessions`
+#### `pei.sessions`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -1074,14 +1074,14 @@ Constraints:
 - `CHECK` `2200_599451_1_not_null` coluna ``
 - `CHECK` `2200_599451_5_not_null` coluna ``
 - `CHECK` `2200_599451_6_not_null` coluna ``
-- `PRIMARY KEY` `sessions_pkey` coluna `id` -> public.sessions.id
+- `PRIMARY KEY` `sessions_pkey` coluna `id` -> pei.sessions.id
 
 Indices:
-- `sessions_last_activity_index`: `CREATE INDEX sessions_last_activity_index ON public.sessions USING btree (last_activity)`
-- `sessions_pkey`: `CREATE UNIQUE INDEX sessions_pkey ON public.sessions USING btree (id)`
-- `sessions_user_id_index`: `CREATE INDEX sessions_user_id_index ON public.sessions USING btree (user_id)`
+- `sessions_last_activity_index`: `CREATE INDEX sessions_last_activity_index ON pei.sessions USING btree (last_activity)`
+- `sessions_pkey`: `CREATE UNIQUE INDEX sessions_pkey ON pei.sessions USING btree (id)`
+- `sessions_user_id_index`: `CREATE INDEX sessions_user_id_index ON pei.sessions USING btree (user_id)`
 
-#### `public.strategic_alerts`
+#### `pei.strategic_alerts`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -1103,13 +1103,13 @@ Constraints:
 - `CHECK` `2200_600169_5_not_null` coluna ``
 - `CHECK` `2200_600169_6_not_null` coluna ``
 - `CHECK` `2200_600169_7_not_null` coluna ``
-- `FOREIGN KEY` `strategic_alerts_user_id_foreign` coluna `user_id` -> public.users.id
-- `PRIMARY KEY` `strategic_alerts_pkey` coluna `id` -> public.strategic_alerts.id
+- `FOREIGN KEY` `strategic_alerts_user_id_foreign` coluna `user_id` -> pei.users.id
+- `PRIMARY KEY` `strategic_alerts_pkey` coluna `id` -> pei.strategic_alerts.id
 
 Indices:
-- `strategic_alerts_pkey`: `CREATE UNIQUE INDEX strategic_alerts_pkey ON public.strategic_alerts USING btree (id)`
+- `strategic_alerts_pkey`: `CREATE UNIQUE INDEX strategic_alerts_pkey ON pei.strategic_alerts USING btree (id)`
 
-#### `public.system_settings`
+#### `pei.system_settings`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -1127,14 +1127,14 @@ Constraints:
 - `CHECK` `2200_600156_2_not_null` coluna ``
 - `CHECK` `2200_600156_4_not_null` coluna ``
 - `CHECK` `2200_600156_5_not_null` coluna ``
-- `PRIMARY KEY` `system_settings_pkey` coluna `id` -> public.system_settings.id
-- `UNIQUE` `system_settings_key_unique` coluna `key` -> public.system_settings.key
+- `PRIMARY KEY` `system_settings_pkey` coluna `id` -> pei.system_settings.id
+- `UNIQUE` `system_settings_key_unique` coluna `key` -> pei.system_settings.key
 
 Indices:
-- `system_settings_key_unique`: `CREATE UNIQUE INDEX system_settings_key_unique ON public.system_settings USING btree (key)`
-- `system_settings_pkey`: `CREATE UNIQUE INDEX system_settings_pkey ON public.system_settings USING btree (id)`
+- `system_settings_key_unique`: `CREATE UNIQUE INDEX system_settings_key_unique ON pei.system_settings USING btree (key)`
+- `system_settings_pkey`: `CREATE UNIQUE INDEX system_settings_pkey ON pei.system_settings USING btree (id)`
 
-#### `public.tab_analise_ambiental`
+#### `strategic_planning.tab_analise_ambiental`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -1161,15 +1161,15 @@ Constraints:
 - `CHECK` `2200_599986_9_not_null` coluna ``
 - `FOREIGN KEY` `tab_analise_ambiental_cod_organizacao_foreign` coluna `cod_organizacao`
 - `FOREIGN KEY` `tab_analise_ambiental_cod_pei_foreign` coluna `cod_pei`
-- `PRIMARY KEY` `tab_analise_ambiental_pkey` coluna `cod_analise` -> public.tab_analise_ambiental.cod_analise
+- `PRIMARY KEY` `tab_analise_ambiental_pkey` coluna `cod_analise` -> strategic_planning.tab_analise_ambiental.cod_analise
 
 Indices:
-- `tab_analise_ambiental_cod_organizacao_index`: `CREATE INDEX tab_analise_ambiental_cod_organizacao_index ON public.tab_analise_ambiental USING btree (cod_organizacao)`
-- `tab_analise_ambiental_cod_pei_index`: `CREATE INDEX tab_analise_ambiental_cod_pei_index ON public.tab_analise_ambiental USING btree (cod_pei)`
-- `tab_analise_ambiental_dsc_tipo_analise_dsc_categoria_index`: `CREATE INDEX tab_analise_ambiental_dsc_tipo_analise_dsc_categoria_index ON public.tab_analise_ambiental USING btree (dsc_tipo_analise, dsc_categoria)`
-- `tab_analise_ambiental_pkey`: `CREATE UNIQUE INDEX tab_analise_ambiental_pkey ON public.tab_analise_ambiental USING btree (cod_analise)`
+- `tab_analise_ambiental_cod_organizacao_index`: `CREATE INDEX tab_analise_ambiental_cod_organizacao_index ON strategic_planning.tab_analise_ambiental USING btree (cod_organizacao)`
+- `tab_analise_ambiental_cod_pei_index`: `CREATE INDEX tab_analise_ambiental_cod_pei_index ON strategic_planning.tab_analise_ambiental USING btree (cod_pei)`
+- `tab_analise_ambiental_dsc_tipo_analise_dsc_categoria_index`: `CREATE INDEX tab_analise_ambiental_dsc_tipo_analise_dsc_categoria_index ON strategic_planning.tab_analise_ambiental USING btree (dsc_tipo_analise, dsc_categoria)`
+- `tab_analise_ambiental_pkey`: `CREATE UNIQUE INDEX tab_analise_ambiental_pkey ON strategic_planning.tab_analise_ambiental USING btree (cod_analise)`
 
-#### `public.tab_audit`
+#### `pei.tab_audit`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -1196,16 +1196,16 @@ Constraints:
 - `CHECK` `2200_599716_6_not_null` coluna ``
 - `CHECK` `2200_599716_8_not_null` coluna ``
 - `CHECK` `2200_599716_9_not_null` coluna ``
-- `FOREIGN KEY` `tab_audit_user_id_foreign` coluna `user_id` -> public.users.id
-- `PRIMARY KEY` `tab_audit_pkey` coluna `id` -> public.tab_audit.id
+- `FOREIGN KEY` `tab_audit_user_id_foreign` coluna `user_id` -> pei.users.id
+- `PRIMARY KEY` `tab_audit_pkey` coluna `id` -> pei.tab_audit.id
 
 Indices:
-- `tab_audit_acao_index`: `CREATE INDEX tab_audit_acao_index ON public.tab_audit USING btree (acao)`
-- `tab_audit_pkey`: `CREATE UNIQUE INDEX tab_audit_pkey ON public.tab_audit USING btree (id)`
-- `tab_audit_table_table_id_index`: `CREATE INDEX tab_audit_table_table_id_index ON public.tab_audit USING btree ("table", table_id)`
-- `tab_audit_user_id_index`: `CREATE INDEX tab_audit_user_id_index ON public.tab_audit USING btree (user_id)`
+- `tab_audit_acao_index`: `CREATE INDEX tab_audit_acao_index ON pei.tab_audit USING btree (acao)`
+- `tab_audit_pkey`: `CREATE UNIQUE INDEX tab_audit_pkey ON pei.tab_audit USING btree (id)`
+- `tab_audit_table_table_id_index`: `CREATE INDEX tab_audit_table_table_id_index ON pei.tab_audit USING btree ("table", table_id)`
+- `tab_audit_user_id_index`: `CREATE INDEX tab_audit_user_id_index ON pei.tab_audit USING btree (user_id)`
 
-#### `public.tab_relatorios_agendados`
+#### `pei.tab_relatorios_agendados`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -1227,13 +1227,13 @@ Constraints:
 - `CHECK` `2200_600190_4_not_null` coluna ``
 - `CHECK` `2200_600190_6_not_null` coluna ``
 - `CHECK` `2200_600190_7_not_null` coluna ``
-- `FOREIGN KEY` `tab_relatorios_agendados_user_id_foreign` coluna `user_id` -> public.users.id
-- `PRIMARY KEY` `tab_relatorios_agendados_pkey` coluna `cod_agendamento` -> public.tab_relatorios_agendados.cod_agendamento
+- `FOREIGN KEY` `tab_relatorios_agendados_user_id_foreign` coluna `user_id` -> pei.users.id
+- `PRIMARY KEY` `tab_relatorios_agendados_pkey` coluna `cod_agendamento` -> pei.tab_relatorios_agendados.cod_agendamento
 
 Indices:
-- `tab_relatorios_agendados_pkey`: `CREATE UNIQUE INDEX tab_relatorios_agendados_pkey ON public.tab_relatorios_agendados USING btree (cod_agendamento)`
+- `tab_relatorios_agendados_pkey`: `CREATE UNIQUE INDEX tab_relatorios_agendados_pkey ON pei.tab_relatorios_agendados USING btree (cod_agendamento)`
 
-#### `public.tab_relatorios_gerados`
+#### `pei.tab_relatorios_gerados`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -1252,13 +1252,13 @@ Constraints:
 - `CHECK` `2200_600204_3_not_null` coluna ``
 - `CHECK` `2200_600204_4_not_null` coluna ``
 - `CHECK` `2200_600204_5_not_null` coluna ``
-- `FOREIGN KEY` `tab_relatorios_gerados_user_id_foreign` coluna `user_id` -> public.users.id
-- `PRIMARY KEY` `tab_relatorios_gerados_pkey` coluna `cod_relatorio_gerado` -> public.tab_relatorios_gerados.cod_relatorio_gerado
+- `FOREIGN KEY` `tab_relatorios_gerados_user_id_foreign` coluna `user_id` -> pei.users.id
+- `PRIMARY KEY` `tab_relatorios_gerados_pkey` coluna `cod_relatorio_gerado` -> pei.tab_relatorios_gerados.cod_relatorio_gerado
 
 Indices:
-- `tab_relatorios_gerados_pkey`: `CREATE UNIQUE INDEX tab_relatorios_gerados_pkey ON public.tab_relatorios_gerados USING btree (cod_relatorio_gerado)`
+- `tab_relatorios_gerados_pkey`: `CREATE UNIQUE INDEX tab_relatorios_gerados_pkey ON pei.tab_relatorios_gerados USING btree (cod_relatorio_gerado)`
 
-#### `public.tab_status`
+#### `pei.tab_status`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -1268,12 +1268,12 @@ Indices:
 Constraints:
 - `CHECK` `2200_599870_1_not_null` coluna ``
 - `CHECK` `2200_599870_2_not_null` coluna ``
-- `PRIMARY KEY` `tab_status_pkey` coluna `cod_status` -> public.tab_status.cod_status
+- `PRIMARY KEY` `tab_status_pkey` coluna `cod_status` -> pei.tab_status.cod_status
 
 Indices:
-- `tab_status_pkey`: `CREATE UNIQUE INDEX tab_status_pkey ON public.tab_status USING btree (cod_status)`
+- `tab_status_pkey`: `CREATE UNIQUE INDEX tab_status_pkey ON pei.tab_status USING btree (cod_status)`
 
-#### `public.users`
+#### `pei.users`
 
 | Coluna | Tipo | Nulo | Default |
 |---|---|---|---|
@@ -1304,12 +1304,12 @@ Constraints:
 - `CHECK` `2200_599385_5_not_null` coluna ``
 - `CHECK` `2200_599385_7_not_null` coluna ``
 - `CHECK` `2200_599385_8_not_null` coluna ``
-- `PRIMARY KEY` `users_pkey` coluna `id` -> public.users.id
-- `UNIQUE` `users_email_unique` coluna `email` -> public.users.email
+- `PRIMARY KEY` `users_pkey` coluna `id` -> pei.users.id
+- `UNIQUE` `users_email_unique` coluna `email` -> pei.users.email
 
 Indices:
-- `users_email_unique`: `CREATE UNIQUE INDEX users_email_unique ON public.users USING btree (email)`
-- `users_pkey`: `CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id)`
+- `users_email_unique`: `CREATE UNIQUE INDEX users_email_unique ON pei.users USING btree (email)`
+- `users_pkey`: `CREATE UNIQUE INDEX users_pkey ON pei.users USING btree (id)`
 
 #### `risk_management.tab_risco`
 
@@ -3586,7 +3586,7 @@ Todas as rotas abaixo foram extraidas da colecao real do Laravel. As rotas de ne
 
 ## 18. Auditoria
 
-- Pacote `owen-it/laravel-auditing` habilitado por `config/audit.php`, driver database, tabela `public.audits`.
+- Pacote `owen-it/laravel-auditing` habilitado por `config/audit.php`, driver database, tabela `pei.audits`.
 - Eventos auditados globalmente: `created`, `updated`, `deleted`, `restored`.
 - Fila de auditoria desabilitada; auditoria ocorre de forma sincrona.
 - Console auditing desabilitado.

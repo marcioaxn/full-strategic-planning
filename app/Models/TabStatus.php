@@ -1,4 +1,4 @@
-<?php
+?php
 
 namespace App\Models;
 
@@ -13,7 +13,7 @@ class TabStatus extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_status';
+    protected $table = 'pei.tab_status';
 
     /**
      * Chave primária

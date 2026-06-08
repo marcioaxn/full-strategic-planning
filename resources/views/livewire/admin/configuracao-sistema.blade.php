@@ -1,9 +1,18 @@
-<div>
-    <x-slot name="header">
-        <h2 class="h4 fw-bold mb-0">
-            <i class="bi bi-gear-fill me-2"></i>{{ __('Configurações do Sistema') }}
-        </h2>
-    </x-slot>
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Configurações</li>
+                </ol>
+            </nav>
+            <h2 class="h3 fw-bold mb-0">
+                <i class="bi bi-gear-fill me-2 text-primary"></i>{{ __('Configurações do Sistema') }}
+            </h2>
+        </div>
+    </div>
 
     <div class="row justify-content-center">
         <div class="col-lg-8">

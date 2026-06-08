@@ -56,6 +56,7 @@
     {{-- Filters Card --}}
     <div class="card card-modern filters-card mb-4">
         <div class="card-body p-4">
+            @php $temFiltro = $search !== '' || $filtroAtivo !== 'todos' || $filtroOrganizacao !== ''; @endphp
             <div class="row g-3 align-items-end">
                 <div class="col-12 col-md-5">
                     <label for="user-search" class="form-label-modern">
@@ -75,6 +76,18 @@
                     </div>
                 </div>
 
+                <div class="col-12 col-md-4">
+                    <label for="user-org" class="form-label-modern">
+                        <i class="bi bi-diagram-3 me-2"></i>{{ __('Organização') }}
+                    </label>
+                    <select id="user-org" class="form-select form-select-modern" wire:model.live="filtroOrganizacao">
+                        <option value="">Todas as organizações</option>
+                        @foreach($this->organizacoesOptions as $org)
+                            <option value="{{ $org['id'] }}">{{ $org['label'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <div class="col-12 col-md-3">
                     <label for="user-status" class="form-label-modern">
                         <i class="bi bi-toggle-on me-2"></i>{{ __('Status') }}
@@ -85,18 +98,10 @@
                         <option value="inativos">Inativos</option>
                     </select>
                 </div>
-
-                <div class="col-12 col-md-4">
-                    @if ($search !== '' || $filtroAtivo !== 'todos')
-                        <button type="button" class="btn btn-outline-secondary btn-modern w-100" wire:click="resetFilters">
-                            <i class="bi bi-x-lg me-2"></i>{{ __('Limpar Filtros') }}
-                        </button>
-                    @endif
-                </div>
             </div>
 
-            @if ($search !== '' || $filtroAtivo !== 'todos')
-                <div class="active-filters">
+            @if ($temFiltro)
+                <div class="active-filters mt-3 d-flex align-items-center flex-wrap gap-2">
                     <span class="text-muted small fw-semibold">{{ __('Filtros ativos:') }}</span>
                     @if($search !== '')
                         <button type="button" class="filter-tag filter-tag-primary" wire:click="$set('search', '')">
@@ -105,13 +110,24 @@
                             <i class="bi bi-x"></i>
                         </button>
                     @endif
-                     @if($filtroAtivo !== 'todos')
+                    @if($filtroOrganizacao !== '')
+                        @php $orgLabel = collect($this->organizacoesOptions)->firstWhere('id', $filtroOrganizacao)['label'] ?? $filtroOrganizacao; @endphp
+                        <button type="button" class="filter-tag filter-tag-secondary" wire:click="$set('filtroOrganizacao', '')">
+                            <i class="bi bi-diagram-3"></i>
+                            <span>{{ Str::limit($orgLabel, 24) }}</span>
+                            <i class="bi bi-x"></i>
+                        </button>
+                    @endif
+                    @if($filtroAtivo !== 'todos')
                         <button type="button" class="filter-tag filter-tag-secondary" wire:click="$set('filtroAtivo', 'todos')">
                             <i class="bi bi-toggle-on"></i>
                             <span>{{ ucfirst($filtroAtivo) }}</span>
                             <i class="bi bi-x"></i>
                         </button>
                     @endif
+                    <button type="button" class="btn btn-sm btn-outline-secondary btn-modern ms-auto" wire:click="resetFilters">
+                        <i class="bi bi-x-lg me-1"></i>{{ __('Limpar filtros') }}
+                    </button>
                 </div>
             @endif
         </div>
@@ -199,7 +215,7 @@
                                     <p class="empty-state-text">
                                         {{ __('Tente ajustar seus termos de busca ou filtros.') }}
                                     </p>
-                                    @if ($search !== '' || $filtroAtivo !== 'todos')
+                                    @if ($search !== '' || $filtroAtivo !== 'todos' || $filtroOrganizacao !== '')
                                         <button type="button" class="btn btn-outline-secondary btn-modern" wire:click="resetFilters">
                                             <i class="bi bi-x-lg me-2"></i>{{ __('Limpar filtros') }}
                                         </button>
@@ -290,7 +306,7 @@
     </div>
 
     {{-- Create/Edit Modal --}}
-    <x-dialog-modal wire:key="user-form-modal" wire:model.live="showFormModal" maxWidth="3xl">
+    <x-dialog-modal wire:key="user-form-modal" wire:model.live="showFormModal" maxWidth="4xl">
         <x-slot name="title">
             <div class="modal-header-modern">
                 <div class="icon-circle-mini modal-icon-primary">
@@ -345,95 +361,155 @@
                             @enderror
                         </div>
 
-                        <div class="col-12 col-lg-6">
-                            <label for="password" class="form-label-modern">
-                                {{ __('Senha') }}
-                                @if($editing)
-                                    <span class="text-muted fw-normal small">(Deixe em branco para manter)</span>
-                                @elseif(!$gerarSenhaAutomatica)
-                                    <span class="text-danger">*</span>
-                                @endif
+                        <div class="col-12">
+                            <label class="form-label-modern">
+                                {{ __('Acesso inicial') }}
                             </label>
-                            <input
-                                id="password"
-                                type="password"
-                                class="form-control form-control-modern @error('form.password') is-invalid @enderror"
-                                placeholder="{{ $gerarSenhaAutomatica && !$editing ? 'Será gerada automaticamente' : '********' }}"
-                                wire:model.live="form.password"
-                                @if($gerarSenhaAutomatica && !$editing) disabled @endif
-                            >
-                            @error('form.password')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-
-                            @if(!$gerarSenhaAutomatica || $editing)
-                                <x-password-strength :password="$form['password'] ?? ''" />
-                            @endif
 
                             @if(!$editing)
-                                <div class="mt-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="gerarSenhaAutomatica" wire:model.live="gerarSenhaAutomatica">
-                                        <label class="form-check-label small" for="gerarSenhaAutomatica">
-                                            <i class="bi bi-magic me-1"></i>{{ __('Gerar senha automática') }}
-                                            <x-tooltip title="Sistema cria senha segura e envia por e-mail" />
+                                <div class="row g-2 mb-3">
+                                    <div class="col-12 col-lg-6">
+                                        <label class="form-check border rounded-3 p-3 h-100 {{ $modoSenhaInicial === 'enviar_link' ? 'border-primary bg-primary bg-opacity-10' : 'bg-light' }}" for="modoSenhaEnviarLink">
+                                            <input class="form-check-input" type="radio" id="modoSenhaEnviarLink" value="enviar_link" wire:model.live="modoSenhaInicial">
+                                            <span class="form-check-label fw-semibold">
+                                                <i class="bi bi-envelope-check me-1"></i>{{ __('Enviar boas-vindas com link') }}
+                                            </span>
+                                            <span class="d-block text-muted small mt-1">
+                                                {{ __('O usuario recebe uma mensagem de boas-vindas e cadastra a propria senha pelo link.') }}
+                                            </span>
                                         </label>
                                     </div>
-                                    @if($gerarSenhaAutomatica)
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="enviarEmailBoasVindas" wire:model="enviarEmailBoasVindas">
-                                            <label class="form-check-label small" for="enviarEmailBoasVindas">
-                                                <i class="bi bi-envelope me-1"></i>{{ __('Enviar e-mail de boas-vindas com credenciais') }}
-                                            </label>
-                                        </div>
-                                    @endif
+
+                                    <div class="col-12 col-lg-6">
+                                        <label class="form-check border rounded-3 p-3 h-100 {{ $modoSenhaInicial === 'senha_manual' ? 'border-primary bg-primary bg-opacity-10' : 'bg-light' }}" for="modoSenhaManual">
+                                            <input class="form-check-input" type="radio" id="modoSenhaManual" value="senha_manual" wire:model.live="modoSenhaInicial">
+                                            <span class="form-check-label fw-semibold">
+                                                <i class="bi bi-key me-1"></i>{{ __('Definir senha no cadastro') }}
+                                            </span>
+                                            <span class="d-block text-muted small mt-1">
+                                                {{ __('Use quando desenvolvimento ou homologacao nao permitir envio de e-mail.') }}
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                @if($modoSenhaInicial === 'enviar_link')
+                                    <div class="alert alert-light border small mb-0">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        {{ __('O e-mail nao inclui senha. Ele contem apenas a mensagem de boas-vindas e o link seguro para cadastro da senha.') }}
+                                    </div>
+                                @endif
+                            @endif
+
+                            @if($editing || $modoSenhaInicial === 'senha_manual')
+                                <div class="row g-3">
+                                    <div class="col-12 col-lg-6">
+                                        <label for="password" class="form-label-modern">
+                                            {{ $editing ? __('Nova senha') : __('Senha inicial') }}
+                                            @if($editing)
+                                                <span class="text-muted fw-normal small">(Deixe em branco para manter)</span>
+                                            @else
+                                                <span class="text-danger">*</span>
+                                            @endif
+                                        </label>
+                                        <input
+                                            id="password"
+                                            type="password"
+                                            class="form-control form-control-modern @error('form.password') is-invalid @enderror"
+                                            placeholder="********"
+                                            wire:model.blur="form.password"
+                                        >
+                                        @error('form.password')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-12 col-lg-6">
+                                        <label for="password_confirmation" class="form-label-modern">
+                                            {{ __('Confirmar senha') }}
+                                            @unless($editing)
+                                                <span class="text-danger">*</span>
+                                            @endunless
+                                        </label>
+                                        <input
+                                            id="password_confirmation"
+                                            type="password"
+                                            class="form-control form-control-modern @error('form.password_confirmation') is-invalid @enderror"
+                                            placeholder="********"
+                                            wire:model.blur="form.password_confirmation"
+                                        >
+                                        @error('form.password_confirmation')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-12">
+                                        <x-password-strength :password="$form['password'] ?? ''" />
+                                    </div>
                                 </div>
                             @endif
                         </div>
-
-                        <div class="col-12 col-lg-3">
+                        <div class="col-12 col-md-5">
                             <label for="ativo" class="form-label-modern">{{ __('Status da Conta') }}</label>
-                            <div class="form-check form-switch mt-1">
-                                <input class="form-check-input" type="checkbox" id="ativo" wire:model="form.ativo">
-                                <label class="form-check-label" for="ativo">
-                                    {{ $form['ativo'] ? __('Ativo') : __('Inativo') }}
+                            <div class="form-check form-switch d-flex align-items-center gap-2 mt-2 ps-0">
+                                <input class="form-check-input ms-0" type="checkbox" id="ativo" role="switch" wire:model.live="form.ativo" style="width:2.6em;height:1.35em;">
+                                <label class="form-check-label fw-semibold" for="ativo">
+                                    @if($form['ativo'])
+                                        <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>{{ __('Ativo') }}</span>
+                                    @else
+                                        <span class="text-secondary"><i class="bi bi-dash-circle-fill me-1"></i>{{ __('Inativo') }}</span>
+                                    @endif
                                 </label>
                             </div>
+                            <span class="text-muted small d-block mt-1">{{ __('Usuários inativos não conseguem acessar o sistema.') }}</span>
                         </div>
 
-                        <div class="col-12 col-lg-3">
+                        <div class="col-12 col-md-7">
                             <label for="trocarsenha" class="form-label-modern">
                                 {{ __('Exigir Troca de Senha') }}
-                                <x-tooltip title="0=Não, 1=Primeiro acesso, 2=Sempre" />
                             </label>
                             <select id="trocarsenha" class="form-select form-select-modern" wire:model="form.trocarsenha">
-                                <option value="0">Não</option>
-                                <option value="1">Sim (No próximo login)</option>
-                                <option value="2">Já trocou (Histórico)</option>
+                                <option value="0">Não exigir</option>
+                                <option value="1">Sim — no próximo acesso (recomendado para novos usuários)</option>
+                                <option value="2">Já trocou (registro histórico)</option>
                             </select>
+                            <span class="text-muted small d-block mt-1">{{ __('Define se o usuário deve cadastrar uma nova senha ao entrar.') }}</span>
                         </div>
                     </div>
                 </div>
 
                 {{-- Vínculos --}}
                 <div class="col-12">
-                    <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary">
-                        <i class="bi bi-diagram-3 me-2"></i>{{ __('Vínculos Organizacionais') }}
-                        <x-tooltip title="Cada usuário pode ter perfis diferentes em cada organização" />
+                    @php $totalVinculos = count($form['vinculos']); @endphp
+                    <h6 class="fw-bold border-bottom pb-2 mb-3 d-flex align-items-center gap-2 {{ $errors->has('form.vinculos') ? 'text-danger' : 'text-primary' }}">
+                        <i class="bi bi-diagram-3"></i>{{ __('Vínculos Organizacionais') }}
+                        <span class="text-danger">*</span>
+                        <span class="badge rounded-pill {{ $totalVinculos > 0 ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }} ms-auto">
+                            {{ $totalVinculos }} {{ \Illuminate\Support\Str::plural('vínculo', $totalVinculos) }}
+                        </span>
                     </h6>
-                    
+
                     <div class="alert alert-light border small py-2 mb-3">
                         <i class="bi bi-info-circle me-1"></i>
-                        <strong>Perfis comuns:</strong> <span class="text-muted">Gestor PEI (Visualiza tudo), Gestor Unidade (Gerencia sua área), Responsável (Atualiza indicadores e entregas).</span>
+                        <strong>Obrigatório:</strong>
+                        <span class="text-muted">todo usuário precisa de ao menos uma <strong>organização</strong> e um <strong>perfil de acesso</strong>. Selecione os dois e clique em <strong>"Adicionar vínculo"</strong>. Perfis comuns: Gestor PEI (visualiza tudo), Gestor Unidade (gerencia sua área), Responsável (atualiza indicadores e entregas).</span>
                     </div>
-                    
-                    <div class="card bg-light border-0 mb-3">
+
+                    {{-- Erro de obrigatoriedade dos vínculos --}}
+                    @error('form.vinculos')
+                        <div class="alert alert-danger d-flex align-items-start gap-2 py-2 mb-3">
+                            <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+                            <span class="small">{{ $message }}</span>
+                        </div>
+                    @enderror
+
+                    <div class="card border-0 mb-3 {{ $errors->has('form.vinculos') ? 'bg-danger-subtle' : 'bg-light' }}">
                         <div class="card-body p-3">
                             <div class="row g-2 align-items-end">
                                 <div class="col-12 col-md-5">
                                     <label class="form-label-modern small mb-1">{{ __('Organização') }}</label>
-                                    <select class="form-select form-select-modern form-select-sm" wire:model="vinculoTemporario.org_id">
-                                        <option value="">Selecione...</option>
+                                    <select class="form-select form-select-modern @error('vinculoTemporario.org_id') is-invalid @enderror" wire:model="vinculoTemporario.org_id">
+                                        <option value="">Selecione a organização...</option>
                                         @foreach($this->organizacoesOptions as $org)
                                             <option value="{{ $org['id'] }}">{{ $org['label'] }}</option>
                                         @endforeach
@@ -441,55 +517,65 @@
                                 </div>
                                 <div class="col-12 col-md-5">
                                     <label class="form-label-modern small mb-1">{{ __('Perfil de Acesso') }}</label>
-                                    <select class="form-select form-select-modern form-select-sm" wire:model="vinculoTemporario.perfil_id">
-                                        <option value="">Selecione...</option>
+                                    <select class="form-select form-select-modern @error('vinculoTemporario.perfil_id') is-invalid @enderror" wire:model="vinculoTemporario.perfil_id">
+                                        <option value="">Selecione o perfil...</option>
                                         @foreach($this->perfisOptions as $perfil)
                                             <option value="{{ $perfil['id'] }}">{{ $perfil['label'] }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="col-12 col-md-2">
-                                    <button type="button" class="btn btn-primary btn-sm w-100 gradient-theme-btn" wire:click="adicionarVinculo">
-                                        <i class="bi bi-plus-lg"></i>
+                                    <button type="button" class="btn btn-primary w-100 gradient-theme-btn" wire:click="adicionarVinculo" wire:loading.attr="disabled" wire:target="adicionarVinculo">
+                                        <i class="bi bi-plus-lg me-1"></i><span class="d-md-none d-lg-inline">Adicionar</span>
                                     </button>
                                 </div>
                             </div>
                             @error('vinculoTemporario')
-                                <div class="text-danger small mt-2">{{ $message }}</div>
+                                <div class="text-danger small mt-2"><i class="bi bi-x-circle me-1"></i>{{ $message }}</div>
                             @enderror
+
+                            {{-- Aviso reativo: seleção feita, mas ainda não adicionada à lista --}}
+                            @if($this->temVinculoPendente)
+                                <div class="d-flex align-items-center gap-2 mt-2 px-2 py-1 rounded-2 bg-warning-subtle text-warning-emphasis small">
+                                    <i class="bi bi-arrow-up-circle-fill"></i>
+                                    <span>Você selecionou um vínculo. Clique em <strong>"Adicionar vínculo"</strong> para incluí-lo na lista abaixo.</span>
+                                </div>
+                            @endif
                         </div>
                     </div>
 
-                    <div class="table-responsive border rounded-3 bg-white" style="max-height: 200px; overflow-y: auto;">
-                        <table class="table table-sm table-hover mb-0">
-                            <thead class="table-light sticky-top">
-                                <tr>
-                                    <th class="ps-3">{{ __('Organização') }}</th>
-                                    <th>{{ __('Perfil') }}</th>
-                                    <th class="text-end pe-3" style="width: 50px;">{{ __('Ação') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($form['vinculos'] as $index => $vinculo)
+                    {{-- Lista de vínculos adicionados --}}
+                    @if($totalVinculos > 0)
+                        <div class="table-responsive border rounded-3 bg-white" style="max-height: 220px; overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light sticky-top">
                                     <tr>
-                                        <td class="ps-3">{{ $vinculo['org_label'] }}</td>
-                                        <td>{{ $vinculo['perfil_label'] }}</td>
-                                        <td class="text-end pe-3">
-                                            <button type="button" class="btn btn-link text-danger p-0" wire:click="removerVinculo({{ $index }})">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </td>
+                                        <th class="ps-3"><i class="bi bi-building me-1"></i>{{ __('Organização') }}</th>
+                                        <th><i class="bi bi-person-badge me-1"></i>{{ __('Perfil') }}</th>
+                                        <th class="text-end pe-3" style="width: 60px;">{{ __('Ação') }}</th>
                                     </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="3" class="text-center text-muted small py-3">
-                                            {{ __('Nenhum vínculo adicionado.') }}
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    @foreach($form['vinculos'] as $index => $vinculo)
+                                        <tr wire:key="vinculo-{{ $index }}">
+                                            <td class="ps-3 fw-semibold">{{ $vinculo['org_label'] }}</td>
+                                            <td><span class="badge bg-primary-subtle text-primary">{{ $vinculo['perfil_label'] }}</span></td>
+                                            <td class="text-end pe-3">
+                                                <button type="button" class="btn btn-sm btn-link text-danger p-0" wire:click="removerVinculo({{ $index }})" title="Remover vínculo">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="text-center border border-2 border-dashed rounded-3 py-4 px-3 {{ $errors->has('form.vinculos') ? 'border-danger text-danger' : 'text-muted' }}">
+                            <i class="bi bi-diagram-3 d-block mb-2" style="font-size:1.6rem;opacity:.5;"></i>
+                            <p class="mb-0 small">Nenhum vínculo adicionado ainda.<br>Selecione uma organização e um perfil acima e clique em <strong>"Adicionar vínculo"</strong>.</p>
+                        </div>
+                    @endif
                 </div>
             </div>
         </x-slot>
@@ -557,4 +643,30 @@
             </x-danger-button>
         </x-slot>
     </x-confirmation-modal>
+
+    <x-dialog-modal wire:key="user-transaction-modal" wire:model.live="showTransactionModal" maxWidth="md">
+        <x-slot name="title">
+            <div class="modal-header-modern">
+                <div class="icon-circle-mini {{ $transactionStyle === 'success' ? 'modal-icon-primary' : 'modal-icon-danger' }}">
+                    <i class="bi bi-{{ $transactionStyle === 'success' ? 'check-circle' : 'exclamation-triangle' }}"></i>
+                </div>
+                <div>
+                    <h5 class="mb-1 fw-bold">{{ $transactionTitle }}</h5>
+                    <p class="text-muted small mb-0">
+                        {{ $transactionStyle === 'success' ? __('Operacao confirmada pelo sistema') : __('A operacao nao foi concluida') }}
+                    </p>
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="content">
+            <p class="mb-0">{{ $transactionMessage }}</p>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-button type="button" wire:click="$set('showTransactionModal', false)" class="btn-save-modern">
+                {{ __('Entendi') }}
+            </x-button>
+        </x-slot>
+    </x-dialog-modal>
 </div>

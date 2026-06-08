@@ -1,281 +1,175 @@
 <x-guest-layout>
-    <div class="auth-full-page d-flex flex-column flex-lg-row">
-        
-        {{-- Coluna Esquerda: Visual & Inspiração --}}
-        <div class="auth-visual d-none d-lg-flex flex-column justify-content-between p-5 text-white">
-            <div class="auth-logo-wrapper animate-fade-in-down">
-                <a href="/" class="d-flex align-items-center text-decoration-none text-white">
-                    <div class="icon-circle bg-white bg-opacity-20 backdrop-blur me-3">
-                        <i class="bi bi-diagram-3 fs-3"></i>
+<div class="lp-login">
+
+    {{-- Blobs decorativos --}}
+    <div class="lp-blob" style="width:520px;height:520px;background:#4361EE;top:-140px;right:-100px;filter:blur(90px);opacity:.18;"></div>
+    <div class="lp-blob" style="width:380px;height:380px;background:#e07b39;bottom:40px;left:30%;filter:blur(80px);opacity:.15;"></div>
+    <div class="lp-blob" style="width:260px;height:260px;background:#22a06b;top:38%;left:-70px;filter:blur(70px);opacity:.2;"></div>
+
+    {{-- Painel institucional (esquerda) --}}
+    @include('auth.partials.auth-left-panel', [
+        'tituloHtml' => 'Crie sua conta e<br>planeje com<br><span>metodologia</span>.',
+        'lead' => 'Junte-se aos gestores que utilizam o sistema para governança estratégica e monitoramento em tempo real. Defina uma senha forte — os requisitos são validados automaticamente.',
+    ])
+
+    {{-- Formulário (direita) --}}
+    <div class="lp-login-right d-flex align-items-center justify-content-center p-4 p-lg-5">
+        <div class="lp-login-card">
+
+            {{-- Logo mobile --}}
+            <div class="d-xl-none text-center mb-4">
+                <div class="d-inline-flex align-items-center gap-2 mb-1">
+                    <div style="width:38px;height:38px;background:linear-gradient(135deg,#1a3a5c,#1B408E);border-radius:.75rem;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-diagram-3 text-white"></i>
                     </div>
-                    <div>
-                        <h4 class="fw-bold mb-0 tracking-tight">SEAE</h4>
-                        <small class="opacity-75 text-uppercase letter-spacing-1" style="font-size: 0.65rem;">Sistema de Gestão Estratégica</small>
-                    </div>
+                    <span class="fw-bold" style="font-size:1.1rem;color:#0d1b2e;letter-spacing:-.02em;">SEAE</span>
+                </div>
+            </div>
+
+            {{-- Cabeçalho --}}
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h2 class="lp-form-title mb-1">Criar sua conta</h2>
+                    <p class="text-muted mb-0" style="font-size:.88rem;line-height:1.5;">Preencha os dados para iniciar.</p>
+                </div>
+                <a href="{{ url('/') }}" class="btn btn-sm rounded-pill px-3 ms-3 flex-shrink-0"
+                   style="font-size:.75rem;border:1.5px solid #e2e8f0;color:#64748b;background:#f8fafc;white-space:nowrap;font-weight:600;">
+                    <i class="bi bi-arrow-left me-1"></i>Início
                 </a>
             </div>
 
-            <div class="auth-quote animate-fade-in">
-                <h1 class="display-4 fw-bold mb-4">Transforme sua visão em <span class="text-warning">resultados</span> concretos.</h1>
-                <p class="lead opacity-75">Junte-se a centenas de gestores que utilizam o SEAE para governança de alto nível e monitoramento estratégico em tempo real.</p>
-                
-                <div class="mt-5 d-flex gap-4">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-shield-check fs-4 text-warning"></i>
-                        <span class="small fw-medium">Segurança de Dados</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-lightning-charge fs-4 text-warning"></i>
-                        <span class="small fw-medium">Alta Performance</span>
+            {{-- Erros --}}
+            @if ($errors->any())
+                <div class="lp-alert lp-alert-error mb-4" id="regErros">
+                    <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
+                    <div>
+                        @foreach ($errors->all() as $erro)
+                            <div>{{ $erro }}</div>
+                        @endforeach
                     </div>
                 </div>
-            </div>
+            @endif
 
-            <div class="auth-footer-visual animate-fade-in-up">
-                <p class="small opacity-50 mb-0">&copy; {{ date('Y') }} Strategic Planning System. Todos os direitos reservados.</p>
-            </div>
-        </div>
+            <form method="POST" action="{{ route('register') }}" id="registerForm" data-pwd-scope>
+                @csrf
 
-        {{-- Coluna Direita: Formulário --}}
-        <div class="auth-form-container d-flex align-items-center justify-content-center p-4 p-lg-5 bg-body">
-            <div class="auth-form-card animate-fade-in-right">
-                
-                <div class="mb-5">
-                    <h2 class="fw-800 text-dark mb-2">Criar sua conta</h2>
-                    <p class="text-muted">Preencha os dados abaixo para iniciar sua jornada estratégica.</p>
+                {{-- Nome --}}
+                <div class="mb-4">
+                    <label class="lp-field-label" for="name">Nome Completo</label>
+                    <div class="lp-field-wrap">
+                        <i class="bi bi-person lp-field-icon"></i>
+                        <input type="text" name="name" id="name"
+                               class="lp-field-input @error('name') lp-field-error @enderror"
+                               value="{{ old('name') }}" placeholder="Seu nome completo" required autofocus
+                               autocomplete="name" data-pwd-require-filled>
+                    </div>
                 </div>
 
-                <x-validation-errors class="mb-4 alert-modern" />
-
-                <form method="POST" action="{{ route('register') }}" id="registerForm">
-                    @csrf
-
-                    {{-- Nome --}}
-                    <div class="mb-4">
-                        <label class="form-label-premium">Nome Completo</label>
-                        <div class="input-group-premium">
-                            <i class="bi bi-person"></i>
-                            <input type="text" name="name" class="form-control" value="{{ old('name') }}" placeholder="Digite seu nome completo" required autofocus autocomplete="name">
-                        </div>
+                {{-- E-mail --}}
+                <div class="mb-4">
+                    <label class="lp-field-label" for="email">E-mail Corporativo</label>
+                    <div class="lp-field-wrap">
+                        <i class="bi bi-envelope lp-field-icon"></i>
+                        <input type="email" name="email" id="email"
+                               class="lp-field-input @error('email') lp-field-error @enderror"
+                               value="{{ old('email') }}" placeholder="seu@orgao.gov.br" required
+                               autocomplete="username" data-pwd-require-filled>
                     </div>
+                </div>
 
-                    {{-- E-mail --}}
-                    <div class="mb-4">
-                        <label class="form-label-premium">E-mail Corporativo</label>
-                        <div class="input-group-premium">
-                            <i class="bi bi-envelope"></i>
-                            <input type="email" name="email" class="form-control" value="{{ old('email') }}" placeholder="joao@organizacao.com" required autocomplete="username">
-                        </div>
-                    </div>
-
-                    {{-- Senha --}}
-                    <div class="mb-4">
-                        <label class="form-label-premium">Senha de Acesso</label>
-                        <div class="input-group-premium">
-                            <i class="bi bi-lock"></i>
-                            <input type="password" name="password" id="password" class="form-control" style="padding-right: 3rem;" placeholder="Mínimo 8 caracteres" required autocomplete="new-password">
-                            <button type="button" class="btn-password-toggle" onclick="togglePassword('password')" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); z-index: 10;">
-                                <i class="bi bi-eye" style="position: static; opacity: 1;"></i>
-                            </button>
-                        </div>
-                        {{-- Indicador de força da senha --}}
-                        <div class="password-strength-meter mt-2">
-                            <div class="meter-bar"><div class="meter-fill" id="strength-fill"></div></div>
-                            <small class="text-muted x-small" id="strength-text">Segurança da senha</small>
-                        </div>
-                    </div>
-
-                    {{-- Confirmar Senha --}}
-                    <div class="mb-4">
-                        <label class="form-label-premium">Confirmar Senha</label>
-                        <div class="input-group-premium">
-                            <i class="bi bi-shield-lock"></i>
-                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" style="padding-right: 3rem;" placeholder="Repita sua senha" required autocomplete="new-password">
-                            <button type="button" class="btn-password-toggle" onclick="togglePassword('password_confirmation')" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); z-index: 10;">
-                                <i class="bi bi-eye" style="position: static; opacity: 1;"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    {{-- Termos e Condições --}}
-                    @if (Laravel\Jetstream\Jetstream::hasTermsAndPrivacyPolicyFeature())
-                        <div class="mb-4">
-                            <div class="form-check form-check-premium">
-                                <input class="form-check-input" type="checkbox" name="terms" id="terms" required>
-                                <label class="form-check-label small text-muted" for="terms">
-                                    {!! __('Eu li e concordo com os :terms_of_service e :privacy_policy', [
-                                            'terms_of_service' => '<a target="_blank" href="'.route('terms.show').'" class="text-primary text-decoration-none fw-bold">Termos de Uso</a>',
-                                            'privacy_policy' => '<a target="_blank" href="'.route('policy.show').'" class="text-primary text-decoration-none fw-bold">Política de Privacidade</a>',
-                                    ]) !!}
-                                </label>
-                            </div>
-                        </div>
-                    @endif
-
-                    <div class="d-grid mb-4">
-                        <button type="submit" class="btn btn-primary btn-lg rounded-pill gradient-theme-btn py-3 shadow-lg hover-scale">
-                            <i class="bi bi-person-plus-fill me-2"></i> {{ __('Finalizar Cadastro') }}
+                {{-- Senha --}}
+                <div class="mb-3">
+                    <label class="lp-field-label" for="password">Senha de Acesso</label>
+                    <div class="lp-field-wrap">
+                        <i class="bi bi-lock lp-field-icon"></i>
+                        <input type="password" name="password" id="password"
+                               class="lp-field-input @error('password') lp-field-error @enderror"
+                               placeholder="Crie uma senha forte" required autocomplete="new-password"
+                               data-pwd-input>
+                        <button type="button" class="lp-pass-toggle" onclick="lpToggleField('password','icPwd')" title="Mostrar/ocultar">
+                            <i class="bi bi-eye" id="icPwd"></i>
                         </button>
                     </div>
+                    @include('auth.partials.password-checklist')
+                </div>
 
-                    <div class="text-center">
-                        <span class="text-muted small">Já possui uma conta?</span>
-                        <a href="{{ route('login') }}" class="text-primary small fw-bold text-decoration-none ms-1 hover-underline">
-                            Fazer Login
-                        </a>
+                {{-- Confirmar senha --}}
+                <div class="mb-4">
+                    <label class="lp-field-label" for="password_confirmation">Confirmar Senha</label>
+                    <div class="lp-field-wrap">
+                        <i class="bi bi-shield-lock lp-field-icon"></i>
+                        <input type="password" name="password_confirmation" id="password_confirmation"
+                               class="lp-field-input" placeholder="Repita sua senha" required
+                               autocomplete="new-password" data-pwd-confirm>
+                        <button type="button" class="lp-pass-toggle" onclick="lpToggleField('password_confirmation','icPwdC')" title="Mostrar/ocultar">
+                            <i class="bi bi-eye" id="icPwdC"></i>
+                        </button>
                     </div>
-                </form>
+                </div>
+
+                {{-- Termos --}}
+                @if (Laravel\Jetstream\Jetstream::hasTermsAndPrivacyPolicyFeature())
+                <div class="mb-4">
+                    <label class="d-flex align-items-start gap-2" style="cursor:pointer;user-select:none;">
+                        <input type="checkbox" name="terms" id="terms" required
+                               class="form-check-input m-0 mt-1" style="width:1.05rem;height:1.05rem;flex-shrink:0;border-color:#cbd5e1;border-radius:.3rem;">
+                        <span style="font-size:.82rem;color:#64748b;font-weight:500;line-height:1.45;">
+                            {!! __('Li e concordo com os :terms e a :policy', [
+                                'terms' => '<a target="_blank" href="'.route('terms.show').'" style="color:#1B408E;font-weight:700;text-decoration:none;">Termos de Uso</a>',
+                                'policy' => '<a target="_blank" href="'.route('policy.show').'" style="color:#1B408E;font-weight:700;text-decoration:none;">Política de Privacidade</a>',
+                            ]) !!}
+                        </span>
+                    </label>
+                </div>
+                @endif
+
+                {{-- Botão --}}
+                <button type="submit" class="lp-submit-btn w-100 mb-4" id="registerButton" data-pwd-submit disabled>
+                    <span class="lp-btn-text" style="display:flex;align-items:center;gap:.5rem;">
+                        <i class="bi bi-person-plus-fill"></i>Finalizar Cadastro
+                    </span>
+                    <span class="lp-btn-loading" style="display:none;align-items:center;gap:.5rem;">
+                        <span class="spinner-border spinner-border-sm"></span>Cadastrando...
+                    </span>
+                </button>
+
+                <p class="text-center mb-0" style="font-size:.85rem;color:#64748b;">
+                    Já possui uma conta?
+                    <a href="{{ route('login') }}" style="color:#1B408E;font-weight:700;text-decoration:none;">Fazer login</a>
+                </p>
+            </form>
+
+            {{-- Selo --}}
+            <div class="lp-secure-seal">
+                <i class="bi bi-shield-check" style="color:#22a06b;font-size:1rem;flex-shrink:0;"></i>
+                <span style="font-size:.72rem;color:#64748b;font-weight:500;">Conexão segura · criptografia ponta a ponta</span>
             </div>
         </div>
     </div>
+</div>
 
-    <style>
-        /* Layout Geral */
-        .auth-full-page { min-height: 100vh; overflow-x: hidden; }
-        
-        .auth-visual {
-            width: 45%;
-            background: linear-gradient(135deg, #1B408E 0%, #4361EE 100%), 
-                        url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
-            background-blend-mode: multiply;
-            background-size: cover;
-            background-position: center;
-            position: relative;
-        }
+@include('auth.partials.auth-styles')
+@include('auth.partials.password-script')
 
-        .auth-form-container { width: 55%; flex-grow: 1; }
-        .auth-form-card { width: 100%; max-width: 480px; }
+<script>
+    (function () {
+        var form = document.getElementById('registerForm');
+        var btn  = document.getElementById('registerButton');
+        if (!form || !btn) return;
+        var txt = btn.querySelector('.lp-btn-text');
+        var load = btn.querySelector('.lp-btn-loading');
 
-        @media (max-width: 991.98px) {
-            .auth-form-container { width: 100%; }
-        }
+        @if ($errors->any())
+            var box = document.getElementById('regErros');
+            if (box) { box.classList.add('lp-shake'); setTimeout(function(){ box.classList.remove('lp-shake'); }, 500); }
+        @endif
 
-        /* Tipografia */
-        .fw-800 { font-weight: 800; }
-        .letter-spacing-1 { letter-spacing: 1px; }
-        .tracking-tight { letter-spacing: -1px; }
-
-        /* Estilos de Formulário Premium */
-        .form-label-premium {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--bs-secondary);
-            margin-bottom: 0.5rem;
-            letter-spacing: 0.5px;
-        }
-
-        .input-group-premium {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .input-group-premium i:not(.btn-password-toggle i) {
-            position: absolute;
-            left: 1rem;
-            color: var(--bs-primary);
-            font-size: 1.1rem;
-            opacity: 0.7;
-            z-index: 5;
-        }
-
-        .input-group-premium .form-control {
-            padding: 0.8rem 1rem 0.8rem 3rem;
-            border-radius: 12px;
-            border: 2px solid rgba(0,0,0,0.05);
-            background-color: rgba(var(--bs-body-color-rgb), 0.03);
-            font-weight: 500;
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-
-        .input-group-premium .form-control:focus {
-            border-color: var(--bs-primary);
-            background-color: #fff;
-            box-shadow: 0 10px 20px rgba(var(--bs-primary-rgb), 0.08);
-        }
-
-        [data-bs-theme="dark"] .input-group-premium .form-control {
-            background-color: rgba(255,255,255,0.05);
-            border-color: rgba(255,255,255,0.1);
-            color: #fff;
-        }
-
-        .btn-password-toggle {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: var(--bs-secondary);
-            cursor: pointer;
-            padding: 0.25rem;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        
-        .btn-password-toggle i {
-            position: static !important;
-            opacity: 1 !important;
-            font-size: 1.25rem !important;
-        }
-
-        /* Meter de Senha */
-        .password-strength-meter { height: 4px; width: 100%; }
-        .meter-bar { height: 4px; background: #eee; border-radius: 10px; overflow: hidden; }
-        .meter-fill { height: 100%; width: 0; transition: all 0.3s ease; }
-
-        /* Checkbox Premium */
-        .form-check-premium .form-check-input { width: 1.2rem; height: 1.2rem; margin-top: 0.1rem; cursor: pointer; }
-
-        /* Animações */
-        .animate-fade-in-right { animation: fadeInRight 0.6s ease-out; }
-        @keyframes fadeInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        
-        .backdrop-blur { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-        .hover-scale:hover { transform: scale(1.02); }
-    </style>
-
-    <script>
-        function togglePassword(id) {
-            const input = document.getElementById(id);
-            const btn = input.nextElementSibling;
-            const icon = btn.querySelector('i');
-
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.replace('bi-eye', 'bi-eye-slash');
-            } else {
-                input.type = 'password';
-                icon.classList.replace('bi-eye-slash', 'bi-eye');
-            }
-        }
-
-        // Simples detector de força de senha
-        document.getElementById('password').addEventListener('input', function(e) {
-            const val = e.target.value;
-            const fill = document.getElementById('strength-fill');
-            const text = document.getElementById('strength-text');
-            
-            let strength = 0;
-            if(val.length > 5) strength += 25;
-            if(val.match(/[A-Z]/)) strength += 25;
-            if(val.match(/[0-9]/)) strength += 25;
-            if(val.match(/[^A-Za-z0-9]/)) strength += 25;
-
-            const colors = ['#dc3545', '#ffc107', '#0dcaf0', '#198754'];
-            const labels = ['Fraca', 'Média', 'Boa', 'Excelente'];
-            const idx = Math.max(0, Math.floor(strength/26));
-
-            fill.style.width = strength + '%';
-            fill.style.backgroundColor = colors[idx];
-            text.innerText = val.length > 0 ? 'Segurança: ' + labels[idx] : 'Segurança da senha';
+        form.addEventListener('submit', function () {
+            if (btn.disabled || !form.checkValidity()) return;
+            if (txt)  txt.style.display = 'none';
+            if (load) load.style.display = 'flex';
+            setTimeout(function () { btn.disabled = true; }, 0);
         });
-    </script>
+    })();
+</script>
 </x-guest-layout>

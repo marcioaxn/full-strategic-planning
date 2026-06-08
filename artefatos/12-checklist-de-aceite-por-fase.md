@@ -34,10 +34,10 @@
 
 ## Fase 7 — Aceite Landing Page + Perfis
 
-- [ ] Rota `/` exibe landing page pública (não o Mapa Estratégico)
-- [ ] Usuários autenticados redirecionados de `/` para `/dashboard`
-- [ ] Tela `/admin/perfis` funcional com tabela de permissões
-- [ ] Função de impersonate operacional para `adm=true`
+- [x] Rota `/` exibe landing page pública (não o Mapa Estratégico) — `App\Livewire\LandingPage`
+- [x] Usuários autenticados redirecionados de `/` para `/dashboard` — `LandingPage::mount()`
+- [x] Tela `/admin/perfis` funcional com tabela de permissões — `App\Livewire\Admin\GestaoPerfis`
+- [x] Função de impersonate operacional para `adm=true` — `App\Http\Controllers\ImpersonateController`
 
 ## Fase 8 — Aceite Complementos
 

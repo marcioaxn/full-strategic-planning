@@ -12,11 +12,12 @@ return new class extends Migration
     {
         // Criar schemas para separação de domínios
         $schemas = [
+            'pei',
             'strategic_planning',
             'action_plan',
             'performance_indicators',
             'risk_management',
-            'organization'
+            'organization',
         ];
 
         foreach ($schemas as $schema) {
@@ -31,11 +32,12 @@ return new class extends Migration
     {
         // Remover schemas (CASCADE para remover todas as tabelas dentro deles)
         $schemas = [
+            'pei',
             'strategic_planning',
             'action_plan',
             'performance_indicators',
             'risk_management',
-            'organization'
+            'organization',
         ];
 
         foreach ($schemas as $schema) {

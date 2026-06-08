@@ -81,17 +81,16 @@ cd planejamento-estrategico
 composer install
 npm install
 
-# 3. Ambiente
-cp .env.example .env          # Windows: copy .env.example .env
-php artisan key:generate
-
-# 4. Configurar o banco no .env
+# 3. Crie o arquivo .env na raiz e configure ao menos a conexão do banco:
 #    DB_CONNECTION=pgsql
 #    DB_HOST=127.0.0.1
 #    DB_PORT=5432
 #    DB_DATABASE=planejamento_estrategico
 #    DB_USERNAME=postgres
 #    DB_PASSWORD=sua_senha
+
+# 4. Gerar a chave da aplicação (requer o .env já criado)
+php artisan key:generate
 
 # 5. Migrations + dados iniciais
 php artisan migrate --seed

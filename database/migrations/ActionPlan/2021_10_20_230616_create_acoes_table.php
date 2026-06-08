@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('action_plan.acoes', function (Blueprint $table) {
             $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->string('table_id')->nullable(false);
-            $table->foreignUuid('user_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->foreignUuid('user_id')->references('id')->on('pei.users')->cascadeOnDelete();
             $table->string('table')->nullable(false);
             $table->text('acao')->nullable(false);
             $table->timestamps();

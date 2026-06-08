@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tab_status', function (Blueprint $table) {
+        Schema::create('pei.tab_status', function (Blueprint $table) {
             $table->uuid('cod_status')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->text('dsc_status')->nullable(false);
         });
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tab_status');
+        Schema::dropIfExists('pei.tab_status');
     }
 };

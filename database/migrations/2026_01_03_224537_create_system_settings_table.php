@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('system_settings', function (Blueprint $table) {
+        Schema::create('pei.system_settings', function (Blueprint $table) {
             $table->id();
             $table->string('key')->unique();
             $table->text('value')->nullable();
@@ -23,7 +23,7 @@ return new class extends Migration
         });
 
         // Inserir configurações padrão iniciais
-        DB::table('system_settings')->insert([
+        DB::table('pei.system_settings')->insert([
             [
                 'key' => 'ai_enabled',
                 'value' => '1', // True
@@ -50,7 +50,7 @@ return new class extends Migration
                 'description' => 'Chave de API do provedor de IA selecionado',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
+            ],
         ]);
     }
 
@@ -59,6 +59,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('system_settings');
+        Schema::dropIfExists('pei.system_settings');
     }
 };

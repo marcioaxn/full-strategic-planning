@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -19,7 +19,7 @@ return new class extends Migration
             $table->uuid('cod_plano_de_acao')->nullable();
             $table->uuid('cod_perfil');
             
-            $table->foreign('user_id', 'fk_uopp_user')->references('id')->on('users')->cascadeOnDelete();
+            $table->foreign('user_id', 'fk_uopp_user')->references('id')->on('pei.users')->cascadeOnDelete();
             $table->foreign('cod_organizacao', 'fk_uopp_org')->references('cod_organizacao')->on('organization.tab_organizacoes')->cascadeOnDelete();
             $table->foreign('cod_plano_de_acao', 'fk_uopp_plano')->references('cod_plano_de_acao')->on('action_plan.tab_plano_de_acao')->cascadeOnDelete();
             $table->foreign('cod_perfil', 'fk_uopp_perfil')->references('cod_perfil')->on('organization.tab_perfil_acesso')->cascadeOnDelete();

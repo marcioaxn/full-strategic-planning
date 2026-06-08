@@ -13,8 +13,9 @@ return new class extends Migration
     public function up(): void
     {
         DB::statement('CREATE EXTENSION IF NOT EXISTS "pgcrypto";');
+        DB::statement('CREATE SCHEMA IF NOT EXISTS pei;');
 
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('pei.users', function (Blueprint $table) {
             $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->string('name');
             $table->string('email')->unique();
@@ -32,7 +33,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
+        Schema::create('pei.password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
@@ -44,7 +45,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('pei.users');
+        Schema::dropIfExists('pei.password_reset_tokens');
     }
 };
