@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use Illuminate\Console\Events\CommandStarting;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
@@ -12,6 +15,20 @@ use App\Observers\EntregaObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
+    /**
+     * Comandos de migrate que exigem que os schemas já existam antes de rodar.
+     * O evento CommandStarting dispara antes de qualquer handle(), portanto
+     * antes de o Migrator tentar criar a tabela "migrations".
+     */
+    private const MIGRATE_COMMANDS = [
+        'migrate',
+        'migrate:fresh',
+        'migrate:refresh',
+        'migrate:reset',
+        'migrate:install',
+        'migrate:run',
+    ];
+
     /**
      * Register any application services.
      */
@@ -25,6 +42,32 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Auto-criação dos schemas PostgreSQL antes de qualquer comando migrate.
+        // Resolve o erro "no schema has been selected to create in" que ocorre
+        // no primeiro migrate de um projeto recém-clonado, quando o schema "pei"
+        // (e os demais do search_path) ainda não existem no banco.
+        Event::listen(CommandStarting::class, function (CommandStarting $event) {
+            if (! in_array($event->command, self::MIGRATE_COMMANDS, true)) {
+                return;
+            }
+
+            $connection = config('database.default');
+
+            if (config("database.connections.{$connection}.driver") !== 'pgsql') {
+                return;
+            }
+
+            $schemas = config("database.connections.{$connection}.search_path", []);
+
+            foreach ((array) $schemas as $schema) {
+                try {
+                    DB::connection($connection)->statement("CREATE SCHEMA IF NOT EXISTS \"{$schema}\"");
+                } catch (\Throwable) {
+                    // Silencia erros de permissão ou conexão; o migrate dará
+                    // mensagem de erro mais clara se o banco for inacessível.
+                }
+            }
+        });
 
         \Illuminate\Support\Facades\Schema::defaultStringLength(191);
     
