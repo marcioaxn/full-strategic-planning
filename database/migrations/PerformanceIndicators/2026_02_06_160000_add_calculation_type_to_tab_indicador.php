@@ -51,9 +51,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('performance_indicators.tab_indicador', function (Blueprint $table) {
-            $table->dropIndex('idx_indicador_calculation_type');
-            $table->dropColumn('dsc_calculation_type');
-        });
+        DB::statement('DROP INDEX IF EXISTS performance_indicators.idx_indicador_calculation_type');
+        DB::statement('ALTER TABLE performance_indicators.tab_indicador DROP COLUMN IF EXISTS dsc_calculation_type');
     }
 };

@@ -73,9 +73,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('action_plan.tab_entregas', function (Blueprint $table) {
-            $table->dropIndex('idx_entregas_peso');
-            $table->dropColumn('num_peso');
-        });
+        DB::statement('DROP INDEX IF EXISTS action_plan.idx_entregas_peso');
+        DB::statement('ALTER TABLE action_plan.tab_entregas DROP COLUMN IF EXISTS num_peso');
     }
 };

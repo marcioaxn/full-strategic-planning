@@ -161,34 +161,33 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
+     *
+     * Usa DROP CONSTRAINT/INDEX/COLUMN IF EXISTS diretamente no PostgreSQL para
+     * garantir idempotência e evitar falha por nome de constraint desconhecido.
      */
     public function down(): void
     {
-        Schema::table('action_plan.tab_entregas', function (Blueprint $table) {
-            // Remover foreign keys primeiro
-            $table->dropForeign('fk_entregas_entrega_pai');
-            $table->dropForeign('fk_entregas_responsavel');
-            
-            // Remover índices
-            $table->dropIndex('idx_entregas_entrega_pai');
-            $table->dropIndex('idx_entregas_tipo');
-            $table->dropIndex('idx_entregas_arquivado');
-            $table->dropIndex('idx_entregas_ordem');
-            $table->dropIndex('idx_entregas_responsavel');
-            $table->dropIndex('idx_entregas_prioridade');
-            $table->dropIndex('idx_entregas_prazo');
-            
-            // Remover colunas
-            $table->dropColumn([
-                'cod_entrega_pai',
-                'dsc_tipo',
-                'json_propriedades',
-                'dte_prazo',
-                'cod_responsavel',
-                'cod_prioridade',
-                'num_ordem',
-                'bln_arquivado',
-            ]);
-        });
+        // FKs criadas com nome explícito no up()
+        DB::statement('ALTER TABLE action_plan.tab_entregas DROP CONSTRAINT IF EXISTS fk_entregas_entrega_pai');
+        DB::statement('ALTER TABLE action_plan.tab_entregas DROP CONSTRAINT IF EXISTS fk_entregas_responsavel');
+
+        // Índices criados com nome explícito no up()
+        DB::statement('DROP INDEX IF EXISTS action_plan.idx_entregas_entrega_pai');
+        DB::statement('DROP INDEX IF EXISTS action_plan.idx_entregas_tipo');
+        DB::statement('DROP INDEX IF EXISTS action_plan.idx_entregas_arquivado');
+        DB::statement('DROP INDEX IF EXISTS action_plan.idx_entregas_ordem');
+        DB::statement('DROP INDEX IF EXISTS action_plan.idx_entregas_responsavel');
+        DB::statement('DROP INDEX IF EXISTS action_plan.idx_entregas_prioridade');
+        DB::statement('DROP INDEX IF EXISTS action_plan.idx_entregas_prazo');
+
+        // Colunas — IF EXISTS torna o rollback idempotente
+        DB::statement('ALTER TABLE action_plan.tab_entregas DROP COLUMN IF EXISTS cod_entrega_pai');
+        DB::statement('ALTER TABLE action_plan.tab_entregas DROP COLUMN IF EXISTS dsc_tipo');
+        DB::statement('ALTER TABLE action_plan.tab_entregas DROP COLUMN IF EXISTS json_propriedades');
+        DB::statement('ALTER TABLE action_plan.tab_entregas DROP COLUMN IF EXISTS dte_prazo');
+        DB::statement('ALTER TABLE action_plan.tab_entregas DROP COLUMN IF EXISTS cod_responsavel');
+        DB::statement('ALTER TABLE action_plan.tab_entregas DROP COLUMN IF EXISTS cod_prioridade');
+        DB::statement('ALTER TABLE action_plan.tab_entregas DROP COLUMN IF EXISTS num_ordem');
+        DB::statement('ALTER TABLE action_plan.tab_entregas DROP COLUMN IF EXISTS bln_arquivado');
     }
 };
