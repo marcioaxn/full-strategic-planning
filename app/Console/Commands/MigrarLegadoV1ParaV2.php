@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Symfony\Component\Process\Process;
 use Throwable;
 
 /**
@@ -19,6 +20,7 @@ use Throwable;
  *   Fase 3 — Transferência (ETL: copia legacy_* -> v2, preservando UUIDs)
  *   Fase 4 — Validação    (contagens origem x destino)
  *   Fase 5 — Descarte     (opcional, após validação OK)
+ *   Fase 6 — Frontend     (npm install + npm run build)
  *
  * ASSISTENTE INTERATIVO: as perguntas feitas ao operador são EXCLUSIVAMENTE
  * operacionais/de ambiente e SEMPRE por seleção (Sim/Não ou escolha de opção) —
@@ -38,7 +40,8 @@ class MigrarLegadoV1ParaV2 extends Command
         {--pular-backup : Pula a confirmação de backup (NÃO recomendado)}
         {--descartar-legado : Ao final, remove os schemas legacy_* (irreversível)}
         {--migrar-auditoria : Inclui audits/tab_audit na migração (padrão: NÃO migra)}
-        {--status-entrega-padrao= : Status para entregas legadas não reconhecidas (padrão: "Não Iniciado")}';
+        {--status-entrega-padrao= : Status para entregas legadas não reconhecidas (padrão: "Não Iniciado")}
+        {--pular-npm : Pula a Fase 6 (npm install + npm run build)}';
 
     protected $description = 'Migra os dados da v1 (Laravel 8) para a v2 (Laravel 12) no mesmo banco PostgreSQL, preservando UUIDs.';
 
@@ -182,6 +185,7 @@ class MigrarLegadoV1ParaV2 extends Command
             $this->fase3Transferencia(false);
             $this->fase4Validacao();
             $this->etapaDescarte();
+            $this->fase6Frontend($dry);
         } catch (Throwable $e) {
             $this->newLine();
             $this->error('✗ MIGRAÇÃO INTERROMPIDA: '.$e->getMessage());
@@ -191,7 +195,7 @@ class MigrarLegadoV1ParaV2 extends Command
         }
 
         $this->newLine();
-        $this->info('✓ Migração concluída.');
+        $this->info('✓ Migração concluída com sucesso. O sistema v2 está pronto.');
         return self::SUCCESS;
     }
 
@@ -200,15 +204,16 @@ class MigrarLegadoV1ParaV2 extends Command
     // ──────────────────────────────────────────────────────────────────────
     private function fase0Precheck(bool $dry): void
     {
-        $this->comment("\n▶ Fase 0 — Pré-checagem");
+        $this->cabecalhoFase(0, 'Pré-checagem');
 
         // Versão do PostgreSQL
+        $this->passo('Verificando versão do PostgreSQL...');
         $verNum = (int) (DB::selectOne('show server_version_num')->server_version_num ?? 0);
         $verTxt = DB::selectOne('show server_version')->server_version ?? '?';
         if ($verNum < self::PG_MIN) {
             throw new \RuntimeException("PostgreSQL $verTxt incompatível. A v2 exige >= 9.4 (jsonb/gen_random_uuid). Atualize o servidor antes de migrar.");
         }
-        $this->line("  • PostgreSQL: $verTxt  (compatível)");
+        $this->ok("PostgreSQL $verTxt — compatível com a v2.");
 
         // Disponibilidade de gen_random_uuid (pgcrypto em PG < 13)
         $this->checarPgcrypto($dry);
@@ -218,32 +223,37 @@ class MigrarLegadoV1ParaV2 extends Command
             if (! $this->gate('  Foi feito um pg_dump COMPLETO do banco antes desta execução?', true)) {
                 throw new \RuntimeException('Backup não confirmado. Faça o pg_dump e reexecute.');
             }
+            $this->ok('Backup confirmado pelo operador.');
         }
 
         // Estado: o legado existe? a migração já foi feita?
-        $temPei = $this->schemaExiste('pei');
+        $this->passo('Verificando estado do banco...');
+        $temPei       = $this->schemaExiste('pei');
         $jaQuarentena = $this->schemaExiste(self::Q_PEI);
         if (! $temPei && ! $jaQuarentena) {
             throw new \RuntimeException('Schema "pei" do legado não encontrado e quarentena inexistente. Este banco contém a v1?');
         }
         if ($jaQuarentena) {
-            $this->warn('  • Quarentena já existe ('.self::Q_PEI.'). Em reexecução, a Fase 1 será pulada.');
+            $this->warn('  ⚠ Quarentena já existe ('.self::Q_PEI.'). Em reexecução, a Fase 1 será pulada.');
         }
-        $this->line('  • Estado do banco verificado.');
+        $this->ok('Estado do banco verificado — legado presente.');
+
+        $this->fimFase(0, 'Pré-checagem concluída.');
     }
 
     /** Verifica gen_random_uuid(); se faltar, oferece criar a extensão pgcrypto (seleção Sim/Não). */
     private function checarPgcrypto(bool $dry): void
     {
+        $this->passo('Verificando disponibilidade de gen_random_uuid()...');
         try {
             DB::select('select gen_random_uuid()');
-            $this->line('  • gen_random_uuid(): disponível.');
+            $this->ok('gen_random_uuid() disponível.');
             return;
         } catch (Throwable $e) {
             // segue para tratamento
         }
 
-        $this->warn('  • gen_random_uuid() indisponível (PostgreSQL < 13 sem a extensão pgcrypto).');
+        $this->warn('  ⚠ gen_random_uuid() indisponível (PostgreSQL < 13 sem a extensão pgcrypto).');
         if ($dry) {
             $this->line('    [dry-run] Em produção, o assistente ofereceria criar a extensão pgcrypto aqui.');
             return;
@@ -251,8 +261,9 @@ class MigrarLegadoV1ParaV2 extends Command
         if (! $this->gate('  Criar a extensão pgcrypto agora?', true)) {
             throw new \RuntimeException('Extensão pgcrypto necessária. Crie manualmente com: CREATE EXTENSION pgcrypto;');
         }
+        $this->passo('Criando extensão pgcrypto...');
         DB::statement('CREATE EXTENSION IF NOT EXISTS pgcrypto');
-        $this->line('  • Extensão pgcrypto criada.');
+        $this->ok('Extensão pgcrypto criada com sucesso.');
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -295,6 +306,10 @@ class MigrarLegadoV1ParaV2 extends Command
             .($this->option('migrar-auditoria')
                 ? 'SERÁ migrada (flag --migrar-auditoria).'
                 : 'NÃO será migrada (padrão).'));
+        $this->line('  • Frontend: '
+            .($this->option('pular-npm')
+                ? 'npm será pulado (flag --pular-npm).'
+                : 'npm install + npm run build serão executados na Fase 6.'));
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -302,38 +317,37 @@ class MigrarLegadoV1ParaV2 extends Command
     // ──────────────────────────────────────────────────────────────────────
     private function fase1Quarentena(): void
     {
-        $this->comment("\n▶ Fase 1 — Quarentena do legado");
+        $this->cabecalhoFase(1, 'Quarentena do legado');
 
         if ($this->schemaExiste(self::Q_PEI)) {
-            $this->line('  • '.self::Q_PEI.' já existe — pulando.');
+            $this->warn('  ⚠ '.self::Q_PEI.' já existe — Fase 1 pulada (reexecução detectada).');
             return;
         }
 
+        $this->passo('Iniciando transação de quarentena...');
         DB::transaction(function () {
             // 1) schema "pei" inteiro → legacy_pei (todas as tabelas vão junto).
-            // Na v1 o schema "pei" continha as tabelas de negócio; na v2 o schema "pei"
-            // abriga as tabelas de infraestrutura (users, sessions, jobs etc.). A quarentena
-            // preserva o schema legado antes de o migrate recriá-lo com a estrutura v2.
             if ($this->schemaExiste('pei')) {
+                $this->passo('Renomeando schema "pei" → "'.self::Q_PEI.'"...');
                 DB::statement('ALTER SCHEMA pei RENAME TO '.self::Q_PEI);
-                $this->line('  • schema "pei" → '.self::Q_PEI);
+                $this->ok('Schema "pei" renomeado para "'.self::Q_PEI.'" — dados preservados.');
             }
 
-            // 2) tabelas de "public" do v1 → legacy_public (o "public" do banco não é usado
-            // pelo v2 — as tabelas de infraestrutura foram movidas para o schema "pei").
+            // 2) tabelas de "public" do v1 → legacy_public.
             $tabelasPublic = $this->tabelasDoSchema('public');
             if (! empty($tabelasPublic)) {
+                $this->passo('Movendo '.count($tabelasPublic).' tabela(s) de "public" para "'.self::Q_PUB.'"...');
                 DB::statement('CREATE SCHEMA IF NOT EXISTS '.self::Q_PUB);
                 foreach ($tabelasPublic as $t) {
                     DB::statement("ALTER TABLE public.\"$t\" SET SCHEMA ".self::Q_PUB);
                 }
-                $this->line('  • '.count($tabelasPublic).' tabela(s) de "public" movidas para '.self::Q_PUB);
+                $this->ok(count($tabelasPublic).' tabela(s) de "public" movidas para "'.self::Q_PUB.'".');
             } else {
-                $this->line('  • "public" sem tabelas — nada a mover para '.self::Q_PUB);
+                $this->line('  • "public" sem tabelas — nada a mover para "'.self::Q_PUB.'".');
             }
         });
 
-        $this->info('  ✓ Legado em quarentena (preservado, reversível).');
+        $this->fimFase(1, 'Legado em quarentena — preservado integralmente e reversível.');
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -341,24 +355,30 @@ class MigrarLegadoV1ParaV2 extends Command
     // ──────────────────────────────────────────────────────────────────────
     private function fase2Construcao(): void
     {
-        $this->comment("\n▶ Fase 2 — Construção do schema v2 (migrate)");
+        $this->cabecalhoFase(2, 'Construção do schema v2 (migrate)');
 
         // pgcrypto reside no primeiro schema do search_path no momento da criação.
         // Como a Fase 0 a cria antes da quarentena, ela acaba dentro de "pei" e é
         // levada para "legacy_pei" pela Fase 1 — fora do search_path da v2, fazendo
         // gen_random_uuid() falhar no migrate. Aqui garantimos que ela esteja no
         // schema "pei" da v2 (primeiro do search_path, permanente) antes do migrate.
+        $this->passo('Garantindo schema "pei" e posição da extensão pgcrypto...');
         DB::statement('CREATE SCHEMA IF NOT EXISTS pei');
         $ext = DB::selectOne(
             "select n.nspname as schema from pg_extension e join pg_namespace n on n.oid = e.extnamespace where e.extname = 'pgcrypto'"
         );
         if ($ext && $ext->schema !== 'pei') {
             DB::statement('ALTER EXTENSION pgcrypto SET SCHEMA pei');
-            $this->line('  • extensão pgcrypto realocada para o schema "pei" (search_path da v2).');
+            $this->ok('Extensão pgcrypto realocada para o schema "pei" (search_path da v2).');
+        } else {
+            $this->ok('pgcrypto já está no schema correto.');
         }
 
+        $this->passo('Executando migrations da v2 (criando os 6 schemas e todas as tabelas)...');
+        $this->newLine();
         Artisan::call('migrate', ['--force' => true], $this->getOutput());
-        $this->info('  ✓ Schema v2 criado.');
+
+        $this->fimFase(2, 'Todos os schemas e tabelas da v2 criados com sucesso.');
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -366,7 +386,7 @@ class MigrarLegadoV1ParaV2 extends Command
     // ──────────────────────────────────────────────────────────────────────
     private function fase3Transferencia(bool $dry): void
     {
-        $this->comment("\n▶ Fase 3 — Transferência de dados");
+        $this->cabecalhoFase(3, 'Transferência de dados (ETL)');
 
         foreach ($this->mapa() as $def) {
             $origemFqn = $this->resolverOrigem($def['origem']);
@@ -374,14 +394,16 @@ class MigrarLegadoV1ParaV2 extends Command
 
             if ($origemFqn === null) {
                 $this->relatorio[$destino] = ['origem' => '(não encontrada)', 'lidos' => 0, 'gravados' => 0, 'status' => 'PULADO'];
-                $this->line("  • {$destino}: origem não encontrada — pulado.");
+                $this->warn("  ⚠ {$destino}: origem não encontrada — pulado.");
                 continue;
             }
             if (! $this->tabelaDestinoExiste($destino)) {
                 $this->relatorio[$destino] = ['origem' => $origemFqn, 'lidos' => 0, 'gravados' => 0, 'status' => 'DESTINO AUSENTE'];
-                $this->warn("  • {$destino}: tabela de destino não existe — pulado.");
+                $this->warn("  ⚠ {$destino}: tabela de destino não existe — pulado.");
                 continue;
             }
+
+            $this->passo("Transferindo {$origemFqn} → {$destino}...");
 
             $colsDestino = $this->colunas($destino);
             $rename      = $def['rename'] ?? [];
@@ -441,15 +463,19 @@ class MigrarLegadoV1ParaV2 extends Command
             }
 
             $this->relatorio[$destino] = ['origem' => $origemFqn, 'lidos' => $lidos, 'gravados' => $gravados, 'descartadas' => $descartadas, 'status' => 'OK'];
-            $obs = $descartadas > 0 ? "  ({$descartadas} duplicata(s) de chave única consolidada(s))" : '';
-            $this->line("  • {$destino}: {$lidos} lidos → {$gravados} gravados{$obs}");
+            $obs = $descartadas > 0 ? " ({$descartadas} duplicata(s) consolidada(s))" : '';
+            $this->ok("{$destino}: {$lidos} lidos → {$gravados} gravados{$obs}.");
         }
 
         // Etapa derivada: pivô plano↔organização (a v2 usa N:N)
+        $this->passo('Populando pivô rel_plano_organizacao (N:N)...');
         $this->popularRelPlanoOrganizacao($dry);
 
         // Etapa derivada: alinhar o flag users.adm à nova regra de Super Admin (por perfil).
+        $this->passo('Sincronizando users.adm com o perfil Super Administrador...');
         $this->sincronizarFlagAdmPorPerfil($dry);
+
+        $this->fimFase(3, 'Transferência de dados concluída — UUIDs preservados.');
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -457,7 +483,9 @@ class MigrarLegadoV1ParaV2 extends Command
     // ──────────────────────────────────────────────────────────────────────
     private function fase4Validacao(): void
     {
-        $this->comment("\n▶ Fase 4 — Validação (origem × destino)");
+        $this->cabecalhoFase(4, 'Validação (origem × destino)');
+        $this->passo('Comparando contagens de origem e destino...');
+
         $rows = [];
         $divergencias = 0;
         foreach ($this->relatorio as $destino => $r) {
@@ -475,7 +503,7 @@ class MigrarLegadoV1ParaV2 extends Command
         if ($divergencias > 0) {
             $this->warn("  ⚠ {$divergencias} tabela(s) com divergência de contagem. Revise antes de descartar o legado.");
         } else {
-            $this->info('  ✓ Contagens conferem.');
+            $this->fimFase(4, 'Contagens conferem — todos os registros foram transferidos corretamente.');
         }
     }
 
@@ -518,10 +546,71 @@ class MigrarLegadoV1ParaV2 extends Command
     // ──────────────────────────────────────────────────────────────────────
     private function fase5Descarte(): void
     {
-        $this->comment("\n▶ Fase 5 — Descarte do legado");
+        $this->cabecalhoFase(5, 'Descarte do legado');
+        $this->passo('Removendo schema "'.self::Q_PEI.'"...');
         DB::statement('DROP SCHEMA IF EXISTS '.self::Q_PEI.' CASCADE');
+        $this->ok('Schema "'.self::Q_PEI.'" removido.');
+        $this->passo('Removendo schema "'.self::Q_PUB.'"...');
         DB::statement('DROP SCHEMA IF EXISTS '.self::Q_PUB.' CASCADE');
-        $this->info('  ✓ Legado removido.');
+        $this->ok('Schema "'.self::Q_PUB.'" removido.');
+        $this->fimFase(5, 'Legado descartado definitivamente.');
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // FASE 6 — Frontend (npm install + npm run build)
+    // ──────────────────────────────────────────────────────────────────────
+    private function fase6Frontend(bool $dry): void
+    {
+        $this->cabecalhoFase(6, 'Frontend (npm)');
+
+        if ($this->option('pular-npm')) {
+            $this->warn('  ⚠ Fase 6 pulada (flag --pular-npm). Execute manualmente: npm install && npm run build');
+            return;
+        }
+
+        if ($dry) {
+            $this->passo('[dry-run] Verificando se npm está disponível...');
+            $check = new Process(['npm', '--version']);
+            $check->run();
+            if ($check->isSuccessful()) {
+                $this->ok('[dry-run] npm '.trim($check->getOutput()).' encontrado. Em execução real: npm install + npm run build.');
+            } else {
+                $this->warn('  ⚠ [dry-run] npm não encontrado no PATH. Instale o Node.js antes de migrar.');
+            }
+            return;
+        }
+
+        // npm install
+        $this->passo('Executando npm install (instalando dependências de frontend)...');
+        $install = new Process(['npm', 'install'], base_path());
+        $install->setTimeout(600);
+        $install->run(function (string $type, string $buffer) {
+            foreach (explode("\n", rtrim($buffer)) as $linha) {
+                if (trim($linha) !== '') {
+                    $this->line('    '.$linha);
+                }
+            }
+        });
+        if (! $install->isSuccessful()) {
+            throw new \RuntimeException('npm install falhou.'.PHP_EOL.$install->getErrorOutput());
+        }
+        $this->ok('npm install concluído — dependências instaladas.');
+
+        // npm run build
+        $this->passo('Executando npm run build (compilando assets CSS/JS)...');
+        $build = new Process(['npm', 'run', 'build'], base_path());
+        $build->setTimeout(600);
+        $build->run(function (string $type, string $buffer) {
+            foreach (explode("\n", rtrim($buffer)) as $linha) {
+                if (trim($linha) !== '') {
+                    $this->line('    '.$linha);
+                }
+            }
+        });
+        if (! $build->isSuccessful()) {
+            throw new \RuntimeException('npm run build falhou.'.PHP_EOL.$build->getErrorOutput());
+        }
+        $this->fimFase(6, 'Assets compilados — frontend pronto para uso.');
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -586,7 +675,7 @@ class MigrarLegadoV1ParaV2 extends Command
         }
 
         if ($dry) {
-            $this->line('  • [dry-run] users.adm seria sincronizado conforme o perfil Super Administrador.');
+            $this->ok('[dry-run] users.adm seria sincronizado conforme o perfil Super Administrador.');
             return;
         }
 
@@ -604,7 +693,7 @@ class MigrarLegadoV1ParaV2 extends Command
             DB::table('pei.users')->whereIn('id', $idsSuper)->update(['adm' => 1]);
         }
 
-        $this->line('  • users.adm sincronizado pelo perfil — Super Admins: '.count($idsSuper).'.');
+        $this->ok('users.adm sincronizado pelo perfil — Super Admins: '.count($idsSuper).'.');
 
         if (count($idsSuper) === 0) {
             $this->warn('  ⚠ Nenhum usuário com o perfil "Super Administrador" após a migração.');
@@ -629,7 +718,7 @@ class MigrarLegadoV1ParaV2 extends Command
             return;
         }
 
-        $adminsV1 = DB::table($origemUsers)->where('adm', 1)->pluck('id');
+        $adminsV1  = DB::table($origemUsers)->where('adm', 1)->pluck('id');
         $promovidos = 0;
 
         foreach ($adminsV1 as $uid) {
@@ -663,7 +752,7 @@ class MigrarLegadoV1ParaV2 extends Command
         }
 
         if ($promovidos > 0) {
-            $this->line("  • {$promovidos} administrador(es) legado(s) (adm=1) promovido(s) a Super Administrador.");
+            $this->ok("{$promovidos} administrador(es) legado(s) (adm=1) promovido(s) a Super Administrador.");
         }
     }
 
@@ -674,9 +763,10 @@ class MigrarLegadoV1ParaV2 extends Command
         if (! $this->tabelaDestinoExiste($destino)) {
             return;
         }
-        $cols = $this->colunas($destino);
+        $cols   = $this->colunas($destino);
         $planos = DB::table('action_plan.tab_plano_de_acao')->whereNotNull('cod_organizacao')->get(['cod_plano_de_acao', 'cod_organizacao']);
-        $n = 0; $buffer = [];
+        $n      = 0;
+        $buffer = [];
         foreach ($planos as $p) {
             $row = ['cod_plano_de_acao' => $p->cod_plano_de_acao, 'cod_organizacao' => $p->cod_organizacao];
             if (in_array('id', $cols, true)) {
@@ -684,11 +774,44 @@ class MigrarLegadoV1ParaV2 extends Command
             }
             $buffer[] = array_intersect_key($row, array_flip($cols));
             // insertOrIgnore: idempotente em reexecuções (PK composta plano+organização).
-            if (! $dry && count($buffer) >= 500) { DB::table($destino)->insertOrIgnore($buffer); $buffer = []; }
+            if (! $dry && count($buffer) >= 500) {
+                DB::table($destino)->insertOrIgnore($buffer);
+                $buffer = [];
+            }
             $n++;
         }
-        if (! $dry && ! empty($buffer)) { DB::table($destino)->insertOrIgnore($buffer); }
-        $this->line("  • {$destino}: {$n} vínculos gravados");
+        if (! $dry && ! empty($buffer)) {
+            DB::table($destino)->insertOrIgnore($buffer);
+        }
+        $this->ok("{$destino}: {$n} vínculo(s) plano↔organização gravado(s).");
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Helpers de feedback visual
+    // ──────────────────────────────────────────────────────────────────────
+
+    /** Cabeçalho de fase: ▶ Fase N — Nome */
+    private function cabecalhoFase(int $n, string $nome): void
+    {
+        $this->comment("\n▶ Fase {$n} — {$nome}");
+    }
+
+    /** Indicador de sub-passo em andamento: → mensagem */
+    private function passo(string $msg): void
+    {
+        $this->line("  <fg=cyan>→</> {$msg}");
+    }
+
+    /** Confirmação de sub-passo concluído com sucesso: ✓ mensagem */
+    private function ok(string $msg): void
+    {
+        $this->line("  <fg=green>✓</> {$msg}");
+    }
+
+    /** Confirmação de fase encerrada com sucesso. */
+    private function fimFase(int $n, string $msg): void
+    {
+        $this->info("  ✓ Fase {$n} concluída — {$msg}");
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -819,7 +942,7 @@ class MigrarLegadoV1ParaV2 extends Command
      */
     private function dedupPorChaveUnica(array $linhas, array $chave): array
     {
-        $escolhidas = [];
+        $escolhidas  = [];
         $descartadas = 0;
         foreach ($linhas as $row) {
             $sig = implode('||', array_map(fn ($c) => (string) ($row[$c] ?? '∅'), $chave));

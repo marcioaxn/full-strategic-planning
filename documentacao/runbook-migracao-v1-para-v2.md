@@ -66,6 +66,7 @@ O comando executa em sequência:
 | 2 — Construção | Cria os 6 schemas e tabelas da v2 (`migrate`) | ✅ sim (drop schemas v2) |
 | 3 — Transferência | Copia os dados legacy_* → v2, **preservando os UUIDs** | ✅ sim (legado intacto) |
 | 4 — Validação | Compara contagens origem × destino | — |
+| 6 — Frontend | `npm install` + `npm run build` (compila assets CSS/JS) | ✅ sim (reexecutar) |
 
 Durante a execução, o assistente faz estas perguntas **de seleção** (responda com as setas/Sim-Não):
 
@@ -87,6 +88,7 @@ Durante a execução, o assistente faz estas perguntas **de seleção** (respond
 | `--descartar-legado` | Remove os schemas `legacy_*` ao final (**irreversível**) |
 | `--migrar-auditoria` | Inclui `audits`/`tab_audit` na migração (padrão: **não** migra) |
 | `--status-entrega-padrao="..."` | Status para entregas legadas não reconhecidas (padrão: `"Não Iniciado"`; valor inválido aborta com a lista correta) |
+| `--pular-npm` | Pula a Fase 6 — npm install + npm run build (use se já fez o build manualmente) |
 
 ---
 
