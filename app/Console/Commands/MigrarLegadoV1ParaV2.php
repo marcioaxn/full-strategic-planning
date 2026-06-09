@@ -110,7 +110,7 @@ class MigrarLegadoV1ParaV2 extends Command
             ['origem' => ['tab_meta_por_ano'], 'destino' => 'performance_indicators.tab_meta_por_ano'],
             ['origem' => ['tab_linha_base_indicador'], 'destino' => 'performance_indicators.tab_linha_base_indicador'],
             ['origem' => ['tab_evolucao_indicador'], 'destino' => 'performance_indicators.tab_evolucao_indicador'],
-            ['origem' => ['tab_arquivos'], 'destino' => 'performance_indicators.tab_arquivos'],
+            ['origem' => ['tab_arquivos'], 'destino' => 'strategic_planning.tab_arquivos'],
             ['origem' => ['rel_indicador_objetivo_estrategico_organizacao'], 'destino' => 'performance_indicators.rel_indicador_objetivo_organizacao'],
 
             ['origem' => ['tab_atividade_cadeia_valor'], 'destino' => 'strategic_planning.tab_atividade_cadeia_valor',
