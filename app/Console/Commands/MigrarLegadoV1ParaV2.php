@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
 use Throwable;
@@ -41,7 +42,8 @@ class MigrarLegadoV1ParaV2 extends Command
         {--descartar-legado : Ao final, remove os schemas legacy_* (irreversível)}
         {--migrar-auditoria : Inclui audits/tab_audit na migração (padrão: NÃO migra)}
         {--status-entrega-padrao= : Status para entregas legadas não reconhecidas (padrão: "Não Iniciado")}
-        {--pular-npm : Pula a Fase 6 (npm install + npm run build)}';
+        {--pular-npm : Pula a Fase 6 (npm install + npm run build)}
+        {--pular-criar-super-admin : Pula a oferta de criação de um novo usuário Super Administrador}';
 
     protected $description = 'Migra os dados da v1 (Laravel 8) para a v2 (Laravel 12) no mesmo banco PostgreSQL, preservando UUIDs.';
 
@@ -184,6 +186,7 @@ class MigrarLegadoV1ParaV2 extends Command
             $this->fase2Construcao();
             $this->fase3Transferencia(false);
             $this->fase4Validacao();
+            $this->etapaCriarSuperAdmin();
             $this->etapaDescarte();
             $this->fase6Frontend($dry);
         } catch (Throwable $e) {
@@ -505,6 +508,138 @@ class MigrarLegadoV1ParaV2 extends Command
         } else {
             $this->fimFase(4, 'Contagens conferem — todos os registros foram transferidos corretamente.');
         }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Oferta de criação de Super Administrador (após validação, antes do descarte)
+    // ──────────────────────────────────────────────────────────────────────
+    private function etapaCriarSuperAdmin(): void
+    {
+        // Pulado em automação ou por flag explícita.
+        if ($this->option('force') || $this->option('pular-criar-super-admin')) {
+            return;
+        }
+
+        $superPerfil = \App\Models\PerfilAcesso::SUPER_ADMIN;
+        $pivot       = 'organization.rel_users_tab_organizacoes_tab_perfil_acesso';
+
+        if (! $this->tabelaDestinoExiste('pei.users') || ! $this->tabelaDestinoExiste($pivot)) {
+            return;
+        }
+
+        $this->newLine();
+        $this->comment("\n▶ Criar usuário Super Administrador");
+
+        // Gera e exibe a senha antes de perguntar — operador já sabe o que vai receber.
+        $senha = $this->gerarSenhaForte();
+        $this->passo('Senha gerada (anote agora — não será exibida novamente):');
+        $this->line('');
+        $this->info("       🔑  $senha");
+        $this->line('');
+
+        if (! $this->confirm('  Deseja criar um novo usuário Super Administrador com esta senha?', true)) {
+            $this->warn('  • Criação de Super Administrador ignorada.');
+            return;
+        }
+
+        // Coleta nome e e-mail via texto livre (exceção justificada: são dados do novo usuário,
+        // não configuração operacional do ambiente — não há alternativa sem digitação).
+        $nome  = $this->ask('  Nome completo do usuário');
+        $email = $this->ask('  E-mail do usuário');
+
+        // Validações básicas (encerra com mensagem clara, sem exceção).
+        if (! $nome || ! $email) {
+            $this->warn('  • Nome ou e-mail vazios — criação cancelada.');
+            return;
+        }
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->warn("  • E-mail inválido ($email) — criação cancelada.");
+            return;
+        }
+        if (DB::table('pei.users')->where('email', $email)->exists()) {
+            $this->warn("  • Já existe um usuário com o e-mail $email — criação cancelada.");
+            return;
+        }
+
+        // Descobrir uma organização raiz (rel_cod_organizacao = cod_organizacao) para o vínculo.
+        // Se não houver raiz, usa qualquer organização ativa.
+        $codOrg = DB::table('organization.tab_organizacoes')
+            ->whereColumn('cod_organizacao', 'rel_cod_organizacao')
+            ->whereNull('deleted_at')
+            ->value('cod_organizacao')
+            ?? DB::table('organization.tab_organizacoes')
+                ->whereNull('deleted_at')
+                ->value('cod_organizacao');
+
+        if (! $codOrg) {
+            $this->warn('  • Nenhuma organização encontrada — criação cancelada.');
+            return;
+        }
+
+        DB::transaction(function () use ($nome, $email, $senha, $codOrg, $pivot, $superPerfil) {
+            $userId = (string) Str::uuid();
+            $agora  = now();
+
+            // 1) Usuário — senha hasheada com bcrypt (Hash::make respeita BCRYPT_ROUNDS do .env).
+            DB::table('pei.users')->insert([
+                'id'          => $userId,
+                'name'        => $nome,
+                'email'       => $email,
+                'password'    => Hash::make($senha),
+                'ativo'       => 1,
+                'adm'         => 1,
+                'trocarsenha' => 0, // senha já é conhecida pelo operador; não forçar troca
+                'created_at'  => $agora,
+                'updated_at'  => $agora,
+            ]);
+
+            // 2) Vínculo usuário ↔ organização.
+            DB::table('organization.rel_users_tab_organizacoes')->insert([
+                'id'              => (string) Str::uuid(),
+                'user_id'         => $userId,
+                'cod_organizacao' => $codOrg,
+                'created_at'      => $agora,
+                'updated_at'      => $agora,
+            ]);
+
+            // 3) Vínculo usuário ↔ organização ↔ perfil Super Administrador.
+            DB::table($pivot)->insert([
+                'id'                => (string) Str::uuid(),
+                'user_id'           => $userId,
+                'cod_organizacao'   => $codOrg,
+                'cod_plano_de_acao' => null,
+                'cod_perfil'        => $superPerfil,
+                'created_at'        => $agora,
+                'updated_at'        => $agora,
+            ]);
+        });
+
+        $this->ok("Usuário Super Administrador criado: $email");
+        $this->warn('  Guarde a senha com segurança — ela não pode ser recuperada depois.');
+    }
+
+    /**
+     * Gera uma senha forte com entropia criptográfica (CSPRNG via random_int).
+     * Garante presença de pelo menos 3 caracteres de cada classe (maiúscula,
+     * minúscula, dígito, símbolo) em um total de 12 caracteres, depois embaralha.
+     * Evita caracteres visualmente ambíguos (0/O, 1/l/I) para facilitar transcrição.
+     */
+    private function gerarSenhaForte(): string
+    {
+        $maiusculas = 'ABCDEFGHJKLMNPQRSTUVWXYZ';   // sem I, O
+        $minusculas = 'abcdefghjkmnpqrstuvwxyz';     // sem i, l, o
+        $digitos    = '23456789';                     // sem 0, 1
+        $simbolos   = '@#$%&*!?';
+
+        $partes = [];
+        for ($i = 0; $i < 3; $i++) {
+            $partes[] = $maiusculas[random_int(0, strlen($maiusculas) - 1)];
+            $partes[] = $minusculas[random_int(0, strlen($minusculas) - 1)];
+            $partes[] = $digitos[random_int(0, strlen($digitos) - 1)];
+            $partes[] = $simbolos[random_int(0, strlen($simbolos) - 1)];
+        }
+        shuffle($partes);
+        return implode('', $partes);
     }
 
     // ──────────────────────────────────────────────────────────────────────
