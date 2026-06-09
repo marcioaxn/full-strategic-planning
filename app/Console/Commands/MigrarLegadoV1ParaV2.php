@@ -69,7 +69,8 @@ class MigrarLegadoV1ParaV2 extends Command
             ['origem' => ['tab_perfil_acesso'], 'destino' => 'organization.tab_perfil_acesso'],
             ['origem' => ['users'], 'destino' => 'pei.users'],
             ['origem' => ['rel_users_tab_organizacoes'], 'destino' => 'organization.rel_users_tab_organizacoes'],
-            ['origem' => ['rel_users_tab_organizacoes_tab_perfil_acesso'], 'destino' => 'organization.rel_users_tab_organizacoes_tab_perfil_acesso'],
+            // NB: rel_users_tab_organizacoes_tab_perfil_acesso é migrado mais abaixo,
+            // após tab_plano_de_acao, pois a v2 adiciona FK fk_uopp_plano → tab_plano_de_acao.
 
             ['origem' => ['tab_pei'], 'destino' => 'strategic_planning.tab_pei'],
             ['origem' => ['tab_missao_visao_valores'], 'destino' => 'strategic_planning.tab_missao_visao_valores'],
@@ -78,6 +79,10 @@ class MigrarLegadoV1ParaV2 extends Command
             ['origem' => ['tab_perspectiva'], 'destino' => 'strategic_planning.tab_perspectiva',
                 'defaults' => ['num_peso_indicadores' => 100, 'num_peso_planos' => 0]],
             ['origem' => ['tab_grau_satisfcao'], 'destino' => 'strategic_planning.tab_grau_satisfacao',
+                'rename' => [
+                    'cod_grau_satisfcao' => 'cod_grau_satisfacao', // legado grafa sem "a"
+                    'dsc_grau_satisfcao' => 'dsc_grau_satisfacao',
+                ],
                 'transform' => 'transformGrauSatisfacao'],
 
             ['origem' => ['tab_objetivo_estrategico'], 'destino' => 'strategic_planning.tab_objetivo',
@@ -95,6 +100,9 @@ class MigrarLegadoV1ParaV2 extends Command
                     'cod_objetivo_estrategico' => 'cod_objetivo',
                     'txt_principais_entregas'  => 'txt_detalhamento',
                 ]],
+
+            // Pivô usuário×organização×perfil: depende de tab_plano_de_acao (FK fk_uopp_plano na v2).
+            ['origem' => ['rel_users_tab_organizacoes_tab_perfil_acesso'], 'destino' => 'organization.rel_users_tab_organizacoes_tab_perfil_acesso'],
 
             ['origem' => ['tab_indicador'], 'destino' => 'performance_indicators.tab_indicador',
                 'rename' => ['cod_objetivo_estrategico' => 'cod_objetivo'],
@@ -334,6 +342,21 @@ class MigrarLegadoV1ParaV2 extends Command
     private function fase2Construcao(): void
     {
         $this->comment("\n▶ Fase 2 — Construção do schema v2 (migrate)");
+
+        // pgcrypto reside no primeiro schema do search_path no momento da criação.
+        // Como a Fase 0 a cria antes da quarentena, ela acaba dentro de "pei" e é
+        // levada para "legacy_pei" pela Fase 1 — fora do search_path da v2, fazendo
+        // gen_random_uuid() falhar no migrate. Aqui garantimos que ela esteja no
+        // schema "pei" da v2 (primeiro do search_path, permanente) antes do migrate.
+        DB::statement('CREATE SCHEMA IF NOT EXISTS pei');
+        $ext = DB::selectOne(
+            "select n.nspname as schema from pg_extension e join pg_namespace n on n.oid = e.extnamespace where e.extname = 'pgcrypto'"
+        );
+        if ($ext && $ext->schema !== 'pei') {
+            DB::statement('ALTER EXTENSION pgcrypto SET SCHEMA pei');
+            $this->line('  • extensão pgcrypto realocada para o schema "pei" (search_path da v2).');
+        }
+
         Artisan::call('migrate', ['--force' => true], $this->getOutput());
         $this->info('  ✓ Schema v2 criado.');
     }
@@ -364,12 +387,14 @@ class MigrarLegadoV1ParaV2 extends Command
             $rename      = $def['rename'] ?? [];
             $defaults    = $def['defaults'] ?? [];
             $transform   = $def['transform'] ?? null;
+            $pk          = $this->chavePrimaria($destino);
+            $chaveUnica  = $this->chaveUnicaSecundaria($destino);
 
-            $lidos = 0; $gravados = 0;
-            $buffer = [];
+            $lidos = 0;
+            $todas = [];
 
             DB::table($origemFqn)->orderBy($this->primeiraColuna($origemFqn))->chunk(1000, function ($linhas) use (
-                &$lidos, &$gravados, &$buffer, $colsDestino, $rename, $defaults, $transform, $destino, $dry
+                &$lidos, &$todas, $colsDestino, $rename, $defaults, $transform
             ) {
                 foreach ($linhas as $linha) {
                     $lidos++;
@@ -395,22 +420,29 @@ class MigrarLegadoV1ParaV2 extends Command
                         }
                     }
 
-                    $buffer[] = $row;
-                    if (! $dry && count($buffer) >= 500) {
-                        DB::table($destino)->insert($buffer);
-                        $gravados += count($buffer);
-                        $buffer = [];
-                    }
+                    $todas[] = $row;
                 }
             });
 
-            if (! $dry && ! empty($buffer)) {
-                DB::table($destino)->insert($buffer);
-                $gravados += count($buffer);
+            // Dedup pela chave única secundária da v2 (quando existir): o legado pode
+            // conter histórico soft-deleted que viola uma unicidade nova. Mantém-se uma
+            // linha por chave, preferindo a ativa (deleted_at NULL) e, no empate, a mais recente.
+            $descartadas = 0;
+            if (! empty($chaveUnica)) {
+                [$todas, $descartadas] = $this->dedupPorChaveUnica($todas, $chaveUnica);
             }
 
-            $this->relatorio[$destino] = ['origem' => $origemFqn, 'lidos' => $lidos, 'gravados' => $gravados, 'status' => 'OK'];
-            $this->line("  • {$destino}: {$lidos} lidos → {$gravados} gravados");
+            $gravados = 0;
+            if (! $dry) {
+                foreach (array_chunk($todas, 500) as $lote) {
+                    $this->gravarLote($destino, $lote, $pk);
+                    $gravados += count($lote);
+                }
+            }
+
+            $this->relatorio[$destino] = ['origem' => $origemFqn, 'lidos' => $lidos, 'gravados' => $gravados, 'descartadas' => $descartadas, 'status' => 'OK'];
+            $obs = $descartadas > 0 ? "  ({$descartadas} duplicata(s) de chave única consolidada(s))" : '';
+            $this->line("  • {$destino}: {$lidos} lidos → {$gravados} gravados{$obs}");
         }
 
         // Etapa derivada: pivô plano↔organização (a v2 usa N:N)
@@ -429,13 +461,16 @@ class MigrarLegadoV1ParaV2 extends Command
         $rows = [];
         $divergencias = 0;
         foreach ($this->relatorio as $destino => $r) {
-            $ok = $r['lidos'] === $r['gravados'] ? '✓' : '✗';
-            if ($r['lidos'] !== $r['gravados'] && $r['status'] === 'OK') {
+            $descartadas = $r['descartadas'] ?? 0;
+            // Esperado = lidos menos as duplicatas de chave única consolidadas.
+            $conferiu = ($r['lidos'] - $descartadas) === $r['gravados'];
+            $ok = $conferiu ? '✓' : '✗';
+            if (! $conferiu && $r['status'] === 'OK') {
                 $divergencias++;
             }
-            $rows[] = [$destino, $r['origem'], $r['lidos'], $r['gravados'], $r['status'], $ok];
+            $rows[] = [$destino, $r['origem'], $r['lidos'], $r['gravados'], $descartadas, $r['status'], $ok];
         }
-        $this->table(['Destino', 'Origem', 'Lidos', 'Gravados', 'Status', 'OK'], $rows);
+        $this->table(['Destino', 'Origem', 'Lidos', 'Gravados', 'Dedup', 'Status', 'OK'], $rows);
 
         if ($divergencias > 0) {
             $this->warn("  ⚠ {$divergencias} tabela(s) com divergência de contagem. Revise antes de descartar o legado.");
@@ -555,6 +590,11 @@ class MigrarLegadoV1ParaV2 extends Command
             return;
         }
 
+        // Ponte v1→v2: na v1 o administrador era o flag users.adm=1; na v2 é o PERFIL
+        // Super Administrador. Para não perder o administrador legado (o que deixaria o
+        // sistema sem ninguém com acesso total), concede esse perfil aos admins da v1.
+        $this->promoverAdminsLegados();
+
         $idsSuper = DB::table('organization.rel_users_tab_organizacoes_tab_perfil_acesso')
             ->where('cod_perfil', \App\Models\PerfilAcesso::SUPER_ADMIN)
             ->pluck('user_id')->unique()->all();
@@ -569,6 +609,61 @@ class MigrarLegadoV1ParaV2 extends Command
         if (count($idsSuper) === 0) {
             $this->warn('  ⚠ Nenhum usuário com o perfil "Super Administrador" após a migração.');
             $this->warn('    Atribua esse perfil a um usuário em /usuarios (ou o sistema ficará sem administrador).');
+        }
+    }
+
+    /**
+     * Concede o perfil Super Administrador aos usuários que eram administradores na v1
+     * (legacy users.adm = 1) e ainda não o possuem. Usa uma organização do próprio
+     * usuário (preferindo vínculo ativo) e cod_plano_de_acao nulo. Idempotente.
+     */
+    private function promoverAdminsLegados(): void
+    {
+        $origemUsers = $this->resolverOrigem(['users']);
+        $pivot       = 'organization.rel_users_tab_organizacoes_tab_perfil_acesso';
+        $superPerfil = \App\Models\PerfilAcesso::SUPER_ADMIN;
+
+        if ($origemUsers === null
+            || ! $this->tabelaDestinoExiste($pivot)
+            || ! DB::table('organization.tab_perfil_acesso')->where('cod_perfil', $superPerfil)->exists()) {
+            return;
+        }
+
+        $adminsV1 = DB::table($origemUsers)->where('adm', 1)->pluck('id');
+        $promovidos = 0;
+
+        foreach ($adminsV1 as $uid) {
+            $jaSuper = DB::table($pivot)
+                ->where('user_id', $uid)->where('cod_perfil', $superPerfil)->exists();
+            if ($jaSuper) {
+                continue;
+            }
+
+            // Organização do usuário: prefere vínculo ativo; cai para qualquer um.
+            $org = DB::table('organization.rel_users_tab_organizacoes')
+                    ->where('user_id', $uid)->whereNull('deleted_at')->value('cod_organizacao')
+                ?? DB::table('organization.rel_users_tab_organizacoes')
+                    ->where('user_id', $uid)->value('cod_organizacao');
+
+            if ($org === null) {
+                $this->warn("  ⚠ Admin legado (id {$uid}) sem organização — perfil Super Administrador não atribuído.");
+                continue;
+            }
+
+            DB::table($pivot)->insert([
+                'id'                => (string) Str::uuid(),
+                'user_id'           => $uid,
+                'cod_organizacao'   => $org,
+                'cod_plano_de_acao' => null,
+                'cod_perfil'        => $superPerfil,
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ]);
+            $promovidos++;
+        }
+
+        if ($promovidos > 0) {
+            $this->line("  • {$promovidos} administrador(es) legado(s) (adm=1) promovido(s) a Super Administrador.");
         }
     }
 
@@ -588,10 +683,11 @@ class MigrarLegadoV1ParaV2 extends Command
                 $row['id'] = (string) Str::uuid();
             }
             $buffer[] = array_intersect_key($row, array_flip($cols));
-            if (! $dry && count($buffer) >= 500) { DB::table($destino)->insert($buffer); $buffer = []; }
+            // insertOrIgnore: idempotente em reexecuções (PK composta plano+organização).
+            if (! $dry && count($buffer) >= 500) { DB::table($destino)->insertOrIgnore($buffer); $buffer = []; }
             $n++;
         }
-        if (! $dry && ! empty($buffer)) { DB::table($destino)->insert($buffer); }
+        if (! $dry && ! empty($buffer)) { DB::table($destino)->insertOrIgnore($buffer); }
         $this->line("  • {$destino}: {$n} vínculos gravados");
     }
 
@@ -667,6 +763,99 @@ class MigrarLegadoV1ParaV2 extends Command
             'select 1 from information_schema.tables where table_schema = ? and table_name = ?',
             [$schema, $tab]
         );
+    }
+
+    /**
+     * Grava um lote no destino. Quando há chave primária, usa UPSERT (on conflict)
+     * para reconciliar com dados de referência já semeados pelas migrations da v2
+     * (mesmos UUIDs do legado) — o dado migrado prevalece, sem violar a unicidade.
+     * Sem PK (tabelas-pivô), recorre ao insert simples.
+     */
+    private function gravarLote(string $destino, array $linhas, array $pk): void
+    {
+        if (empty($pk)) {
+            DB::table($destino)->insert($linhas);
+            return;
+        }
+        // Colunas a atualizar no conflito = todas as presentes, exceto a própria PK.
+        $update = array_values(array_diff(array_keys($linhas[0]), $pk));
+        DB::table($destino)->upsert($linhas, $pk, $update ?: $pk);
+    }
+
+    /**
+     * Colunas de um índice ÚNICO secundário (não a PK) do destino, se houver.
+     * Usado para deduplicar dados legados que violem uma unicidade nova da v2.
+     * Retorna o primeiro índice único não-primário encontrado (sem WHERE/parcial).
+     */
+    private function chaveUnicaSecundaria(string $fqn): array
+    {
+        $rel = '"'.str_replace('.', '"."', $fqn).'"';
+        $idx = DB::selectOne(
+            "select i.indexrelid::int as oid
+               from pg_index i
+              where i.indrelid = ?::regclass
+                and i.indisunique and not i.indisprimary and i.indpred is null
+              order by i.indnatts
+              limit 1",
+            [$rel]
+        );
+        if (! $idx) {
+            return [];
+        }
+        return collect(DB::select(
+            "select a.attname as col
+               from pg_attribute a
+               join pg_index i on i.indrelid = a.attrelid
+              where i.indexrelid = ? and a.attnum = any(i.indkey)
+              order by a.attnum",
+            [$idx->oid]
+        ))->pluck('col')->all();
+    }
+
+    /**
+     * Consolida linhas que colidiriam numa chave única secundária da v2.
+     * Mantém uma linha por chave, preferindo a ativa (deleted_at NULL) e, no empate,
+     * a de updated_at mais recente. Devolve [linhasConsolidadas, qtdDescartadas].
+     */
+    private function dedupPorChaveUnica(array $linhas, array $chave): array
+    {
+        $escolhidas = [];
+        $descartadas = 0;
+        foreach ($linhas as $row) {
+            $sig = implode('||', array_map(fn ($c) => (string) ($row[$c] ?? '∅'), $chave));
+            if (! isset($escolhidas[$sig])) {
+                $escolhidas[$sig] = $row;
+                continue;
+            }
+            $descartadas++;
+            if ($this->linhaPreferivel($row, $escolhidas[$sig])) {
+                $escolhidas[$sig] = $row;
+            }
+        }
+        return [array_values($escolhidas), $descartadas];
+    }
+
+    /** $a é preferível a $b? Ativa (deleted_at NULL) ganha; senão, updated_at mais recente. */
+    private function linhaPreferivel(array $a, array $b): bool
+    {
+        $aDel = ($a['deleted_at'] ?? null) !== null;
+        $bDel = ($b['deleted_at'] ?? null) !== null;
+        if ($aDel !== $bDel) {
+            return ! $aDel; // a ativa prevalece sobre b deletada
+        }
+        return (string) ($a['updated_at'] ?? '') > (string) ($b['updated_at'] ?? '');
+    }
+
+    /** Colunas que compõem a chave primária do destino (vazio se não houver). */
+    private function chavePrimaria(string $fqn): array
+    {
+        return collect(DB::select(
+            "select a.attname as col
+               from pg_index i
+               join pg_attribute a on a.attrelid = i.indrelid and a.attnum = any(i.indkey)
+              where i.indrelid = ?::regclass and i.indisprimary",
+            ['"'.str_replace('.', '"."', $fqn).'"']
+        ))->pluck('col')->all();
     }
 
     private function colunas(string $fqn): array
