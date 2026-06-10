@@ -17,6 +17,7 @@ Plataforma web de gestão estratégica para **organizações públicas brasileir
   - [Opção B — php artisan serve (desenvolvimento rápido)](#opção-b--php-artisan-serve-desenvolvimento-rápido)
 - [Configuração do ambiente (.env)](#-configuração-do-ambiente-env)
 - [Primeiro acesso e passos iniciais](#-primeiro-acesso-e-passos-iniciais)
+- [Filas e relatórios agendados](#-filas-e-relatórios-agendados)
 - [Arquitetura do sistema](#-arquitetura-do-sistema)
 - [Desenvolvimento](#-desenvolvimento)
 - [Testes e qualidade de código](#-testes-e-qualidade-de-código)
@@ -314,6 +315,228 @@ O sistema possui um **assistente de configuração guiado** (`PeiGuidanceService
 7. **Criar Indicadores** — `/indicadores` — com metas anuais para cada objetivo
 8. **Criar Planos de Ação** — `/planos` — detalhando como os objetivos serão atingidos
 9. **Acompanhar no Dashboard** — `/dashboard` — visão consolidada do ciclo
+
+---
+
+## ⚙️ Filas e relatórios agendados
+
+O módulo de relatórios do PEI permite que o usuário **agende a geração automática de relatórios em PDF** com frequência diária, semanal ou mensal. Para que esses agendamentos sejam executados de fato, dois componentes de infraestrutura precisam estar em funcionamento no servidor: o **queue worker** e o **agendador de tarefas (scheduler)** do Laravel.
+
+Esta seção explica cada um, como configurar e como verificar que estão funcionando.
+
+---
+
+### Como o sistema funciona internamente
+
+```
+Usuário agenda relatório (interface /relatorios)
+    ↓
+Registro salvo em pei.tab_relatorios_agendados
+    (bln_ativo = true, dte_proxima_execucao = data escolhida)
+    ↓
+Cron do sistema chama php artisan schedule:run a cada minuto
+    ↓
+Laravel Scheduler executa reports:process-scheduled a cada hora
+    ↓
+Comando busca registros com dte_proxima_execucao <= agora
+    ↓
+PDF gerado → salvo em storage/app/public/relatorios/YYYY/MM/
+    ↓
+Registro criado em pei.tab_relatorios_gerados
+    ↓
+dte_proxima_execucao atualizada para a próxima recorrência
+```
+
+> **Em resumo:** sem o cron do sistema chamando `schedule:run`, nenhum relatório agendado será gerado — independente do que estiver configurado no sistema.
+
+---
+
+### Componente 1 — Queue Worker (processador de filas)
+
+O sistema usa o driver de fila `database`, o que significa que os jobs ficam na tabela `pei.jobs` do PostgreSQL até serem processados. O queue worker é o processo que consome essa fila continuamente.
+
+**Para que serve:** processar qualquer tarefa em background despachada pelo sistema (geração sob demanda, exportações pesadas, notificações, etc.).
+
+**Verificar se está configurado no `.env`:**
+
+```dotenv
+QUEUE_CONNECTION=database   # já é o padrão — não altere
+```
+
+#### Em desenvolvimento (`composer dev`)
+
+O `composer dev` já sobe o queue worker automaticamente junto com o servidor:
+
+```bash
+composer dev
+# Inicia em paralelo: php artisan serve + php artisan queue:listen --tries=1 + npm run dev
+```
+
+#### Em produção — via Supervisor (recomendado)
+
+O queue worker precisa rodar continuamente como um processo daemon. O **Supervisor** é o gerenciador de processos padrão para isso em servidores Linux.
+
+**1. Instale o Supervisor:**
+
+```bash
+sudo apt install supervisor
+```
+
+**2. Crie o arquivo de configuração** (`/etc/supervisor/conf.d/pei-worker.conf`):
+
+```ini
+[program:pei-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/pei/artisan queue:work database --sleep=3 --tries=3 --max-time=3600
+directory=/var/www/pei
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+numprocs=1
+redirect_stderr=true
+stdout_logfile=/var/www/pei/storage/logs/worker.log
+stopwaitsecs=3600
+```
+
+> Ajuste `/var/www/pei` para o caminho real da instalação e `www-data` para o usuário que roda o Apache/Nginx.
+
+**3. Ative e inicie:**
+
+```bash
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start pei-worker:*
+```
+
+**4. Verificar status:**
+
+```bash
+sudo supervisorctl status pei-worker:*
+```
+
+#### Em produção — via systemd (alternativa)
+
+Caso prefira usar o systemd nativo do Linux sem instalar o Supervisor, crie o arquivo `/etc/systemd/system/pei-worker.service`:
+
+```ini
+[Unit]
+Description=PEI Queue Worker
+After=network.target
+
+[Service]
+User=www-data
+WorkingDirectory=/var/www/pei
+ExecStart=/usr/bin/php /var/www/pei/artisan queue:work database --sleep=3 --tries=3 --max-time=3600
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl enable pei-worker
+sudo systemctl start pei-worker
+sudo systemctl status pei-worker
+```
+
+---
+
+### Componente 2 — Scheduler (agendador de tarefas)
+
+O scheduler do Laravel é responsável por disparar o comando `reports:process-scheduled` **a cada hora**, que por sua vez verifica quais relatórios estão com `dte_proxima_execucao <= agora` e os gera.
+
+**O scheduler do Laravel precisa ser invocado pelo cron do sistema operacional a cada minuto.** Essa é a única linha de cron que você precisa configurar — o restante (qual comando roda, em qual frequência) é gerenciado dentro do próprio Laravel.
+
+#### Configurar o cron do sistema operacional
+
+```bash
+# Abra o crontab do usuário que executa o projeto (ex: www-data)
+sudo crontab -u www-data -e
+```
+
+Adicione a seguinte linha:
+
+```cron
+* * * * * cd /var/www/pei && php artisan schedule:run >> /dev/null 2>&1
+```
+
+> Substitua `/var/www/pei` pelo caminho real da instalação.
+
+#### Verificar o que está agendado
+
+```bash
+php artisan schedule:list
+```
+
+O resultado deve incluir:
+
+```
+reports:process-scheduled    Hourly   Runs in background   Without overlapping
+```
+
+#### Testar o scheduler manualmente
+
+```bash
+# Executa o scheduler agora, sem esperar o próximo minuto do cron
+php artisan schedule:run
+
+# Ou executa o comando de relatórios diretamente (útil para depuração)
+php artisan reports:process-scheduled
+```
+
+---
+
+### Verificando que tudo funciona
+
+Após configurar o Supervisor (ou systemd) e o cron, faça este checklist:
+
+| O que verificar | Como verificar |
+|---|---|
+| Queue worker em execução | `sudo supervisorctl status pei-worker:*` |
+| Comando registrado no scheduler | `php artisan schedule:list` |
+| Cron do sistema ativo | `sudo crontab -u www-data -l` |
+| Jobs com falha na fila | `php artisan queue:failed` |
+| Log do scheduler de relatórios | `tail -f storage/logs/reports-scheduler.log` |
+| Log geral do sistema | `tail -f storage/logs/laravel.log` |
+
+#### Após a execução do scheduler, verificar no banco:
+
+```sql
+-- Relatórios agendados ativos e suas próximas execuções
+SELECT cod_agendamento, dsc_tipo_relatorio, dsc_frequencia, dte_proxima_execucao
+FROM pei.tab_relatorios_agendados
+WHERE bln_ativo = true
+ORDER BY dte_proxima_execucao;
+
+-- Relatórios já gerados
+SELECT dsc_tipo_relatorio, dsc_caminho_arquivo, created_at
+FROM pei.tab_relatorios_gerados
+ORDER BY created_at DESC
+LIMIT 10;
+```
+
+---
+
+### Reprocessar jobs com falha
+
+Se um relatório não foi gerado por falha (erro de memória, banco temporariamente indisponível, etc.), os jobs ficam registrados na tabela `pei.failed_jobs`. Para reprocessar:
+
+```bash
+# Listar jobs com falha
+php artisan queue:failed
+
+# Reenviar um job específico pelo ID
+php artisan queue:retry <id>
+
+# Reenviar todos os jobs com falha de uma vez
+php artisan queue:retry all
+
+# Limpar jobs com falha antigos (após confirmação de que não são mais necessários)
+php artisan queue:flush
+```
 
 ---
 
