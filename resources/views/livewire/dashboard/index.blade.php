@@ -593,16 +593,21 @@
 
     <script>
         function dashboardData() {
+            // Instâncias do Chart.js fora do escopo reativo do Alpine/Livewire.
+            // Se estivessem dentro do objeto retornado, o Livewire v4 tentaria
+            // serializar os objetos Chart (referências circulares) via toRaw,
+            // causando "Maximum call stack size exceeded".
+            const charts = {};
+
             return {
                 chartData: @entangle('chartData'),
-                charts: { bsc: null, riscos: null, planos: null, evolucao: null },
-                
+
                 init() {
                     if (typeof Chart === 'undefined') return;
                     Chart.defaults.font.family = "'Inter', sans-serif";
                     Chart.defaults.color = '#64748b';
                     Chart.defaults.scale.grid.color = 'rgba(0, 0, 0, 0.03)';
-                    
+
                     this.updateAllCharts();
                     this.$watch('chartData', (newValue, oldValue) => {
                         if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
@@ -610,7 +615,7 @@
                         }
                     });
                 },
-                
+
                 updateAllCharts() {
                     this.renderChart('evolucaoChart', 'line', {
                         labels: this.chartData.evolucao.labels,
@@ -642,15 +647,15 @@
                         datasets: [{ label: 'Atingimento', data: this.chartData.bsc.map(i => i.count), backgroundColor: this.chartData.bsc.map(i => i.color), borderRadius: 6, barThickness: 24 }]
                     }, { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { max: 100, border: { display: false } }, y: { grid: { display: false }, border: { display: false } } } });
                 },
-                
+
                 renderChart(id, type, data, options) {
                     const canvas = document.getElementById(id);
                     if (!canvas) return;
-                    if (this.charts[id]) {
-                        this.charts[id].data = data;
-                        this.charts[id].update();
+                    if (charts[id]) {
+                        charts[id].data = data;
+                        charts[id].update();
                     } else {
-                        this.charts[id] = new Chart(canvas, { type, data, options: { ...options, responsive: true, maintainAspectRatio: false } });
+                        charts[id] = new Chart(canvas, { type, data, options: { ...options, responsive: true, maintainAspectRatio: false } });
                     }
                 }
             }
