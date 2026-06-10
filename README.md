@@ -1,6 +1,6 @@
 # Sistema de Planejamento Estratégico Integrado (PEI)
 
-Plataforma web de gestão estratégica para **organizações públicas brasileiras**, construída sobre **Laravel 12 + Livewire 3.8**. Permite definir, executar e monitorar a estratégia institucional usando a metodologia **Balanced Scorecard (BSC)**, indicadores de desempenho (KPIs), planos de ação, entregas e gestão de riscos — alinhada ao **Guia Prático de Planejamento Estratégico Institucional (GPPEI / MGI 2025)** e à **Agenda 2030 / ODS**.
+Plataforma web de gestão estratégica para **organizações públicas brasileiras**, construída sobre **Laravel 12 + Livewire 4**. Permite definir, executar e monitorar a estratégia institucional usando a metodologia **Balanced Scorecard (BSC)**, indicadores de desempenho (KPIs), planos de ação, entregas e gestão de riscos — alinhada ao **Guia Prático de Planejamento Estratégico Institucional (GPPEI / MGI 2025)** e à **Agenda 2030 / ODS**.
 
 > **Referência metodológica:** `documentacao/pdf/Guia_PEI_VF.pdf`
 > **Documento mestre do projeto:** `documentacao/documento-mestre-evolucao-sistema-pei.md`
@@ -62,7 +62,7 @@ Ciclo PEI → Identidade (Missão/Visão/Valores) → Perspectivas BSC
 
 | Camada | Tecnologia |
 |---|---|
-| **Backend** | PHP 8.2+ · Laravel 12 · Livewire 3.8.1 · Alpine.js 3 |
+| **Backend** | PHP 8.2+ · Laravel 12 · Livewire 4.0.0 · Alpine.js 3 (embutido no Livewire 4) |
 | **Frontend** | Bootstrap 5.3 + Bootstrap Icons · Vite 7 · Livewire Blaze |
 | **Banco de dados** | PostgreSQL 13+ (arquitetura multi-schema, 6 domínios) |
 | **Autenticação** | Laravel Fortify + Jetstream + Sanctum |
@@ -676,6 +676,21 @@ php artisan test --filter=NomeTeste      # Teste filtrado por nome
 
 > ⚠️ **XAMPP com OPcache (Apache):** **nunca** rode `php artisan config:cache` ou `php artisan optimize` nesse ambiente. Esses comandos podem deixar a aplicação servindo uma configuração sem `APP_KEY`, causando erro 500 global. Se isso ocorrer, reinicie o Apache para limpar o OPcache.
 
+### Livewire 4 — notas de compatibilidade
+
+O projeto roda **Livewire 4.0.0**. As principais diferenças em relação à série 3.x que afetam desenvolvedores:
+
+| Aspecto | Livewire 3.x | Livewire 4.0 |
+|---|---|---|
+| **Alpine.js** | Embutido, mas importação separada era comum | Embutido e gerenciado pelo Livewire; **não importe `alpinejs` separadamente** |
+| **`wire:model`** | Atualização em tempo real por padrão | **Lazy por padrão** (só atualiza ao sair do campo); use `wire:model.live` para comportamento anterior |
+| **URL do JS** | `/livewire/livewire.js` | `/livewire-{nonce}/livewire.js` (nonce derivado do `APP_KEY`) |
+| **`asset_url` no config** | Podia ser configurado manualmente | **Deve ser `null`** — nunca hardcode o caminho do JS |
+| **Evento pós-init** | `livewire:load` | `livewire:initialized` (o `livewire:load` foi removido) |
+| **Hook de commit** | `Livewire.hook('message.processed', ...)` | `Livewire.hook('commit', ({ succeed }) => ...)` |
+
+> **Alpine.js e plugins:** Para registrar plugins (`@alpinejs/mask`, `@alpinejs/focus` etc.), use o evento `livewire:init` — o `window.Alpine` já está disponível nesse momento, antes de o Alpine inicializar os componentes.
+
 ### Livewire Blaze — otimização de views em produção
 
 O pacote [`livewire/blaze`](https://github.com/livewire/blaze) melhora a performance de renderização **inlining** os componentes Blade nas views que os utilizam, eliminando o overhead de carregamento e compilação de cada componente separado.
@@ -765,6 +780,16 @@ Após corrigir o `.env`, execute: `php artisan optimize:clear`.
 
 **Causa:** O banco PostgreSQL não existe ou o usuário não tem permissões suficientes.
 **Solução:** Verifique que o banco foi criado conforme a seção de [Preparação do banco](#preparação-do-banco-de-dados-comum-a-todas-as-opções) e que as credenciais no `.env` estão corretas.
+
+### "Detected multiple instances of Alpine running" no console
+
+**Causa:** O Alpine.js está sendo importado separadamente no `app.js` além de já estar embutido no Livewire 4.
+**Solução:** Remova qualquer `import Alpine from 'alpinejs'` do `app.js`. No Livewire 4, use o evento `livewire:init` para registrar plugins via `window.Alpine.plugin(...)`. Execute `npm run build` após a remoção.
+
+### `SIDEBAR_SCROLL_KEY has already been declared` com `wire:navigate`
+
+**Causa:** Scripts inline com `const` em partials de layout (ex.: sidebar) são re-executados no scope global a cada navegação SPA do Livewire — `const` não pode ser redeclarado.
+**Solução:** Envolva o conteúdo do `<script>` em um IIFE `(function() { ... })()` e proteja os `addEventListener` com uma flag de guarda (ex.: `window._sidebarListenersInit`) para evitar duplicação.
 
 ### `pg_dump` / `psql` não encontrado no Windows
 
