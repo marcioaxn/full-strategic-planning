@@ -13,25 +13,6 @@ window.bootstrap = {
     Toast: Toast
 };
 
-window.deferLoadingAlpine = true;
-
-Alpine.plugin(mask);
-Alpine.plugin(focus);
-
-window.Alpine = Alpine;
-
-let alpineStarted = false;
-
-const startAlpine = () => {
-    if (alpineStarted) {
-        return;
-    }
-
-    Alpine.start();
-    alpineStarted = true;
-    console.debug('[app.js] Alpine started');
-};
-
 const THEME_KEY = 'app.theme';
 const SIDEBAR_KEY = 'appSidebarCollapsed';
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
@@ -150,33 +131,33 @@ window.appLayout = function () {
 applyTheme(getStoredTheme());
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.debug('[app.js] DOMContentLoaded');
-
-    if (!window.Livewire) {
-        startAlpine();
-    }
-
     initTooltips();
     initToasts();
 });
 
 document.addEventListener('app-sidebar-toggled', () => {
-    console.debug('[app.js] app-sidebar-toggled');
     initTooltips();
     initToasts();
 });
 
-document.addEventListener('livewire:load', () => {
-    console.debug('[app.js] livewire:load');
+// Livewire v4 — registra plugins do Alpine antes de ele inicializar
+document.addEventListener('livewire:init', () => {
+    if (window.Alpine) {
+        window.Alpine.plugin(mask);
+        window.Alpine.plugin(focus);
+    }
+});
 
-    startAlpine();
+// Livewire v4 — pós-inicialização
+document.addEventListener('livewire:initialized', () => {
     initTooltips();
     initToasts();
 
-    Livewire.hook('message.processed', (message, component) => {
-        console.debug('[app.js] Livewire message.processed', component.id);
-        initTooltips();
-        initToasts();
+    Livewire.hook('commit', ({ succeed }) => {
+        succeed(() => {
+            initTooltips();
+            initToasts();
+        });
     });
 
     Livewire.on('refresh-navigation-menu', () => initTooltips());
@@ -184,7 +165,6 @@ document.addEventListener('livewire:load', () => {
 });
 
 document.addEventListener('livewire:navigated', () => {
-    console.debug('[app.js] livewire:navigated');
     initTooltips();
     initToasts();
 });

@@ -162,8 +162,10 @@ return [
     |---------------------------------------------------------------------------
     | Asset URL
     |---------------------------------------------------------------------------
-    | For subfolder deployment, configure the full URL to the Livewire script.
+    | null = Livewire gera a URL automaticamente a partir de APP_URL.
+    | Em v4 o endpoint mudou para /livewire-{nonce}/livewire.js; nunca
+    | hardcode o caminho do JS aqui, pois o nonce é derivado do APP_KEY.
     */
-    'asset_url' => env('APP_URL') . '/livewire/livewire.js',
+    'asset_url' => null,
 
 ];

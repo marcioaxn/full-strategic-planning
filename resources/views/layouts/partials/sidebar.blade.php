@@ -149,6 +149,7 @@
 
 <!-- Scripts -->
 <script>
+(function () {
     const SIDEBAR_SCROLL_KEY = 'app.sidebarScrollTop';
 
     // Mantém a posição de rolagem da sidebar entre navegações (wire:navigate),
@@ -168,21 +169,29 @@
         });
     }
 
-    // Garante o valor mais recente imediatamente antes de navegar
-    document.addEventListener('livewire:navigate', () => {
-        const el = document.querySelector('.app-sidebar-scroll');
-        if (el) sessionStorage.setItem(SIDEBAR_SCROLL_KEY, el.scrollTop);
-    });
+    // Registra listeners apenas uma vez para evitar duplicação com wire:navigate
+    if (!window._sidebarListenersInit) {
+        window._sidebarListenersInit = true;
 
-    document.addEventListener('livewire:navigated', () => {
-        persistSidebarScroll();
-        initTooltips();
-    });
+        // Garante o valor mais recente imediatamente antes de navegar
+        document.addEventListener('livewire:navigate', () => {
+            const el = document.querySelector('.app-sidebar-scroll');
+            if (el) sessionStorage.setItem(SIDEBAR_SCROLL_KEY, el.scrollTop);
+        });
 
-    document.addEventListener('DOMContentLoaded', () => {
-        persistSidebarScroll();
-        initTooltips();
-    });
+        document.addEventListener('livewire:navigated', () => {
+            persistSidebarScroll();
+            initTooltips();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            persistSidebarScroll();
+            initTooltips();
+        });
+    }
+
+    // Restaura scroll imediatamente (cada navegação re-executa este script)
+    persistSidebarScroll();
 
     function initTooltips() {
         // Tooltips padrão (elementos com data-bs-toggle="tooltip")
@@ -210,6 +219,7 @@
             });
         });
     }
+})();
 </script>
 
 <!-- Mobile Offcanvas -->
