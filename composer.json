@@ -15,7 +15,8 @@
         "laravel/jetstream": "^5.3",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
-        "livewire/livewire": "^3.6.4",
+        "livewire/blaze": "^1.0",
+        "livewire/livewire": "3.8",
         "maatwebsite/excel": "*",
         "owen-it/laravel-auditing": "^14.0",
         "spatie/laravel-html": "^3.12"

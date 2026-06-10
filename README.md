@@ -1,6 +1,6 @@
 # Sistema de Planejamento Estratégico Integrado (PEI)
 
-Plataforma web de gestão estratégica para **organizações públicas brasileiras**, construída sobre **Laravel 12 + Livewire 3**. Permite definir, executar e monitorar a estratégia institucional usando a metodologia **Balanced Scorecard (BSC)**, indicadores de desempenho (KPIs), planos de ação, entregas e gestão de riscos — alinhada ao **Guia Prático de Planejamento Estratégico Institucional (GPPEI / MGI 2025)** e à **Agenda 2030 / ODS**.
+Plataforma web de gestão estratégica para **organizações públicas brasileiras**, construída sobre **Laravel 12 + Livewire 3.8**. Permite definir, executar e monitorar a estratégia institucional usando a metodologia **Balanced Scorecard (BSC)**, indicadores de desempenho (KPIs), planos de ação, entregas e gestão de riscos — alinhada ao **Guia Prático de Planejamento Estratégico Institucional (GPPEI / MGI 2025)** e à **Agenda 2030 / ODS**.
 
 > **Referência metodológica:** `documentacao/pdf/Guia_PEI_VF.pdf`
 > **Documento mestre do projeto:** `documentacao/documento-mestre-evolucao-sistema-pei.md`
@@ -62,8 +62,8 @@ Ciclo PEI → Identidade (Missão/Visão/Valores) → Perspectivas BSC
 
 | Camada | Tecnologia |
 |---|---|
-| **Backend** | PHP 8.2+ · Laravel 12 · Livewire 3 · Alpine.js 3 |
-| **Frontend** | Bootstrap 5.3 + Bootstrap Icons · Vite 7 |
+| **Backend** | PHP 8.2+ · Laravel 12 · Livewire 3.8.1 · Alpine.js 3 |
+| **Frontend** | Bootstrap 5.3 + Bootstrap Icons · Vite 7 · Livewire Blaze |
 | **Banco de dados** | PostgreSQL 13+ (arquitetura multi-schema, 6 domínios) |
 | **Autenticação** | Laravel Fortify + Jetstream + Sanctum |
 | **Fila / Cache / Sessão** | Driver `database` (sem dependência de Redis ou Memcached) |
@@ -73,6 +73,7 @@ Ciclo PEI → Identidade (Missão/Visão/Valores) → Perspectivas BSC
 | **Excel** | `maatwebsite/excel` |
 | **Auditoria** | `owen-it/laravel-auditing` |
 | **HTML helpers** | `spatie/laravel-html` |
+| **Otimização de views** | `livewire/blaze` |
 
 ---
 
@@ -674,6 +675,22 @@ php artisan test --filter=NomeTeste      # Teste filtrado por nome
 ```
 
 > ⚠️ **XAMPP com OPcache (Apache):** **nunca** rode `php artisan config:cache` ou `php artisan optimize` nesse ambiente. Esses comandos podem deixar a aplicação servindo uma configuração sem `APP_KEY`, causando erro 500 global. Se isso ocorrer, reinicie o Apache para limpar o OPcache.
+
+### Livewire Blaze — otimização de views em produção
+
+O pacote [`livewire/blaze`](https://github.com/livewire/blaze) melhora a performance de renderização **inlining** os componentes Blade nas views que os utilizam, eliminando o overhead de carregamento e compilação de cada componente separado.
+
+**Nenhuma alteração no código é necessária.** O Blaze é registrado automaticamente via package auto-discovery e atua durante o cache de views:
+
+```bash
+# Ativar as otimizações do Blaze (executar após cada deploy em produção)
+php artisan view:cache
+
+# Limpar o cache de views (necessário após alterações em componentes Blade)
+php artisan view:clear
+```
+
+> Em desenvolvimento (com `composer dev`), o Blaze não interfere no ciclo de hot-reload do Vite. O `view:cache` só deve ser rodado em produção — em desenvolvimento, o Laravel re-compila as views automaticamente.
 
 ### Convenções de código
 
