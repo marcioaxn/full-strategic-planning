@@ -13,9 +13,8 @@ Plataforma web de gestão estratégica para **organizações públicas brasileir
 - [Stack tecnológica](#-stack-tecnológica)
 - [Requisitos de instalação](#-requisitos-de-instalação)
 - [Instalação passo a passo](#-instalação-passo-a-passo)
-  - [Opção A — XAMPP (Windows)](#opção-a--xampp-windows)
-  - [Opção B — Servidor Linux / Apache](#opção-b--servidor-linux--apache)
-  - [Opção C — php artisan serve (desenvolvimento rápido)](#opção-c--php-artisan-serve-desenvolvimento-rápido)
+  - [Opção A — Servidor Linux / Apache](#opção-a--servidor-linux--apache)
+  - [Opção B — php artisan serve (desenvolvimento rápido)](#opção-b--php-artisan-serve-desenvolvimento-rápido)
 - [Configuração do ambiente (.env)](#-configuração-do-ambiente-env)
 - [Primeiro acesso e passos iniciais](#-primeiro-acesso-e-passos-iniciais)
 - [Arquitetura do sistema](#-arquitetura-do-sistema)
@@ -122,78 +121,7 @@ GRANT ALL PRIVILEGES ON DATABASE pei_producao TO pei_user;
 
 ---
 
-### Opção A — XAMPP (Windows)
-
-Esta é a configuração do ambiente de referência de desenvolvimento do projeto.
-
-**1. Clone o repositório dentro da pasta `htdocs` do XAMPP:**
-
-```bash
-cd C:\xampp\htdocs
-git clone <url_do_repositorio> fs-v1
-cd fs-v1
-```
-
-**2. Instale as dependências:**
-
-```bash
-composer install
-npm install
-```
-
-**3. Crie e configure o arquivo `.env`:**
-
-```bash
-copy .env.example .env
-```
-
-Abra o `.env` em um editor e preencha **obrigatoriamente** as seguintes variáveis:
-
-```dotenv
-APP_URL=http://localhost/fs-v1/public
-SESSION_DOMAIN=localhost
-
-DB_HOST=127.0.0.1
-DB_PORT=5432
-DB_DATABASE=pei_producao
-DB_USERNAME=pei_user
-DB_PASSWORD=senha_forte_aqui
-```
-
-> ⚠️ `APP_URL` deve conter o caminho completo incluindo `/fs-v1/public` (o subdiretório dentro do `htdocs`). `SESSION_DOMAIN` deve ser **apenas o host**, sem protocolo, porta ou subdiretório.
-
-**4. Gere a chave da aplicação:**
-
-```bash
-php artisan key:generate
-```
-
-**5. Execute as migrations e o seed inicial:**
-
-```bash
-php artisan migrate --seed
-```
-
-**6. Compile os assets:**
-
-```bash
-npm run build
-```
-
-**7. Crie o link simbólico para o storage:**
-
-```bash
-php artisan storage:link
-```
-
-**8. Acesse o sistema:**
-
-Abra o Apache e o PostgreSQL no painel do XAMPP e acesse:
-`http://localhost/fs-v1/public`
-
----
-
-### Opção B — Servidor Linux / Apache
+### Opção A — Servidor Linux / Apache
 
 **1. Clone o repositório:**
 
@@ -272,7 +200,7 @@ php artisan storage:link
 
 ---
 
-### Opção C — php artisan serve (desenvolvimento rápido)
+### Opção B — php artisan serve (desenvolvimento rápido)
 
 Ideal para desenvolvimento local sem necessidade de configurar Apache ou Nginx.
 
@@ -653,8 +581,8 @@ php artisan migracao:v1-para-v2 --descartar-legado
 | **Módulos novos da v2** | Riscos, Temas Norteadores, Agenda 2030 — nascem vazios, pois não existiam na v1 |
 
 📖 **Documentação de apoio:**
-- **Runbook do executor** (passo a passo para analistas de infraestrutura): `documentacao/runbook-migracao-v1-para-v2.md`
-- **Mapa De→Para campo a campo**: `documentacao/migracao-legado-v1-para-v2-mapa-de-para.md`
+- **Runbook do executor** (passo a passo para analistas de infraestrutura): [runbook-migracao-v1-para-v2.md](documentacao/runbook-migracao-v1-para-v2.md)
+- **Mapa De→Para campo a campo**: [migracao-legado-v1-para-v2-mapa-de-para.md](documentacao/migracao-legado-v1-para-v2-mapa-de-para.md)
 
 ---
 
@@ -662,13 +590,14 @@ php artisan migracao:v1-para-v2 --descartar-legado
 
 | Documento | Localização |
 |---|---|
-| Documento mestre e roadmap do sistema | `documentacao/documento-mestre-evolucao-sistema-pei.md` |
-| Documentação técnica completa (v2) | `documentacao/documentacao-tecnica-planejamento-estrategico-v2.md` |
-| Manual operacional do administrador | `documentacao/manual-operacional-planejamento-estrategico-v1.md` |
-| Dicionário de dados PostgreSQL | `documentacao/dicionario-dados-postgresql-planejamento-estrategico.md` |
-| Agenda 2030 / ODS — integração | `documentacao/agenda_2030_ods_agregado_ao_planejamento_estrategico.md` |
-| Guia GPPEI — MGI 2025 (PDF) | `documentacao/pdf/Guia_PEI_VF.pdf` |
-| Guia de Projetos — MGI (PDF) | `documentacao/pdf/guia-pratico-de-projetos.pdf` |
+| Documento mestre e roadmap do sistema | [documento-mestre-evolucao-sistema-pei.md](documentacao/documento-mestre-evolucao-sistema-pei.md) |
+| Documentação técnica completa (v2) | [documentacao-tecnica-planejamento-estrategico-v2.md](documentacao/documentacao-tecnica-planejamento-estrategico-v2.md) |
+| Manual operacional do administrador | [manual-operacional-planejamento-estrategico-v1.md](documentacao/manual-operacional-planejamento-estrategico-v1.md) |
+| Dicionário de dados PostgreSQL | [dicionario-dados-postgresql-planejamento-estrategico.md](documentacao/dicionario-dados-postgresql-planejamento-estrategico.md) |
+| Agenda 2030 / ODS — integração | [agenda_2030_ods_agregado_ao_planejamento_estrategico.md](documentacao/agenda_2030_ods_agregado_ao_planejamento_estrategico.md) |
+| Guia de transição completa v1 → v2 | [guia-transicao-completa-v1-para-v2.md](documentacao/guia-transicao-completa-v1-para-v2.md) |
+| Guia GPPEI — MGI 2025 (PDF) | [Guia_PEI_VF.pdf](documentacao/pdf/Guia_PEI_VF.pdf) |
+| Guia de Projetos — MGI (PDF) | [guia-pratico-de-projetos.pdf](documentacao/pdf/guia-pratico-de-projetos.pdf) |
 
 ---
 
