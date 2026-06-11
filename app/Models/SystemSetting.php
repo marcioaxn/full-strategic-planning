@@ -57,7 +57,7 @@ class SystemSetting extends Model
         if (!$setting->exists) {
             $setting->type = 'string';
             if (str_contains($key, 'enabled')) $setting->type = 'boolean';
-            if (str_contains($key, 'api_key')) $setting->is_encrypted = true;
+            if (str_contains($key, 'api_key') || str_contains($key, 'service_account_json')) $setting->is_encrypted = true;
         }
 
         if ($setting->is_encrypted && !empty($value)) {

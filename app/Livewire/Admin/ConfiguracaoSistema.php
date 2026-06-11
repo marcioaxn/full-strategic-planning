@@ -3,59 +3,81 @@
 namespace App\Livewire\Admin;
 
 use App\Models\SystemSetting;
+use App\Services\AI\GeminiProvider;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class ConfiguracaoSistema extends Component
 {
-    public bool $aiEnabled = true;
-
-    public string $aiProvider = 'gemini';
-
+    public string $aiProvider = 'gemini-studio';
     public string $aiApiKey = '';
+    public string $aiModel = 'gemini-2.5-flash';
 
-    // Controle de UI
-    public bool $showKey = false;
+    public string $vertexProjectId = '';
+    public string $vertexLocation = 'us-central1';
+    public string $vertexServiceAccountJson = '';
 
     public string $connectionStatus = '';
-
     public string $connectionMessage = '';
 
     public function mount()
     {
         abort_unless(auth()->user()?->isSuperAdmin(), 403, 'Acesso restrito ao Super Administrador.');
 
-        $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
-        $this->aiProvider = SystemSetting::getValue('ai_provider', 'gemini');
+        $this->aiProvider = SystemSetting::getValue('ai_provider', 'gemini-studio');
+
         $hasKey = SystemSetting::where('key', 'ai_api_key')->whereNotNull('value')->exists();
         $this->aiApiKey = $hasKey ? '********' : '';
+
+        $this->aiModel = SystemSetting::getValue('ai_model', 'gemini-2.5-flash');
+
+        $this->vertexProjectId = SystemSetting::getValue('vertex_project_id', '');
+        $this->vertexLocation = SystemSetting::getValue('vertex_location', 'us-central1');
+
+        $hasJson = SystemSetting::where('key', 'vertex_service_account_json')->whereNotNull('value')->exists();
+        $this->vertexServiceAccountJson = $hasJson ? '********' : '';
     }
 
     public function testConnection()
     {
         $this->connectionStatus = 'testing';
-        $this->connectionMessage = 'Testando comunicação...';
+        $this->connectionMessage = 'Testando comunicação com o Agente de IA...';
 
-        $keyToTest = $this->aiApiKey;
-        if ($keyToTest === '********') {
-            $keyToTest = SystemSetting::getValue('ai_api_key');
+        if ($this->aiProvider === 'vertex-ai') {
+            $jsonToTest = $this->vertexServiceAccountJson;
+            if ($jsonToTest === '********') {
+                $jsonToTest = SystemSetting::getValue('vertex_service_account_json');
+            }
+
+            if (empty($jsonToTest)) {
+                $this->connectionStatus = 'error';
+                $this->connectionMessage = 'JSON da Service Account não informado.';
+                return;
+            }
+
+            $provider = new \App\Services\AI\VertexAiProvider(
+                $this->vertexProjectId,
+                $this->vertexLocation,
+                $this->aiModel,
+                $jsonToTest
+            );
+            $result = $provider->testConnection();
+        } else {
+            $keyToTest = $this->aiApiKey;
+            if ($keyToTest === '********') {
+                $keyToTest = SystemSetting::getValue('ai_api_key');
+            }
+
+            if (empty($keyToTest)) {
+                $this->connectionStatus = 'error';
+                $this->connectionMessage = 'Chave de API não informada.';
+                return;
+            }
+
+            $provider = new GeminiProvider($keyToTest, $this->aiModel);
+            $result = $provider->testConnection();
         }
-
-        if (empty($keyToTest)) {
-            $this->connectionStatus = 'error';
-            $this->connectionMessage = 'Forneça uma chave de API para testar.';
-
-            return;
-        }
-
-        $provider = match ($this->aiProvider) {
-            'gemini' => new \App\Services\AI\GeminiProvider($keyToTest),
-            'openai' => new \App\Services\AI\OpenAiProvider($keyToTest),
-            default => new \App\Services\AI\GeminiProvider($keyToTest),
-        };
-
-        $result = $provider->testConnection();
 
         if ($result['success']) {
             $this->connectionStatus = 'success';
@@ -66,30 +88,25 @@ class ConfiguracaoSistema extends Component
         }
     }
 
-    public function saveAiSettings()
+    public function save()
     {
-        if ($this->aiEnabled) {
-            if (empty($this->aiProvider)) {
-                $this->addError('aiProvider', 'Selecione um provedor de IA.');
-
-                return;
-            }
-
-            if (empty($this->aiApiKey)) {
-                $this->addError('aiApiKey', 'A chave de API é obrigatória para habilitar a IA.');
-
-                return;
-            }
-        }
-
-        SystemSetting::setValue('ai_enabled', $this->aiEnabled);
         SystemSetting::setValue('ai_provider', $this->aiProvider);
+        SystemSetting::setValue('ai_model', $this->aiModel);
 
-        if ($this->aiApiKey !== '********' && ! empty($this->aiApiKey)) {
-            SystemSetting::setValue('ai_api_key', $this->aiApiKey);
+        if ($this->aiProvider === 'gemini-studio') {
+            if ($this->aiApiKey !== '********' && !empty($this->aiApiKey)) {
+                SystemSetting::setValue('ai_api_key', $this->aiApiKey);
+            }
+        } else {
+            SystemSetting::setValue('vertex_project_id', $this->vertexProjectId);
+            SystemSetting::setValue('vertex_location', $this->vertexLocation);
+            if ($this->vertexServiceAccountJson !== '********' && !empty($this->vertexServiceAccountJson)) {
+                SystemSetting::setValue('vertex_service_account_json', $this->vertexServiceAccountJson);
+            }
         }
 
-        session()->flash('status', 'Configurações de IA salvas com sucesso!');
+        session()->flash('status', 'Configurações do Agente de IA salvas com sucesso!');
+        $this->connectionStatus = '';
     }
 
     public function render()
