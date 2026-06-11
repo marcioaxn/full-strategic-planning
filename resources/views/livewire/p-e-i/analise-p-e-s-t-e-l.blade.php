@@ -360,11 +360,11 @@
                     @if(is_array($aiSuggestion))
                         <div class="row g-3">
                             @foreach([
-                                'Político' => 'politico', 
-                                'Econômico' => 'economico', 
-                                'Social' => 'social', 
-                                'Tecnológico' => 'tecnologico', 
-                                'Ecológico' => 'ecologico', 
+                                'Político' => 'politico',
+                                'Econômico' => 'economico',
+                                'Social' => 'social',
+                                'Tecnológico' => 'tecnologico',
+                                'Ambiental' => 'ambiental',
                                 'Legal' => 'legal'
                             ] as $label => $key)
                                 @if(isset($aiSuggestion[$key]) && !empty($aiSuggestion[$key]))
