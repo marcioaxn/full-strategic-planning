@@ -134,7 +134,7 @@ class VertexAiProvider implements AiProviderInterface
 
                 if (is_array($data)) {
                     foreach ($data as $chunk) {
-                        $fullText .= $chunk['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                        $fullText .= data_get($chunk, 'candidates.0.content.parts.0.text', '');
                     }
                 }
 
@@ -156,7 +156,7 @@ class VertexAiProvider implements AiProviderInterface
             Log::error('VertexAI API Error: ' . $msg);
             return "Erro na análise (Vertex): {$msg}";
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('VertexAI Exception: ' . $e->getMessage());
             return 'Falha técnica na comunicação com o cérebro da IA (Vertex).';
         }

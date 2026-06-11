@@ -440,7 +440,7 @@
                     @if(is_array($aiSuggestion))
                         <div class="row g-3">
                             @foreach(['Força' => 'forcas', 'Fraqueza' => 'fraquezas', 'Oportunidade' => 'oportunidades', 'Ameaça' => 'ameacas'] as $label => $key)
-                                @if(isset($aiSuggestion[$key]) && count($aiSuggestion[$key]) > 0)
+                                @if(isset($aiSuggestion[$key]) && is_array($aiSuggestion[$key]) && count($aiSuggestion[$key]) > 0)
                                     <div class="col-md-3">
                                         <div class="small fw-bold text-muted text-uppercase mb-2">{{ $label }}s</div>
                                         <div class="list-group list-group-flush border rounded">
