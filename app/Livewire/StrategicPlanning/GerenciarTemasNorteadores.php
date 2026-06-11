@@ -54,8 +54,12 @@ class GerenciarTemasNorteadores extends Component
         if (!$aiService) return;
 
         $org = Organization::find($this->organizacaoId);
+        if (!$org) {
+            session()->flash('error', 'Selecione uma organização antes de usar o Agente IA.');
+            return;
+        }
         $this->aiSuggestion = 'Pensando...';
-        
+
         $prompt = "Sugerir 3 Temas Norteadores (Objetivos Estratégicos de alto nível) para a organização: '{$org->nom_organizacao}'. 
         Responda OBRIGATORIAMENTE em formato JSON puro, contendo um array de objetos com o campo 'nome'.";
         

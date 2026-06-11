@@ -1,6 +1,5 @@
-<div class="dashboard-wrapper" 
-     wire:poll.30s 
-     wire:key="dashboard-{{ $peiAtivo?->cod_pei }}-{{ $organizacaoId }}-{{ $anoSelecionado }}"
+<div class="dashboard-wrapper"
+     wire:poll.30s
      x-data="dashboardData()">
     
     <style>
@@ -593,26 +592,23 @@
 
     <script>
         function dashboardData() {
-            // Instâncias do Chart.js fora do escopo reativo do Alpine/Livewire.
-            // Se estivessem dentro do objeto retornado, o Livewire v4 tentaria
-            // serializar os objetos Chart (referências circulares) via toRaw,
-            // causando "Maximum call stack size exceeded".
             const charts = {};
 
             return {
-                chartData: @entangle('chartData'),
+                chartData: @json($chartData),
 
                 init() {
-                    if (typeof Chart === 'undefined') return;
-                    Chart.defaults.font.family = "'Inter', sans-serif";
-                    Chart.defaults.color = '#64748b';
-                    Chart.defaults.scale.grid.color = 'rgba(0, 0, 0, 0.03)';
+                    if (typeof Chart !== 'undefined') {
+                        Chart.defaults.font.family = "'Inter', sans-serif";
+                        Chart.defaults.color = '#64748b';
+                        Chart.defaults.scale.grid.color = 'rgba(0, 0, 0, 0.03)';
+                    }
 
-                    this.updateAllCharts();
-                    this.$watch('chartData', (newValue, oldValue) => {
-                        if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
-                            this.updateAllCharts();
-                        }
+                    this.$nextTick(() => this.updateAllCharts());
+
+                    Livewire.on('graficosAtualizados', ({ chartData }) => {
+                        this.chartData = chartData;
+                        this.$nextTick(() => this.updateAllCharts());
                     });
                 },
 
