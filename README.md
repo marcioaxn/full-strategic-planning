@@ -10,6 +10,7 @@ Plataforma web de gestão estratégica para **organizações públicas brasileir
 ## 📋 Sumário
 
 - [O que o sistema entrega](#-o-que-o-sistema-entrega)
+- [Agente de Inteligência Artificial](#-agente-de-inteligência-artificial)
 - [Stack tecnológica](#-stack-tecnológica)
 - [Requisitos de instalação](#-requisitos-de-instalação)
 - [Instalação passo a passo](#-instalação-passo-a-passo)
@@ -55,6 +56,67 @@ Ciclo PEI → Identidade (Missão/Visão/Valores) → Perspectivas BSC
   → Objetivos Estratégicos → Graus de Satisfação
   → Indicadores (KPIs) → Planos de Ação → Dashboard
 ```
+
+---
+
+## 🤖 Agente de Inteligência Artificial
+
+O sistema possui um **Agente de IA integrado e totalmente opcional**. Quando configurado, o agente atua como assistente estratégico em tempo real em diversos módulos — sugerindo conteúdo, auditando qualidade e gerando análises preditivas alinhadas à metodologia do GPPEI/MGI 2025. **Sem configuração, todos os módulos funcionam normalmente** — os botões de IA ficam ocultos ou são silenciosamente ignorados.
+
+### Comportamento sem o Agente configurado
+
+O sistema é **resiliente por padrão**: a classe `AiServiceFactory` retorna `null` quando nenhuma credencial está configurada, e todos os componentes que usam IA verificam esse retorno antes de acionar qualquer chamada. Nenhum processo de negócio depende do agente para ser concluído.
+
+### Onde o Agente de IA atua
+
+| Módulo | Tela / Rota | Função da IA | Método |
+|---|---|---|---|
+| **Organizações** | `/organizacoes` | Sugere sigla e subunidades para uma nova organização com base no nome informado | `suggest()` |
+| **Identidade Estratégica** | `/pei` | Sugere Missão, Visão e 5 Valores completos (formato JSON estruturado) | `suggest()` |
+| **Perspectivas BSC** | `/pei/perspectivas` | Sugere as 4 perspectivas BSC na ordem metodológica DOWN-TOP, baseadas na Missão e Visão | `suggest()` |
+| **Temas Norteadores** | (modal de criação) | Sugere 3 Temas Norteadores de alto nível para a organização | `suggest()` |
+| **Objetivos Estratégicos** | `/objetivos` | (1) Audita a qualidade SMART do objetivo sendo redigido; (2) sugere 3 objetivos para a perspectiva selecionada | `analyzeSmart()` / `suggest()` |
+| **Graus de Satisfação** | `/graus-satisfacao` | Sugere uma escala de 4–5 níveis (Crítico → Excelente) com cores e faixas percentuais | `suggest()` |
+| **Análise SWOT** | `/pei/swot` | Sugere Forças, Fraquezas, Oportunidades e Ameaças (3 itens cada) no formato JSON | `suggest()` |
+| **Análise PESTEL** | `/pei/pestel` | Sugere 2 fatores para cada uma das 6 dimensões PESTEL (JSON estruturado) | `suggest()` |
+| **Gestão de Riscos** | `/riscos` | Sugere 3 riscos potenciais com título, categoria, descrição e medida de mitigação, baseados nos objetivos da organização | `suggest()` |
+| **Planos de Ação** | `/planos` | Sugere nomes e justificativas de planos alinhados ao objetivo estratégico selecionado | `suggest()` |
+| **Dashboard Executivo** | `/dashboard` | Gera um resumo estratégico executivo com análise dos KPIs da organização | `summarizeStrategy()` |
+| **Relatórios** | `/relatorios` | Gera um "AI Minute" — resumo executivo em Markdown com pontos de atenção e sugestões | `suggest()` |
+| **Geração de PDF** | (serviço interno) | Incorpora resumo estratégico e análise preditiva de tendências de indicadores no PDF gerado | `summarizeStrategy()` / `analyzeTrends()` |
+
+### Provedores suportados
+
+| Provedor | Autenticação | Dados para treino | Indicado para |
+|---|---|---|---|
+| **Google AI Studio** | API Key | Sim (plano gratuito) | Prototipagem e desenvolvimento |
+| **Google Vertex AI** | Service Account JSON | Não (enterprise) | Produção em ambientes GCP |
+| **Claude (Anthropic) via Vertex AI** | Service Account JSON (mesma do Vertex) | Não (enterprise) | Alternativa enterprise com modelos Claude |
+
+> Documentação de implementação do provedor Claude via Vertex AI: [`documentacao/integracao-claude-vertex-ai.md`](documentacao/integracao-claude-vertex-ai.md)
+
+### Arquitetura da integração
+
+```
+AiServiceFactory::make()
+    ├── ai_provider = 'gemini-studio' → GeminiProvider    (API Key obrigatória)
+    ├── ai_provider = 'vertex-ai'     → VertexAiProvider  (Project ID + SA JSON obrigatórios)
+    └── credenciais ausentes          → null              (sistema opera sem IA)
+
+Todos os Livewire components:
+    $aiService = AiServiceFactory::make();
+    if (!$aiService) return;   ← guard universal: sem credenciais, sem chamada
+```
+
+### Como configurar
+
+1. Acesse **Configurações** (`/configuracoes`) — disponível apenas para Super Administradores
+2. Escolha o **Provedor** (Google AI Studio ou Vertex AI)
+3. Informe as credenciais correspondentes
+4. Clique em **"Testar Comunicação agora"** para validar antes de salvar
+5. Clique em **"Salvar e Ativar Agente"**
+
+As credenciais são armazenadas com **criptografia em repouso** (`Crypt::encryptString`) na tabela `pei.system_settings`.
 
 ---
 
