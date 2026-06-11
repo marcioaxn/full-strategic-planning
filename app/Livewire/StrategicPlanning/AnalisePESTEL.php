@@ -59,8 +59,8 @@ class AnalisePESTEL extends Component
 
             $this->aiSuggestion = 'Pensando...';
             
-            $prompt = "Sugira 2 fatores para cada dimensão da análise PESTEL (Político, Econômico, Social, Tecnológico, Ecológico, Legal) para a organização: {$this->organizacaoNome}.
-            Responda OBRIGATORIAMENTE em formato JSON puro com as chaves 'politico', 'economico', 'social', 'tecnologico', 'ecologico', 'legal', cada uma contendo um array de strings.";
+            $prompt = "Sugira 2 fatores para cada dimensão da análise PESTEL (Político, Econômico, Social, Tecnológico, Ambiental, Legal) para a organização: {$this->organizacaoNome}.
+            Responda OBRIGATORIAMENTE em formato JSON puro com as chaves 'politico', 'economico', 'social', 'tecnologico', 'ambiental', 'legal', cada uma contendo um array de strings.";
             
             $response = $aiService->suggest($prompt);
             $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
@@ -70,7 +70,7 @@ class AnalisePESTEL extends Component
             } else {
                 throw new \Exception('Resposta em formato inválido.');
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             \Log::error('Erro IA PESTEL: ' . $e->getMessage());
             $this->aiSuggestion = null;
             session()->flash('error', 'Não foi possível gerar sugestões.');
@@ -96,12 +96,12 @@ class AnalisePESTEL extends Component
             'Econômico' => 'economico',
             'Social' => 'social',
             'Tecnológico' => 'tecnologico',
-            'Ecológico' => 'ecologico',
+            'Ambiental' => 'ambiental',
             'Legal' => 'legal'
         ];
-        $key = $map[$categoria];
-        
-        if (isset($this->aiSuggestion[$key])) {
+        $key = $map[$categoria] ?? null;
+
+        if ($key && isset($this->aiSuggestion[$key])) {
             $this->aiSuggestion[$key] = array_filter($this->aiSuggestion[$key], fn($i) => $item !== $i);
         }
     }

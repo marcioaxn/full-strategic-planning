@@ -86,6 +86,11 @@ class AnaliseSWOT extends Component
     {
         if (!$this->aiEnabled) return;
 
+        if (empty($this->organizacaoNome)) {
+            session()->flash('error', 'Selecione uma organização antes de usar o Agente IA.');
+            return;
+        }
+
         try {
             $aiService = \App\Services\AI\AiServiceFactory::make();
             if (!$aiService) return;
@@ -103,7 +108,7 @@ class AnaliseSWOT extends Component
             } else {
                 throw new \Exception('Formato de resposta inválido.');
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             \Log::error('Erro IA SWOT: ' . $e->getMessage());
             $this->aiSuggestion = null;
             session()->flash('error', 'Não foi possível gerar sugestões.');
@@ -112,6 +117,8 @@ class AnaliseSWOT extends Component
 
     public function adicionarSugerido($categoria, $item)
     {
+        if (!$this->peiAtivo) return;
+
         AnaliseAmbiental::create([
             'cod_pei' => $this->peiAtivo->cod_pei,
             'cod_organizacao' => $this->organizacaoId,
@@ -130,9 +137,9 @@ class AnaliseSWOT extends Component
             'Oportunidade' => 'oportunidades',
             'Ameaça' => 'ameacas'
         ];
-        $key = $map[$categoria];
-        
-        if (isset($this->aiSuggestion[$key])) {
+        $key = $map[$categoria] ?? null;
+
+        if ($key && isset($this->aiSuggestion[$key])) {
             $this->aiSuggestion[$key] = array_filter($this->aiSuggestion[$key], fn($i) => $item !== $i);
         }
     }

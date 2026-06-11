@@ -128,6 +128,10 @@ class InaugurarIntegrar extends Component
             'formInaugurar.dte_fim_previsto.after_or_equal' => 'A data fim deve ser igual ou posterior à data de início.',
         ]);
 
+        if (!$this->peiAtivo) {
+            $this->dispatch('notify', message: 'Nenhum ciclo PEI selecionado.', style: 'danger');
+            return;
+        }
         $data = array_merge($this->formInaugurar, ['cod_pei' => $this->peiAtivo->cod_pei]);
 
         if ($this->inaugurar) {

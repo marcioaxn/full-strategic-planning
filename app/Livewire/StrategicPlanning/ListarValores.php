@@ -62,7 +62,7 @@ class ListarValores extends Component
 
         if ($id) {
             $org = Organization::find($id);
-            $this->organizacaoNome = $org->nom_organizacao;
+            $this->organizacaoNome = $org?->nom_organizacao ?? '';
             $this->carregarValores();
         } else {
             $this->valores = [];

@@ -84,6 +84,10 @@ class CadeiaDeValor extends Component
             'formAtividade.dsc_tipo'      => 'required|in:Finalística,Suporte',
         ], ['formAtividade.dsc_atividade.required' => 'Informe a descrição da atividade.']);
 
+        if (!$this->peiAtivo) {
+            $this->dispatch('notify', message: 'Nenhum ciclo PEI selecionado.', style: 'danger');
+            return;
+        }
         $data = array_merge($this->formAtividade, ['cod_pei' => $this->peiAtivo->cod_pei]);
         if (empty($data['cod_perspectiva'])) {
             $data['cod_perspectiva'] = null;
