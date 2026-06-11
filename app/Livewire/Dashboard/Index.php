@@ -49,16 +49,14 @@ class Index extends Component
         // Se a sessão está vazia, auto-seleciona a primeira org disponível para o usuário,
         // garantindo chartData correto desde o primeiro render sem depender de AJAX.
         if (!$this->organizacaoId) {
-            $user = Auth::user();
-            $org = null;
-            if ($user && $user->isSuperAdmin()) {
-                $org = Organization::orderBy('sgl_organizacao')->first();
-            } elseif ($user) {
-                $org = $user->organizacoes()->orderBy('sgl_organizacao')->first();
-            }
+            // Seleciona a organização raiz (auto-referenciada) para alinhar com o
+            // SeletorOrganizacao, que exibe a raiz como primeiro item da árvore.
+            $org = Organization::raiz()->orderBy('nom_organizacao')->first();
             if ($org) {
                 $this->organizacaoId = $org->cod_organizacao;
                 Session::put('organizacao_selecionada_id', $org->cod_organizacao);
+                Session::put('organizacao_selecionada_nom', $org->nom_organizacao);
+                Session::put('organizacao_selecionada_sgl', $org->sgl_organizacao);
             }
         }
 
