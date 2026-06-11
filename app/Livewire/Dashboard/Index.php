@@ -44,6 +44,24 @@ class Index extends Component
     {
         $this->anoSelecionado = Session::get('ano_selecionado', date('Y'));
         $this->organizacaoId = Session::get('organizacao_selecionada_id');
+
+        // O Dashboard monta antes do SeletorOrganizacao (slot renderiza antes do layout).
+        // Se a sessão está vazia, auto-seleciona a primeira org disponível para o usuário,
+        // garantindo chartData correto desde o primeiro render sem depender de AJAX.
+        if (!$this->organizacaoId) {
+            $user = Auth::user();
+            $org = null;
+            if ($user && $user->isSuperAdmin()) {
+                $org = Organization::orderBy('sgl_organizacao')->first();
+            } elseif ($user) {
+                $org = $user->organizacoes()->orderBy('sgl_organizacao')->first();
+            }
+            if ($org) {
+                $this->organizacaoId = $org->cod_organizacao;
+                Session::put('organizacao_selecionada_id', $org->cod_organizacao);
+            }
+        }
+
         $this->carregarPEI();
         $this->carregarNomeOrganizacao();
         $this->atualizarDadosGraficos();
@@ -112,8 +130,8 @@ class Index extends Component
 
     public function render()
     {
-        // Atualiza os dados a cada renderização (incluindo poll)
         $this->atualizarDadosGraficos();
+        $this->dispatch('graficosAtualizados', chartData: $this->chartData);
 
         return view('livewire.dashboard.index', [
             'stats' => $this->getStats(),

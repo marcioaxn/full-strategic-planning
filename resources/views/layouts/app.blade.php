@@ -22,6 +22,9 @@
         <!-- Bootstrap Icons CDN (Failsafe) -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+        <!-- Chart.js — carregado no head para garantir disponibilidade antes do Alpine/Livewire -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
         <!-- Styles / Scripts -->
         @vite(['resources/scss/app.scss', 'resources/js/app.js'])
         @livewireStyles
@@ -402,9 +405,6 @@
         </div>
 
         @stack('modals')
-
-        <!-- Chart.js for data visualization -->
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
         @livewireScripts
 

@@ -351,7 +351,7 @@ class ListarPlanos extends Component
         }
 
         // Capture details for success modal before resetting
-        $tipo = TipoExecucao::find($this->cod_tipo_execucao)->dsc_tipo_execucao ?? 'Item';
+        $tipo = TipoExecucao::find($this->cod_tipo_execucao)?->dsc_tipo_execucao ?? 'Item';
         $this->createdPlanType = $tipo;
         $this->createdPlanName = $this->dsc_plano_de_acao;
         

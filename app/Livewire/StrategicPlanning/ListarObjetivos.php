@@ -163,6 +163,7 @@ class ListarObjetivos extends Component
 
     public function carregarPerspectivas()
     {
+        if (!$this->peiAtivo) return;
         $this->perspectivas = Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
             ->with(['objetivos' => function($query) {
                 $query->ordenadoPorNivel()->with('ods');

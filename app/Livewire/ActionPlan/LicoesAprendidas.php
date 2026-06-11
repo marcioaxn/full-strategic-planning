@@ -110,7 +110,7 @@ class LicoesAprendidas extends Component
         }
 
         $query = LicaoAprendida::with('plano')
-            ->whereHas('plano.objetivo.perspectiva', fn($q) => $q->where('cod_pei', $this->peiAtivo?->cod_pei ?? 'none'))
+            ->when($this->peiAtivo, fn($q) => $q->whereHas('plano.objetivo.perspectiva', fn($inner) => $inner->where('cod_pei', $this->peiAtivo->cod_pei)))
             ->when($this->organizacaoId, fn($q) => $q->whereHas('plano', fn($p) => $p->where('cod_organizacao', $this->organizacaoId)))
             ->when($this->planoFiltro, fn($q) => $q->where('cod_plano_de_acao', $this->planoFiltro))
             ->orderBy('dsc_tipo')->orderBy('dsc_categoria');

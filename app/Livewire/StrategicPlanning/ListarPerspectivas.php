@@ -141,6 +141,7 @@ class ListarPerspectivas extends Component
 
     public function carregarPerspectivas()
     {
+        if (!$this->peiAtivo) return;
         $this->perspectivas = Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
             ->with('pei')
             ->ordenadoPorNivel()
