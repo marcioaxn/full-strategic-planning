@@ -44,7 +44,7 @@ class GeminiProvider implements AiProviderInterface
 
             if ($response->successful()) {
                 $data = $response->json();
-                $fullText = $data['candidates'][0]['content']['parts'][0]['text'] ?? 'A IA não retornou uma resposta válida.';
+                $fullText = data_get($data, 'candidates.0.content.parts.0.text', 'A IA não retornou uma resposta válida.');
 
                 if (str_contains($fullText, '\\u')) {
                     $fullText = preg_replace_callback('/\\\\u([0-9a-fA-F]{4})/', function ($match) {
@@ -60,7 +60,7 @@ class GeminiProvider implements AiProviderInterface
             Log::error('Gemini API Error: ' . $msg);
             return "Erro na análise: {$msg}";
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Gemini Exception: ' . $e->getMessage());
             return 'Falha técnica na comunicação com o cérebro da IA.';
         }
