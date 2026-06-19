@@ -126,6 +126,8 @@ class GerenciarTemasNorteadores extends Component
     public function edit($id)
     {
         $obj = TemaNorteador::findOrFail($id);
+        abort_unless($obj->cod_organizacao === $this->organizacaoId, 403);
+        abort_unless($this->peiAtivo && $obj->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->temaId = $id;
         $this->nom_tema_norteador = $obj->nom_tema_norteador;
         $this->cod_organizacao = $obj->cod_organizacao;
@@ -166,6 +168,9 @@ class GerenciarTemasNorteadores extends Component
 
     public function confirmDelete($id)
     {
+        $tema = TemaNorteador::findOrFail($id);
+        abort_unless($tema->cod_organizacao === $this->organizacaoId, 403);
+        abort_unless($this->peiAtivo && $tema->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->temaId = $id;
         $this->showDeleteModal = true;
     }
@@ -173,7 +178,10 @@ class GerenciarTemasNorteadores extends Component
     public function delete()
     {
         if ($this->temaId) {
-            TemaNorteador::findOrFail($this->temaId)->delete();
+            $tema = TemaNorteador::findOrFail($this->temaId);
+            abort_unless($tema->cod_organizacao === $this->organizacaoId, 403);
+            abort_unless($this->peiAtivo && $tema->cod_pei === $this->peiAtivo->cod_pei, 403);
+            $tema->delete();
             $this->temaId = null;
             $this->showDeleteModal = false;
             

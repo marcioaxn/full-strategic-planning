@@ -423,7 +423,7 @@
                             </div>
                         @else
                             <div class="markdown-content">
-                                {!! Str::markdown($aiSuggestion) !!}
+                                {!! Str::markdown($aiSuggestion, ['html_input' => 'strip']) !!}
                             </div>
                         @endif
                     </div>

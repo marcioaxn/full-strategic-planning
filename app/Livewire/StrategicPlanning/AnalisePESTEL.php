@@ -164,6 +164,7 @@ class AnalisePESTEL extends Component
     public function edit($id)
     {
         $item = AnaliseAmbiental::findOrFail($id);
+        abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
         $this->itemId = $id;
         $this->dsc_categoria = $item->dsc_categoria;
         $this->dsc_item = $item->dsc_item;
@@ -191,7 +192,9 @@ class AnalisePESTEL extends Component
         ];
 
         if ($this->itemId) {
-            AnaliseAmbiental::findOrFail($this->itemId)->update($data);
+            $item = AnaliseAmbiental::findOrFail($this->itemId);
+            abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
+            $item->update($data);
             $message = 'Item atualizado com sucesso!';
         } else {
             AnaliseAmbiental::create($data);
@@ -205,7 +208,9 @@ class AnalisePESTEL extends Component
 
     public function delete($id)
     {
-        AnaliseAmbiental::findOrFail($id)->delete();
+        $item = AnaliseAmbiental::findOrFail($id);
+        abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
+        $item->delete();
         $this->carregarDados();
         session()->flash('status', 'Item removido com sucesso!');
     }
