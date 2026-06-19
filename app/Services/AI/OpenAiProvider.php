@@ -22,7 +22,7 @@ class OpenAiProvider implements AiProviderInterface
         }
 
         try {
-            $response = Http::timeout(20)->withoutVerifying()->withToken($this->apiKey)->post($this->baseUrl, [
+            $response = Http::timeout(20)->withToken($this->apiKey)->post($this->baseUrl, [
                 'model' => 'gpt-4o-mini', // Modelo performático e econômico
                 'messages' => [
                     ['role' => 'system', 'content' => $context],
@@ -54,7 +54,7 @@ class OpenAiProvider implements AiProviderInterface
         }
 
         try {
-            $response = Http::timeout(10)->withoutVerifying()->withToken($this->apiKey)->post($this->baseUrl, [
+            $response = Http::timeout(10)->withToken($this->apiKey)->post($this->baseUrl, [
                 'model' => 'gpt-4o-mini',
                 'messages' => [['role' => 'user', 'content' => 'Responda apenas OK.']],
                 'max_tokens' => 5

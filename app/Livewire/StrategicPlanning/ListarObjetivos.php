@@ -7,6 +7,7 @@ use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\Agenda2030\ODS;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Illuminate\Support\Facades\Session;
 
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Session;
 class ListarObjetivos extends Component
 {
     public $perspectivas = [];
+    #[Locked]
     public $peiAtivo;
 
     public bool $showModal = false;
@@ -216,7 +218,8 @@ class ListarObjetivos extends Component
 
     public function edit($id)
     {
-        $obj = Objetivo::with('ods')->findOrFail($id);
+        $obj = Objetivo::with(['ods', 'perspectiva'])->findOrFail($id);
+        abort_unless($this->peiAtivo && $obj->perspectiva->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->objetivoId = $id;
         $this->nom_objetivo = $obj->nom_objetivo;
         $this->dsc_objetivo = $obj->dsc_objetivo;
@@ -292,9 +295,9 @@ class ListarObjetivos extends Component
 
     public function confirmDelete($id)
     {
+        $objetivo = Objetivo::with('perspectiva')->withCount(['indicadores', 'planosAcao'])->findOrFail($id);
+        abort_unless($this->peiAtivo && $objetivo->perspectiva->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->objetivoId = $id;
-        
-        $objetivo = Objetivo::withCount(['indicadores', 'planosAcao'])->findOrFail($id);
         
         $this->impactoExclusao = [
             'indicadores' => $objetivo->indicadores_count,
@@ -306,7 +309,9 @@ class ListarObjetivos extends Component
 
     public function delete()
     {
-        Objetivo::findOrFail($this->objetivoId)->delete();
+        $obj = Objetivo::with('perspectiva')->findOrFail($this->objetivoId);
+        abort_unless($this->peiAtivo && $obj->perspectiva->cod_pei === $this->peiAtivo->cod_pei, 403);
+        $obj->delete();
         $this->showDeleteModal = false;
         $this->objetivoId = null;
         $this->carregarPerspectivas();

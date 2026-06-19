@@ -7,6 +7,7 @@ use App\Models\StrategicPlanning\Valor;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\Organization;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Session;
@@ -18,9 +19,12 @@ class MissaoVisao extends Component
 
     public $missao = '';
     public $visao = '';
+    #[Locked]
     public $organizacaoId;
     public $organizacaoNome;
+    #[Locked]
     public $identidadeId;
+    #[Locked]
     public $peiAtivo;
 
     // Propriedades para Valores

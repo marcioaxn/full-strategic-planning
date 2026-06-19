@@ -4,18 +4,18 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', \App\Livewire\LandingPage::class)->name('welcome');
 
-// CSRF Token Refresh Endpoint
-Route::get('/refresh-csrf', function () {
-    return response()->json([
-        'csrf_token' => csrf_token(),
-    ]);
-})->name('csrf.refresh');
-
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
+    // CSRF Token Refresh Endpoint — requer autenticação
+    Route::get('/refresh-csrf', function () {
+        return response()->json([
+            'csrf_token' => csrf_token(),
+        ]);
+    })->name('csrf.refresh');
+
     Route::get('/dashboard', \App\Livewire\Dashboard\Index::class)->name('dashboard');
 
     // Documentos de referência metodológica
