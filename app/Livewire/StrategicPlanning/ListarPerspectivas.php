@@ -167,6 +167,7 @@ class ListarPerspectivas extends Component
     public function edit($id)
     {
         $p = Perspectiva::findOrFail($id);
+        abort_unless($this->peiAtivo && $p->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->perspectivaId = $id;
         $this->dsc_perspectiva = $p->dsc_perspectiva;
         $this->num_nivel_hierarquico_apresentacao = $p->num_nivel_hierarquico_apresentacao;
@@ -222,13 +223,17 @@ class ListarPerspectivas extends Component
 
     public function confirmDelete($id)
     {
+        $p = Perspectiva::findOrFail($id);
+        abort_unless($this->peiAtivo && $p->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->perspectivaId = $id;
         $this->showDeleteModal = true;
     }
 
     public function delete()
     {
-        Perspectiva::findOrFail($this->perspectivaId)->delete();
+        $p = Perspectiva::findOrFail($this->perspectivaId);
+        abort_unless($this->peiAtivo && $p->cod_pei === $this->peiAtivo->cod_pei, 403);
+        $p->delete();
         $this->showDeleteModal = false;
         $this->perspectivaId = null;
         $this->carregarPerspectivas();

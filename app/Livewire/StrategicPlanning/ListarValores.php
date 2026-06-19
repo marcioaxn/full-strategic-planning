@@ -96,6 +96,7 @@ class ListarValores extends Component
     public function edit($id)
     {
         $valor = Valor::findOrFail($id);
+        abort_unless($valor->cod_organizacao === $this->organizacaoId, 403);
         $this->valorId = $id;
         $this->nom_valor = $valor->nom_valor;
         $this->dsc_valor = $valor->dsc_valor;
@@ -131,7 +132,9 @@ class ListarValores extends Component
 
     public function delete($id)
     {
-        Valor::findOrFail($id)->delete();
+        $valor = Valor::findOrFail($id);
+        abort_unless($valor->cod_organizacao === $this->organizacaoId, 403);
+        $valor->delete();
         $this->carregarValores();
         session()->flash('status', 'Valor excluído com sucesso!');
     }

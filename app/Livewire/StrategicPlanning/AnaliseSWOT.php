@@ -205,6 +205,7 @@ class AnaliseSWOT extends Component
     public function edit($id)
     {
         $item = AnaliseAmbiental::findOrFail($id);
+        abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
         $this->itemId       = $id;
         $this->dsc_categoria = $item->dsc_categoria;
         $this->dsc_item      = $item->dsc_item;
@@ -241,7 +242,9 @@ class AnaliseSWOT extends Component
         ];
 
         if ($this->itemId) {
-            AnaliseAmbiental::findOrFail($this->itemId)->update($data);
+            $item = AnaliseAmbiental::findOrFail($this->itemId);
+            abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
+            $item->update($data);
             $message = 'Item atualizado com sucesso!';
         } else {
             AnaliseAmbiental::create($data);
@@ -265,6 +268,7 @@ class AnaliseSWOT extends Component
     public function editarParte(string $id): void
     {
         $p = ParteInteressada::findOrFail($id);
+        abort_unless($this->peiAtivo && $p->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->parteEditId = $id;
         $this->formParte   = [
             'nom_parte'                  => $p->nom_parte,
@@ -297,7 +301,9 @@ class AnaliseSWOT extends Component
 
     public function excluirParte(string $id): void
     {
-        ParteInteressada::findOrFail($id)->delete();
+        $parte = ParteInteressada::findOrFail($id);
+        abort_unless($this->peiAtivo && $parte->cod_pei === $this->peiAtivo->cod_pei, 403);
+        $parte->delete();
         $this->dispatch('notify', message: 'Parte interessada removida.', style: 'warning');
     }
 
@@ -313,6 +319,7 @@ class AnaliseSWOT extends Component
     public function editarCenario(string $id): void
     {
         $c = CenarioProspectivo::findOrFail($id);
+        abort_unless($this->peiAtivo && $c->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->cenarioEditId = $id;
         $this->formCenario = [
             'nom_cenario'              => $c->nom_cenario,
@@ -351,13 +358,17 @@ class AnaliseSWOT extends Component
 
     public function excluirCenario(string $id): void
     {
-        CenarioProspectivo::findOrFail($id)->delete();
+        $cenario = CenarioProspectivo::findOrFail($id);
+        abort_unless($this->peiAtivo && $cenario->cod_pei === $this->peiAtivo->cod_pei, 403);
+        $cenario->delete();
         $this->dispatch('notify', message: 'Cenário removido.', style: 'warning');
     }
 
     public function delete($id)
     {
-        AnaliseAmbiental::findOrFail($id)->delete();
+        $item = AnaliseAmbiental::findOrFail($id);
+        abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
+        $item->delete();
         $this->carregarDados();
         session()->flash('status', 'Item removido com sucesso!');
     }
