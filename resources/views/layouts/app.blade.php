@@ -373,7 +373,7 @@
                         </div>
                         <div class="mentor-toast-content">
                             <div class="mentor-toast-title" x-text="n.title"></div>
-                            <div class="mentor-toast-message" x-html="n.message"></div>
+                            <div class="mentor-toast-message" x-text="n.message"></div>
                         </div>
                         <button type="button" class="btn-close small ms-2" @click="removeNotification(n.id)"></button>
                         
