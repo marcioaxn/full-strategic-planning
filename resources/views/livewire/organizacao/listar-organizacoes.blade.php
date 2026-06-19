@@ -363,7 +363,7 @@
                                                             wire:model="form.rel_cod_organizacao">
                                                         <option value="">Unidade Master (Raiz)</option>
                                                         @foreach($this->organizacoesPai as $org)
-                                                            <option value="{{ $org['id'] }}">{!! $org['label'] !!}</option>
+                                                            <option value="{{ $org['id'] }}">{{ $org['label'] }}</option>
                                                         @endforeach
                                                     </select>
                                                 </div>
