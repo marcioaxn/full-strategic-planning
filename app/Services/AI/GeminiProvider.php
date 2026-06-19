@@ -30,9 +30,11 @@ class GeminiProvider implements AiProviderInterface
 
         try {
             $response = Http::timeout(60)
-                ->withoutVerifying()
-                ->withHeaders(['Content-Type' => 'application/json'])
-                ->post($this->getApiUrl() . '?key=' . $this->apiKey, [
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'x-goog-api-key' => $this->apiKey,
+                ])
+                ->post($this->getApiUrl(), [
                 'contents' => [
                     [
                         'parts' => [
@@ -74,9 +76,11 @@ class GeminiProvider implements AiProviderInterface
 
         try {
             $response = Http::timeout(10)
-                ->withoutVerifying()
-                ->withHeaders(['Content-Type' => 'application/json'])
-                ->post($this->getApiUrl() . '?key=' . $this->apiKey, [
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'x-goog-api-key' => $this->apiKey,
+                ])
+                ->post($this->getApiUrl(), [
                 'contents' => [['parts' => [['text' => 'Olá, responda apenas OK.']]]]
             ]);
 

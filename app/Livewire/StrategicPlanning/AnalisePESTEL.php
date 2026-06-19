@@ -5,6 +5,7 @@ namespace App\Livewire\StrategicPlanning;
 use App\Models\StrategicPlanning\AnaliseAmbiental;
 use App\Models\StrategicPlanning\PEI;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Session;
@@ -14,7 +15,9 @@ class AnalisePESTEL extends Component
 {
     use AuthorizesRequests;
 
+    #[Locked]
     public $peiAtivo;
+    #[Locked]
     public $organizacaoId;
     public $organizacaoNome;
 
@@ -79,6 +82,8 @@ class AnalisePESTEL extends Component
 
     public function adicionarSugerido($categoria, $item)
     {
+        abort_unless($this->peiAtivo !== null && $this->organizacaoId !== null, 403);
+
         AnaliseAmbiental::create([
             'cod_pei' => $this->peiAtivo->cod_pei,
             'cod_organizacao' => $this->organizacaoId,
@@ -164,6 +169,7 @@ class AnalisePESTEL extends Component
     public function edit($id)
     {
         $item = AnaliseAmbiental::findOrFail($id);
+        abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
         $this->itemId = $id;
         $this->dsc_categoria = $item->dsc_categoria;
         $this->dsc_item = $item->dsc_item;
@@ -191,7 +197,9 @@ class AnalisePESTEL extends Component
         ];
 
         if ($this->itemId) {
-            AnaliseAmbiental::findOrFail($this->itemId)->update($data);
+            $item = AnaliseAmbiental::findOrFail($this->itemId);
+            abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
+            $item->update($data);
             $message = 'Item atualizado com sucesso!';
         } else {
             AnaliseAmbiental::create($data);
@@ -205,7 +213,9 @@ class AnalisePESTEL extends Component
 
     public function delete($id)
     {
-        AnaliseAmbiental::findOrFail($id)->delete();
+        $item = AnaliseAmbiental::findOrFail($id);
+        abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
+        $item->delete();
         $this->carregarDados();
         session()->flash('status', 'Item removido com sucesso!');
     }

@@ -5,6 +5,7 @@ namespace App\Livewire\StrategicPlanning;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Perspectiva;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Illuminate\Support\Facades\Session;
 
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Session;
 class ListarPerspectivas extends Component
 {
     public $perspectivas = [];
+    #[Locked]
     public $peiAtivo;
 
     public bool $showModal = false;
@@ -167,6 +169,7 @@ class ListarPerspectivas extends Component
     public function edit($id)
     {
         $p = Perspectiva::findOrFail($id);
+        abort_unless($this->peiAtivo && $p->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->perspectivaId = $id;
         $this->dsc_perspectiva = $p->dsc_perspectiva;
         $this->num_nivel_hierarquico_apresentacao = $p->num_nivel_hierarquico_apresentacao;
@@ -222,13 +225,17 @@ class ListarPerspectivas extends Component
 
     public function confirmDelete($id)
     {
+        $p = Perspectiva::findOrFail($id);
+        abort_unless($this->peiAtivo && $p->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->perspectivaId = $id;
         $this->showDeleteModal = true;
     }
 
     public function delete()
     {
-        Perspectiva::findOrFail($this->perspectivaId)->delete();
+        $p = Perspectiva::findOrFail($this->perspectivaId);
+        abort_unless($this->peiAtivo && $p->cod_pei === $this->peiAtivo->cod_pei, 403);
+        $p->delete();
         $this->showDeleteModal = false;
         $this->perspectivaId = null;
         $this->carregarPerspectivas();

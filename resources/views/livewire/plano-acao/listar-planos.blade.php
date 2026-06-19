@@ -822,7 +822,7 @@
                                                             <input class="form-check-input" type="checkbox" value="{{ $org['id'] }}" 
                                                                    wire:model="organizacoes_ids" id="org_{{ $org['id'] }}">
                                                             <label class="form-check-label small fw-medium text-dark" for="org_{{ $org['id'] }}">
-                                                                {!! $org['label'] !!}
+                                                                {{ $org['label'] }}
                                                             </label>
                                                         </div>
                                                     @endforeach

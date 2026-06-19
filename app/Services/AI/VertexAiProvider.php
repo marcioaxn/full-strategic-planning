@@ -74,7 +74,6 @@ class VertexAiProvider implements AiProviderInterface
         $jwt = "{$sigInput}.{$signature}";
 
         $response = Http::timeout(10)
-            ->withoutVerifying()
             ->asForm()
             ->post('https://oauth2.googleapis.com/token', [
                 'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
@@ -110,7 +109,6 @@ class VertexAiProvider implements AiProviderInterface
 
         try {
             $response = Http::timeout(60)
-                ->withoutVerifying()
                 ->withToken($token)
                 ->post($this->getApiUrl(), [
                 'contents' => [
@@ -172,7 +170,6 @@ class VertexAiProvider implements AiProviderInterface
 
         try {
             $response = Http::timeout(10)
-                ->withoutVerifying()
                 ->withToken($token)
                 ->post($this->getApiUrl(), [
                 'contents' => [['role' => 'user', 'parts' => [['text' => 'Olá, responda apenas OK.']]]]
