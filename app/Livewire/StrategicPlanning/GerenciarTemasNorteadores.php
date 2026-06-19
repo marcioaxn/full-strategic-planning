@@ -8,6 +8,7 @@ use App\Models\Organization;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Illuminate\Support\Facades\Session;
 
 #[Layout('layouts.app')]
@@ -16,7 +17,9 @@ class GerenciarTemasNorteadores extends Component
     use WithPagination;
 
     public $search = '';
+    #[Locked]
     public $peiAtivo;
+    #[Locked]
     public $organizacaoId;
 
     // Campos do Modal

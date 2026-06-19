@@ -5,6 +5,7 @@ namespace App\Livewire\StrategicPlanning;
 use App\Models\StrategicPlanning\AnaliseAmbiental;
 use App\Models\StrategicPlanning\PEI;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Session;
@@ -14,7 +15,9 @@ class AnalisePESTEL extends Component
 {
     use AuthorizesRequests;
 
+    #[Locked]
     public $peiAtivo;
+    #[Locked]
     public $organizacaoId;
     public $organizacaoNome;
 
@@ -79,6 +82,8 @@ class AnalisePESTEL extends Component
 
     public function adicionarSugerido($categoria, $item)
     {
+        abort_unless($this->peiAtivo !== null && $this->organizacaoId !== null, 403);
+
         AnaliseAmbiental::create([
             'cod_pei' => $this->peiAtivo->cod_pei,
             'cod_organizacao' => $this->organizacaoId,

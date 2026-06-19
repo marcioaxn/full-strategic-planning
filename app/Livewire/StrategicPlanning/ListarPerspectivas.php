@@ -5,6 +5,7 @@ namespace App\Livewire\StrategicPlanning;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Perspectiva;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Illuminate\Support\Facades\Session;
 
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Session;
 class ListarPerspectivas extends Component
 {
     public $perspectivas = [];
+    #[Locked]
     public $peiAtivo;
 
     public bool $showModal = false;
