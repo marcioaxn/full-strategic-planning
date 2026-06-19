@@ -7,6 +7,7 @@ use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\Agenda2030\ODS;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Illuminate\Support\Facades\Session;
 
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Session;
 class ListarObjetivos extends Component
 {
     public $perspectivas = [];
+    #[Locked]
     public $peiAtivo;
 
     public bool $showModal = false;

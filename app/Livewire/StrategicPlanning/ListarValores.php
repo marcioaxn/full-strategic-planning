@@ -6,6 +6,7 @@ use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Valor;
 use App\Models\Organization;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Session;
@@ -15,8 +16,10 @@ class ListarValores extends Component
 {
     use AuthorizesRequests;
 
+    #[Locked]
     public $organizacaoId;
     public $organizacaoNome;
+    #[Locked]
     public $peiAtivo;
 
     public $valores = [];

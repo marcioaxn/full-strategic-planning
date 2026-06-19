@@ -7,6 +7,7 @@ use App\Models\StrategicPlanning\CenarioProspectivo;
 use App\Models\StrategicPlanning\ParteInteressada;
 use App\Models\StrategicPlanning\PEI;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Session;
@@ -16,7 +17,9 @@ class AnaliseSWOT extends Component
 {
     use AuthorizesRequests;
 
+    #[Locked]
     public $peiAtivo;
+    #[Locked]
     public $organizacaoId;
     public $organizacaoNome;
 
@@ -118,6 +121,7 @@ class AnaliseSWOT extends Component
     public function adicionarSugerido($categoria, $item)
     {
         if (!$this->peiAtivo) return;
+        abort_unless($this->organizacaoId !== null, 403);
 
         AnaliseAmbiental::create([
             'cod_pei' => $this->peiAtivo->cod_pei,
