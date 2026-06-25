@@ -4,7 +4,9 @@ namespace App\Livewire\StrategicPlanning;
 
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Rae;
+use App\Models\StrategicPlanning\RaeEncaminhamento;
 use App\Models\Organization;
+use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Facades\Session;
@@ -16,6 +18,7 @@ class GerenciarRae extends Component
     public $organizacaoId;
     public $organizacaoNome;
 
+    // Modal RAE
     public bool $showModal    = false;
     public bool $showDelete   = false;
     public ?string $raeEditId = null;
@@ -31,6 +34,24 @@ class GerenciarRae extends Component
         'participantes_raw'          => '',
         'num_progresso_geral'        => '',
     ];
+
+    // Modal Encaminhamento
+    public bool $showEncModal      = false;
+    public bool $showEncDelete     = false;
+    public ?string $encEditId      = null;
+    public ?string $encDeleteId    = null;
+    public ?string $encRaeId       = null;
+
+    public array $encForm = [
+        'dsc_tipo'       => 'Outro',
+        'txt_descricao'  => '',
+        'cod_responsavel'=> '',
+        'dte_prazo'      => '',
+        'dsc_status'     => 'Pendente',
+    ];
+
+    // Controla quais RAEs têm painel de encaminhamentos expandido
+    public array $encExpanded = [];
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
@@ -56,6 +77,8 @@ class GerenciarRae extends Component
         $this->organizacaoId   = $id;
         $this->organizacaoNome = $id ? Organization::find($id)?->nom_organizacao : null;
     }
+
+    // ── RAE ──────────────────────────────────────────────────────────────────
 
     public function novaRae(): void
     {
@@ -93,9 +116,9 @@ class GerenciarRae extends Component
     public function salvarRae(): void
     {
         $this->validate([
-            'form.dte_referencia'  => 'required|date',
-            'form.dte_reuniao'     => 'nullable|date',
-            'form.dsc_tipo_reuniao'=> 'required|string',
+            'form.dte_referencia'      => 'required|date',
+            'form.dte_reuniao'         => 'nullable|date',
+            'form.dsc_tipo_reuniao'    => 'required|string',
             'form.num_progresso_geral' => 'nullable|numeric|min:0|max:100',
         ], [
             'form.dte_referencia.required' => 'Informe o período de referência.',
@@ -154,18 +177,123 @@ class GerenciarRae extends Component
         );
     }
 
+    // ── ENCAMINHAMENTOS ───────────────────────────────────────────────────────
+
+    public function toggleEncaminhamentos(string $raeId): void
+    {
+        if (in_array($raeId, $this->encExpanded)) {
+            $this->encExpanded = array_values(array_filter($this->encExpanded, fn($id) => $id !== $raeId));
+        } else {
+            $this->encExpanded[] = $raeId;
+        }
+    }
+
+    public function novoEncaminhamento(string $raeId): void
+    {
+        $this->encEditId  = null;
+        $this->encRaeId   = $raeId;
+        $this->encForm    = [
+            'dsc_tipo'        => 'Outro',
+            'txt_descricao'   => '',
+            'cod_responsavel' => '',
+            'dte_prazo'       => '',
+            'dsc_status'      => 'Pendente',
+        ];
+
+        if (! in_array($raeId, $this->encExpanded)) {
+            $this->encExpanded[] = $raeId;
+        }
+
+        $this->showEncModal = true;
+    }
+
+    public function editarEncaminhamento(string $id): void
+    {
+        $enc = RaeEncaminhamento::findOrFail($id);
+        $this->encEditId  = $id;
+        $this->encRaeId   = $enc->cod_rae;
+        $this->encForm    = [
+            'dsc_tipo'        => $enc->dsc_tipo,
+            'txt_descricao'   => $enc->txt_descricao,
+            'cod_responsavel' => $enc->cod_responsavel ?? '',
+            'dte_prazo'       => $enc->dte_prazo?->format('Y-m-d') ?? '',
+            'dsc_status'      => $enc->dsc_status,
+        ];
+        $this->showEncModal = true;
+    }
+
+    public function salvarEncaminhamento(): void
+    {
+        $this->validate([
+            'encForm.dsc_tipo'      => 'required|in:' . implode(',', RaeEncaminhamento::TIPOS),
+            'encForm.txt_descricao' => 'required|string|max:2000',
+            'encForm.cod_responsavel' => 'nullable|exists:pei.users,id',
+            'encForm.dte_prazo'     => 'nullable|date',
+            'encForm.dsc_status'    => 'required|in:' . implode(',', RaeEncaminhamento::STATUS),
+        ], [
+            'encForm.dsc_tipo.required'      => 'Selecione o tipo de encaminhamento.',
+            'encForm.txt_descricao.required' => 'Descreva o encaminhamento.',
+        ]);
+
+        $data = [
+            'cod_rae'         => $this->encRaeId,
+            'dsc_tipo'        => $this->encForm['dsc_tipo'],
+            'txt_descricao'   => $this->encForm['txt_descricao'],
+            'cod_responsavel' => $this->encForm['cod_responsavel'] ?: null,
+            'dte_prazo'       => $this->encForm['dte_prazo'] ?: null,
+            'dsc_status'      => $this->encForm['dsc_status'],
+        ];
+
+        $this->encEditId
+            ? RaeEncaminhamento::findOrFail($this->encEditId)->update($data)
+            : RaeEncaminhamento::create($data);
+
+        $this->showEncModal = false;
+        $this->encEditId    = null;
+        $this->dispatch('notify', message: 'Encaminhamento salvo.', style: 'success');
+    }
+
+    public function atualizarStatusEnc(string $id, string $status): void
+    {
+        $enc = RaeEncaminhamento::findOrFail($id);
+        $enc->update(['dsc_status' => $status]);
+        $this->dispatch('notify', message: 'Status atualizado.', style: 'success');
+    }
+
+    public function confirmarExclusaoEnc(string $id): void
+    {
+        $this->encDeleteId = $id;
+        $this->showEncDelete = true;
+    }
+
+    public function excluirEncaminhamento(): void
+    {
+        RaeEncaminhamento::findOrFail($this->encDeleteId)->delete();
+        $this->showEncDelete = false;
+        $this->encDeleteId   = null;
+        $this->dispatch('notify', message: 'Encaminhamento removido.', style: 'warning');
+    }
+
+    // ── RENDER ────────────────────────────────────────────────────────────────
+
     public function render()
     {
         $raes = ($this->peiAtivo && $this->organizacaoId)
             ? Rae::where('cod_pei', $this->peiAtivo->cod_pei)
                 ->where('cod_organizacao', $this->organizacaoId)
+                ->with(['encaminhamentos.responsavel'])
                 ->orderByDesc('dte_referencia')
                 ->get()
             : collect();
 
+        $usuarios = User::where('ativo', true)->orderBy('name')->get(['id', 'name']);
+
         return view('livewire.p-e-i.gerenciar-rae', [
             'raes'         => $raes,
             'tiposReuniao' => Rae::TIPOS_REUNIAO,
+            'tiposEnc'     => RaeEncaminhamento::TIPOS,
+            'statusEnc'    => RaeEncaminhamento::STATUS,
+            'usuarios'     => $usuarios,
         ]);
     }
 }
