@@ -1090,6 +1090,103 @@
             </div>
             @endif
 
+            {{-- ── Matriz TOWS ─────────────────────────────────────────── --}}
+            <div class="card border-0 shadow-sm mb-4 mt-4">
+                <div class="card-header bg-transparent border-bottom d-flex justify-content-between align-items-center py-3 px-4">
+                    <div>
+                        <h6 class="fw-bold mb-0"><i class="bi bi-table me-2 text-purple" style="color:#6f42c1"></i>Matriz TOWS — Estratégias Derivadas</h6>
+                        <small class="text-muted">Weihrich (1982) — cruzamento SWOT para derivar estratégias concretas</small>
+                    </div>
+                    <button wire:click="novaEstrategiaTows" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                        <i class="bi bi-plus-lg me-1"></i>Nova Estratégia
+                    </button>
+                </div>
+                <div class="card-body p-3">
+                    <div class="row g-3">
+                        @foreach($tiposTows as $tipo => $meta)
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3 h-100" style="border-color: var(--bs-{{ $meta['cor'] }}) !important;">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-{{ $meta['cor'] }} fs-6 px-3">{{ $tipo }}</span>
+                                    <button wire:click="novaEstrategiaTows('{{ $tipo }}')"
+                                            class="btn btn-sm btn-outline-{{ $meta['cor'] }} rounded-pill px-2">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                                <p class="small text-muted mb-2 fst-italic">{{ $meta['desc'] }}</p>
+                                @forelse($tows->get($tipo, collect()) as $est)
+                                <div class="d-flex justify-content-between align-items-start bg-light rounded-2 p-2 mb-2">
+                                    <div class="flex-grow-1">
+                                        <p class="mb-1 small fw-semibold">{{ $est->dsc_estrategia }}</p>
+                                        @if($est->objetivo)
+                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 small">
+                                                <i class="bi bi-bullseye me-1"></i>{{ Str::limit($est->objetivo->nom_objetivo, 35) }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div class="d-flex gap-1 ms-2">
+                                        <button wire:click="editarEstrategiaTows('{{ $est->cod_estrategia }}')" class="btn btn-xs btn-light border"><i class="bi bi-pencil"></i></button>
+                                        <button wire:click="excluirEstrategiaTows('{{ $est->cod_estrategia }}')" class="btn btn-xs btn-light border text-danger"><i class="bi bi-trash"></i></button>
+                                    </div>
+                                </div>
+                                @empty
+                                <p class="text-muted small fst-italic mb-0">Nenhuma estratégia registrada.</p>
+                                @endforelse
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            {{-- Modal: TOWS --}}
+            @if($showModalTows)
+            <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.5);">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold"><i class="bi bi-table me-2" style="color:#6f42c1"></i>Estratégia TOWS</h5>
+                            <button type="button" class="btn-close" wire:click="$set('showModalTows',false)"></button>
+                        </div>
+                        <div class="modal-body px-4">
+                            <form wire:submit="salvarEstrategiaTows">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Quadrante</label>
+                                    <select wire:model="formTows.dsc_tipo" class="form-select">
+                                        @foreach($tiposTows as $t => $m)
+                                            <option value="{{ $t }}">{{ $m['label'] }} — {{ $m['desc'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Estratégia <span class="text-danger">*</span></label>
+                                    <textarea wire:model="formTows.dsc_estrategia" class="form-control @error('formTows.dsc_estrategia') is-invalid @enderror" rows="3" placeholder="Descreva a estratégia derivada do cruzamento SWOT..."></textarea>
+                                    @error('formTows.dsc_estrategia') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Fundamentação (Quais forças/fraquezas e oportunidades/ameaças embasam)</label>
+                                    <textarea wire:model="formTows.txt_fundamentacao" class="form-control" rows="2" placeholder="Ex: Aproveita a Força F1 e a Oportunidade O2..."></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Objetivo Estratégico que operacionaliza esta estratégia</label>
+                                    <select wire:model="formTows.cod_objetivo_vinculado" class="form-select">
+                                        <option value="">— Nenhum (a estratégia ainda não tem objetivo) —</option>
+                                        @foreach($objetivosOptions as $obj)
+                                            <option value="{{ $obj['cod_objetivo'] }}">{{ $obj['nom_objetivo'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2 mt-4">
+                                    <button type="button" class="btn btn-light rounded-pill px-4" wire:click="$set('showModalTows',false)">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary rounded-pill px-5"><i class="bi bi-check-lg me-2"></i>Salvar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
         @endif
     @endif
 </div>

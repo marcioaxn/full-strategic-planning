@@ -4,6 +4,8 @@ namespace App\Livewire\StrategicPlanning;
 
 use App\Models\StrategicPlanning\AnaliseAmbiental;
 use App\Models\StrategicPlanning\CenarioProspectivo;
+use App\Models\StrategicPlanning\EstrategiaTows;
+use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\ParteInteressada;
 use App\Models\StrategicPlanning\PEI;
 use Livewire\Attributes\Layout;
@@ -69,6 +71,17 @@ class AnaliseSWOT extends Component
         'num_probabilidade'        => 3,
         'num_impacto'              => 3,
     ];
+
+    // Matriz TOWS
+    public bool $showModalTows = false;
+    public ?string $towsEditId = null;
+    public array $formTows = [
+        'dsc_tipo'               => 'SO',
+        'dsc_estrategia'         => '',
+        'txt_fundamentacao'      => '',
+        'cod_objetivo_vinculado' => '',
+    ];
+    public array $objetivosOptions = [];
 
     public bool $aiEnabled = false;
     public $aiSuggestion = '';
@@ -174,6 +187,14 @@ class AnaliseSWOT extends Component
         $this->carregarDados();
     }
 
+    private function carregarObjetivos(): void
+    {
+        $this->objetivosOptions = $this->peiAtivo
+            ? Objetivo::whereHas('perspectiva', fn($q) => $q->where('cod_pei', $this->peiAtivo->cod_pei))
+                ->orderBy('nom_objetivo')->get(['cod_objetivo', 'nom_objetivo'])->toArray()
+            : [];
+    }
+
     public function carregarDados()
     {
         if (!$this->peiAtivo) return;
@@ -192,6 +213,64 @@ class AnaliseSWOT extends Component
         $this->fraquezas = $itens->where('dsc_categoria', AnaliseAmbiental::SWOT_FRAQUEZA)->values()->toArray();
         $this->oportunidades = $itens->where('dsc_categoria', AnaliseAmbiental::SWOT_OPORTUNIDADE)->values()->toArray();
         $this->ameacas = $itens->where('dsc_categoria', AnaliseAmbiental::SWOT_AMEACA)->values()->toArray();
+
+        $this->carregarObjetivos();
+    }
+
+    // ── Matriz TOWS ───────────────────────────────────────────────────────────
+
+    public function novaEstrategiaTows(string $tipo = 'SO'): void
+    {
+        $this->towsEditId = null;
+        $this->formTows   = ['dsc_tipo' => $tipo, 'dsc_estrategia' => '', 'txt_fundamentacao' => '', 'cod_objetivo_vinculado' => ''];
+        $this->showModalTows = true;
+    }
+
+    public function editarEstrategiaTows(string $id): void
+    {
+        $e = EstrategiaTows::findOrFail($id);
+        abort_unless($this->peiAtivo && $e->cod_pei === $this->peiAtivo->cod_pei, 403);
+        $this->towsEditId = $id;
+        $this->formTows   = [
+            'dsc_tipo'               => $e->dsc_tipo,
+            'dsc_estrategia'         => $e->dsc_estrategia,
+            'txt_fundamentacao'      => $e->txt_fundamentacao ?? '',
+            'cod_objetivo_vinculado' => $e->cod_objetivo_vinculado ?? '',
+        ];
+        $this->showModalTows = true;
+    }
+
+    public function salvarEstrategiaTows(): void
+    {
+        $this->validate([
+            'formTows.dsc_tipo'       => 'required|in:SO,ST,WO,WT',
+            'formTows.dsc_estrategia' => 'required|string|max:1000',
+        ], ['formTows.dsc_estrategia.required' => 'Descreva a estratégia TOWS.']);
+
+        $data = [
+            'cod_pei'                => $this->peiAtivo->cod_pei,
+            'cod_organizacao'        => $this->organizacaoId,
+            'dsc_tipo'               => $this->formTows['dsc_tipo'],
+            'dsc_estrategia'         => $this->formTows['dsc_estrategia'],
+            'txt_fundamentacao'      => $this->formTows['txt_fundamentacao'] ?: null,
+            'cod_objetivo_vinculado' => $this->formTows['cod_objetivo_vinculado'] ?: null,
+        ];
+
+        $this->towsEditId
+            ? EstrategiaTows::findOrFail($this->towsEditId)->update($data)
+            : EstrategiaTows::create($data);
+
+        $this->showModalTows = false;
+        $this->towsEditId    = null;
+        $this->dispatch('notify', message: 'Estratégia TOWS salva.', style: 'success');
+    }
+
+    public function excluirEstrategiaTows(string $id): void
+    {
+        $e = EstrategiaTows::findOrFail($id);
+        abort_unless($this->peiAtivo && $e->cod_pei === $this->peiAtivo->cod_pei, 403);
+        $e->delete();
+        $this->dispatch('notify', message: 'Estratégia removida.', style: 'warning');
     }
 
     public function toggleModoVisualizacao()
@@ -404,12 +483,23 @@ class AnaliseSWOT extends Component
             ? CenarioProspectivo::where('cod_pei', $this->peiAtivo->cod_pei)->orderBy('num_ordem')->orderBy('dsc_tipo')->get()
             : collect();
 
+        $tows = $this->peiAtivo
+            ? EstrategiaTows::where('cod_pei', $this->peiAtivo->cod_pei)
+                ->when($this->organizacaoId, fn($q) => $q->where('cod_organizacao', $this->organizacaoId))
+                ->with('objetivo')
+                ->orderBy('dsc_tipo')
+                ->get()
+                ->groupBy('dsc_tipo')
+            : collect();
+
         return view('livewire.p-e-i.analise-s-w-o-t', [
             'categorias'   => AnaliseAmbiental::categoriasSWOT(),
             'partes'       => $partes,
             'tiposParte'   => ParteInteressada::TIPOS,
             'cenarios'     => $cenarios,
             'tiposCenario' => CenarioProspectivo::TIPOS,
+            'tows'         => $tows,
+            'tiposTows'    => EstrategiaTows::TIPOS,
         ]);
     }
 }
