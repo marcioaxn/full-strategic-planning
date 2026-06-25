@@ -595,6 +595,7 @@
                             <th>Período / Unidade</th>
                             <th class="text-center">Polaridade</th>
                             <th>Performance</th>
+                            <th class="text-center" title="Planos de Ação vinculados (ROAD-005)">Planos</th>
                             <th class="text-end pe-4">Ações</th>
                         </tr>
                     </thead>
@@ -659,6 +660,22 @@
                                         <div class="farol-dot me-2" style="background-color: {{ $corFarol ?: '#dee2e6' }}; shadow: 0 0 5px {{ $corFarol }}88;"></div>
                                         <span class="fw-bold fs-6">@brazil_percent($atingimento, 1)</span>
                                     </div>
+                                </td>
+                                {{-- Coluna: Planos de Ação vinculados (ROAD-005) --}}
+                                <td class="text-center">
+                                    @php $qtdPlanos = $ind->planosDeAcaoVinculados->count(); @endphp
+                                    @if($qtdPlanos > 0)
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2"
+                                              data-bs-toggle="tooltip"
+                                              title="{{ $ind->planosDeAcaoVinculados->pluck('dsc_plano_de_acao')->join(', ') }}">
+                                            <i class="bi bi-link-45deg"></i> {{ $qtdPlanos }}
+                                        </span>
+                                    @else
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-2"
+                                              data-bs-toggle="tooltip" title="Sem plano de ação vinculado">
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="text-end pe-4">
                                     <div class="d-flex align-items-center justify-content-end gap-2">

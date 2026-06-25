@@ -441,7 +441,7 @@ class ListarIndicadores extends Component
 
     public function render()
     {
-        $query = Indicador::query()->with(['objetivo', 'planoDeAcao', 'evolucoes', 'metasPorAno']);
+        $query = Indicador::query()->with(['objetivo', 'planoDeAcao', 'evolucoes', 'metasPorAno', 'planosDeAcaoVinculados']);
 
         // Se há filtro por objetivo específico, prioriza esse filtro
         if ($this->filtroObjetivo) {

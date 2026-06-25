@@ -132,12 +132,13 @@ class Index extends Component
         $this->dispatch('graficosAtualizados', chartData: $this->chartData);
 
         return view('livewire.dashboard.index', [
-            'stats' => $this->getStats(),
-            'minhasEntregas' => $this->getMinhasEntregas(),
-            'entregasAgrupadas' => $this->getMinhasEntregasAgrupadas(),
-            'comentariosRecentes' => $this->getComentariosRecentes(),
-            'alertasPrazos' => $this->getAlertasPrazos(),
-            'odsCobertura' => $this->getOdsCobertura(),
+            'stats'              => $this->getStats(),
+            'iqg'                => $this->getIQG(),
+            'minhasEntregas'     => $this->getMinhasEntregas(),
+            'entregasAgrupadas'  => $this->getMinhasEntregasAgrupadas(),
+            'comentariosRecentes'=> $this->getComentariosRecentes(),
+            'alertasPrazos'      => $this->getAlertasPrazos(),
+            'odsCobertura'       => $this->getOdsCobertura(),
         ]);
     }
 
@@ -419,6 +420,16 @@ class Index extends Component
             'labels' => array_slice($meses, 0, count($dadosPorMes)),
             'data' => $dadosPorMes
         ];
+    }
+
+    private function getIQG(): array
+    {
+        if (! $this->peiAtivo) {
+            return ['valor' => 0, 'tem_dados' => false, 'grau' => null, 'perspectivas' => []];
+        }
+
+        $service = app(\App\Services\IndicadorCalculoService::class);
+        return $service->calcularIQG($this->peiAtivo->cod_pei, (int) $this->anoSelecionado);
     }
 
     private function getCorAtingimento($percentual)

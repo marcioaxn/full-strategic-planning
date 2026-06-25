@@ -156,6 +156,21 @@ class Indicador extends Model implements Auditable
     }
 
     /**
+     * Planos de Ação vinculados via pivô (ROAD-005)
+     */
+    public function planosDeAcaoVinculados(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            PlanoDeAcao::class,
+            'performance_indicators.rel_indicador_plano_de_acao',
+            'cod_indicador',
+            'cod_plano_de_acao',
+            'cod_indicador',
+            'cod_plano_de_acao'
+        )->withPivot('txt_justificativa')->withTimestamps();
+    }
+
+    /**
      * Relacionamento: Organizações (muitos-para-muitos)
      */
     public function organizacoes(): BelongsToMany

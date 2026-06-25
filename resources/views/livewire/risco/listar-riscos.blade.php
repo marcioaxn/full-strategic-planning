@@ -532,6 +532,23 @@
                                     <span class="text-muted small fw-mono">R-{{ str_pad($risco->num_codigo_risco, 3, '0', STR_PAD_LEFT) }}</span>
                                     <span class="fw-bold text-dark d-block mb-1">{{ $risco->dsc_titulo }}</span>
                                     <small class="text-muted d-block">{{ $risco->dsc_status }}</small>
+                                    @if($risco->dsc_estrategia_resposta)
+                                        <span class="badge rounded-pill px-2 mt-1
+                                            {{ match($risco->dsc_estrategia_resposta) {
+                                                'Mitigar'    => 'bg-primary-subtle text-primary',
+                                                'Evitar'     => 'bg-danger-subtle text-danger',
+                                                'Transferir' => 'bg-warning-subtle text-warning',
+                                                'Aceitar'    => 'bg-secondary-subtle text-secondary',
+                                                default      => 'bg-light text-muted'
+                                            } }}" style="font-size:.65rem;">
+                                            <i class="bi bi-shield-check me-1"></i>{{ $risco->dsc_estrategia_resposta }}
+                                        </span>
+                                    @endif
+                                    @if($risco->revisaoVencida())
+                                        <span class="badge bg-danger rounded-pill px-2 mt-1" style="font-size:.65rem;" title="Prazo de revisão vencido">
+                                            <i class="bi bi-clock-history me-1"></i>Revisão vencida
+                                        </span>
+                                    @endif
                                 </td>
                                 <td>
                                     <span class="badge bg-light text-dark border px-3 rounded-pill">{{ $risco->dsc_categoria }}</span>
@@ -721,6 +738,40 @@
                                                     @endforeach
                                                 </select>
                                                 @error('form.cod_responsavel_monitoramento') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                            </div>
+
+                                            {{-- Resposta ao Risco (ISO 31000) --}}
+                                            <div class="mb-4">
+                                                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                                                    <i class="bi bi-shield-check me-1 text-primary"></i>Resposta ao Risco (ISO 31000)
+                                                </h6>
+                                                <label class="form-label text-muted small text-uppercase fw-bold">Estratégia de Resposta</label>
+                                                <select wire:model.live="form.dsc_estrategia_resposta" class="form-select bg-white border-0 shadow-sm mb-2 @error('form.dsc_estrategia_resposta') is-invalid @enderror">
+                                                    <option value="">— Não definida —</option>
+                                                    @foreach($estrategiasOptions as $est)
+                                                        <option value="{{ $est }}">{{ $est }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @if($form['dsc_estrategia_resposta'])
+                                                    <div class="small text-muted mb-2 ps-1">
+                                                        @switch($form['dsc_estrategia_resposta'])
+                                                            @case('Mitigar') Reduzir a probabilidade ou o impacto do risco. @break
+                                                            @case('Evitar') Eliminar a causa raiz ou abandonar a atividade. @break
+                                                            @case('Transferir') Compartilhar o risco (seguro, terceirização). @break
+                                                            @case('Aceitar') Registrar conscientemente e monitorar. Exige justificativa. @break
+                                                        @endswitch
+                                                    </div>
+                                                @endif
+                                                @if($form['dsc_estrategia_resposta'] === 'Aceitar')
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Justificativa <span class="text-danger">*</span></label>
+                                                    <textarea wire:model="form.txt_justificativa_estrategia" rows="2"
+                                                              class="form-control bg-white border-0 shadow-sm @error('form.txt_justificativa_estrategia') is-invalid @enderror"
+                                                              placeholder="Por que este risco está sendo aceito sem mitigação?"></textarea>
+                                                    @error('form.txt_justificativa_estrategia') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                                @endif
+                                                <label class="form-label text-muted small text-uppercase fw-bold mt-2">Próxima Revisão</label>
+                                                <input type="date" wire:model="form.dte_proxima_revisao"
+                                                       class="form-control bg-white border-0 shadow-sm">
                                             </div>
 
                                             <div class="mb-0">
