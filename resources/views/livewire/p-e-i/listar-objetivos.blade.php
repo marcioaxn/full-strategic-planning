@@ -497,14 +497,20 @@
                         </thead>
                         <tbody class="border-top-0">
                             @forelse($perspectiva->objetivos as $objetivo)
+                                {{-- Linha: objetivo raiz --}}
                                 <tr>
                                     <td class="ps-4 fw-semibold text-primary">
                                         {{ $objetivo->num_nivel_hierarquico_apresentacao }}
                                     </td>
                                     <td>
-                                        <a href="{{ route('objetivos.detalhes', $objetivo->cod_objetivo) }}" wire:navigate class="fw-bold text-dark text-decoration-none hover-primary">{{ $objetivo->nom_objetivo }}</a>
+                                        <div class="d-flex align-items-center gap-2">
+                                            @if($objetivo->objetivosFilhos->isNotEmpty())
+                                                <i class="bi bi-diagram-2 text-primary small" title="{{ $objetivo->objetivosFilhos->count() }} objetivo(s) desdobrado(s)"></i>
+                                            @endif
+                                            <a href="{{ route('objetivos.detalhes', $objetivo->cod_objetivo) }}" wire:navigate class="fw-bold text-dark text-decoration-none hover-primary">{{ $objetivo->nom_objetivo }}</a>
+                                        </div>
                                         @if($objetivo->ods->isNotEmpty())
-                                            <div class="d-flex flex-wrap align-items-center gap-1 mt-1">
+                                            <div class="d-flex flex-wrap align-items-center gap-1 mt-1 ms-4">
                                                 @foreach($objetivo->ods as $ods)
                                                     <x-ods-badge :ods="$ods" size="sm" />
                                                 @endforeach
@@ -530,6 +536,46 @@
                                         </div>
                                     </td>
                                 </tr>
+                                {{-- Sub-linhas: objetivos filhos (desdobramento Hoshin Kanri) --}}
+                                @foreach($objetivo->objetivosFilhos as $filho)
+                                <tr class="table-light">
+                                    <td class="ps-4 text-muted small">
+                                        <span class="ms-3">↳</span> {{ $filho->num_nivel_hierarquico_apresentacao }}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2 ps-4">
+                                            <i class="bi bi-arrow-return-right text-muted small"></i>
+                                            <a href="{{ route('objetivos.detalhes', $filho->cod_objetivo) }}" wire:navigate class="fw-semibold text-secondary text-decoration-none hover-primary small">{{ $filho->nom_objetivo }}</a>
+                                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2" style="font-size:.65rem;">desdobrado</span>
+                                        </div>
+                                        @if($filho->ods->isNotEmpty())
+                                            <div class="d-flex flex-wrap align-items-center gap-1 mt-1 ps-5">
+                                                @foreach($filho->ods as $ods)
+                                                    <x-ods-badge :ods="$ods" size="sm" />
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="text-muted small text-truncate" style="max-width: 400px;" title="{{ $filho->dsc_objetivo }}">
+                                            {{ $filho->dsc_objetivo ?: __('Sem descrição') }}
+                                        </div>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-flex justify-content-end gap-1">
+                                            <a href="{{ route('objetivos.detalhes', $filho->cod_objetivo) }}" wire:navigate class="btn btn-sm btn-icon btn-ghost-info rounded-circle" title="{{ __('Detalhar') }}">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <button wire:click="edit('{{ $filho->cod_objetivo }}')" class="btn btn-sm btn-icon btn-ghost-primary rounded-circle" title="{{ __('Editar') }}">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button wire:click="confirmDelete('{{ $filho->cod_objetivo }}')" class="btn btn-sm btn-icon btn-ghost-danger rounded-circle" title="{{ __('Excluir') }}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
                             @empty
                                 <tr>
                                     <td colspan="4" class="text-center py-4 text-muted small italic">
@@ -638,6 +684,23 @@
                                                     @endforeach
                                                 </select>
                                                 @error('cod_perspectiva') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                            </div>
+
+                                            {{-- Objetivo Pai (Desdobramento Hoshin Kanri) --}}
+                                            <div class="mb-4 text-start">
+                                                <label class="form-label text-muted small text-uppercase fw-bold">
+                                                    <i class="bi bi-diagram-2 me-1 text-primary"></i>Desdobramento de
+                                                </label>
+                                                <select wire:model="cod_objetivo_pai" class="form-select bg-white border-0 shadow-sm">
+                                                    <option value="">— Objetivo raiz (nível estratégico) —</option>
+                                                    @foreach($objetivosPossivelPai as $pai)
+                                                        <option value="{{ $pai->cod_objetivo }}">
+                                                            [{{ $pai->perspectiva->dsc_perspectiva }}] {{ $pai->nom_objetivo }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('cod_objetivo_pai') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                                <p class="x-small text-muted mt-1 mb-0">Opcional. Use para desdobrar este objetivo a partir de um objetivo estratégico de nível superior (Hoshin Kanri).</p>
                                             </div>
 
                                             {{-- Ordem --}}

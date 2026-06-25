@@ -2,7 +2,7 @@
 
 namespace App\Livewire\StrategicPlanning;
 
-use App\Models\StrategicPlanning\MissaoVisaoValores;
+use App\Models\StrategicPlanning\IdentidadeEstrategica;
 use App\Models\StrategicPlanning\Valor;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\Organization;
@@ -17,6 +17,7 @@ class MissaoVisao extends Component
 {
     use AuthorizesRequests;
 
+    public $negocio = '';
     public $missao = '';
     public $visao = '';
     #[Locked]
@@ -152,6 +153,7 @@ class MissaoVisao extends Component
     public function resetarDados()
     {
         $this->identidadeId = null;
+        $this->negocio = '';
         $this->missao = '';
         $this->visao = '';
         $this->organizacaoNome = '';
@@ -161,7 +163,7 @@ class MissaoVisao extends Component
     public function carregarDados()
     {
         // Carregar Missão/Visão
-        $dados = MissaoVisaoValores::where('cod_organizacao', $this->organizacaoId)
+        $dados = IdentidadeEstrategica::where('cod_organizacao', $this->organizacaoId)
             ->where(function($q) {
                 // Tenta buscar pelo PEI ativo, ou o último registro se não houver PEI específico
                 if ($this->peiAtivo) {
@@ -173,10 +175,12 @@ class MissaoVisao extends Component
 
         if ($dados) {
             $this->identidadeId = $dados->cod_missao_visao_valores;
+            $this->negocio = $dados->dsc_negocio ?? '';
             $this->missao = $dados->dsc_missao;
             $this->visao = $dados->dsc_visao;
         } else {
             $this->identidadeId = null;
+            $this->negocio = '';
             $this->missao = '';
             $this->visao = '';
         }
@@ -219,16 +223,18 @@ class MissaoVisao extends Component
         $before = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
 
         $this->validate([
+            'negocio' => 'nullable|string|max:2000',
             'missao' => 'nullable|string|max:5000',
             'visao' => 'nullable|string|max:5000',
         ]);
 
-        MissaoVisaoValores::updateOrCreate(
+        IdentidadeEstrategica::updateOrCreate(
             [
                 'cod_organizacao' => $this->organizacaoId,
                 'cod_pei' => $this->peiAtivo->cod_pei
             ],
             [
+                'dsc_negocio' => $this->negocio ?: null,
                 'dsc_missao' => $this->missao,
                 'dsc_visao' => $this->visao,
             ]

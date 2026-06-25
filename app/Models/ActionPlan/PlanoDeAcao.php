@@ -125,11 +125,26 @@ class PlanoDeAcao extends Model implements Auditable
     }
 
     /**
-     * Relacionamento: Indicadores
+     * Relacionamento: Indicadores (HasMany via FK direta)
      */
     public function indicadores(): HasMany
     {
         return $this->hasMany(Indicador::class, 'cod_plano_de_acao', 'cod_plano_de_acao');
+    }
+
+    /**
+     * Indicadores vinculados via pivô (ROAD-005)
+     */
+    public function indicadoresVinculados(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            Indicador::class,
+            'performance_indicators.rel_indicador_plano_de_acao',
+            'cod_plano_de_acao',
+            'cod_indicador',
+            'cod_plano_de_acao',
+            'cod_indicador'
+        )->withPivot('txt_justificativa')->withTimestamps();
     }
 
     /**

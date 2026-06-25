@@ -42,21 +42,25 @@ class ListarRiscos extends Component
 
     // Campos do Formulário
     public $form = [
-        'dsc_titulo' => '',
-        'txt_descricao' => '',
-        'dsc_categoria' => 'Operacional',
-        'num_probabilidade' => 3,
-        'num_impacto' => 3,
-        'txt_causas' => '',
-        'txt_consequencias' => '',
+        'dsc_titulo'                    => '',
+        'txt_descricao'                 => '',
+        'dsc_categoria'                 => 'Operacional',
+        'num_probabilidade'             => 3,
+        'num_impacto'                   => 3,
+        'txt_causas'                    => '',
+        'txt_consequencias'             => '',
         'cod_responsavel_monitoramento' => '',
-        'dsc_status' => 'Identificado',
-        'objetivos_vinculados' => [], 
+        'dsc_status'                    => 'Identificado',
+        'objetivos_vinculados'          => [],
+        'dsc_estrategia_resposta'       => '',
+        'txt_justificativa_estrategia'  => '',
+        'dte_proxima_revisao'           => '',
     ];
 
     // Listas auxiliares
     public $categoriasOptions = ['Estratégico', 'Operacional', 'Financeiro', 'Reputacional', 'Legal/Conformidade'];
-    public $statusOptions = ['Identificado', 'Em Monitoramento', 'Mitigado', 'Encerrado'];
+    public $statusOptions     = ['Identificado', 'Em Monitoramento', 'Mitigado', 'Encerrado'];
+    public array $estrategiasOptions = [];
     public $objetivos = [];
     public $usuarios = [];
 
@@ -67,7 +71,8 @@ class ListarRiscos extends Component
 
     public function mount()
     {
-        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
+        $this->aiEnabled         = \App\Models\SystemSetting::getValue('ai_enabled', true);
+        $this->estrategiasOptions = Risco::ESTRATEGIAS_RESPOSTA;
         $this->carregarPEI();
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
     }
@@ -191,16 +196,19 @@ class ListarRiscos extends Component
 
         $this->riscoId = $id;
         $this->form = [
-            'dsc_titulo' => $risco->dsc_titulo,
-            'txt_descricao' => $risco->txt_descricao,
-            'dsc_categoria' => $risco->dsc_categoria,
-            'num_probabilidade' => $risco->num_probabilidade,
-            'num_impacto' => $risco->num_impacto,
-            'txt_causas' => $risco->txt_causas,
-            'txt_consequencias' => $risco->txt_consequencias,
+            'dsc_titulo'                    => $risco->dsc_titulo,
+            'txt_descricao'                 => $risco->txt_descricao,
+            'dsc_categoria'                 => $risco->dsc_categoria,
+            'num_probabilidade'             => $risco->num_probabilidade,
+            'num_impacto'                   => $risco->num_impacto,
+            'txt_causas'                    => $risco->txt_causas,
+            'txt_consequencias'             => $risco->txt_consequencias,
             'cod_responsavel_monitoramento' => $risco->cod_responsavel_monitoramento,
-            'dsc_status' => $risco->dsc_status,
-            'objetivos_vinculados' => $risco->objetivos->pluck('cod_objetivo')->toArray(),
+            'dsc_status'                    => $risco->dsc_status,
+            'objetivos_vinculados'          => $risco->objetivos->pluck('cod_objetivo')->toArray(),
+            'dsc_estrategia_resposta'       => $risco->dsc_estrategia_resposta ?? '',
+            'txt_justificativa_estrategia'  => $risco->txt_justificativa_estrategia ?? '',
+            'dte_proxima_revisao'           => $risco->dte_proxima_revisao?->format('Y-m-d') ?? '',
         ];
 
         $this->showModal = true;
@@ -209,11 +217,16 @@ class ListarRiscos extends Component
     public function save()
     {
         $this->validate([
-            'form.dsc_titulo' => 'required|string|max:255',
-            'form.dsc_categoria' => 'required',
-            'form.num_probabilidade' => 'required|integer|min:1|max:5',
-            'form.num_impacto' => 'required|integer|min:1|max:5',
-            'form.cod_responsavel_monitoramento' => 'required|exists:users,id',
+            'form.dsc_titulo'                   => 'required|string|max:255',
+            'form.dsc_categoria'                => 'required',
+            'form.num_probabilidade'            => 'required|integer|min:1|max:5',
+            'form.num_impacto'                  => 'required|integer|min:1|max:5',
+            'form.cod_responsavel_monitoramento'=> 'required|exists:pei.users,id',
+            'form.dsc_estrategia_resposta'      => 'nullable|in:Mitigar,Evitar,Transferir,Aceitar',
+            'form.txt_justificativa_estrategia' => 'required_if:form.dsc_estrategia_resposta,Aceitar|nullable|string|max:2000',
+            'form.dte_proxima_revisao'          => 'nullable|date',
+        ], [
+            'form.txt_justificativa_estrategia.required_if' => 'Ao aceitar o risco, é obrigatório justificar a decisão.',
         ]);
 
         try {
@@ -282,10 +295,19 @@ class ListarRiscos extends Component
     {
         $this->riscoId = null;
         $this->form = [
-            'dsc_titulo' => '', 'txt_descricao' => '', 'dsc_categoria' => 'Operacional',
-            'num_probabilidade' => 3, 'num_impacto' => 3, 'txt_causas' => '',
-            'txt_consequencias' => '', 'cod_responsavel_monitoramento' => '',
-            'dsc_status' => 'Identificado', 'objetivos_vinculados' => [],
+            'dsc_titulo'                    => '',
+            'txt_descricao'                 => '',
+            'dsc_categoria'                 => 'Operacional',
+            'num_probabilidade'             => 3,
+            'num_impacto'                   => 3,
+            'txt_causas'                    => '',
+            'txt_consequencias'             => '',
+            'cod_responsavel_monitoramento' => '',
+            'dsc_status'                    => 'Identificado',
+            'objetivos_vinculados'          => [],
+            'dsc_estrategia_resposta'       => '',
+            'txt_justificativa_estrategia'  => '',
+            'dte_proxima_revisao'           => '',
         ];
     }
 

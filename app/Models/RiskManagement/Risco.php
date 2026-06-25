@@ -21,6 +21,8 @@ class Risco extends Model implements Auditable
     protected $keyType = 'string';
     public $incrementing = false;
 
+    public const ESTRATEGIAS_RESPOSTA = ['Mitigar', 'Evitar', 'Transferir', 'Aceitar'];
+
     protected $fillable = [
         'cod_pei',
         'cod_organizacao',
@@ -35,16 +37,20 @@ class Risco extends Model implements Auditable
         'txt_causas',
         'txt_consequencias',
         'cod_responsavel_monitoramento',
+        'dsc_estrategia_resposta',
+        'txt_justificativa_estrategia',
+        'dte_proxima_revisao',
     ];
 
     protected $casts = [
-        'num_codigo_risco' => 'integer',
+        'num_codigo_risco'  => 'integer',
         'num_probabilidade' => 'integer',
-        'num_impacto' => 'integer',
-        'num_nivel_risco' => 'integer',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
+        'num_impacto'       => 'integer',
+        'num_nivel_risco'   => 'integer',
+        'dte_proxima_revisao' => 'date',
+        'created_at'        => 'datetime',
+        'updated_at'        => 'datetime',
+        'deleted_at'        => 'datetime',
     ];
 
     // === RELACIONAMENTOS ===
@@ -155,6 +161,18 @@ class Risco extends Model implements Auditable
     public function isCritico()
     {
         return $this->num_nivel_risco >= 16;
+    }
+
+    public function revisaoVencida(): bool
+    {
+        return $this->dsc_status !== 'Encerrado'
+            && $this->dte_proxima_revisao !== null
+            && $this->dte_proxima_revisao->isPast();
+    }
+
+    public function precisaJustificativa(): bool
+    {
+        return $this->dsc_estrategia_resposta === 'Aceitar';
     }
 
     public function temPlanoMitigacao()
