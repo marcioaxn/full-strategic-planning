@@ -145,6 +145,11 @@
                             'icon'  => 'globe-americas',
                         ],
                         [
+                            'label' => 'Graus de Satisfação',
+                            'route' => 'graus-satisfacao.index',
+                            'icon'  => 'palette',
+                        ],
+                        [
                             'label' => 'Indicadores',
                             'route' => 'indicadores.index',
                             'icon'  => 'graph-up',
@@ -264,11 +269,6 @@
                             'label' => 'Perfis de Acesso',
                             'route' => 'admin.perfis',
                             'icon'  => 'person-badge',
-                        ],
-                        [
-                            'label' => 'Graus de Satisfação',
-                            'route' => 'graus-satisfacao.index',
-                            'icon'  => 'palette',
                         ],
                         [
                             'label' => 'Configurações',

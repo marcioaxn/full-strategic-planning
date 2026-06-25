@@ -108,8 +108,8 @@ class ListarValores extends Component
 
     public function save()
     {
-        if (!$this->peiAtivo) {
-            session()->flash('error', 'Não é possível salvar sem um Ciclo PEI selecionado.');
+        if (!$this->peiAtivo || !$this->organizacaoId) {
+            session()->flash('error', 'Selecione um Ciclo PEI e uma organização antes de salvar.');
             return;
         }
 
