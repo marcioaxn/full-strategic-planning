@@ -567,6 +567,7 @@
                             <th>Status</th>
                             <th>Período</th>
                             <th>Orçamento</th>
+                            <th class="text-center" title="Indicadores vinculados (ROAD-005)">Indicadores</th>
                             <th class="text-end pe-4">Ações</th>
                         </tr>
                     </thead>
@@ -607,6 +608,19 @@
                                     <small class="fw-mono text-muted">
                                         R$ {{ number_format($plano->vlr_orcamento_previsto, 2, ',', '.') }}
                                     </small>
+                                </td>
+                                {{-- Coluna: Indicadores vinculados (ROAD-005) --}}
+                                <td class="text-center">
+                                    @php $qtdInd = $plano->indicadoresVinculados->count(); @endphp
+                                    @if($qtdInd > 0)
+                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2"
+                                              data-bs-toggle="tooltip"
+                                              title="{{ $plano->indicadoresVinculados->pluck('nom_indicador')->join(', ') }}">
+                                            <i class="bi bi-graph-up me-1"></i>{{ $qtdInd }}
+                                        </span>
+                                    @else
+                                        <span class="text-muted small" data-bs-toggle="tooltip" title="Nenhum indicador vinculado">—</span>
+                                    @endif
                                 </td>
                                 <td class="text-end pe-4">
                                     <div class="d-flex align-items-center justify-content-end gap-2">

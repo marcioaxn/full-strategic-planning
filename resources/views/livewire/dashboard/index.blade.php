@@ -216,6 +216,50 @@
         </div>
     </div>
 
+    {{-- Widget: Índice de Qualidade de Gestão (IQG) — ROAD-004 --}}
+    @if($iqg['tem_dados'] ?? false)
+    @php
+        $iqgValor = $iqg['valor'];
+        $iqgGrau  = $iqg['grau'];
+        $iqgCor   = $iqgGrau?->cor ?? '#6c757d';
+        $iqgNome  = $iqgGrau?->dsc_grau_satisfacao ?? 'Sem grau';
+        $iqgGiro  = min(180, max(0, ($iqgValor / 100) * 180));
+    @endphp
+    <div class="glass-panel p-4 mb-4 animate-entry border-start border-4" style="border-color: {{ $iqgCor }} !important;">
+        <div class="row align-items-center g-3">
+            <div class="col-md-4 text-center">
+                {{-- Gauge semicircular via SVG --}}
+                <svg viewBox="0 0 200 110" style="width:180px;max-width:100%;" aria-label="IQG {{ $iqgValor }}%">
+                    <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#e9ecef" stroke-width="18" stroke-linecap="round"/>
+                    <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none"
+                          stroke="{{ $iqgCor }}" stroke-width="18" stroke-linecap="round"
+                          stroke-dasharray="{{ round(($iqgValor / 100) * 251.2) }} 251.2"/>
+                    <text x="100" y="96" text-anchor="middle" font-size="28" font-weight="800" fill="{{ $iqgCor }}">{{ number_format($iqgValor, 1) }}%</text>
+                    <text x="100" y="112" text-anchor="middle" font-size="10" fill="#6c757d">{{ $iqgNome }}</text>
+                </svg>
+                <p class="fw-bold text-dark mb-0 small">Índice de Qualidade de Gestão</p>
+                <p class="x-small text-muted mb-0">Exercício {{ $anoSelecionado }}</p>
+            </div>
+            <div class="col-md-8">
+                <h6 class="fw-bold text-dark mb-3">
+                    <i class="bi bi-speedometer2 me-2" style="color:{{ $iqgCor }}"></i>Desempenho por Perspectiva
+                </h6>
+                @foreach($iqg['perspectivas'] as $p)
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between align-items-center small mb-1">
+                        <span class="text-muted">{{ Str::limit($p['perspectiva'], 35) }}</span>
+                        <span class="fw-bold" style="color:{{ $iqgCor }}">{{ $p['atingimento'] }}%</span>
+                    </div>
+                    <div class="progress" style="height:6px;">
+                        <div class="progress-bar" style="width:{{ min(100, $p['atingimento']) }}%;background-color:{{ $iqgCor }};"></div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Widget: Cobertura da Agenda 2030 (ODS) --}}
     @php $qtdCobertos = count($odsCobertura['cobertos'] ?? []); @endphp
     <div class="glass-panel p-4 mb-4 animate-entry">

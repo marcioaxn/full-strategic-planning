@@ -225,6 +225,13 @@ class ListarPlanos extends Component
 
     public function create()
     {
+        $bloqueio = app(\App\Services\PeiGuidanceService::class)
+            ->verificarPreRequisitos('planos', $this->peiAtivo?->cod_pei ?? null);
+        if ($bloqueio) {
+            $this->dispatch('notify', message: $bloqueio['mensagem'], style: 'warning');
+            return;
+        }
+
         try {
             $this->authorize('create', PlanoDeAcao::class);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
@@ -233,7 +240,7 @@ class ListarPlanos extends Component
         }
 
         $this->resetForm();
-        
+
         if (!$this->organizacaoId) {
             $this->dispatch('notify', message: 'Selecione uma organização no menu superior.', style: 'warning');
             return;
@@ -405,7 +412,7 @@ class ListarPlanos extends Component
     public function render()
     {
         $query = PlanoDeAcao::query()
-            ->with(['objetivo', 'tipoExecucao', 'organizacoes'])
+            ->with(['objetivo', 'tipoExecucao', 'organizacoes', 'indicadoresVinculados'])
             ->where('cod_tipo_execucao', '!=', 'ecef6a50-c010-4cda-afc3-cbda245b55b0');
 
         if ($this->filtroObjetivo) {

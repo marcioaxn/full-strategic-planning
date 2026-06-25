@@ -64,7 +64,7 @@ class PEI extends Model
      */
     public function identidadeEstrategica(): HasMany
     {
-        return $this->hasMany(MissaoVisaoValores::class, 'cod_pei', 'cod_pei');
+        return $this->hasMany(IdentidadeEstrategica::class, 'cod_pei', 'cod_pei');
     }
 
     /**

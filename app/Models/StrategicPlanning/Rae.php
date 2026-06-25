@@ -6,6 +6,7 @@ use App\Models\Organization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Rae extends Model
@@ -50,5 +51,23 @@ class Rae extends Model
     public function organizacao(): BelongsTo
     {
         return $this->belongsTo(Organization::class, 'cod_organizacao', 'cod_organizacao');
+    }
+
+    public function encaminhamentos(): HasMany
+    {
+        return $this->hasMany(RaeEncaminhamento::class, 'cod_rae', 'cod_rae')
+            ->orderBy('dte_prazo')
+            ->orderBy('created_at');
+    }
+
+    public function encaminhamentosPendentes(): HasMany
+    {
+        return $this->hasMany(RaeEncaminhamento::class, 'cod_rae', 'cod_rae')
+            ->whereIn('dsc_status', ['Pendente', 'Em Execução']);
+    }
+
+    public function causasRaiz(): HasMany
+    {
+        return $this->hasMany(RaeCausaRaiz::class, 'cod_rae', 'cod_rae')->orderBy('created_at');
     }
 }

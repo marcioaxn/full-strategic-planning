@@ -15,7 +15,7 @@ class FuturoAlmejado extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_futuro_almejado_objetivo';
+    protected $table = 'strategic_planning.tab_futuro_almejado_objetivo';
 
     /**
      * Chave primária
@@ -36,8 +36,17 @@ class FuturoAlmejado extends Model
      * Atributos mass assignable
      */
     protected $fillable = [
-        'dsc_futuro_almejado',
         'cod_objetivo',
+        'dsc_situacao_atual',
+        'dsc_futuro_almejado',
+        'dsc_indicador_referencia',
+        'vlr_referencia_meta',
+        'dte_horizonte',
+    ];
+
+    protected $casts = [
+        'vlr_referencia_meta' => 'decimal:4',
+        'dte_horizonte'       => 'date',
     ];
 
     /**
