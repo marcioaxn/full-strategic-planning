@@ -198,6 +198,11 @@
                             'route' => 'relatorios.historico',
                             'icon'  => 'clock-history',
                         ],
+                        [
+                            'label' => 'Lições Aprendidas',
+                            'route' => 'licoes.index',
+                            'icon'  => 'lightbulb',
+                        ],
                     ],
                 ],
 
@@ -214,11 +219,6 @@
                             'label' => 'Minhas Entregas',
                             'route' => 'entregas.minhas',
                             'icon'  => 'person-check',
-                        ],
-                        [
-                            'label' => 'Lições Aprendidas',
-                            'route' => 'licoes.index',
-                            'icon'  => 'lightbulb',
                         ],
                     ],
                 ],
