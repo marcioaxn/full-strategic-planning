@@ -98,11 +98,19 @@ class DemoPreparar extends Command
         $this->line('  <info>2/3</info> Populando dados de demo...');
         $this->popularDemo($nivel);
 
-        $this->line('  <info>3/3</info> Verificando resultado...');
+        $this->line('  <info>3/3</info> Garantindo usuário de demo...');
+        $this->call('db:seed', ['--class' => \Database\Seeders\Demo\DemoUsuarioSeeder::class]);
+
+        $this->line('  <info>4/4</info> Verificando resultado...');
         $this->verificar();
 
         $this->info('');
         $this->info('✅ Demo preparada com sucesso!');
+        $this->info('');
+        $this->table(['Credencial', 'Valor'], [
+            ['E-mail', \Database\Seeders\Demo\DemoUsuarioSeeder::EMAIL],
+            ['Senha',  \Database\Seeders\Demo\DemoUsuarioSeeder::SENHA],
+        ]);
         $this->info('');
 
         if ($nivel === 2) {
