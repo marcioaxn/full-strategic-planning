@@ -8,6 +8,7 @@ use App\Models\StrategicPlanning\Objetivo;
 use App\Models\Organization;
 use App\Models\User;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -22,7 +23,9 @@ class ListarRiscos extends Component
     public $search = '';
     public $filtroNivel = '';
     public $filtroCategoria = '';
+    #[Locked]
     public $organizacaoId;
+    #[Locked]
     public $peiAtivo;
 
     public bool $showModal = false;
@@ -223,6 +226,11 @@ class ListarRiscos extends Component
                 $risco->update($data);
                 $this->successMessage = "As definições do risco foram atualizadas com sucesso e a matriz já reflete a nova avaliação.";
             } else {
+                if (!$this->peiAtivo || !$this->organizacaoId) {
+                    $this->errorMessage = 'Selecione um Ciclo PEI e uma organização antes de registrar um risco.';
+                    $this->showErrorModal = true;
+                    return;
+                }
                 $this->authorize('create', Risco::class);
                 $data['cod_pei'] = $this->peiAtivo->cod_pei;
                 $data['cod_organizacao'] = $this->organizacaoId;
