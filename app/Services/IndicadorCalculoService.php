@@ -744,4 +744,109 @@ class IndicadorCalculoService
             'tem_dados'    => $somaPeso > 0,
         ];
     }
+
+    /**
+     * Dispara alerta de StrategicAlert se a tendência do indicador for desfavorável.
+     * Evita duplicidade verificando se já existe alerta não lido nas últimas 24h.
+     */
+    public function verificarAlertaTendencia(Indicador $indicador): void
+    {
+        $tendencia = $this->calcularTendencia($indicador->cod_indicador);
+
+        if ($tendencia['favoravel'] !== false || count($tendencia['pontos']) < 2) {
+            return;
+        }
+
+        $jaAlertado = \App\Models\StrategicAlert::where('title', 'like', '%' . $indicador->nom_indicador . '%')
+            ->whereNull('read_at')
+            ->where('created_at', '>=', now()->subHours(24))
+            ->exists();
+
+        if ($jaAlertado) {
+            return;
+        }
+
+        $userId = auth()->id();
+        if (! $userId) {
+            return;
+        }
+
+        \App\Models\StrategicAlert::create([
+            'user_id'         => $userId,
+            'cod_organizacao' => session('organizacao_selecionada_id'),
+            'title'           => 'Tendência Desfavorável: ' . $indicador->nom_indicador,
+            'message'         => 'O indicador apresenta tendência ' . strtolower($tendencia['direcao'])
+                . ' (' . ($tendencia['variacao_pct'] >= 0 ? '+' : '') . $tendencia['variacao_pct'] . '% por período), '
+                . 'desfavorável para a polaridade ' . ($indicador->dsc_polaridade ?? 'Positiva') . '. Avalie ação corretiva.',
+            'icon'            => 'bi-graph-down-arrow',
+            'type'            => 'danger',
+        ]);
+    }
+
+    /**
+     * Regressão linear simples sobre os últimos N valores realizados.
+     * Retorna direção (Crescente/Decrescente/Estável), se é favorável e variação percentual.
+     */
+    public function calcularTendencia(string $codIndicador, int $ultimosMeses = 3): array
+    {
+        $neutro = ['direcao' => 'Estável', 'favoravel' => null, 'variacao_pct' => 0.0, 'pontos' => []];
+
+        $indicador = Indicador::with(['evolucoes'])->find($codIndicador);
+        if (! $indicador) {
+            return $neutro;
+        }
+
+        $evolucoes = $indicador->evolucoes()
+            ->whereNotNull('vlr_realizado')
+            ->orderBy('num_ano')
+            ->orderBy('num_mes')
+            ->get(['num_ano', 'num_mes', 'vlr_realizado'])
+            ->takeLast($ultimosMeses);
+
+        if ($evolucoes->count() < 2) {
+            return array_merge($neutro, ['pontos' => $evolucoes->pluck('vlr_realizado')->toArray()]);
+        }
+
+        $n      = $evolucoes->count();
+        $xs     = range(1, $n);
+        $ys     = $evolucoes->pluck('vlr_realizado')->map(fn($v) => (float) $v)->toArray();
+        $meanX  = array_sum($xs) / $n;
+        $meanY  = array_sum($ys) / $n;
+
+        $num = 0.0;
+        $den = 0.0;
+        foreach ($xs as $i => $x) {
+            $num += ($x - $meanX) * ($ys[$i] - $meanY);
+            $den += ($x - $meanX) ** 2;
+        }
+
+        $slope = $den != 0 ? $num / $den : 0.0;
+
+        // threshold relativo: 1% do valor médio para evitar falsos positivos em séries estáveis
+        $threshold = $meanY != 0 ? abs($meanY) * 0.01 : 0.01;
+
+        $direcao = match(true) {
+            $slope >  $threshold  => 'Crescente',
+            $slope < -$threshold  => 'Decrescente',
+            default               => 'Estável',
+        };
+
+        $variacaoPct = $meanY != 0 ? round(($slope / abs($meanY)) * 100, 1) : 0.0;
+
+        // Favorável depende da polaridade
+        $polaridade = $indicador->dsc_polaridade ?? 'Positiva';
+        $favoravel  = match($polaridade) {
+            'Positiva'    => $direcao === 'Crescente',
+            'Negativa'    => $direcao === 'Decrescente',
+            'Estabilidade' => $direcao === 'Estável',
+            default       => null,
+        };
+
+        return [
+            'direcao'      => $direcao,
+            'favoravel'    => $favoravel,
+            'variacao_pct' => $variacaoPct,
+            'pontos'       => $ys,
+        ];
+    }
 }

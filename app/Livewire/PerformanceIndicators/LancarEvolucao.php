@@ -134,6 +134,9 @@ class LancarEvolucao extends Component
 
         $this->carregarPeriodo();
         $this->carregarHistorico();
+
+        app(\App\Services\IndicadorCalculoService::class)->verificarAlertaTendencia($this->indicador);
+
         session()->flash('status', 'Lançamento realizado com sucesso!');
     }
 

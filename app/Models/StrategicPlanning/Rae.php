@@ -65,4 +65,9 @@ class Rae extends Model
         return $this->hasMany(RaeEncaminhamento::class, 'cod_rae', 'cod_rae')
             ->whereIn('dsc_status', ['Pendente', 'Em Execução']);
     }
+
+    public function causasRaiz(): HasMany
+    {
+        return $this->hasMany(RaeCausaRaiz::class, 'cod_rae', 'cod_rae')->orderBy('created_at');
+    }
 }

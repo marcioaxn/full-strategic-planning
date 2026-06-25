@@ -239,12 +239,121 @@
                                 @endif
                             </div>
                             @endif
+                        {{-- ── Painel de Causa Raiz (5 Porquês / Ishikawa) ── --}}
+                        @php $causaAberto = in_array($rae->cod_rae, $causaExpanded); @endphp
+                        <div class="mt-2 pt-2 border-top">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <button wire:click="toggleCausas('{{ $rae->cod_rae }}')"
+                                        class="btn btn-sm btn-link text-decoration-none p-0 fw-bold text-dark">
+                                    <i class="bi bi-{{ $causaAberto ? 'chevron-down' : 'chevron-right' }} me-1 small"></i>
+                                    <i class="bi bi-diagram-3 me-1 text-warning"></i>
+                                    Análise de Causa Raiz
+                                    @if($rae->causasRaiz->count() > 0)
+                                        <span class="badge bg-warning-subtle text-warning ms-1 rounded-pill">{{ $rae->causasRaiz->count() }}</span>
+                                    @endif
+                                </button>
+                                <button wire:click="novaCausa('{{ $rae->cod_rae }}')"
+                                        class="btn btn-sm btn-outline-warning rounded-pill px-3">
+                                    <i class="bi bi-plus-lg me-1"></i>5 Porquês
+                                </button>
+                            </div>
+                            @if($causaAberto)
+                            <div class="mt-2">
+                                @forelse($rae->causasRaiz as $causa)
+                                <div class="bg-light rounded-2 p-2 mb-2 small">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Problema:</strong> {{ $causa->dsc_problema }}
+                                            @if($causa->dsc_causa_raiz)
+                                                <br><strong class="text-danger">Causa raiz:</strong> {{ $causa->dsc_causa_raiz }}
+                                            @endif
+                                            @if($causa->dsc_categoria_ishikawa)
+                                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle ms-1">{{ $causa->dsc_categoria_ishikawa }}</span>
+                                            @endif
+                                        </div>
+                                        <div class="d-flex gap-1 ms-2">
+                                            <button wire:click="editarCausa('{{ $causa->cod_causa }}')" class="btn btn-xs btn-light border"><i class="bi bi-pencil"></i></button>
+                                            <button wire:click="excluirCausa('{{ $causa->cod_causa }}')" class="btn btn-xs btn-light border text-danger"><i class="bi bi-trash"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                                @empty
+                                <p class="text-muted small fst-italic ps-1">Nenhuma análise registrada.</p>
+                                @endforelse
+                            </div>
+                            @endif
+                        </div>
+
                         </div>
                     </div>
                 </div>
             </div>
             @endforeach
         </div>
+    @endif
+
+    {{-- Modal: Análise de Causa Raiz --}}
+    @if($showCausaModal)
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.5);z-index:1060;">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-diagram-3 me-2 text-warning"></i>Análise de Causa Raiz — 5 Porquês</h5>
+                    <button type="button" class="btn-close" wire:click="$set('showCausaModal',false)"></button>
+                </div>
+                <div class="modal-body px-4">
+                    <form wire:submit="salvarCausa">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Problema Observado <span class="text-danger">*</span></label>
+                            <textarea wire:model="causaForm.dsc_problema" class="form-control @error('causaForm.dsc_problema') is-invalid @enderror" rows="2"
+                                      placeholder="Ex: O indicador de satisfação caiu 15% no trimestre"></textarea>
+                            @error('causaForm.dsc_problema') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Técnica dos 5 Porquês (Taiichi Ohno / Toyota)</label>
+                            @foreach(range(1, 5) as $i)
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge bg-warning text-dark rounded-circle" style="width:28px;height:28px;line-height:18px;font-size:.75rem;">{{ $i }}°</span>
+                                <input type="text" wire:model="causaForm.json_cinco_porques.{{ $i - 1 }}"
+                                       class="form-control form-control-sm"
+                                       placeholder="Por quê{{ $i > 1 ? ' (aprofundando)' : '?' }}">
+                            </div>
+                            @endforeach
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Causa Raiz Identificada</label>
+                            <textarea wire:model="causaForm.dsc_causa_raiz" class="form-control" rows="2"
+                                      placeholder="Síntese da causa fundamental após os 5 porquês..."></textarea>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Categoria Ishikawa (6M)</label>
+                                <select wire:model="causaForm.dsc_categoria_ishikawa" class="form-select">
+                                    <option value="">— Nenhuma —</option>
+                                    @foreach($categoriasIshikawa as $cat)
+                                        <option value="{{ $cat }}">{{ $cat }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Encaminhamento vinculado</label>
+                                <select wire:model="causaForm.cod_encaminhamento_vinculado" class="form-select">
+                                    <option value="">— Nenhum —</option>
+                                    @foreach($raes->firstWhere('cod_rae', $causaRaeId)?->encaminhamentos ?? [] as $enc)
+                                        <option value="{{ $enc->cod_encaminhamento }}">{{ Str::limit($enc->txt_descricao, 50) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="button" class="btn btn-light rounded-pill px-4" wire:click="$set('showCausaModal',false)">Cancelar</button>
+                            <button type="submit" class="btn btn-warning rounded-pill px-5 text-dark fw-bold"><i class="bi bi-check-lg me-2"></i>Salvar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
     @endif
 
     {{-- Modal: Criar/Editar RAE --}}

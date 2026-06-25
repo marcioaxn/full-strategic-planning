@@ -4,6 +4,7 @@ namespace App\Livewire\StrategicPlanning;
 
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Rae;
+use App\Models\StrategicPlanning\RaeCausaRaiz;
 use App\Models\StrategicPlanning\RaeEncaminhamento;
 use App\Models\Organization;
 use App\Models\User;
@@ -52,6 +53,19 @@ class GerenciarRae extends Component
 
     // Controla quais RAEs têm painel de encaminhamentos expandido
     public array $encExpanded = [];
+
+    // Causa Raiz (5 Porquês / Ishikawa)
+    public bool $showCausaModal = false;
+    public ?string $causaEditId = null;
+    public ?string $causaRaeId  = null;
+    public array $causaForm = [
+        'dsc_problema'                => '',
+        'json_cinco_porques'          => ['', '', '', '', ''],
+        'dsc_causa_raiz'              => '',
+        'dsc_categoria_ishikawa'      => '',
+        'cod_encaminhamento_vinculado'=> '',
+    ];
+    public array $causaExpanded = [];
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
@@ -274,6 +288,85 @@ class GerenciarRae extends Component
         $this->dispatch('notify', message: 'Encaminhamento removido.', style: 'warning');
     }
 
+    // ── CAUSA RAIZ (5 Porquês / Ishikawa) ────────────────────────────────────
+
+    public function toggleCausas(string $raeId): void
+    {
+        if (in_array($raeId, $this->causaExpanded)) {
+            $this->causaExpanded = array_values(array_filter($this->causaExpanded, fn($id) => $id !== $raeId));
+        } else {
+            $this->causaExpanded[] = $raeId;
+        }
+    }
+
+    public function novaCausa(string $raeId): void
+    {
+        $this->causaEditId  = null;
+        $this->causaRaeId   = $raeId;
+        $this->causaForm    = [
+            'dsc_problema'                => '',
+            'json_cinco_porques'          => ['', '', '', '', ''],
+            'dsc_causa_raiz'              => '',
+            'dsc_categoria_ishikawa'      => '',
+            'cod_encaminhamento_vinculado'=> '',
+        ];
+        if (! in_array($raeId, $this->causaExpanded)) {
+            $this->causaExpanded[] = $raeId;
+        }
+        $this->showCausaModal = true;
+    }
+
+    public function editarCausa(string $id): void
+    {
+        $causa = RaeCausaRaiz::findOrFail($id);
+        $this->causaEditId = $id;
+        $this->causaRaeId  = $causa->cod_rae;
+        $porques = $causa->json_cinco_porques ?? [];
+        while (count($porques) < 5) $porques[] = '';
+        $this->causaForm = [
+            'dsc_problema'                => $causa->dsc_problema,
+            'json_cinco_porques'          => array_slice($porques, 0, 5),
+            'dsc_causa_raiz'              => $causa->dsc_causa_raiz ?? '',
+            'dsc_categoria_ishikawa'      => $causa->dsc_categoria_ishikawa ?? '',
+            'cod_encaminhamento_vinculado'=> $causa->cod_encaminhamento_vinculado ?? '',
+        ];
+        $this->showCausaModal = true;
+    }
+
+    public function salvarCausa(): void
+    {
+        $this->validate([
+            'causaForm.dsc_problema'  => 'required|string|max:1000',
+            'causaForm.dsc_causa_raiz'=> 'nullable|string|max:1000',
+            'causaForm.dsc_categoria_ishikawa' => 'nullable|in:' . implode(',', RaeCausaRaiz::CATEGORIAS_ISHIKAWA),
+        ], ['causaForm.dsc_problema.required' => 'Descreva o problema observado.']);
+
+        $porques = array_values(array_filter($this->causaForm['json_cinco_porques'], fn($p) => trim($p) !== ''));
+
+        $data = [
+            'cod_rae'                      => $this->causaRaeId,
+            'dsc_problema'                 => $this->causaForm['dsc_problema'],
+            'json_cinco_porques'           => $porques,
+            'dsc_causa_raiz'               => $this->causaForm['dsc_causa_raiz'] ?: null,
+            'dsc_categoria_ishikawa'       => $this->causaForm['dsc_categoria_ishikawa'] ?: null,
+            'cod_encaminhamento_vinculado' => $this->causaForm['cod_encaminhamento_vinculado'] ?: null,
+        ];
+
+        $this->causaEditId
+            ? RaeCausaRaiz::findOrFail($this->causaEditId)->update($data)
+            : RaeCausaRaiz::create($data);
+
+        $this->showCausaModal = false;
+        $this->causaEditId    = null;
+        $this->dispatch('notify', message: 'Análise de causa raiz salva.', style: 'success');
+    }
+
+    public function excluirCausa(string $id): void
+    {
+        RaeCausaRaiz::findOrFail($id)->delete();
+        $this->dispatch('notify', message: 'Análise removida.', style: 'warning');
+    }
+
     // ── RENDER ────────────────────────────────────────────────────────────────
 
     public function render()
@@ -281,7 +374,7 @@ class GerenciarRae extends Component
         $raes = ($this->peiAtivo && $this->organizacaoId)
             ? Rae::where('cod_pei', $this->peiAtivo->cod_pei)
                 ->where('cod_organizacao', $this->organizacaoId)
-                ->with(['encaminhamentos.responsavel'])
+                ->with(['encaminhamentos.responsavel', 'causasRaiz.encaminhamento'])
                 ->orderByDesc('dte_referencia')
                 ->get()
             : collect();
@@ -289,11 +382,12 @@ class GerenciarRae extends Component
         $usuarios = User::where('ativo', true)->orderBy('name')->get(['id', 'name']);
 
         return view('livewire.p-e-i.gerenciar-rae', [
-            'raes'         => $raes,
-            'tiposReuniao' => Rae::TIPOS_REUNIAO,
-            'tiposEnc'     => RaeEncaminhamento::TIPOS,
-            'statusEnc'    => RaeEncaminhamento::STATUS,
-            'usuarios'     => $usuarios,
+            'raes'              => $raes,
+            'tiposReuniao'      => Rae::TIPOS_REUNIAO,
+            'tiposEnc'          => RaeEncaminhamento::TIPOS,
+            'statusEnc'         => RaeEncaminhamento::STATUS,
+            'usuarios'          => $usuarios,
+            'categoriasIshikawa'=> RaeCausaRaiz::CATEGORIAS_ISHIKAWA,
         ]);
     }
 }

@@ -202,6 +202,62 @@ class PeiGuidanceService
         ];
     }
 
+    /**
+     * Verifica pré-requisitos metodológicos antes de criar um registro.
+     * Retorna null se tudo OK, ou array com ['mensagem', 'rota', 'rotulo'] se bloqueado.
+     */
+    public function verificarPreRequisitos(string $modulo, ?string $peiId = null, ?string $organizacaoId = null): ?array
+    {
+        $peiId = $peiId ?? session('pei_selecionado_id');
+        $pei   = $peiId ? PEI::find($peiId) : PEI::ativos()->first();
+
+        if (! $pei) {
+            return [
+                'mensagem' => 'É necessário ter um Ciclo PEI ativo antes de registrar qualquer informação estratégica.',
+                'rota'     => 'pei.ciclos',
+                'rotulo'   => 'Ir para Ciclos PEI',
+            ];
+        }
+
+        return match ($modulo) {
+            'perspectivas' => null,
+
+            'objetivos' => Perspectiva::where('cod_pei', $pei->cod_pei)->count() >= 2
+                ? null
+                : [
+                    'mensagem' => 'Para criar Objetivos Estratégicos são necessárias ao menos 2 Perspectivas cadastradas.',
+                    'rota'     => 'pei.perspectivas',
+                    'rotulo'   => 'Ir para Perspectivas',
+                ],
+
+            'indicadores' => Objetivo::whereHas('perspectiva', fn($q) => $q->where('cod_pei', $pei->cod_pei))->exists()
+                ? null
+                : [
+                    'mensagem' => 'Para criar Indicadores é necessário ter ao menos 1 Objetivo Estratégico cadastrado.',
+                    'rota'     => 'objetivos',
+                    'rotulo'   => 'Ir para Objetivos',
+                ],
+
+            'planos' => Objetivo::whereHas('perspectiva', fn($q) => $q->where('cod_pei', $pei->cod_pei))->exists()
+                ? null
+                : [
+                    'mensagem' => 'Para criar Planos de Ação é necessário ter ao menos 1 Objetivo Estratégico cadastrado.',
+                    'rota'     => 'objetivos',
+                    'rotulo'   => 'Ir para Objetivos',
+                ],
+
+            'riscos' => Objetivo::whereHas('perspectiva', fn($q) => $q->where('cod_pei', $pei->cod_pei))->exists()
+                ? null
+                : [
+                    'mensagem' => 'Para cadastrar Riscos é recomendável ter ao menos 1 Objetivo Estratégico definido.',
+                    'rota'     => 'objetivos',
+                    'rotulo'   => 'Ir para Objetivos',
+                ],
+
+            default => null,
+        };
+    }
+
     private function getNextStepInfo(string $currentPhase): ?array
     {
         $order = ['ciclo', 'inaugurar', 'identidade', 'perspectivas', 'objetivos', 'graus', 'indicadores', 'planos', 'monitoramento'];

@@ -340,6 +340,12 @@ class Indicador extends Model implements Auditable
         return $grau->cor ?? null;
     }
 
+    public function tendenciaAtual(int $meses = 3): array
+    {
+        return app(\App\Services\IndicadorCalculoService::class)
+            ->calcularTendencia($this->cod_indicador, $meses);
+    }
+
     /**
      * Scopes
      */

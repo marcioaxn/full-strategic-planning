@@ -654,11 +654,27 @@
                                 <td>
                                     @php
                                         $atingimento = $ind->calcularAtingimento();
-                                        $corFarol = $ind->getCorFarol();
+                                        $corFarol    = $ind->getCorFarol();
+                                        $tendencia   = $ind->tendenciaAtual(3);
+                                        $tendIcn     = match($tendencia['direcao']) {
+                                            'Crescente'   => 'bi-arrow-up-right',
+                                            'Decrescente' => 'bi-arrow-down-right',
+                                            default       => 'bi-arrow-right',
+                                        };
+                                        $tendCor = match(true) {
+                                            $tendencia['favoravel'] === true  => 'text-success',
+                                            $tendencia['favoravel'] === false  => 'text-danger',
+                                            default                           => 'text-muted',
+                                        };
+                                        $tendTip = $tendencia['direcao'] . ' (' . ($tendencia['variacao_pct'] >= 0 ? '+' : '') . $tendencia['variacao_pct'] . '% / mês)';
                                     @endphp
-                                    <div class="d-flex align-items-center">
-                                        <div class="farol-dot me-2" style="background-color: {{ $corFarol ?: '#dee2e6' }}; shadow: 0 0 5px {{ $corFarol }}88;"></div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="farol-dot" style="background-color: {{ $corFarol ?: '#dee2e6' }};"></div>
                                         <span class="fw-bold fs-6">@brazil_percent($atingimento, 1)</span>
+                                        @if(count($tendencia['pontos']) >= 2)
+                                            <i class="bi {{ $tendIcn }} {{ $tendCor }} fs-6"
+                                               data-bs-toggle="tooltip" title="{{ $tendTip }}"></i>
+                                        @endif
                                     </div>
                                 </td>
                                 {{-- Coluna: Planos de Ação vinculados (ROAD-005) --}}

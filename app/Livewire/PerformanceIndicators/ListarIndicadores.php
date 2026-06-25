@@ -201,7 +201,11 @@ class ListarIndicadores extends Component
 
     public function create(\App\Services\PeiGuidanceService $service)
     {
-        // ... (guidance check)
+        $bloqueio = $service->verificarPreRequisitos('indicadores', $this->peiAtivo?->cod_pei ?? null);
+        if ($bloqueio) {
+            $this->dispatch('notify', message: $bloqueio['mensagem'], style: 'warning');
+            return;
+        }
         $this->authorize('create', Indicador::class);
         $this->resetForm();
         if ($this->organizacaoId) {

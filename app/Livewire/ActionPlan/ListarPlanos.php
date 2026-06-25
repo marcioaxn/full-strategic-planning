@@ -225,6 +225,13 @@ class ListarPlanos extends Component
 
     public function create()
     {
+        $bloqueio = app(\App\Services\PeiGuidanceService::class)
+            ->verificarPreRequisitos('planos', $this->peiAtivo?->cod_pei ?? null);
+        if ($bloqueio) {
+            $this->dispatch('notify', message: $bloqueio['mensagem'], style: 'warning');
+            return;
+        }
+
         try {
             $this->authorize('create', PlanoDeAcao::class);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
@@ -233,7 +240,7 @@ class ListarPlanos extends Component
         }
 
         $this->resetForm();
-        
+
         if (!$this->organizacaoId) {
             $this->dispatch('notify', message: 'Selecione uma organização no menu superior.', style: 'warning');
             return;
