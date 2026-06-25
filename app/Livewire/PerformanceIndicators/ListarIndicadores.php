@@ -255,11 +255,11 @@ class ListarIndicadores extends Component
 
         // Validação condicional: Se tipo é Plano E cálculo é automático, plano é obrigatório
         if ($this->form['dsc_tipo'] === 'Plano') {
-            $rules['form.cod_plano_de_acao'] = 'required|uuid|exists:tab_planos_acao,cod_plano_de_acao';
+            $rules['form.cod_plano_de_acao'] = 'required|uuid|exists:tab_plano_de_acao,cod_plano_de_acao';
 
             // Se cálculo automático, reforçar mensagem
             if ($this->form['dsc_calculation_type'] === 'action_plan') {
-                $rules['form.cod_plano_de_acao'] = 'required|uuid|exists:tab_planos_acao,cod_plano_de_acao';
+                $rules['form.cod_plano_de_acao'] = 'required|uuid|exists:tab_plano_de_acao,cod_plano_de_acao';
             }
         } elseif ($this->form['dsc_tipo'] === 'Objetivo') {
             $rules['form.cod_objetivo'] = 'required|uuid|exists:tab_objetivo,cod_objetivo';
