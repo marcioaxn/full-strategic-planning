@@ -108,6 +108,13 @@ class ListarGrausSatisfacao extends Component
 
     public function aplicarSugestao($nome, $cor, $min, $max)
     {
+        $this->cod_pei = $this->cod_pei ?? session('pei_selecionado_id');
+
+        if (! $this->cod_pei) {
+            session()->flash('error', 'Selecione um Ciclo PEI antes de aplicar sugestões da IA.');
+            return;
+        }
+
         $this->dsc_grau_satisfacao = $nome;
         $this->cor = $cor;
         $this->vlr_minimo = $min;
@@ -129,21 +136,24 @@ class ListarGrausSatisfacao extends Component
     protected function rules()
     {
         return [
+            'cod_pei'             => 'required|exists:strategic_planning.tab_pei,cod_pei',
             'dsc_grau_satisfacao' => 'required|string|max:100',
-            'cor' => 'required|string|max:50',
-            'vlr_minimo' => 'required|numeric|min:0|max:999.99',
-            'vlr_maximo' => 'required|numeric|min:0|max:999.99|gte:vlr_minimo',
+            'cor'                 => 'required|string|max:50',
+            'vlr_minimo'          => 'required|numeric|min:0|max:999.99',
+            'vlr_maximo'          => 'required|numeric|min:0|max:999.99|gte:vlr_minimo',
         ];
     }
 
     protected $messages = [
-        'dsc_grau_satisfacao.required' => 'A descricao e obrigatoria.',
-        'cor.required' => 'A cor e obrigatoria.',
-        'vlr_minimo.required' => 'O valor minimo e obrigatorio.',
-        'vlr_minimo.numeric' => 'O valor minimo deve ser numerico.',
-        'vlr_maximo.required' => 'O valor maximo e obrigatorio.',
-        'vlr_maximo.numeric' => 'O valor maximo deve ser numerico.',
-        'vlr_maximo.gte' => 'O valor maximo deve ser maior ou igual ao minimo.',
+        'cod_pei.required'             => 'O Ciclo PEI é obrigatório.',
+        'cod_pei.exists'               => 'O Ciclo PEI selecionado é inválido.',
+        'dsc_grau_satisfacao.required' => 'A descrição é obrigatória.',
+        'cor.required'                 => 'A cor é obrigatória.',
+        'vlr_minimo.required'          => 'O valor mínimo é obrigatório.',
+        'vlr_minimo.numeric'           => 'O valor mínimo deve ser numérico.',
+        'vlr_maximo.required'          => 'O valor máximo é obrigatório.',
+        'vlr_maximo.numeric'           => 'O valor máximo deve ser numérico.',
+        'vlr_maximo.gte'               => 'O valor máximo deve ser maior ou igual ao mínimo.',
     ];
 
     public function updatingSearch()

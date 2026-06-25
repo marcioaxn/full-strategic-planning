@@ -180,6 +180,11 @@ class ListarPerspectivas extends Component
 
     public function save()
     {
+        if (!$this->peiAtivo) {
+            session()->flash('error', 'Selecione um Ciclo PEI antes de salvar.');
+            return;
+        }
+
         $service = app(\App\Services\PeiGuidanceService::class);
         $this->validate([
             'dsc_perspectiva' => 'required|string|max:255',
