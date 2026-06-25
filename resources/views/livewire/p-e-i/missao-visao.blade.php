@@ -423,28 +423,6 @@
                 </div>
             @endif
 
-            {{-- Link para Valores Institucionais --}}
-            <div class="col-12">
-                <div class="card card-modern border border-warning border-opacity-25">
-                    <div class="card-body d-flex align-items-center justify-content-between gap-3 p-4">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="icon-circle bg-warning-subtle text-warning flex-shrink-0">
-                                <i class="bi bi-heart-fill"></i>
-                            </div>
-                            <div>
-                                <h6 class="fw-bold mb-1">{{ __('Valores Institucionais') }}</h6>
-                                <p class="text-muted small mb-0">
-                                    Os princípios éticos e comportamentais da organização são gerenciados em uma tela dedicada,
-                                    separada da Missão e Visão.
-                                </p>
-                            </div>
-                        </div>
-                        <a href="{{ route('pei.valores') }}" wire:navigate class="btn btn-outline-warning rounded-pill px-4 flex-shrink-0">
-                            <i class="bi bi-arrow-right-circle me-1"></i> Gerenciar Valores
-                        </a>
-                    </div>
-                </div>
-            </div>
         </div>
     @endif
 </div>
