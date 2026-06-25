@@ -180,6 +180,11 @@ class AnalisePESTEL extends Component
 
     public function save()
     {
+        if (!$this->peiAtivo) {
+            session()->flash('error', 'Selecione um Ciclo PEI antes de salvar.');
+            return;
+        }
+
         $this->validate([
             'dsc_item' => 'required|string|max:500',
             'num_impacto' => 'required|integer|min:1|max:5',
