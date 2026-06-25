@@ -31,7 +31,7 @@ A varredura realizada em 2026-06-25 avaliou o sistema contra a literatura e melh
 
 ### ROAD-001 — Ciclo PDCA completo: RAE deve gerar ajustes formais
 **Prioridade:** P1 — Crítico  
-**Status:** 🔴 Pendente  
+**Status:** 🟢 Concluído — 2026-06-25  
 **Impacto:** Alto  
 **Referência:** PDCA (Deming, 1950); Hoshin Kanri; GPPEI/MGI 2025 Módulo 03  
 
@@ -538,6 +538,7 @@ Conecta o discurso estratégico à realidade mensurável. Um "futuro almejado" s
 | Data | Versão | Descrição | Autor |
 |---|---|---|---|
 | 2026-06-25 | 1.0 | Criação do roadmap com 11 itens da varredura metodológica | Sistema PEI |
+| 2026-06-25 | 1.1 | ROAD-001 concluído — encaminhamentos formais na RAE | Sistema PEI |
 
 ---
 
@@ -545,7 +546,7 @@ Conecta o discurso estratégico à realidade mensurável. Um "futuro almejado" s
 
 | ID | Título resumido | Prioridade | Status | Impacto |
 |---|---|---|---|---|
-| ROAD-001 | Ciclo PDCA completo — RAE gera ajustes formais | P1 | 🔴 Pendente | Alto |
+| ROAD-001 | Ciclo PDCA completo — RAE gera ajustes formais | P1 | 🟢 Concluído | Alto |
 | ROAD-002 | Desdobramento em cascata de objetivos | P1 | 🔴 Pendente | Alto |
 | ROAD-003 | Estratégias de resposta a riscos (ISO 31000) | P2 | 🔴 Pendente | Médio |
 | ROAD-004 | Índice consolidado de desempenho do PEI | P2 | 🔴 Pendente | Médio |
