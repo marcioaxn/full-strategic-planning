@@ -31,6 +31,7 @@ class ListarObjetivos extends Component
     public $dsc_objetivo;
     public $num_nivel_hierarquico_apresentacao;
     public $cod_perspectiva;
+    public $cod_objetivo_pai;
 
     // Agenda 2030 — vínculo de ODS ao objetivo (máx. 3, padrão ONU institucional)
     public array $odsSelecionados = [];
@@ -168,7 +169,12 @@ class ListarObjetivos extends Component
         if (!$this->peiAtivo) return;
         $this->perspectivas = Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
             ->with(['objetivos' => function($query) {
-                $query->ordenadoPorNivel()->with('ods');
+                $query->raiz()->ordenadoPorNivel()->with([
+                    'ods',
+                    'objetivosFilhos' => function($q) {
+                        $q->ordenadoPorNivel()->with('ods');
+                    }
+                ]);
             }])
             ->ordenadoPorNivel()
             ->get();
@@ -220,13 +226,13 @@ class ListarObjetivos extends Component
     {
         $obj = Objetivo::with(['ods', 'perspectiva'])->findOrFail($id);
         abort_unless($this->peiAtivo && $obj->perspectiva->cod_pei === $this->peiAtivo->cod_pei, 403);
-        $this->objetivoId = $id;
-        $this->nom_objetivo = $obj->nom_objetivo;
-        $this->dsc_objetivo = $obj->dsc_objetivo;
+        $this->objetivoId    = $id;
+        $this->nom_objetivo  = $obj->nom_objetivo;
+        $this->dsc_objetivo  = $obj->dsc_objetivo;
         $this->num_nivel_hierarquico_apresentacao = $obj->num_nivel_hierarquico_apresentacao;
-        $this->cod_perspectiva = $obj->cod_perspectiva;
+        $this->cod_perspectiva   = $obj->cod_perspectiva;
+        $this->cod_objetivo_pai  = $obj->cod_objetivo_pai;
 
-        // Carregar vínculos de ODS existentes
         $this->odsSelecionados  = $obj->ods->pluck('num_ods')->map(fn($n) => (int) $n)->toArray();
         $this->odsContribuicoes = $obj->ods->pluck('pivot.txt_contribuicao', 'num_ods')->toArray();
 
@@ -251,20 +257,35 @@ class ListarObjetivos extends Component
     {
         $service = app(\App\Services\PeiGuidanceService::class);
         $this->validate([
-            'nom_objetivo' => 'required|string|max:255',
-            'dsc_objetivo' => 'nullable|string|max:1000',
-            'num_nivel_hierarquico_apresentacao' => 'required|integer|min:1',
-            'cod_perspectiva' => 'required|exists:tab_perspectiva,cod_perspectiva',
+            'nom_objetivo'                        => 'required|string|max:255',
+            'dsc_objetivo'                        => 'nullable|string|max:1000',
+            'num_nivel_hierarquico_apresentacao'  => 'required|integer|min:1',
+            'cod_perspectiva'                     => 'required|exists:tab_perspectiva,cod_perspectiva',
+            'cod_objetivo_pai'                    => 'nullable|exists:tab_objetivo,cod_objetivo',
         ]);
+
+        // Impede que um objetivo seja seu próprio pai
+        if ($this->cod_objetivo_pai && $this->cod_objetivo_pai === $this->objetivoId) {
+            $this->addError('cod_objetivo_pai', 'Um objetivo não pode ser pai de si mesmo.');
+            return;
+        }
+
+        $nivelDesdobramento = 1;
+        if ($this->cod_objetivo_pai) {
+            $pai = Objetivo::find($this->cod_objetivo_pai);
+            $nivelDesdobramento = ($pai->num_nivel_desdobramento ?? 1) + 1;
+        }
 
         try {
             $objetivo = Objetivo::updateOrCreate(
                 ['cod_objetivo' => $this->objetivoId],
                 [
-                    'nom_objetivo' => $this->nom_objetivo,
-                    'dsc_objetivo' => $this->dsc_objetivo,
+                    'nom_objetivo'                       => $this->nom_objetivo,
+                    'dsc_objetivo'                       => $this->dsc_objetivo,
                     'num_nivel_hierarquico_apresentacao' => $this->num_nivel_hierarquico_apresentacao,
-                    'cod_perspectiva' => $this->cod_perspectiva,
+                    'cod_perspectiva'                    => $this->cod_perspectiva,
+                    'cod_objetivo_pai'                   => $this->cod_objetivo_pai ?: null,
+                    'num_nivel_desdobramento'            => $nivelDesdobramento,
                 ]
             );
 
@@ -326,19 +347,35 @@ class ListarObjetivos extends Component
 
     public function resetForm()
     {
-        $this->objetivoId = null;
-        $this->nom_objetivo = '';
-        $this->dsc_objetivo = '';
+        $this->objetivoId       = null;
+        $this->nom_objetivo     = '';
+        $this->dsc_objetivo     = '';
         $this->num_nivel_hierarquico_apresentacao = 1;
-        $this->cod_perspectiva = '';
-        $this->odsSelecionados = [];
+        $this->cod_perspectiva  = '';
+        $this->cod_objetivo_pai = null;
+        $this->odsSelecionados  = [];
         $this->odsContribuicoes = [];
     }
 
     public function render()
     {
+        // Objetivos raiz do PEI (candidatos a pai no modal)
+        $objetivosPossivelPai = collect();
+        if ($this->peiAtivo) {
+            $objetivosPossivelPai = Objetivo::whereHas('perspectiva', function($q) {
+                    $q->where('cod_pei', $this->peiAtivo->cod_pei);
+                })
+                ->raiz()
+                ->when($this->objetivoId, fn($q) => $q->where('cod_objetivo', '!=', $this->objetivoId))
+                ->with('perspectiva')
+                ->orderBy('cod_perspectiva')
+                ->orderBy('num_nivel_hierarquico_apresentacao')
+                ->get();
+        }
+
         return view('livewire.p-e-i.listar-objetivos', [
-            'todosOds' => ODS::ordenado()->get(),
+            'todosOds'            => ODS::ordenado()->get(),
+            'objetivosPossivelPai'=> $objetivosPossivelPai,
         ]);
     }
 }

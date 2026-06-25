@@ -47,6 +47,8 @@ class Objetivo extends Model implements Auditable
         'dsc_objetivo',
         'num_nivel_hierarquico_apresentacao',
         'cod_perspectiva',
+        'cod_objetivo_pai',
+        'num_nivel_desdobramento',
     ];
 
     /**
@@ -54,6 +56,7 @@ class Objetivo extends Model implements Auditable
      */
     protected $casts = [
         'num_nivel_hierarquico_apresentacao' => 'integer',
+        'num_nivel_desdobramento'            => 'integer',
     ];
 
     /**
@@ -62,6 +65,31 @@ class Objetivo extends Model implements Auditable
     public function perspectiva(): BelongsTo
     {
         return $this->belongsTo(Perspectiva::class, 'cod_perspectiva', 'cod_perspectiva');
+    }
+
+    /**
+     * Relacionamento: Objetivo pai (Hoshin Kanri — desdobramento)
+     */
+    public function objetivoPai(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'cod_objetivo_pai', 'cod_objetivo');
+    }
+
+    /**
+     * Relacionamento: Objetivos filhos (desdobramento em cascata)
+     */
+    public function objetivosFilhos(): HasMany
+    {
+        return $this->hasMany(self::class, 'cod_objetivo_pai', 'cod_objetivo')
+            ->orderBy('num_nivel_hierarquico_apresentacao');
+    }
+
+    /**
+     * Scope: apenas objetivos raiz (sem pai — nível estratégico)
+     */
+    public function scopeRaiz($query)
+    {
+        return $query->whereNull('cod_objetivo_pai');
     }
 
     /**
@@ -250,6 +278,27 @@ class Objetivo extends Model implements Auditable
             'percentual_atingimento' => round($atingimento, 1),
             'cor_farol' => $this->getCorFarolConsolidado($ano),
         ];
+    }
+
+    /**
+     * Atingimento considerando objetivos filhos (média simples entre próprio e filhos).
+     * Usado no Mapa Estratégico para objetivos que têm desdobramento.
+     */
+    public function calcularAtingimentoCascata(int $ano = null, int $mes = null): float
+    {
+        $proprio = $this->calcularAtingimentoConsolidado($ano, $mes);
+
+        $filhos = $this->objetivosFilhos()->with(['indicadores', 'planosAcao'])->get();
+        if ($filhos->isEmpty()) {
+            return $proprio;
+        }
+
+        $valores = collect([$proprio]);
+        foreach ($filhos as $filho) {
+            $valores->push($filho->calcularAtingimentoConsolidado($ano, $mes));
+        }
+
+        return $valores->avg();
     }
 
     /**
