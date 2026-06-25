@@ -6,10 +6,20 @@ use App\Models\Organization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class EstrategiaTows extends Model
 {
     use SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            if (! $model->cod_estrategia) {
+                $model->cod_estrategia = (string) Str::uuid();
+            }
+        });
+    }
 
     protected $table = 'strategic_planning.tab_estrategia_tows';
 
