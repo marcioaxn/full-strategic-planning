@@ -81,14 +81,14 @@
                     'id'       => 'nav-inaugurar',
                     'children' => [
                         [
-                            'label' => 'Inaugurar e Integrar',
-                            'route' => 'pei.inaugurar',
-                            'icon'  => 'flag-fill',
-                        ],
-                        [
                             'label' => 'Ciclos PEI',
                             'route' => 'pei.ciclos',
                             'icon'  => 'calendar-range',
+                        ],
+                        [
+                            'label' => 'Inaugurar e Integrar',
+                            'route' => 'pei.inaugurar',
+                            'icon'  => 'flag-fill',
                         ],
                         [
                             'label' => 'Cadeia de Valor',
@@ -115,9 +115,9 @@
                             'icon'  => 'heart',
                         ],
                         [
-                            'label' => 'Temas Norteadores',
-                            'route' => 'temas-norteadores.index',
-                            'icon'  => 'shield-check',
+                            'label' => 'Análise PESTEL',
+                            'route' => 'pei.pestel',
+                            'icon'  => 'globe2',
                         ],
                         [
                             'label' => 'Análise SWOT',
@@ -125,9 +125,9 @@
                             'icon'  => 'grid-3x3-gap',
                         ],
                         [
-                            'label' => 'Análise PESTEL',
-                            'route' => 'pei.pestel',
-                            'icon'  => 'globe2',
+                            'label' => 'Temas Norteadores',
+                            'route' => 'temas-norteadores.index',
+                            'icon'  => 'shield-check',
                         ],
                         [
                             'label' => 'Perspectivas BSC',
