@@ -82,7 +82,7 @@ Fecha o ciclo PDCA. O sistema deixa de ser um repositório de diagnósticos para
 
 ### ROAD-002 — Desdobramento em cascata de objetivos (Hoshin Kanri)
 **Prioridade:** P1 — Crítico  
-**Status:** 🔴 Pendente  
+**Status:** 🟢 Concluído — 2026-06-25  
 **Impacto:** Alto  
 **Referência:** Hoshin Kanri (Toyota, 1965); BSC (Kaplan & Norton, 2004 — Strategy Maps)  
 
@@ -539,6 +539,7 @@ Conecta o discurso estratégico à realidade mensurável. Um "futuro almejado" s
 |---|---|---|---|
 | 2026-06-25 | 1.0 | Criação do roadmap com 11 itens da varredura metodológica | Sistema PEI |
 | 2026-06-25 | 1.1 | ROAD-001 concluído — encaminhamentos formais na RAE | Sistema PEI |
+| 2026-06-25 | 1.2 | ROAD-002 concluído — desdobramento em cascata de objetivos (Hoshin Kanri) | Sistema PEI |
 
 ---
 
@@ -547,7 +548,7 @@ Conecta o discurso estratégico à realidade mensurável. Um "futuro almejado" s
 | ID | Título resumido | Prioridade | Status | Impacto |
 |---|---|---|---|---|
 | ROAD-001 | Ciclo PDCA completo — RAE gera ajustes formais | P1 | 🟢 Concluído | Alto |
-| ROAD-002 | Desdobramento em cascata de objetivos | P1 | 🔴 Pendente | Alto |
+| ROAD-002 | Desdobramento em cascata de objetivos | P1 | 🟢 Concluído | Alto |
 | ROAD-003 | Estratégias de resposta a riscos (ISO 31000) | P2 | 🔴 Pendente | Médio |
 | ROAD-004 | Índice consolidado de desempenho do PEI | P2 | 🔴 Pendente | Médio |
 | ROAD-005 | Rastreabilidade bidirecional Plano ↔ Indicador | P2 | 🔴 Pendente | Médio |
