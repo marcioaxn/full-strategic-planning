@@ -24,7 +24,7 @@
         </div>
 
         <div class="d-flex align-items-center gap-2">
-            <div wire:loading.delay.short wire:target="salvar,habilitarEdicao,cancelar,adicionarValor,removerValor,editarValor,atualizarValor" class="text-primary">
+            <div wire:loading.delay.short wire:target="salvar,habilitarEdicao,cancelar" class="text-primary">
                 <span class="spinner-border spinner-border-sm" role="status">
                     <span class="visually-hidden">{{ __('Carregando...') }}</span>
                 </span>
@@ -226,7 +226,7 @@
         <div class="ai-mentor-wrapper animate-fade-in">
             <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="ai-magic-button shadow-sm">
                 <span wire:loading.remove wire:target="pedirAjudaIA">
-                    <i class="bi bi-robot"></i> {{ __('Sugerir Missão, Visão e Valores com IA') }}
+                    <i class="bi bi-robot"></i> {{ __('Sugerir Missão e Visão com IA') }}
                 </span>
                 <span wire:loading wire:target="pedirAjudaIA">
                     <span class="spinner-border spinner-border-sm me-2"></span>{{ __('Inspirando novas ideias...') }}
@@ -271,21 +271,10 @@
                                 </div>
                             @endif
 
-                            {{-- Valores --}}
-                            <h6 class="fw-bold text-dark small mb-3 text-uppercase border-bottom pb-2">{{ __('Valores Sugeridos') }}</h6>
-                            <div class="list-group list-group-flush border rounded-3 overflow-hidden">
-                                @foreach($aiSuggestion['valores'] as $valor)
-                                    <div class="list-group-item d-flex align-items-start justify-content-between p-3 bg-light bg-opacity-25 hover-bg-white transition-all gap-3">
-                                        <div class="flex-grow-1">
-                                            <div class="fw-bold text-dark">{{ $valor['nome'] }}</div>
-                                            <p class="small text-muted mb-0 mt-1">{{ $valor['descricao'] }}</p>
-                                        </div>
-                                        <button wire:click="adicionarValorSugerido('{{ $valor['nome'] }}', '{{ $valor['descricao'] }}')" 
-                                                class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
-                                            <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}
-                                        </button>
-                                    </div>
-                                @endforeach
+                            <div class="alert alert-info border-0 small mb-0">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Para cadastrar os <strong>Valores Institucionais</strong>, acesse o menu dedicado:
+                                <a href="{{ route('pei.valores') }}" wire:navigate class="fw-bold">PEI → Valores Institucionais</a>.
                             </div>
                         @else
                             <div class="markdown-content">
@@ -434,172 +423,28 @@
                 </div>
             @endif
 
-            {{-- Valores --}}
+            {{-- Link para Valores Institucionais --}}
             <div class="col-12">
-                <div class="card card-modern">
-                    <div class="card-header border-0 bg-transparent d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="icon-circle bg-warning-subtle text-warning">
-                                <i class="bi bi-star-fill"></i>
+                <div class="card card-modern border border-warning border-opacity-25">
+                    <div class="card-body d-flex align-items-center justify-content-between gap-3 p-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="icon-circle bg-warning-subtle text-warning flex-shrink-0">
+                                <i class="bi bi-heart-fill"></i>
                             </div>
-                            <h5 class="mb-0 fw-bold">{{ __('Valores Organizacionais') }}</h5>
-                        </div>
-                        @if($peiAtivo)
-                            <button type="button" class="btn btn-sm btn-outline-warning rounded-pill" wire:click="$toggle('showExemplosValores')">
-                                <i class="bi bi-lightbulb me-1"></i> Ver Exemplos
-                            </button>
-                        @endif
-                    </div>
-                    <div class="card-body pt-0">
-                        @if($showExemplosValores)
-                            <div class="alert alert-warning bg-warning bg-opacity-10 border-warning border-opacity-25 mb-4 animate-fade-in">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-lightbulb me-2"></i>Biblioteca de Valores Comuns</h6>
-                                    <button type="button" class="btn-close" style="font-size: 0.7rem;" wire:click="$set('showExemplosValores', false)"></button>
-                                </div>
-                                <div class="row g-2">
-                                    @foreach([
-                                        ['Etica', 'Agir com integridade e transparencia.'],
-                                        ['Inovacao', 'Buscar novas solucoes e melhoria continua.'],
-                                        ['Foco no Cidadao', 'Priorizar as necessidades da sociedade.'],
-                                        ['Excelencia', 'Compromisso com a qualidade e resultados.'],
-                                        ['Valorizacao de Pessoas', 'Respeito e desenvolvimento dos colaboradores.'],
-                                        ['Sustentabilidade', 'Responsabilidade social, economica e ambiental.']
-                                    ] as $exemplo)
-                                        <div class="col-md-4">
-                                            <button type="button" wire:click="adicionarValorSugerido('{{ $exemplo[0] }}', '{{ $exemplo[1] }}')" class="btn btn-sm btn-white border w-100 text-start h-100 hover-shadow">
-                                                <div class="fw-bold small">{{ $exemplo[0] }}</div>
-                                                <div class="x-small text-muted text-truncate">{{ $exemplo[1] }}</div>
-                                            </button>
-                                        </div>
-                                    @endforeach
-                                </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">{{ __('Valores Institucionais') }}</h6>
+                                <p class="text-muted small mb-0">
+                                    Os princípios éticos e comportamentais da organização são gerenciados em uma tela dedicada,
+                                    separada da Missão e Visão.
+                                </p>
                             </div>
-                        @endif
-
-                        <p class="text-muted small mb-4">
-                            {{ __('Os princípios fundamentais e crenças que orientam o comportamento e as decisões da organização.') }}
-                        </p>
-
-                        <div class="row g-4">
-                            <!-- Lista de Valores -->
-                            @foreach($valores as $valor)
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="card h-100 border-0 shadow-sm bg-light hover-card">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <a href="{{ route('pei.valores.detalhes', $valor->cod_valor) }}" wire:navigate class="fw-bold text-primary mb-0 text-decoration-none hover-primary">
-                                                    {{ $valor->nom_valor }}
-                                                </a>
-                                                @if($peiAtivo)
-                                                    <div class="dropdown">
-                                                        <button class="btn btn-sm btn-icon btn-ghost-secondary rounded-circle" type="button" data-bs-toggle="dropdown">
-                                                            <i class="bi bi-three-dots-vertical"></i>
-                                                        </button>
-                                                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm">
-                                                            <li>
-                                                                <a class="dropdown-item small" href="{{ route('pei.valores.detalhes', $valor->cod_valor) }}" wire:navigate>
-                                                                    <i class="bi bi-eye me-2"></i>Detalhar
-                                                                </a>
-                                                            </li>
-                                                            <li>
-                                                                <button class="dropdown-item small" wire:click="editarValor('{{ $valor->cod_valor }}')">
-                                                                    <i class="bi bi-pencil me-2"></i>Editar
-                                                                </button>
-                                                            </li>
-                                                            <li>
-                                                                <button class="dropdown-item small text-danger" wire:click="confirmDeleteValor('{{ $valor->cod_valor }}')">
-                                                                    <i class="bi bi-trash me-2"></i>Remover
-                                                                </button>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                            <p class="small text-muted mb-0">{{ $valor->dsc_valor }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-
-                            <!-- Formulário de Adição/Edição -->
-                            @if($peiAtivo)
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="card h-100 border-2 border-dashed border-secondary bg-transparent">
-                                        <div class="card-body d-flex flex-column justify-content-center">
-                                            @if($isEditingValores)
-                                                <div class="d-flex flex-column gap-2">
-                                                    <input type="text" class="form-control form-control-sm" placeholder="Título do Valor" wire:model="novoValorTitulo">
-                                                    <textarea class="form-control form-control-sm" rows="2" placeholder="Descrição do Valor" wire:model="novoValorDescricao"></textarea>
-                                                    <div class="d-flex justify-content-end gap-1 mt-1">
-                                                        <button class="btn btn-sm btn-secondary" wire:click="cancelarEdicaoValor">Cancelar</button>
-                                                        <button class="btn btn-sm btn-primary" wire:click="atualizarValor">Salvar</button>
-                                                    </div>
-                                                </div>
-                                            @elseif($novoValorTitulo || $novoValorDescricao)
-                                                <div class="d-flex flex-column gap-2">
-                                                    <input type="text" class="form-control form-control-sm" placeholder="Título do Valor" wire:model="novoValorTitulo">
-                                                    <textarea class="form-control form-control-sm" rows="2" placeholder="Descrição do Valor" wire:model="novoValorDescricao"></textarea>
-                                                    <div class="d-flex justify-content-end gap-1 mt-1">
-                                                        <button class="btn btn-sm btn-secondary" wire:click="$set('novoValorTitulo', '')">Cancelar</button>
-                                                        <button class="btn btn-sm btn-primary" wire:click="adicionarValor">Adicionar</button>
-                                                    </div>
-                                                </div>
-                                            @else
-                                                <button class="btn btn-link text-decoration-none text-muted d-flex flex-column align-items-center p-3"
-                                                        wire:click="$set('novoValorTitulo', ' ')" {{-- Hack to show form --}}>
-                                                    <div class="icon-circle-mini bg-secondary bg-opacity-10">
-                                                        <i class="bi bi-plus-lg text-secondary"></i>
-                                                    </div>
-                                                    <span class="small fw-semibold">Adicionar Novo Valor</span>
-                                                </button>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
                         </div>
+                        <a href="{{ route('pei.valores') }}" wire:navigate class="btn btn-outline-warning rounded-pill px-4 flex-shrink-0">
+                            <i class="bi bi-arrow-right-circle me-1"></i> Gerenciar Valores
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     @endif
-
-    {{-- Modal de Exclusão de Valor --}}
-    <x-confirmation-modal wire:model.live="showDeleteModal">
-        <x-slot name="title">
-            <div class="modal-header-modern">
-                <div class="icon-circle-mini modal-icon-danger">
-                    <i class="bi bi-trash"></i>
-                </div>
-                <div>
-                    <h5 class="mb-1 fw-bold text-dark">{{ __('Remover Valor') }}</h5>
-                    <p class="text-muted small mb-0">{{ __('Ação irreversível') }}</p>
-                </div>
-            </div>
-        </x-slot>
-
-        <x-slot name="content">
-            <div class="delete-confirmation">
-                <p class="text-dark">
-                    {{ __('Tem certeza que deseja remover este princípio da identidade estratégica da organização?') }}
-                </p>
-            </div>
-        </x-slot>
-
-        <x-slot name="footer">
-            <x-secondary-button wire:click="$set('showDeleteModal', false)" wire:loading.attr="disabled" class="btn-modern">
-                {{ __('Cancelar') }}
-            </x-secondary-button>
-
-            <x-danger-button wire:click="removerValor" wire:loading.attr="disabled" class="btn-delete-modern ms-2">
-                <span wire:loading.remove wire:target="removerValor">
-                    <i class="bi bi-trash me-1"></i>{{ __('Remover Agora') }}
-                </span>
-                <span wire:loading wire:target="removerValor">
-                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                </span>
-            </x-danger-button>
-        </x-slot>
-    </x-confirmation-modal>
 </div>

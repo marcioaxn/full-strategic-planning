@@ -97,7 +97,7 @@ class ListarRiscos extends Component
         $aiService = \App\Services\AI\AiServiceFactory::make();
         if (!$aiService) return;
 
-        $objetivosList = $this->objetivos->pluck('nom_objetivo')->take(5)->implode(', ');
+        $objetivosList = collect($this->objetivos)->pluck('nom_objetivo')->take(5)->implode(', ');
 
         $this->aiSuggestion = 'Pensando...';
         

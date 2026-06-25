@@ -3,7 +3,6 @@
 namespace App\Livewire\StrategicPlanning;
 
 use App\Models\StrategicPlanning\IdentidadeEstrategica;
-use App\Models\StrategicPlanning\Valor;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\Organization;
 use Livewire\Attributes\Layout;
@@ -28,18 +27,8 @@ class MissaoVisao extends Component
     #[Locked]
     public $peiAtivo;
 
-    // Propriedades para Valores
-    public $valores = [];
-    public $novoValorTitulo = '';
-    public $novoValorDescricao = '';
-    public $editandoValorId = null;
-
     public bool $isEditing = false;
-    public bool $isEditingValores = false;
-    public bool $showExemplosValores = false;
     public bool $aiEnabled = false;
-    public bool $showDeleteModal = false;
-    public $valorParaExcluirId;
     public $aiSuggestion = '';
 
     protected $listeners = [
@@ -69,9 +58,9 @@ class MissaoVisao extends Component
 
             $this->aiSuggestion = 'Pensando...';
             
-            $prompt = "Sugira Missão, Visão e 5 Valores para a organização: {$this->organizacaoNome}. 
-            Responda OBRIGATORIAMENTE em formato JSON puro com os campos: 
-            'missao' (string), 'visao' (string) e 'valores' (array de objetos com 'nome' e 'descricao').";
+            $prompt = "Sugira Missão e Visão para a organização: {$this->organizacaoNome}.
+            Responda OBRIGATORIAMENTE em formato JSON puro com os campos:
+            'missao' (string) e 'visao' (string).";
             
             $response = $aiService->suggest($prompt);
             $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
@@ -94,25 +83,9 @@ class MissaoVisao extends Component
 
         $this->missao = $this->aiSuggestion['missao'];
         $this->visao = $this->aiSuggestion['visao'];
-        
+
         $this->salvar();
-        
-        // Mantém apenas os valores na sugestão para não repetir a missão/visão já aplicada
-        $this->aiSuggestion['missao_aplicada'] = true;
-    }
-
-    public function adicionarValorSugerido($nome, $descricao)
-    {
-        $this->novoValorTitulo = $nome;
-        $this->novoValorDescricao = $descricao;
-        $this->adicionarValor();
-
-        // Remove o valor da lista de sugestões
-        if (isset($this->aiSuggestion['valores'])) {
-            $this->aiSuggestion['valores'] = array_filter($this->aiSuggestion['valores'], function($v) use ($nome) {
-                return $v['nome'] !== $nome;
-            });
-        }
+        $this->aiSuggestion = '';
     }
 
     public function atualizarPEI($id)
@@ -147,7 +120,6 @@ class MissaoVisao extends Component
         }
         
         $this->isEditing = false;
-        $this->isEditingValores = false;
     }
 
     public function resetarDados()
@@ -157,7 +129,6 @@ class MissaoVisao extends Component
         $this->missao = '';
         $this->visao = '';
         $this->organizacaoNome = '';
-        $this->valores = [];
     }
 
     public function carregarDados()
@@ -185,15 +156,6 @@ class MissaoVisao extends Component
             $this->visao = '';
         }
 
-        // Carregar Valores
-        if ($this->peiAtivo) {
-            $this->valores = Valor::where('cod_organizacao', $this->organizacaoId)
-                ->where('cod_pei', $this->peiAtivo->cod_pei)
-                ->orderBy('created_at')
-                ->get();
-        } else {
-            $this->valores = [];
-        }
     }
 
     public function habilitarEdicao()
@@ -252,100 +214,6 @@ class MissaoVisao extends Component
 
         $this->isEditing = false;
         session()->flash('status', 'Identidade estratégica atualizada com sucesso!');
-    }
-
-    // --- Métodos para Valores ---
-
-    public function adicionarValor()
-    {
-        if (!$this->peiAtivo) return;
-
-        $service = app(\App\Services\PeiGuidanceService::class);
-        $before = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
-
-        $this->validate([
-            'novoValorTitulo' => 'required|string|max:255',
-            'novoValorDescricao' => 'nullable|string|max:1000',
-        ]);
-
-        Valor::create([
-            'cod_organizacao' => $this->organizacaoId,
-            'cod_pei' => $this->peiAtivo->cod_pei,
-            'nom_valor' => $this->novoValorTitulo,
-            'dsc_valor' => $this->novoValorDescricao,
-        ]);
-
-        $after = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
-        if ($after['progress'] > $before['progress']) {
-            $alert = \App\Services\NotificationService::sendMentorAlert(
-                'Valor Adicionado!',
-                "Princípios fortalecidos. Progresso: <strong>{$after['progress']}%</strong>.",
-                'bi-star-fill'
-            );
-            $this->dispatch('mentor-notification', ...$alert);
-        }
-
-        $this->novoValorTitulo = '';
-        $this->novoValorDescricao = '';
-        $this->carregarDados();
-        session()->flash('status', 'Valor adicionado com sucesso!');
-    }
-
-    public function confirmDeleteValor($id)
-    {
-        $this->valorParaExcluirId = $id;
-        $this->showDeleteModal = true;
-    }
-
-    public function removerValor()
-    {
-        Valor::find($this->valorParaExcluirId)->delete();
-        $this->valorParaExcluirId = null;
-        $this->showDeleteModal = false;
-        $this->carregarDados();
-        
-        $this->dispatch('mentor-notification', 
-            title: 'Valor Removido',
-            message: 'O princípio foi excluído da identidade estratégica.',
-            icon: 'bi-trash',
-            type: 'warning'
-        );
-    }
-
-    public function editarValor($id)
-    {
-        $valor = Valor::find($id);
-        $this->editandoValorId = $id;
-        $this->novoValorTitulo = $valor->nom_valor;
-        $this->novoValorDescricao = $valor->dsc_valor;
-        $this->isEditingValores = true;
-    }
-
-    public function atualizarValor()
-    {
-        $this->validate([
-            'novoValorTitulo' => 'required|string|max:255',
-            'novoValorDescricao' => 'nullable|string|max:1000',
-        ]);
-
-        $valor = Valor::find($this->editandoValorId);
-        $valor->update([
-            'nom_valor' => $this->novoValorTitulo,
-            'dsc_valor' => $this->novoValorDescricao,
-        ]);
-
-        $this->cancelarEdicaoValor();
-        $this->carregarDados();
-        session()->flash('status', 'Valor atualizado com sucesso!');
-    }
-
-    public function cancelarEdicaoValor()
-    {
-        $this->editandoValorId = null;
-        $this->novoValorTitulo = '';
-        $this->novoValorDescricao = '';
-        $this->isEditingValores = false;
-        $this->resetValidation();
     }
 
     public function render()
