@@ -684,4 +684,64 @@ class IndicadorCalculoService
         
         return round($atingimentoFinal, 1);
     }
+
+    /**
+     * Calcula o Índice de Qualidade de Gestão (IQG) do PEI — índice único de desempenho.
+     *
+     * Média ponderada dos atingimentos de todas as perspectivas que possuem
+     * ao menos um indicador com evolução registrada no período.
+     *
+     * @return array{valor: float, tendencia: string, perspectivas: array, grau: mixed}
+     */
+    public function calcularIQG(string $codPei, int $ano, int $mes = null): array
+    {
+        $mes = $mes ?? now()->month;
+
+        $perspectivas = \App\Models\StrategicPlanning\Perspectiva::where('cod_pei', $codPei)
+            ->with(['objetivos.indicadores.evolucoes', 'objetivos.planosAcao.entregas'])
+            ->orderBy('num_nivel_hierarquico_apresentacao')
+            ->get();
+
+        $somaAtingimento = 0.0;
+        $somaPeso        = 0;
+        $detalhes        = [];
+
+        foreach ($perspectivas as $perspectiva) {
+            // Só inclui perspectivas que têm ao menos 1 evolução registrada
+            $temEvolucao = $perspectiva->objetivos->flatMap->indicadores
+                ->flatMap->evolucoes
+                ->where('num_ano', $ano)
+                ->isNotEmpty();
+
+            if (! $temEvolucao) {
+                continue;
+            }
+
+            $atingimento = $this->calcularAtingimentoPerspectiva($perspectiva, $ano);
+            $peso = max(1, $perspectiva->num_nivel_hierarquico_apresentacao ?? 1);
+
+            $somaAtingimento += $atingimento * $peso;
+            $somaPeso        += $peso;
+
+            $detalhes[] = [
+                'perspectiva' => $perspectiva->dsc_perspectiva,
+                'atingimento' => round($atingimento, 1),
+                'peso'        => $peso,
+            ];
+        }
+
+        $valor = $somaPeso > 0 ? round($somaAtingimento / $somaPeso, 1) : 0.0;
+
+        $grau = \App\Models\StrategicPlanning\GrauSatisfacao::where('cod_pei', $codPei)
+            ->where('vlr_minimo', '<=', $valor)
+            ->where('vlr_maximo', '>=', $valor)
+            ->first();
+
+        return [
+            'valor'        => $valor,
+            'perspectivas' => $detalhes,
+            'grau'         => $grau,
+            'tem_dados'    => $somaPeso > 0,
+        ];
+    }
 }

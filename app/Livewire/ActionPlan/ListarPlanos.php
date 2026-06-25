@@ -405,7 +405,7 @@ class ListarPlanos extends Component
     public function render()
     {
         $query = PlanoDeAcao::query()
-            ->with(['objetivo', 'tipoExecucao', 'organizacoes'])
+            ->with(['objetivo', 'tipoExecucao', 'organizacoes', 'indicadoresVinculados'])
             ->where('cod_tipo_execucao', '!=', 'ecef6a50-c010-4cda-afc3-cbda245b55b0');
 
         if ($this->filtroObjetivo) {

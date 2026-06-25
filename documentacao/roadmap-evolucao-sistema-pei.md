@@ -131,7 +131,7 @@ Implementa o conceito central do Hoshin Kanri: alinhamento vertical. A estratég
 
 ### ROAD-003 — Estratégias de resposta a riscos (ISO 31000:2018)
 **Prioridade:** P2 — Importante  
-**Status:** 🔴 Pendente  
+**Status:** 🟢 Concluído  
 **Impacto:** Médio  
 **Referência:** ISO 31000:2018 — Gestão de Riscos; ERM (COSO, 2017)  
 
@@ -177,7 +177,7 @@ Alinha a gestão de riscos ao padrão ISO 31000:2018 e COSO ERM — os dois fram
 
 ### ROAD-004 — Índice consolidado de desempenho do PEI
 **Prioridade:** P2 — Importante  
-**Status:** 🔴 Pendente  
+**Status:** 🟢 Concluído  
 **Impacto:** Médio  
 **Referência:** BSC (Kaplan & Norton — Scorecard Consolidado); IQG (Índice de Qualidade de Gestão)  
 
@@ -221,7 +221,7 @@ Um executivo que entra no sistema deve saber em 3 segundos se a organização es
 
 ### ROAD-005 — Rastreabilidade bidirecional: Plano de Ação ↔ Indicador
 **Prioridade:** P2 — Importante  
-**Status:** 🔴 Pendente  
+**Status:** 🟢 Concluído  
 **Impacto:** Médio  
 **Referência:** BSC (teoria da causalidade estratégica); Gestão por Resultados  
 
@@ -549,9 +549,9 @@ Conecta o discurso estratégico à realidade mensurável. Um "futuro almejado" s
 |---|---|---|---|---|
 | ROAD-001 | Ciclo PDCA completo — RAE gera ajustes formais | P1 | 🟢 Concluído | Alto |
 | ROAD-002 | Desdobramento em cascata de objetivos | P1 | 🟢 Concluído | Alto |
-| ROAD-003 | Estratégias de resposta a riscos (ISO 31000) | P2 | 🔴 Pendente | Médio |
-| ROAD-004 | Índice consolidado de desempenho do PEI | P2 | 🔴 Pendente | Médio |
-| ROAD-005 | Rastreabilidade bidirecional Plano ↔ Indicador | P2 | 🔴 Pendente | Médio |
+| ROAD-003 | Estratégias de resposta a riscos (ISO 31000) | P2 | 🟢 Concluído | Médio |
+| ROAD-004 | Índice consolidado de desempenho do PEI | P2 | 🟢 Concluído | Médio |
+| ROAD-005 | Rastreabilidade bidirecional Plano ↔ Indicador | P2 | 🟢 Concluído | Médio |
 | ROAD-006 | Análise de tendência temporal dos indicadores | P2 | 🔴 Pendente | Médio |
 | ROAD-007 | Matriz TOWS: da análise ambiental às estratégias | P3 | 🔴 Pendente | Médio |
 | ROAD-008 | Bloqueios e guardrails metodológicos no fluxo | P3 | 🔴 Pendente | Médio |
