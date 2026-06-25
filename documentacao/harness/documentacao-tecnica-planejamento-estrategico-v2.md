@@ -32,6 +32,40 @@ Verificado no codigo e no README: este repositorio implementa um Sistema de Plan
 - O banco real possui 56 tabelas em schemas PostgreSQL de dominio e infraestrutura.
 - A tabela `migrations` possui 67 migrations aplicadas; ha 67 arquivos de migration no disco.
 
+## Correcoes de regras de negocio e ajustes (2026-06-25)
+
+> Confianca: `Verificado no codigo`. Estas correcoes foram aplicadas apos auditoria de violacoes de regras de negocio identificadas em componentes Livewire.
+
+### Violacoes corrigidas em componentes Livewire
+
+| Componente | Problema corrigido |
+|---|---|
+| `ListarGrausSatisfacao` | `cod_pei` ausente das `rules()` — permitia gravar grau sem vinculo com PEI. Adicionado `required\|exists:strategic_planning.tab_pei,cod_pei`. Metodo `aplicarSugestao()` da IA tambem corrigido para validar `cod_pei` antes de gravar. |
+| `ListarRiscos` | `$peiAtivo` e `$organizacaoId` sem atributo `#[Locked]` — campos publicos manipulaveis via Livewire. Adicionado `#[Locked]` em ambos. Guard de null adicionado em `save()` para novos registros. |
+| `AnaliseSWOT` | `save()` usava `$this->peiAtivo->cod_pei` sem verificar null — causaria erro 500 sem PEI na sessao. Guard adicionado antes do `validate()`. |
+| `AnalisePESTEL` | Idem ao SWOT. |
+| `ListarPerspectivas` | Idem. |
+| `ListarValores` | Guard de `save()` verificava apenas `$peiAtivo`, nao `$organizacaoId` — poderia gravar `cod_organizacao = NULL` em coluna NOT NULL. Corrigido para verificar ambos. |
+
+### Alteracao de schema — `action_plan.tab_entregas`
+
+- Coluna `dsc_periodo_medicao`: era `NOT NULL`, tornada **nullable** (migration `2026_06_25_032649`).
+- Motivacao: campo vestigial para entregas (sem enum proprio no model `Entrega`); `criarRapido()` gravava string vazia `''`, semanticamente invalido.
+- O `down()` da migration restaura `NOT NULL` e converte NULL de volta para `''`.
+
+### Reorganizacao da sidebar (`resources/views/layouts/app.blade.php`)
+
+| Item | Antes | Depois |
+|---|---|---|
+| Graus de Satisfacao | Administracao | Planejar (antes de Indicadores) |
+| Licoes Aprendidas | Meu Espaco | Monitorar e Avaliar (apos Historico de Relatorios) |
+
+### Novo comando Artisan
+
+- `demo:preparar` (`app/Console/Commands/DemoPreparar.php`): zera tabelas de dominio estrategico (39 tabelas, ordem FK-safe via `session_replication_role = replica`) e popula dados de demo. Opcoes `--nivel=2` (50% automatico) e `--nivel=3` (95% automatico). Seeders: `database/seeders/Demo/DemoNivel2Seeder.php` e `DemoNivel3Seeder.php`.
+
+---
+
 ## Atualização técnica (2026-06) — Novos módulos e funcionalidades
 
 > Esta seção consolida tudo o que foi adicionado **após** a versão base (2026-05-23). É a referência mais atual e deve prevalecer sobre os inventários antigos abaixo quando houver divergência. Confiança: `Verificado no código` (arquivos, migrations e rotas no repositório). Os inventários originais (Models, Livewire, Rotas, Banco) seguem válidos para o núcleo, mas **não incluem** os itens listados aqui.
@@ -114,7 +148,7 @@ Componente `App\Livewire\Deliverables\MinhasEntregas` (`/minhas-entregas`): list
 - **Landing page** (`App\Livewire\LandingPage`, rota `/`): deixou de ser vitrine de marketing e passou a ser um **painel público de transparência estratégica**. Quando há PEI configurado, exibe panorama BSC com atingimento, KPIs, riscos críticos e um **Mapa Estratégico read-only** (swimlanes de perspectivas com objetivos coloridos por farol) antes do CTA de acesso. Mantém abaixo a apresentação metodológica (módulos GPPEI, funcionalidades). Dados em cache de 5 min.
 - **Tema claro/escuro responsivo**: landing, login e dashboard com dark mode aderente; alternador de tema disponível nas páginas públicas (guest layout).
 - **Login** (`auth/login`): redesenhado no mesmo padrão visual da landing, com reatividade no botão de submit e dark mode.
-- **Sidebar** (`layouts/partials/sidebar`): reorganizada por módulos GPPEI (Inaugurar/Planejar/Monitorar), com separadores de seção, grupo "Meu Espaço", "Referências" e "Administração". Suporte a item externo (abrir em nova aba).
+- **Sidebar** (`layouts/partials/sidebar`): reorganizada por módulos GPPEI (Inaugurar/Planejar/Monitorar), com separadores de seção, grupo "Meu Espaço", "Referências" e "Administração". Suporte a item externo (abrir em nova aba). Posição dos itens: "Graus de Satisfação" está em Planejar (antes de Indicadores); "Lições Aprendidas" está em Monitorar e Avaliar (não em Meu Espaço).
 
 ### Visualizadores de guias
 
@@ -555,7 +589,7 @@ Indices verificados:
 | `cod_plano_de_acao` | `uuid/uuid` | `YES` | `` |
 | `dsc_entrega` | `text/text` | `NO` | `` |
 | `bln_status` | `character varying/varchar(191)` | `NO` | `` |
-| `dsc_periodo_medicao` | `character varying/varchar(191)` | `NO` | `` |
+| `dsc_periodo_medicao` | `character varying/varchar(191)` | `YES` | `` |
 | `num_nivel_hierarquico_apresentacao` | `smallint/int2` | `NO` | `` |
 | `created_at` | `timestamp without time zone/timestamp` | `YES` | `` |
 | `updated_at` | `timestamp without time zone/timestamp` | `YES` | `` |
@@ -3697,3 +3731,686 @@ Assinaturas extraidas do codigo. Os modulos criticos lidos semanticamente estao 
 ## Conclusao
 
 Esta documentacao descreve o repositorio como Sistema de Planejamento Estrategico, com base em evidencias do codigo, banco real e runtime. Pontos marcados como risco ou nao confirmado devem ser tratados antes de qualquer upgrade de versao ou refatoracao estrutural.
+
+---
+
+# Apêndice técnico ampliado — Inventário detalhado de componentes, modelos, serviços e frontend
+
+> Adicionado em 2026-06-24. Confiança: `Verificado no código` (leitura direta dos arquivos do repositório). Esta seção complementa o inventário de assinaturas já existente acima com semântica real: props, slots, propriedades públicas Livewire, fillable/casts/scopes/boot events dos models, detalhes de services, stores Alpine e estrutura de testes.
+
+---
+
+## A. Catálogo de Componentes Blade Reutilizáveis
+
+**Localização:** `resources/views/components/`
+
+Todos os componentes abaixo são invocados via `<x-nome-do-componente ...>` nas views Blade e Livewire.
+
+### Componentes de UI fundamentais
+
+| Componente | Arquivo | Props principais | Slots | Descrição |
+|---|---|---|---|---|
+| `x-modal` | `modal.blade.php` | `id` (required), `maxWidth='2xl'` (sm/md/lg/xl/2xl/3xl/4xl/5xl) | `$slot` | Modal Alpine.js com `wire:model`, transition suave, gerencia tooltips ao abrir/fechar (destroy + re-init). O `maxWidth` mapeia para classes CSS internas. |
+| `x-toast` | `toast.blade.php` | `title`, `subtitle`, `icon`, `autohide=true`, `delay=5000`, `closeLabel` | `$slot` | Toast Bootstrap com auto-dismiss configurável. Instanciado em `DOMContentLoaded` e `livewire:navigated`. |
+| `x-alert` | `alert.blade.php` | `variant='primary'`, `dismissible=false`, `icon`, `heading` | `$slot` | Alerta Bootstrap com ícone opcional. Variant mapeia diretamente para `alert-{variant}`. |
+| `x-tooltip` | `tooltip.blade.php` | `title` (required), `placement='top'`, `html=false` | — | Renderiza ícone Bootstrap com tooltip. Re-inicializado em `DOMContentLoaded`, `livewire:navigated` e `livewire:initialized` via `app.js`. |
+| `x-data-table` | `data-table.blade.php` | `title`, `description` | `head`, `actions`, `filters`, `footer`, `empty` | Tabela responsiva com header customizável via named slots. |
+| `x-button` | `button.blade.php` | `type='submit'`, `class` (merge) | `$slot` | Botão com merge de classes Bootstrap. |
+| `x-input` | `input.blade.php` | `disabled=false`, `type` (detecta `file`), `class` (merge) | — | Input genérico; detecta `type=file` para aplicar classes específicas. |
+| `x-checkbox` | `checkbox.blade.php` | Atributos do `<input>` | — | Checkbox `form-check-input` Bootstrap. |
+| `x-label` | `label.blade.php` | `for` | `$slot` | Label HTML com `for`. |
+| `x-input-error` | `input-error.blade.php` | `messages` (array) | — | Exibe array de erros de validação Livewire sob um campo. |
+| `x-validation-errors` | `validation-errors.blade.php` | Automático | — | Exibe erros globais de validação da sessão flash. |
+| `x-password-strength` | `password-strength.blade.php` | `strength='weak'` | — | Indicador visual de força de senha (barra colorida). |
+| `x-dropdown` | `dropdown.blade.php` | `trigger` label, `align` | `trigger`, `content` | Dropdown genérico com trigger customizável. |
+| `x-dropdown-link` | `dropdown-link.blade.php` | `href` | `$slot` | Link de item dentro de dropdown. |
+| `x-nav-link` | `nav-link.blade.php` | `href`, `active=false` | `$slot` | Link de navegação com estado ativo. |
+| `x-responsive-nav-link` | `responsive-nav-link.blade.php` | `href`, `active=false` | `$slot` | Link de nav responsivo (mobile). |
+| `x-section-title` | `section-title.blade.php` | `title`, `subtitle` | — | Título de seção com subtítulo. |
+| `x-section-border` | `section-border.blade.php` | — | `$slot` | Divisor visual de seção com linha `<hr>`. |
+| `x-action-message` | `action-message.blade.php` | `on`, `timeout=2000` | `$slot` | Mensagem transiente que some após `timeout` ms. |
+
+### Componentes de formulário e modais avançados
+
+| Componente | Arquivo | Props | Slots | Descrição |
+|---|---|---|---|---|
+| `x-form-section` | `form-section.blade.php` | `title`, `description` | `form`, `actions` | Seção de formulário com título lateral e área de ações. |
+| `x-action-section` | `action-section.blade.php` | `title`, `description` | `content`, `actions` | Seção de ações (ex: deletar conta). |
+| `x-action-button` | `action-button.blade.php` | `type='button'` | `$slot` | Botão genérico de ação. |
+| `x-secondary-button` | `secondary-button.blade.php` | Classes merge | `$slot` | Botão secundário (cinza). |
+| `x-danger-button` | `danger-button.blade.php` | Classes merge | `$slot` | Botão de perigo (vermelho). |
+| `x-confirmation-modal` | `confirmation-modal.blade.php` | `title`, `description`, `action` | — | Modal de confirmação de ação destrutiva. |
+| `x-dialog-modal` | `dialog-modal.blade.php` | `id`, `maxWidth` | `title`, `content`, `footer` | Modal estilo Jetstream com named slots. |
+| `x-confirms-password` | `confirms-password.blade.php` | — | — | Modal de re-confirmação de senha (Jetstream). |
+
+### Componentes de autenticação (Jetstream)
+
+| Componente | Arquivo | Descrição |
+|---|---|---|
+| `x-authentication-card` | `authentication-card.blade.php` | Card container para páginas de auth. |
+| `x-authentication-card-logo` | `authentication-card-logo.blade.php` | Logo dentro do card de auth. |
+| `x-application-logo` | `application-logo.blade.php` | Logo completo da aplicação. |
+| `x-application-mark` | `application-mark.blade.php` | Mark/ícone reduzido. |
+| `x-banner` | `banner.blade.php` | Banner de notificação no topo (Jetstream flash messages). |
+| `x-switchable-team` | `switchable-team.blade.php` | Seletor de time/organização (Jetstream, adaptado para org). |
+
+### Componentes de domínio (PEI-específicos)
+
+| Componente | Arquivo | Props | Descrição |
+|---|---|---|---|
+| `x-ods-badge` | `ods-badge.blade.php` | `numOds` (1-18), `cor` (hex) | Badge colorido de ODS com ícone oficial `public/img/ods/ods-{NN}.png`; fallback automático para badge colorido se imagem ausente. |
+| `x-module-header` | `module-header.blade.php` | `title`, `subtitle` | `actions` slot | Cabeçalho padronizado de módulo GPPEI com título, subtítulo e área de ações. |
+| `x-gppei-link` | `gppei-link.blade.php` | `href`, `label` | — | Link contextual para página específica do Guia GPPEI com ícone e estilo padronizado. |
+| `x-projetos-link` | `projetos-link.blade.php` | `href`, `label` | — | Link contextual para o Guia Prático de Projetos. |
+| `x-welcome` | `welcome.blade.php` | — | — | Componente de boas-vindas (legado). |
+
+---
+
+## B. Inventário detalhado de Componentes Livewire
+
+**Localização:** `app/Livewire/`
+
+### B.1 Dashboard — `Dashboard\Index`
+
+**Propriedades públicas:**
+
+| Propriedade | Tipo | Inicialização | Descrição |
+|---|---|---|---|
+| `$organizacaoId` | string\|null | `mount()` via sessão | ID da organização ativa |
+| `$organizacaoNome` | string | `mount()` | Nome display da organização |
+| `$peiAtivo` | array\|null | `mount()` | Dados do PEI selecionado |
+| `$aiSummary` | string | '' | Resumo estratégico gerado por IA |
+| `$anoSelecionado` | int | `date('Y')` | Ano de referência para filtros |
+| `$chartData` | array | [] | Dados de gráficos: `bsc`, `riscos`, `planos`, `evolucao` |
+
+**Listeners (`#[On]`):**
+- `organizacaoSelecionada` → `atualizarOrganizacao($id)`
+- `peiSelecionado` → `atualizarPEI($id)`
+- `anoSelecionado` → `atualizarAno($ano)`
+
+**Métodos de cálculo privados:**
+- `getStats()` — totais de objetivos, perspectivas, indicadores, planos, riscos
+- `getMinhasEntregas()` — entregas do usuário autenticado
+- `getMinhasEntregasAgrupadas()` — idem, agrupadas por plano
+- `getComentariosRecentes()` — últimos 5 comentários
+- `getAlertasPrazos()` — entregas com prazo ≤ 7 dias ou vencidas
+- `getChartBSC()` — percentual de atingimento por perspectiva
+- `getChartRiscosNivel()` — contagem por nível (Crítico, Alto, Médio, Baixo)
+- `getChartPlanos()` — distribuição de status dos planos
+- `getChartEvolucao()` — média de atingimento por mês (últimos 12 meses)
+- `getCorAtingimento($percentual)` — cor do farol via `GrauSatisfacao`
+- `getOdsCobertura()` — ODS com objetivos vinculados no ciclo atual
+- `getMentorStatus()` — checklist: identidade, mapa, objetivos, indicadores, planos
+
+---
+
+### B.2 Entregas — `Deliverables\DeliverablesBoard`
+
+Este é o componente mais complexo do sistema. Concentra 4 views, filtros, drag-and-drop, upload, comentários em thread e lixeira.
+
+**Estado da view:**
+
+| Propriedade | Tipo | Descrição |
+|---|---|---|
+| `$plano` | PlanoDeAcao | Plano atual |
+| `$view` | string (`#[Url]`) | `kanban` / `lista` / `timeline` / `calendario` |
+| `$filtroStatus` | string | Filtro por status |
+| `$filtroPrioridade` | string | Filtro por prioridade |
+| `$filtroResponsavel` | string | Filtro por responsável |
+| `$busca` | string | Busca textual |
+| `$mostrarArquivados` | bool | Toggle arquivados |
+| `$mostrarLixeira` | bool | Toggle lixeira (soft deleted) |
+| `$progresso` | float | % conclusão do plano |
+
+**Seletores estratégicos (navegação entre planos):**
+
+| Propriedade | Descrição |
+|---|---|
+| `$perspectivaId` | Filtro de perspectiva para listar objetivos |
+| `$objetivoId` | Filtro de objetivo para listar planos |
+| `$perspectivasDisponiveis` | Array para o select de perspectivas |
+| `$objetivosDisponiveis` | Array para o select de objetivos |
+| `$planosDisponiveis` | Array para o select de planos |
+
+**Calendário:**
+
+| Propriedade | Descrição |
+|---|---|
+| `$calendarioMes` | Mês exibido (1-12) |
+| `$calendarioAno` | Ano exibido |
+
+**Timeline/Gantt:**
+
+| Propriedade | Descrição |
+|---|---|
+| `$timelineInicio` | Data início (Y-m-d) |
+| `$timelineFim` | Data fim (Y-m-d) |
+| `$timelineZoom` | `dia` / `semana` / `mes` |
+
+**Listeners (`#[On]`):**
+- `reordenar-entregas` → `reordenarEntregas(array $ordem)` — SortableJS drag-and-drop
+- `mover-para-status` → `moverParaStatus(string $entregaId, string $status, int $posicao)` — drop entre colunas Kanban
+- `adicionar-comentario` → `adicionarComentario(...)` — suporte a thread
+- `force-delete-entrega` → `excluirPermanente(string $entregaId)` — da lixeira
+
+**Status suportados:** `Não Iniciado`, `Em Andamento`, `Concluído`, `Cancelado`, `Suspenso`
+
+**Prioridades suportadas com cores:**
+
+| Prioridade | Cor de fundo |
+|---|---|
+| `baixa` | `#e3e2e0` |
+| `media` | `#fdecc8` |
+| `alta` | `#ffe2dd` |
+| `urgente` | `#e03e3e` |
+
+**Tipos de entrega:**
+
+| Tipo | Ícone Bootstrap | Semântica |
+|---|---|---|
+| `task` | `check2-square` | Tarefa padrão |
+| `heading` | `type-h1` | Título de seção |
+| `text` | `text-paragraph` | Bloco de texto |
+| `divider` | `dash-lg` | Divisor visual |
+| `checklist` | `list-check` | Lista de verificação |
+
+---
+
+### B.3 Indicadores — `PerformanceIndicators\ListarIndicadores`
+
+**Propriedades de formulário relevantes:**
+
+| Propriedade | Descrição |
+|---|---|
+| `$form['dsc_calculation_type']` | `manual` ou `action_plan` — se `action_plan`, o valor é calculado automaticamente pelo `IndicadorCalculoService` via `EntregaObserver` |
+| `$form['dsc_polaridade']` | Positiva / Negativa / Estabilidade / Não Aplicável — altera a fórmula de atingimento |
+| `$form['bln_acumulado']` | `Sim` / `Não` — se acumulado, usa soma; senão, usa último valor do período |
+| `$form['json_smart']` | Array com 5 chaves: `especifico`, `mensuravel`, `atingivel`, `relevante`, `temporal` |
+| `$form['organizacoes_ids']` | Array de UUIDs — multivinculação de indicador a organizações |
+
+**Modais:**
+
+| Modal | Propriedade | Finalidade |
+|---|---|---|
+| CRUD | `$showModal` | Criação/edição |
+| Metas | `$showMetasModal` | Gerenciar `MetaPorAno` |
+| Linha base | `$showLinhaBaseModal` | Gerenciar `LinhaBaseIndicador` |
+| Exclusão | `$showDeleteModal` | Confirmação de exclusão |
+| Sucesso/Erro | `$showSuccessModal`, `$showErrorModal` | Feedback visual |
+
+---
+
+### B.4 Componentes compartilhados — `Shared\*`
+
+| Componente | Arquivo | Eventos emitidos | Descrição |
+|---|---|---|---|
+| `SeletorOrganizacao` | `Shared/SeletorOrganizacao.php` | `organizacaoSelecionada` | Tree selector da hierarquia de organizações. Persiste ID na sessão `organizacao_selecionada_id`. |
+| `SeletorPei` | `Shared/SeletorPei.php` | `peiSelecionado` | Dropdown de PEIs. Persiste `pei_selecionado_id` na sessão. |
+| `SeletorAno` | `Shared/SeletorAno.php` | `anoSelecionado` | Dropdown de anos extraídos dos PEIs cadastrados. |
+| `PeiProgressBar` | `Shared/PeiProgressBar.php` | — | Barra de progresso no rodapé da sidebar. Usa `PeiGuidanceService::analyzeCompleteness()` e exibe as 7 fases com cores de semáforo. |
+| `StrategicAlertsBell` | `Shared/StrategicAlertsBell.php` | — | Ícone de sino com badge contador. Lê `pei.strategic_alerts` não lidos do usuário. |
+
+---
+
+## C. Inventário detalhado de Models
+
+### C.1 `ActionPlan\Entrega` — boot events e métodos de negócio
+
+O model `Entrega` possui boot events registrados que geram automaticamente entradas na tabela `tab_entrega_historico`:
+
+| Evento | Condição | Ação no histórico |
+|---|---|---|
+| `created` | Sempre | Registra `dsc_acao = 'created'` |
+| `updating` | Campos monitorados alterados | Registra `dsc_acao = 'updated'`, `dsc_campo`, `json_valor_antigo`, `json_valor_novo` |
+| `deleting` (soft) | Sempre | Registra `dsc_acao = 'deleted'` |
+| `restored` | Sempre | Registra `dsc_acao = 'restored'` |
+
+**Campos monitorados no `updating`:** `bln_status`, `cod_prioridade`, `dsc_entrega`, `dte_prazo`, `num_ordem`, `num_peso`, `bln_arquivado`, `cod_entrega_pai` (excluído `updated_at` e `json_propriedades`).
+
+**Scopes do model `Entrega`:**
+
+| Scope | Filtro aplicado |
+|---|---|
+| `porStatus($status)` | `bln_status = $status` |
+| `concluidas()` | `bln_status = 'Concluído'` |
+| `pendentes()` | `bln_status != 'Concluído'` e não canceladas |
+| `ordenado()` | `ORDER BY num_ordem ASC` |
+| `raiz()` | `whereNull cod_entrega_pai` |
+| `ativas()` | Não arquivadas e não deletadas |
+| `arquivadas()` | `bln_arquivado = true` |
+| `porPrioridade()` | Ordena urgente → alta → media → baixa |
+| `atrasadas()` | `dte_prazo < today` e não concluídas/canceladas |
+| `tarefas()` | `dsc_tipo = 'task'` |
+| `deletadasRecentemente()` | `deleted_at > 24h atrás` |
+
+**Método `getProp($key)` / `setProp($key, $value)`:** Acessa/altera o campo `json_propriedades` de forma segura, preservando outros valores do JSON.
+
+---
+
+### C.2 `PerformanceIndicators\Indicador` — lógica de atingimento
+
+O método `calcularAtingimento(int $ano = null, int $mes = null)` implementa a seguinte lógica:
+
+```
+Se dsc_calculation_type == 'action_plan':
+    Delega para IndicadorCalculoService (usa progresso de entregas do plano)
+Senão:
+    Busca evoluções do período (ano/mês)
+    Se bln_acumulado == 'Sim': usa soma das evoluções
+    Senão: usa último valor registrado
+    Aplica calcularPercentualPorTipo($realizado, $previsto) com polaridade
+```
+
+**Fórmulas por polaridade:**
+
+| Polaridade | Fórmula de atingimento |
+|---|---|
+| `Positiva (↑ melhor)` | `(realizado / previsto) × 100` |
+| `Negativa (↓ melhor)` | `(previsto / realizado) × 100` |
+| `Estabilidade (= melhor)` | `100 - abs(realizado - previsto) / previsto × 100` |
+| `Não Aplicável (informativo)` | `null` (não calcula) |
+
+---
+
+### C.3 `RiskManagement\Risco` — matriz de risco
+
+**Fórmula:** `num_nivel_risco = num_probabilidade × num_impacto` (escala 1–5 × 1–5 = 1–25)
+
+**Classificação de nível:**
+
+| Range | Classificação | Cor |
+|---|---|---|
+| ≥ 16 | Crítico | `#dc2626` (vermelho) |
+| ≥ 10 e < 16 | Alto | `#f97316` (laranja) |
+| ≥ 5 e < 10 | Médio | `#eab308` (amarelo) |
+| < 5 | Baixo | `#65a30d` (verde) |
+
+---
+
+### C.4 `Organization\PerfilAcesso` — constantes de perfil
+
+```php
+const SUPER_ADMIN = 'Super Admin';
+const ADMIN_UNIDADE = 'Admin Unidade';
+const GESTOR_RESPONSAVEL = 'Gestor Responsável';
+const GESTOR_SUBSTITUTO = 'Gestor Substituto';
+const CONSULTOR = 'Consultor';
+const VISUALIZADOR = 'Visualizador';
+```
+
+A hierarquia de autorização real é determinada por `User::isSuperAdmin()`, que verifica a presença do perfil `SUPER_ADMIN` no pivot `rel_users_tab_organizacoes_tab_perfil_acesso`, **não** pelo campo `adm` da tabela `users` (mantido apenas por compatibilidade).
+
+---
+
+### C.5 `Agenda2030\ODS`
+
+**Tabela:** `strategic_planning.tab_ods`
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `num_ods` | int (PK) | Número 1–18 (17 ODS ONU + ODS 18 Igualdade Étnico-Racial) |
+| `nom_ods` | string | Nome completo |
+| `nom_ods_abreviado` | string | Nome abreviado |
+| `dsc_ods` | text | Descrição |
+| `cod_cor` | string | Cor oficial hexadecimal |
+| `nom_icone` | string | Nome do arquivo de ícone |
+
+Imagens em `public/img/ods/ods-01.png` ... `ods-18.png`. O componente `<x-ods-badge>` tenta `<img src="/img/ods/ods-{NN}.png">` e faz fallback para badge colorido via `cod_cor` se o arquivo não existir.
+
+---
+
+## D. Inventário detalhado de Services
+
+### D.1 `IndicadorCalculoService`
+
+**Constante `STATUS_DECIMAL`:**
+
+| Status da entrega | Decimal |
+|---|---|
+| `Concluído` | `1.0` |
+| `Em Andamento` | `0.5` |
+| `Suspenso` | `0.25` |
+| `Não Iniciado` | `0.0` |
+| `Cancelado` | Excluído do cálculo |
+
+**Método `calcularProgressoPlano(PlanoDeAcao $plano, bool $apenasRaiz = true)`:**
+- Se `$apenasRaiz = true`: processa apenas entregas raiz (`cod_entrega_pai IS NULL`), calculando sub-entregas recursivamente.
+- Fórmula: `Σ(peso × progresso) / Σ(peso)`, onde `progresso` é `STATUS_DECIMAL[status]`.
+- Retorna 0 se não há entregas elegíveis.
+
+**Método `atualizarIndicadoresDoPlano(PlanoDeAcao $plano)`:**
+- Busca indicadores com `dsc_calculation_type = 'action_plan'` vinculados ao plano.
+- Para cada indicador, cria ou atualiza `EvolucaoIndicador` com `vlr_realizado = calcularProgressoPlano()` para o mês/ano atual.
+- Retorna contagem de indicadores atualizados.
+
+---
+
+### D.2 `PeiGuidanceService`
+
+**Método `analyzeCompleteness(string $codPei)`:**
+
+Retorna array com:
+- `status`: `critical` / `warning` / `success`
+- `progress`: 0–100
+- `current_phase`: slug da fase incompleta
+- `message`: texto de orientação
+- `action_route`: nome da rota Laravel para redirecionar
+
+**Fases em ordem:**
+
+| Fase | Critério | Rota de ação |
+|---|---|---|
+| `ciclo` | `PEI` existe e está ativo | `pei.ciclos` |
+| `identidade` | `MissaoVisaoValores` com missão e visão não vazias | `pei.index` |
+| `perspectivas` | Pelo menos 1 `Perspectiva` no PEI | `pei.perspectivas` |
+| `objetivos` | Pelo menos 1 `Objetivo` em perspectivas do PEI | `objetivos.index` |
+| `graus` | Pelo menos 1 `GrauSatisfacao` no PEI | `graus-satisfacao.index` |
+| `indicadores` | Pelo menos 1 `Indicador` vinculado a objetivos do PEI | `indicadores.index` |
+| `planos` | Pelo menos 1 `PlanoDeAcao` vinculado a objetivos do PEI | `planos.index` |
+
+---
+
+### D.3 Services de Inteligência Artificial
+
+**Localização:** `app/Services/AI/`
+
+**`AiServiceFactory`:**
+- Método estático `make()`: retorna instância do provider ativo com base em `config('services.ai.provider')` ou `null` se IA desabilitada em `system_settings`.
+- Providers disponíveis: `VertexAiProvider`, `OpenAiProvider`, `GeminiProvider`.
+
+**Interface `AiProviderInterface`:**
+
+```php
+interface AiProviderInterface
+{
+    public function suggest(string $prompt): string;
+    public function analyzeSmart(string $tipo, string $titulo, string $descricao): string;
+    public function summarizeStrategy(array $stats, string $organizacaoNome): string;
+}
+```
+
+**Uso nos componentes Livewire:**
+- `pedirAjudaIA()` — chama `suggest()` com prompt estruturado e espera JSON com array de sugestões.
+- `auditSmart()` — chama `analyzeSmart()` com nome e descrição do objetivo/indicador; retorna JSON com análise por critério SMART.
+- `generateAiSummary()` no Dashboard — chama `summarizeStrategy()` com estatísticas do PEI.
+
+**Habilitação:** controlada por `system_settings.setting_key = 'ai_enabled'`. Se `0`, os botões de IA ficam ocultos nos formulários via `$aiEnabled = false`.
+
+---
+
+### D.4 `Reports\ReportGenerationService`
+
+**Relatórios suportados:**
+
+| Tipo | Método | Formato | Observações |
+|---|---|---|---|
+| Executivo | `gerarRelatorioExecutivo()` | PDF | Visão geral do PEI |
+| Identidade | `gerarRelatorioIdentidade()` | PDF | Missão, visão, valores, cadeia de valor (paisagem) |
+| Objetivos | `gerarRelatorioObjetivos()` | PDF + XLSX | Por perspectiva |
+| Indicadores | `gerarRelatorioIndicadores()` | PDF + XLSX | Agrupados por perspectiva |
+| Planos | `gerarRelatorioPlanos()` | PDF + XLSX | Com RACI e modelo lógico |
+| Riscos | `gerarRelatorioRiscos()` | PDF + XLSX | Com matriz 5×5 e mitigações |
+| Comunicação | `gerarRelatorioComunicacao()` | PDF | Plano de comunicação consolidado |
+| RAE | `gerarRelatorioRae()` | PDF | Revisão e Avaliação da Estratégia |
+| Cadeia de valor | `gerarRelatorioCadeiaValor()` | PDF | Atividades finalísticas e de suporte |
+| Integrado (Dossiê) | `gerarRelatorioIntegrado()` | PDF | Todos os capítulos em um documento; `memory_limit=512M`, `max_execution_time=600` |
+
+**Partials de layout compartilhados:** `resources/views/relatorios/partials/cabecalho.blade.php`, `rodape.blade.php`, `estilos.blade.php`.
+
+---
+
+## E. Frontend — JavaScript e Alpine.js
+
+### E.1 `resources/js/app.js` — estrutura e Alpine stores
+
+**Imports e globals:**
+```js
+import Alpine from 'alpinejs';
+import mask from '@alpinejs/mask';      // Máscara de input
+import focus from '@alpinejs/focus';    // Gerência de foco
+import Tooltip from 'bootstrap/js/dist/tooltip';
+import Toast from 'bootstrap/js/dist/toast';
+window.bootstrap = { Tooltip, Toast };  // Expõe Bootstrap globalmente para Blade
+```
+
+**Store Alpine `appLayout()`:**
+
+Retornado por `Alpine.data('appLayout', () => ({...}))`. Utilizado no `<body x-data="appLayout()">` do layout `app.blade.php`.
+
+| Propriedade | Default | Descrição |
+|---|---|---|
+| `theme` | `localStorage.getItem('app.theme') \|\| 'light'` | Tema ativo (`light` / `dark`) |
+| `sidebarCollapsed` | `localStorage.getItem('appSidebarCollapsed') === 'true'` | Estado da sidebar |
+
+| Método | Descrição |
+|---|---|
+| `init()` | Aplica tema inicial, inicializa tooltips |
+| `toggleTheme()` | Alterna `light`↔`dark`, persiste em `localStorage` |
+| `toggleSidebar()` | Alterna sidebar, persiste em `localStorage` |
+
+**Ciclo de inicialização de tooltips:**
+- `DOMContentLoaded`: inicialização inicial
+- `livewire:navigated`: re-inicializa após navegação Livewire
+- `livewire:initialized`: re-inicializa após hidratação
+- `Livewire.hook('commit', ...)`: re-inicializa após cada request Livewire (para tooltips em elementos renderizados dinamicamente)
+
+**Inicialização de Toasts:**
+- `DOMContentLoaded` e `livewire:navigated`: ativa todos os `[data-bs-toggle="toast"]` com `autohide` e `delay` configurados.
+
+---
+
+### E.2 `resources/js/session-timer.js`
+
+**Objetivo:** Monitorar inatividade e renovar/expirar a sessão.
+
+**Fluxo:**
+1. Registra eventos de atividade do usuário: `mousemove`, `keydown`, `click`, `scroll`.
+2. A cada interação, atualiza `lastActivity = Date.now()`.
+3. Interval a cada 60s: se `Date.now() - lastActivity > SESSION_LIFETIME_MS - 60000`, faz `POST /session/ping`.
+4. Se `POST /session/ping` retorna `401` ou `session_expired`, redireciona para `/login`.
+5. `SESSION_LIFETIME_MS` lido da meta tag `<meta name="session-lifetime" content="...">` no layout.
+
+**Rota de suporte:** `POST /session/ping` — retorna `200 OK` se sessão válida, `401` se expirada.
+
+---
+
+### E.3 `vite.config.js`
+
+```js
+export default defineConfig({
+    base: '/fs-v1/public/build/',    // Subfolder deployment (XAMPP)
+    plugins: [
+        laravel({
+            input: [
+                'resources/scss/app.scss',
+                'resources/js/app.js',
+            ],
+            refresh: true,           // Livewire hot-reload
+        }),
+    ],
+    css: {
+        preprocessorOptions: {
+            scss: { quietDeps: true }  // Suprime warnings de bootstrap SCSS
+        }
+    }
+});
+```
+
+**Ponto crítico:** O `base` `/fs-v1/public/build/` é necessário porque a aplicação roda em subfolder do XAMPP. Em produção com domínio próprio, deve ser alterado para `/build/` ou `''`.
+
+---
+
+## F. Seeders — catálogo completo
+
+| Seeder | Responsabilidade |
+|---|---|
+| `DatabaseSeeder` | Orquestra os demais seeders em ordem |
+| `BaseStrategicSeeder` | PEI base + perspectivas BSC padrão |
+| `PEIDataSeeder` | Dados genéricos de PEI para testes |
+| `MIDROrganizationSeeder` | Organizações de exemplo (estrutura MIDR) |
+| `MIDRIdentitySeeder` | Missão, visão e valores da organização MIDR |
+| `MIDRStrategicSeeder` | Perspectivas, objetivos e valores estratégicos |
+| `MIDRAnalysisSeeder` | Análise SWOT e PESTEL com dados de exemplo |
+| `TemaNorteadorSeeder` | Temas norteadores estratégicos |
+| `MIDRBusinessSeeder` | Planos de ação com modelo lógico |
+| `EntregaSeeder` | Entregas com hierarquia e diferentes status |
+| `IndicadorSeeder` | Indicadores vinculados a objetivos e planos |
+| `EvolucaoIndicadorSeeder` | Dados mensais de evolução (previsto/realizado) |
+| `LinhaBaseIndicadorSeeder` | Valores de linha de base por ano |
+| `MetaPorAnoSeeder` | Metas anuais por indicador |
+| `MIDRRiskSeeder` | Riscos com categorias e níveis |
+| `RiscoMitigacaoSeeder` | Ações de mitigação por risco |
+| `RiscoOcorrenciaSeeder` | Incidentes/ocorrências registradas |
+| `OdsSeeder` | Os 18 ODS (idempotente — usa `updateOrCreate`) |
+| `MIDRModulosGppeiSeeder` | Módulos metodológicos GPPEI de demonstração |
+| `MIDRSupportSeeder` | Dados de suporte (tipos de execução, perfis, etc) |
+
+**Command Artisan para ambiente de demonstração:** `php artisan db:seed-midr` (via `SeedMIDREnvironment`).
+
+---
+
+## G. Testes — estrutura atual
+
+**Localização:** `tests/`
+
+```
+tests/
+├── Feature/
+│   ├── ExampleTest.php
+│   ├── Auth/
+│   │   ├── AuthenticationTest.php
+│   │   ├── EmailVerificationTest.php
+│   │   ├── PasswordResetTest.php
+│   │   └── RegistrationTest.php
+│   ├── API/
+│   │   ├── ApiTokenPermissionsTest.php
+│   │   ├── CreateApiTokenTest.php
+│   │   └── DeleteApiTokenTest.php
+│   ├── Profile/
+│   │   ├── BrowserSessionsTest.php
+│   │   ├── DeleteAccountTest.php
+│   │   ├── ProfileInformationTest.php
+│   │   ├── TwoFactorAuthenticationSettingsTest.php
+│   │   └── UpdatePasswordTest.php
+│   ├── Livewire/
+│   │   └── ListarIndicadoresTest.php
+│   └── UserManagement/
+│       └── ListarUsuariosCadastroSemTruncateTest.php
+├── Unit/
+│   └── ExampleTest.php
+├── Pest.php               ← Configuração global do Pest (helpers, datasets)
+└── TestCase.php           ← Base class com helpers de autenticação
+```
+
+**Cobertura atual:** Majoritariamente focada em auth e profile (Jetstream padrão). Testes de domínio PEI são escassos — apenas `ListarIndicadoresTest` cobre um componente Livewire de negócio. Esta é uma lacuna crítica identificada para evolução.
+
+**Comando de execução:** `php artisan test` ou `vendor/bin/pest --parallel`.
+
+---
+
+## H. Commands Artisan customizados
+
+| Command | Assinatura | Responsabilidade |
+|---|---|---|
+| `FixPlanosEntregasDates` | `pei:fix-datas` | Corrige datas de planos/entregas que ficaram fora do range do PEI |
+| `GenerateCsvTemplates` | `pei:gerar-templates-csv` | Gera templates CSV para importação em massa (pares guia+template) |
+| `ProcessScheduledReports` | `pei:processar-relatorios` | Processa fila de relatórios agendados; atualiza `dte_proxima_execucao` conforme frequência (Diária/Semanal/Mensal/Única) |
+| `SeedMIDREnvironment` | `db:seed-midr` | Popula ambiente de demonstração com dados MIDR completos |
+
+---
+
+## I. Catálogo de eventos Livewire (barramento de comunicação)
+
+O sistema utiliza eventos Livewire como barramento principal entre componentes. Segue o catálogo completo:
+
+### Eventos globais de contexto (emitidos pelos seletores, escutados por múltiplos componentes)
+
+| Evento | Emitido por | Escutado por | Dado transportado |
+|---|---|---|---|
+| `organizacaoSelecionada` | `Shared\SeletorOrganizacao` | Dashboard, ListarPlanos, ListarRiscos, MapaEstrategico, ListarObjetivos, e outros | `$codOrganizacao` (UUID) |
+| `peiSelecionado` | `Shared\SeletorPei` | Dashboard, ListarObjetivos, MapaEstrategico, ListarPerspectivas, e outros | `$codPei` (UUID) |
+| `anoSelecionado` | `Shared\SeletorAno` | Dashboard, ListarIndicadores, ListarPlanos | `$ano` (int) |
+
+### Eventos de UI (notificações e feedback)
+
+| Evento | Emitido por | Escutado por | Dado transportado |
+|---|---|---|---|
+| `notify` | Componentes de domínio após save | Layout (JS listener) → inicializa Toast | `{type: 'success'/'error', message: '...'}` |
+| `mentor-notification` | `MissaoVisao`, `ListarObjetivos`, `ListarRiscos` | Layout sidebar (mentor widget) | `{phase: '...', message: '...'}` |
+
+### Eventos do DeliveriesBoard (drag-and-drop e ações em linha)
+
+| Evento | Emitido por | Escutado por | Dado |
+|---|---|---|---|
+| `reordenar-entregas` | Alpine.js + SortableJS (JS) | `DeliverablesBoard` (#[On]) | `array $ordem` [{id, ordem}] |
+| `mover-para-status` | Alpine.js drop entre colunas | `DeliverablesBoard` (#[On]) | `$entregaId`, `$status`, `$posicao` |
+| `adicionar-comentario` | View Blade (form submit) | `DeliverablesBoard` (#[On]) | `$entregaId`, `$comentario`, `$comentarioPaiId` |
+| `force-delete-entrega` | View Blade (botão lixeira) | `DeliverablesBoard` (#[On]) | `$entregaId` |
+| `atualizar-prazo-entrega` | Alpine.js (timeline drag) | `DeliverablesBoard` (#[On]) | `$entregaId`, `$novoPrazo` |
+
+---
+
+## J. Layouts — estrutura detalhada
+
+### `layouts/app.blade.php` — layout autenticado
+
+**Seções e stacks:**
+- `@yield('content')` — conteúdo principal (usado por Livewire full-page)
+- `@stack('scripts')` — scripts adicionais por página
+- `@stack('styles')` — estilos adicionais por página
+
+**Meta tags relevantes:**
+```html
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<meta name="session-lifetime" content="{{ config('session.lifetime') * 60 }}">
+<meta name="api-url" content="{{ url('/') }}">
+```
+
+**Imports CDN:**
+- Bootstrap Icons `1.11.x` (CSS)
+- Chart.js (para gráficos do Dashboard)
+
+**Imports via Vite:**
+- `resources/scss/app.scss` — Bootstrap + customizações
+- `resources/js/app.js` — Alpine, session-timer, tooltips
+
+**Impersonation banner:** Exibido em sticky no topo quando `session('impersonating') = true`. Mostra nome do usuário impersonado e link "Encerrar impersonação" → `GET /impersonate-stop`.
+
+---
+
+### `layouts/guest.blade.php` — layout público (login/register)
+
+Card centralizado sem sidebar. Inclui alternador de tema (dark/light) via Alpine. Usa `resources/scss/app.scss` e `resources/js/app.js` via Vite.
+
+---
+
+### `layouts/public.blade.php` — layout da landing page
+
+Navbar pública com logo, links de módulos GPPEI e botão "Acessar sistema". Suporte a dark mode com alternador persistido em `localStorage`. Inclui rodapé com informações institucionais.
+
+---
+
+## K. Convenções de nomenclatura de banco de dados
+
+O sistema usa convenções de prefixo rígidas para todos os identificadores do banco:
+
+| Prefixo | Uso | Exemplo |
+|---|---|---|
+| `tab_` | Tabelas de dados | `tab_pei`, `tab_entregas` |
+| `rel_` | Tabelas de relacionamento (pivot) | `rel_entrega_labels`, `rel_plano_organizacao` |
+| `cod_` | Chaves primárias UUID | `cod_pei`, `cod_entrega` |
+| `dsc_` | Campos descritivos curtos (varchar) | `dsc_plano_de_acao`, `dsc_tipo` |
+| `txt_` | Campos de texto longo (text) | `txt_descricao`, `txt_detalhamento` |
+| `nom_` | Campos de nome | `nom_indicador`, `nom_organizacao` |
+| `bln_` | Campos booleanos | `bln_status`, `bln_arquivado` |
+| `num_` | Campos numéricos | `num_peso`, `num_probabilidade` |
+| `dte_` | Campos de data | `dte_inicio`, `dte_prazo` |
+| `vlr_` | Campos de valor decimal | `vlr_realizado`, `vlr_orcamento_previsto` |
+| `json_` | Campos JSON/JSONB | `json_propriedades`, `json_smart` |
+| `sgl_` | Campos de sigla | `sgl_organizacao` |
+
+---
+
+## Conclusão do apêndice
+
+Este apêndice eleva a documentação do nível de inventário de assinaturas para o nível de referência semântica completa. Com ele, um engenheiro pode implementar novos componentes, integrações ou testes sem precisar derivar comportamento por inspeção de código — as regras de negócio, convenções e contratos de interface estão explicitados acima.
