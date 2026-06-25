@@ -23,7 +23,9 @@ class DemoNivel3Seeder extends Seeder
 {
     public function run(): void
     {
-        $org = Organization::whereNull('rel_cod_organizacao')->first();
+        $org = Organization::whereNull('rel_cod_organizacao')
+            ->orWhereColumn('rel_cod_organizacao', 'cod_organizacao')
+            ->first();
 
         if (! $org) {
             $this->command->error('Nenhuma organização raiz encontrada. Verifique o cadastro de organizações.');
