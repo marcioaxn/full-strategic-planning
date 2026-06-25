@@ -38,6 +38,7 @@ class DemoNivel2Seeder extends Seeder
         MissaoVisaoValores::create([
             'cod_pei'          => $pei->cod_pei,
             'cod_organizacao'  => $org->cod_organizacao,
+            'dsc_negocio'      => 'Formulação, coordenação e monitoramento de políticas públicas de desenvolvimento regional e urbano.',
             'dsc_missao'       => 'Formular, coordenar e monitorar as políticas públicas de desenvolvimento regional e urbano, promovendo a redução das desigualdades territoriais e a melhoria da qualidade de vida da população brasileira.',
             'dsc_visao'        => 'Ser reconhecido como referência nacional em governança territorial e gestão estratégica, contribuindo para um Brasil mais equilibrado, sustentável e inovador até 2028.',
         ]);
