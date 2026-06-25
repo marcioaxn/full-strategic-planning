@@ -59,14 +59,52 @@
                     <h6 class="fw-bold text-primary mb-3">
                         <i class="bi bi-info-circle me-2"></i>{{ __('O que são Temas Norteadores?') }}
                     </h6>
-                    <p class="text-muted mb-3">
-                        <strong>Temas Norteadores</strong> (anteriormente Objetivos Estratégicos) são declarações que descrevem <strong>o que a organização pretende alcançar</strong> no médio e longo prazo
-                        para cumprir sua missão e realizar sua visão de futuro. Eles traduzem a estratégia em diretrizes concretas.
+                    <div class="alert alert-warning border-0 small mb-3">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Não confunda com Valores nem com Objetivos Estratégicos.</strong>
+                        Temas Norteadores são um conceito próprio — não são um "outro nome" para nenhum desses.
+                    </div>
+                    <p class="text-muted mb-2">
+                        <strong>Temas Norteadores</strong> são as <strong>grandes prioridades estratégicas transversais do ciclo PEI</strong> — eixos temáticos que atravessam perspectivas, objetivos e planos, concentrando os esforços da organização no que é mais crítico <em>neste período</em>.
                     </p>
-                    <p class="text-muted mb-0">
+                    <p class="text-muted mb-2">
+                        Eles são derivados do <strong>diagnóstico ambiental</strong> (SWOT/PESTEL): as forças e oportunidades a explorar, as fraquezas e ameaças a mitigar — condensadas em poucos eixos orientadores.
+                    </p>
+                    <div class="row g-3 mt-1 mb-3">
+                        <div class="col-md-4">
+                            <div class="card border-2 border-primary h-100">
+                                <div class="card-body py-3">
+                                    <h6 class="fw-bold text-primary small mb-2"><i class="bi bi-heart-fill me-1"></i>Valores Institucionais</h6>
+                                    <p class="x-small text-muted mb-1"><strong>O que são:</strong> Princípios éticos permanentes</p>
+                                    <p class="x-small text-muted mb-1"><strong>Respondem:</strong> "Como agimos?"</p>
+                                    <p class="x-small text-muted mb-0"><strong>Duração:</strong> Não mudam com o ciclo</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-2 border-warning h-100">
+                                <div class="card-body py-3">
+                                    <h6 class="fw-bold text-warning small mb-2"><i class="bi bi-compass-fill me-1"></i>Temas Norteadores</h6>
+                                    <p class="x-small text-muted mb-1"><strong>O que são:</strong> Prioridades estratégicas do ciclo</p>
+                                    <p class="x-small text-muted mb-1"><strong>Respondem:</strong> "Onde focamos agora?"</p>
+                                    <p class="x-small text-muted mb-0"><strong>Duração:</strong> Temporários (duram o ciclo)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-2 border-success h-100">
+                                <div class="card-body py-3">
+                                    <h6 class="fw-bold text-success small mb-2"><i class="bi bi-bullseye me-1"></i>Objetivos Estratégicos</h6>
+                                    <p class="x-small text-muted mb-1"><strong>O que são:</strong> Metas concretas por perspectiva BSC</p>
+                                    <p class="x-small text-muted mb-1"><strong>Respondem:</strong> "O que queremos atingir?"</p>
+                                    <p class="x-small text-muted mb-0"><strong>Duração:</strong> Vinculados ao ciclo, mensuráveis</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-0">
                         <i class="bi bi-lightbulb text-warning me-2"></i>
-                        <strong>Por que são importantes?</strong> Temas norteadores conectam a alta gestão (missão/visão) com a execução tática e operacional.
-                        São o elo entre "onde queremos chegar" e "como vamos chegar lá".
+                        <strong>Por que são importantes?</strong> Temas norteadores garantem que perspectivas, objetivos, indicadores e planos de ação falem "a mesma língua" — o diagnóstico do ciclo. São a bússola que orienta <em>todas</em> as outras peças do mapa estratégico.
                     </p>
                 </div>
 

@@ -103,7 +103,7 @@ class AnaliseSWOT extends Component
         if (!$this->aiEnabled) return;
 
         if (empty($this->organizacaoNome)) {
-            session()->flash('error', 'Selecione uma organização antes de usar o Agente IA.');
+            $this->dispatch('notify', message: 'Selecione uma organização antes de usar o Agente IA.', style: 'danger');
             return;
         }
 
@@ -127,7 +127,7 @@ class AnaliseSWOT extends Component
         } catch (\Throwable $e) {
             \Log::error('Erro IA SWOT: ' . $e->getMessage());
             $this->aiSuggestion = null;
-            session()->flash('error', 'Não foi possível gerar sugestões.');
+            $this->dispatch('notify', message: 'Não foi possível gerar sugestões.', style: 'danger');
         }
     }
 
@@ -303,7 +303,7 @@ class AnaliseSWOT extends Component
     public function save()
     {
         if (!$this->peiAtivo) {
-            session()->flash('error', 'Selecione um Ciclo PEI antes de salvar.');
+            $this->dispatch('notify', message: 'Selecione um Ciclo PEI antes de salvar.', style: 'danger');
             return;
         }
 
@@ -341,7 +341,7 @@ class AnaliseSWOT extends Component
 
         $this->showModal = false;
         $this->carregarDados();
-        session()->flash('status', $message);
+        $this->dispatch('notify', message: $message, style: 'success');
     }
 
     // ── Partes Interessadas ──────────────────────────────────────────────────
@@ -458,7 +458,7 @@ class AnaliseSWOT extends Component
         abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
         $item->delete();
         $this->carregarDados();
-        session()->flash('status', 'Item removido com sucesso!');
+        $this->dispatch('notify', message: 'Item removido com sucesso!', style: 'warning');
     }
 
     public function resetForm()
