@@ -20,8 +20,8 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | `strategic_planning` | 13 | Planejamento estrategico PEI/BSC |
 
 - Tabelas reais: 56.
-- Migrations aplicadas: 67.
-- Arquivos de migration no disco: 67.
+- Migrations aplicadas: 68.
+- Arquivos de migration no disco: 68.
 - Arquivos de migration nao aplicados: nenhum.
 - Migrations aplicadas sem arquivo local: nenhuma.
 
@@ -426,7 +426,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | 2 | `cod_plano_de_acao` | `uuid / uuid` | `YES` | `` | FK para action_plan.tab_plano_de_acao.cod_plano_de_acao |
 | 3 | `dsc_entrega` | `text / text` | `NO` | `` |  |
 | 4 | `bln_status` | `character varying / varchar(191)` | `NO` | `` |  |
-| 5 | `dsc_periodo_medicao` | `character varying / varchar(191)` | `NO` | `` |  |
+| 5 | `dsc_periodo_medicao` | `character varying / varchar(191)` | `YES` | `` | Tornado nullable em 2026-06-25 (migration 2026_06_25_032649). Campo vestigial para entregas; registros com '' convertidos para NULL. |
 | 6 | `num_nivel_hierarquico_apresentacao` | `smallint / int2(16,0)` | `NO` | `` |  |
 | 7 | `created_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
 | 8 | `updated_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
@@ -1639,7 +1639,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 | 6 | `created_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
 | 7 | `updated_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
 | 8 | `deleted_at` | `timestamp without time zone / timestamp` | `YES` | `` |  |
-| 9 | `cod_pei` | `uuid / uuid` | `YES` | `` | FK para strategic_planning.tab_pei.cod_pei |
+| 9 | `cod_pei` | `uuid / uuid` | `YES` | `` | FK para strategic_planning.tab_pei.cod_pei. Nullable no banco por design (escala global). OBRIGATORIO na camada de aplicacao: `ListarGrausSatisfacao` valida `required\|exists` desde 2026-06-25. |
 | 10 | `num_ano` | `integer / int4(32,0)` | `YES` | `` |  |
 
 #### Constraints
