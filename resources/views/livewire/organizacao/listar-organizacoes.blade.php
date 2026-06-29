@@ -8,7 +8,7 @@
                 </div>
                 <h1 class="h3 fw-bold mb-0">{{ __('Unidades Organizacionais') }}</h1>
                 <span class="badge-modern badge-count">
-                    {{ $organizacoes->total() }}
+                    {{ $isPaginated ? $organizacoes->total() : $organizacoes->count() }}
                 </span>
             </div>
             <p class="text-muted mb-0">
@@ -110,7 +110,7 @@
                 </thead>
                 <tbody wire:loading.class="loading-opacity" wire:target="search,resetFilters">
                     @forelse ($organizacoes as $org)
-                        @php $nivel = $org->getNivelHierarquico(); @endphp
+                        @php $nivel = $org->nivel_hierarquico_calculado ?? $org->getNivelHierarquico(); @endphp
                         <tr class="table-row-hover" wire:key="org-row-{{ $org->cod_organizacao }}">
                             <td class="ps-4">
                                 <div class="d-flex align-items-center gap-3" style="margin-left: {{ $nivel * 30 }}px;">
@@ -193,7 +193,7 @@
             </table>
         </div>
 
-        @if($organizacoes->hasPages())
+        @if($isPaginated && $organizacoes->hasPages())
             <div class="card-footer pagination-footer">
                 <span class="pagination-info">
                     {{ __('Mostrando') }} <span class="fw-semibold">{{ $organizacoes->firstItem() }}</span> {{ __('a') }} <span class="fw-semibold">{{ $organizacoes->lastItem() }}</span> {{ __('de') }} <span class="fw-semibold">{{ $organizacoes->total() }}</span> {{ __('resultados') }}
@@ -258,7 +258,7 @@
             @endforelse
         </div>
         
-        @if($organizacoes->hasPages())
+        @if($isPaginated && $organizacoes->hasPages())
              <div class="mobile-pagination">
                 {{ $organizacoes->onEachSide(1)->links() }}
             </div>
