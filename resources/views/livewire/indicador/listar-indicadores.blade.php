@@ -432,16 +432,7 @@
         </div>
     @endif
 
-    @if(!$organizacaoId && !$filtroObjetivo)
-        <div class="alert alert-warning shadow-sm border-0 d-flex align-items-center p-4" role="alert">
-            <i class="bi bi-building-exclamation fs-2 me-4"></i>
-            <div>
-                <h5 class="alert-heading fw-bold mb-1">Selecione uma Organizacao</h5>
-                <p class="mb-0">Selecione uma organizacao no menu superior para listar e gerenciar indicadores.</p>
-            </div>
-        </div>
-    @else
-        @if($filtroObjetivo)
+    @if($filtroObjetivo)
             @php
                 $objetivoFiltrado = \App\Models\StrategicPlanning\Objetivo::with(['perspectiva.pei', 'indicadores.evolucoes', 'indicadores.metasPorAno', 'planosAcao'])->find($filtroObjetivo);
             @endphp
@@ -739,7 +730,6 @@
                 {{ $indicadores->links() }}
             </div>
         </div>
-    @endif
 
     <!-- Modal Premium Criar/Editar XL -->
     @if($showModal)

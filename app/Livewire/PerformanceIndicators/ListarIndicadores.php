@@ -273,31 +273,33 @@ class ListarIndicadores extends Component
         $this->validate($rules, $messages);
 
         try {
-            $data = $this->form;
-            $orgIds = $data['organizacoes_ids'];
+            $data   = $this->form;
+            $orgIds = $data['organizacoes_ids'] ?? [];
             unset($data['organizacoes_ids']);
             $data['json_smart'] = $data['smart'] ?? [];
             unset($data['smart']);
 
             if ($data['dsc_tipo'] === 'Objetivo') {
                 $data['cod_plano_de_acao'] = null;
-                $data['dsc_calculation_type'] = 'manual'; // Objetivo sempre manual
+                $data['dsc_calculation_type'] = 'manual';
             } else {
                 $data['cod_objetivo'] = null;
             }
 
-            if ($this->indicadorId) {
-                $indicador = Indicador::findOrFail($this->indicadorId);
-                $this->authorize('update', $indicador);
-                $indicador->update($data);
-                $indicador->organizacoes()->sync($orgIds);
-                $this->successMessage = 'As configurações do indicador foram atualizadas com sucesso e as organizações vinculadas já refletem as mudanças.';
-            } else {
-                $this->authorize('create', Indicador::class);
-                $indicador = Indicador::create($data);
-                $indicador->organizacoes()->sync($orgIds);
-                $this->successMessage = 'O novo indicador foi registrado com sucesso e vinculado às unidades organizacionais selecionadas.';
-            }
+            \Illuminate\Support\Facades\DB::transaction(function () use ($data, $orgIds) {
+                if ($this->indicadorId) {
+                    $indicador = Indicador::findOrFail($this->indicadorId);
+                    $this->authorize('update', $indicador);
+                    $indicador->update($data);
+                    $indicador->organizacoes()->sync($orgIds);
+                    $this->successMessage = 'As configurações do indicador foram atualizadas com sucesso e as organizações vinculadas já refletem as mudanças.';
+                } else {
+                    $this->authorize('create', Indicador::class);
+                    $indicador = Indicador::create($data);
+                    $indicador->organizacoes()->sync($orgIds);
+                    $this->successMessage = 'O novo indicador foi registrado com sucesso e vinculado às unidades organizacionais selecionadas.';
+                }
+            });
 
             $this->createdIndicadorName = $this->form['nom_indicador'];
             $this->showModal = false;
@@ -404,6 +406,7 @@ class ListarIndicadores extends Component
             'dsc_meta' => '', 'dsc_unidade_medida' => 'Percentual (%)', 'dsc_polaridade' => 'Positiva', 'num_peso' => 1, 'bln_acumulado' => 'Não',
             'dsc_formula' => '', 'dsc_fonte' => '', 'dsc_periodo_medicao' => 'Mensal',
             'dsc_referencial_comparativo' => '', 'dsc_atributos' => '',
+            'organizacoes_ids' => [],
             'smart' => ['especifico' => false, 'mensuravel' => false, 'atingivel' => false, 'relevante' => false, 'temporal' => false],
         ];
     }
@@ -458,13 +461,21 @@ class ListarIndicadores extends Component
                     });
             });
         } elseif ($this->organizacaoId) {
-            // Filtro por organização considerando multivinculação
-            $query->where(function ($q) {
-                $q->whereHas('organizacoes', function ($sub) {
-                    $sub->where('tab_organizacoes.cod_organizacao', $this->organizacaoId);
-                })->orWhereHas('planoDeAcao', function ($sub) {
-                    $sub->whereHas('organizacoes', function ($subOrg) {
-                        $subOrg->where('tab_organizacoes.cod_organizacao', $this->organizacaoId);
+            // Admin vê indicadores da org selecionada e todos os descendentes na hierarquia.
+            // Usuário comum vê apenas a org exata.
+            $isAdmin = auth()->user()?->isSuperAdmin();
+            $orgIds = $isAdmin
+                ? (Organization::find($this->organizacaoId)?->getDescendantsAndSelfIds() ?? [$this->organizacaoId])
+                : [$this->organizacaoId];
+
+            $query->where(function ($q) use ($orgIds) {
+                $q->whereIn('tab_indicador.cod_indicador', function ($sub) use ($orgIds) {
+                    $sub->select('cod_indicador')
+                        ->from('performance_indicators.rel_indicador_objetivo_organizacao')
+                        ->whereIn('cod_organizacao', $orgIds);
+                })->orWhereHas('planoDeAcao', function ($sub) use ($orgIds) {
+                    $sub->whereHas('organizacoes', function ($subOrg) use ($orgIds) {
+                        $subOrg->whereIn('tab_organizacoes.cod_organizacao', $orgIds);
                     });
                 });
             });

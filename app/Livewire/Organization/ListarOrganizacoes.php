@@ -5,6 +5,7 @@ namespace App\Livewire\Organization;
 use App\Models\Organization;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -134,13 +135,44 @@ class ListarOrganizacoes extends Component
             return $query->orderBy('nom_organizacao');
         }
 
-        return $query->orderByRaw("(CASE WHEN cod_organizacao = rel_cod_organizacao THEN '0' ELSE '1' END), nom_organizacao");
+        return $query->orderBy('nom_organizacao');
     }
 
     protected function paginatedOrganizacoes(): LengthAwarePaginator
     {
-        return $this->baseQuery()
-            ->paginate(10);
+        return $this->baseQuery()->paginate(50);
+    }
+
+    /**
+     * Retorna todas as organizações em ordem hierárquica (DFS: raiz → filhos → netos).
+     * Pré-computa o nível em cada model para evitar N+1 no template.
+     */
+    protected function buildHierarchicalList(): Collection
+    {
+        $all = Organization::with('pai')->get()->keyBy('cod_organizacao');
+
+        $roots = $all->filter(fn ($org) => $org->isRaiz())->sortBy('nom_organizacao');
+
+        $result = collect();
+        foreach ($roots as $root) {
+            $this->appendHierarchically($result, $root, $all, 0);
+        }
+
+        return $result;
+    }
+
+    protected function appendHierarchically(Collection $list, Organization $org, Collection $all, int $level): void
+    {
+        $org->nivel_hierarquico_calculado = $level;
+        $list->push($org);
+
+        $children = $all
+            ->filter(fn ($o) => $o->rel_cod_organizacao === $org->cod_organizacao && $o->cod_organizacao !== $org->cod_organizacao)
+            ->sortBy('nom_organizacao');
+
+        foreach ($children as $child) {
+            $this->appendHierarchically($list, $child, $all, $level + 1);
+        }
     }
 
     public function create(): void
@@ -236,8 +268,19 @@ class ListarOrganizacoes extends Component
 
     public function render()
     {
+        $search = trim($this->search);
+
+        if ($search !== '') {
+            $organizacoes = $this->paginatedOrganizacoes();
+            $isPaginated  = true;
+        } else {
+            $organizacoes = $this->buildHierarchicalList();
+            $isPaginated  = false;
+        }
+
         return view('livewire.organizacao.listar-organizacoes', [
-            'organizacoes' => $this->paginatedOrganizacoes(),
+            'organizacoes' => $organizacoes,
+            'isPaginated'  => $isPaginated,
         ]);
     }
 
