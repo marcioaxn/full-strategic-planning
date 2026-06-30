@@ -144,7 +144,7 @@ class PlanoDeAcao extends Model implements Auditable
             'cod_indicador',
             'cod_plano_de_acao',
             'cod_indicador'
-        )->withPivot('txt_justificativa')->withTimestamps();
+        )->withPivot('txt_justificativa', 'created_at');
     }
 
     /**
