@@ -1,755 +1,578 @@
-{{-- View Timeline/Gantt - Modo Funcional com Navegação e Interação --}}
+{{-- Gantt / Timeline --}}
 @php
     use Carbon\Carbon;
 
-    // Usa as propriedades do componente
-    $inicio = Carbon::parse($timelineInicio);
-    $fim = Carbon::parse($timelineFim);
-    $hoje = now()->startOfDay();
+    $DAY_W = 38; // largura fixa de cada coluna (px)
+
+    $inicio = Carbon::parse($timelineInicio)->startOfDay();
+    $fim    = Carbon::parse($timelineFim)->startOfDay();
+    $hoje   = Carbon::now()->startOfDay();
 
     // Gera array de dias
     $dias = [];
-    $current = $inicio->copy();
-    while ($current <= $fim) {
-        $dias[] = $current->copy();
-        $current->addDay();
-    }
+    $cur  = $inicio->copy();
+    while ($cur <= $fim) { $dias[] = $cur->copy(); $cur->addDay(); }
+    $totalDias   = count($dias);
+    $labelWidth  = 220;                          // px — coluna de rótulos
+    $gridWidth   = $totalDias * $DAY_W;          // px — área de grade
+    $rowWidth    = $labelWidth + $gridWidth;     // px — linha total
 
-    $totalDias = count($dias);
-
-    // Agrupa dias por semana/mês para o cabeçalho
-    $semanas = collect($dias)->groupBy(fn($d) => $d->format('W-Y'));
+    // Meses para o cabeçalho
     $meses = collect($dias)->groupBy(fn($d) => $d->format('Y-m'));
 
-    // Calcula estatísticas
-    $entregasComPrazo = $entregas->filter(fn($e) => $e->dte_prazo)->count();
-    $entregasNoPeriodo = $entregas->filter(function($e) use ($inicio, $fim) {
-        if (!$e->dte_prazo) return false;
-        return $e->dte_prazo->between($inicio, $fim);
-    })->count();
+    // Cores por status
+    $statusColor = [
+        'Não Iniciado' => '#64748b',
+        'Em Andamento' => '#2563eb',
+        'Concluído'    => '#16a34a',
+        'Cancelado'    => '#dc2626',
+        'Suspenso'     => '#d97706',
+    ];
+
+    // Posição da linha "Hoje" (px a partir do início da linha)
+    $todayOffsetDias = (int) $inicio->diffInDays($hoje);
+    $todayPx = $labelWidth + ($todayOffsetDias + 0.5) * $DAY_W;
+
+    // Contadores do toolbar
+    $noPeriodo  = $entregas->filter(fn($e) => $e->dte_prazo && $e->dte_prazo->between($inicio, $fim))->count();
+    $nConcluido = $entregas->filter(fn($e) => $e->isConcluida())->count();
+    $nAtrasado  = $entregas->filter(fn($e) => $e->isAtrasada())->count();
 @endphp
 
-<div class="notion-timeline" x-data="ganttChart()" wire:key="timeline-{{ $timelineInicio }}-{{ $timelineFim }}">
-    {{-- Barra de Controles --}}
+<div class="pei-gantt" x-data="peiGantt()">
+
+    {{-- ─── Toolbar ────────────────────────────────────────────────────── --}}
     <div class="card border-0 shadow-sm mb-3">
-        <div class="card-body py-2">
+        <div class="card-body py-2 px-3">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                {{-- Navegação --}}
+
                 <div class="btn-group btn-group-sm">
-                    <button
-                        wire:click="timelineAnterior"
-                        class="btn btn-outline-secondary"
-                        title="Período Anterior"
-                    >
+                    <button wire:click="timelineAnterior" class="btn btn-outline-secondary">
                         <i class="bi bi-chevron-double-left"></i>
                     </button>
-                    <button
-                        wire:click="timelineHoje"
-                        class="btn btn-outline-primary"
-                        title="Centralizar em Hoje"
-                    >
-                        <i class="bi bi-calendar-check me-1"></i>
-                        Hoje
+                    <button wire:click="timelineHoje" class="btn btn-primary px-3">
+                        <i class="bi bi-calendar-check me-1"></i>Hoje
                     </button>
-                    <button
-                        wire:click="timelineProximo"
-                        class="btn btn-outline-secondary"
-                        title="Próximo Período"
-                    >
+                    <button wire:click="timelineProximo" class="btn btn-outline-secondary">
                         <i class="bi bi-chevron-double-right"></i>
                     </button>
                 </div>
 
-                {{-- Período Atual --}}
-                <div class="text-center">
-                    <span class="badge bg-light text-dark border">
-                        <i class="bi bi-calendar-range me-1"></i>
-                        {{ $inicio->format('d/m/Y') }} - {{ $fim->format('d/m/Y') }}
-                        <span class="text-muted ms-1">({{ $totalDias }} dias)</span>
-                    </span>
+                <span class="text-muted small fw-semibold">
+                    {{ $inicio->translatedFormat('d M') }} — {{ $fim->translatedFormat('d M Y') }}
+                    <span class="badge bg-light text-secondary border ms-1">{{ $totalDias }}d</span>
+                </span>
+
+                <div class="d-flex gap-3 small">
+                    <span class="text-muted"><span class="g-dot" style="background:#2563eb"></span>{{ $noPeriodo }} no período</span>
+                    <span class="text-success"><span class="g-dot" style="background:#16a34a"></span>{{ $nConcluido }} concluídas</span>
+                    @if($nAtrasado)<span class="text-danger"><span class="g-dot" style="background:#dc2626"></span>{{ $nAtrasado }} atrasadas</span>@endif
                 </div>
 
-                {{-- Zoom --}}
                 <div class="btn-group btn-group-sm">
-                    <button
-                        wire:click="timelineZoomIn"
-                        class="btn btn-outline-secondary"
-                        title="Zoom In (menos dias)"
-                        {{ $totalDias <= 7 ? 'disabled' : '' }}
-                    >
-                        <i class="bi bi-zoom-in"></i>
-                    </button>
-                    <button
-                        wire:click="timelineZoomOut"
-                        class="btn btn-outline-secondary"
-                        title="Zoom Out (mais dias)"
-                        {{ $totalDias >= 120 ? 'disabled' : '' }}
-                    >
-                        <i class="bi bi-zoom-out"></i>
-                    </button>
-                </div>
-
-                {{-- Estatísticas --}}
-                <div class="d-flex gap-3 small text-muted">
-                    <span title="Entregas no período visível">
-                        <i class="bi bi-eye text-primary"></i>
-                        {{ $entregasNoPeriodo }} visíveis
-                    </span>
-                    <span title="Total de entregas com prazo">
-                        <i class="bi bi-calendar-check text-success"></i>
-                        {{ $entregasComPrazo }} com prazo
-                    </span>
+                    <button wire:click="timelineZoomIn"  class="btn btn-outline-secondary" {{ $totalDias <= 7  ? 'disabled' : '' }}><i class="bi bi-zoom-in"></i></button>
+                    <button wire:click="timelineZoomOut" class="btn btn-outline-secondary" {{ $totalDias >= 120 ? 'disabled' : '' }}><i class="bi bi-zoom-out"></i></button>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Grid do Gantt --}}
-    <div class="card border-0 shadow-sm overflow-hidden">
-        <div class="notion-timeline-container" style="overflow-x: auto;">
-            {{-- Cabeçalho com Meses --}}
-            <div class="notion-timeline-header-months">
-                <div class="notion-timeline-label-col">
-                    <span class="text-muted small">Entrega</span>
+    {{-- ─── Tabela Gantt ───────────────────────────────────────────────── --}}
+    <div class="card border-0 shadow-sm">
+        <div class="g-scroll">
+
+            {{-- Cabeçalho meses --}}
+            <div class="g-row g-hd" style="min-width:{{ $rowWidth }}px">
+                <div class="g-label-col" style="width:{{ $labelWidth }}px;min-width:{{ $labelWidth }}px">
+                    <span class="g-hd-label">Entrega</span>
                 </div>
-                <div class="notion-timeline-months-row">
-                    @foreach($meses as $mesKey => $diasDoMes)
-                        @php
-                            $mesCarbon = Carbon::parse($mesKey . '-01');
-                            $largura = (count($diasDoMes) / $totalDias) * 100;
-                        @endphp
-                        <div class="notion-timeline-month" style="width: {{ $largura }}%;">
-                            {{ $mesCarbon->translatedFormat('F Y') }}
+                <div class="g-months" style="width:{{ $gridWidth }}px;min-width:{{ $gridWidth }}px">
+                    @foreach($meses as $mesKey => $diasMes)
+                        @php $mc = Carbon::parse($mesKey . '-01'); @endphp
+                        <div class="g-month" style="width:{{ count($diasMes) * $DAY_W }}px;min-width:{{ count($diasMes) * $DAY_W }}px">
+                            {{ $mc->translatedFormat('F Y') }}
                         </div>
                     @endforeach
                 </div>
             </div>
 
-            {{-- Cabeçalho com Dias --}}
-            <div class="notion-timeline-header">
-                <div class="notion-timeline-label-col"></div>
-                <div class="notion-timeline-dates">
-                    @foreach($dias as $index => $dia)
-                        @php
-                            $isHoje = $dia->isToday();
-                            $isWeekend = $dia->isWeekend();
-                            $isFirstOfMonth = $dia->day === 1;
-                        @endphp
-                        <div class="notion-timeline-date {{ $isHoje ? 'today' : '' }} {{ $isWeekend ? 'weekend' : '' }} {{ $isFirstOfMonth ? 'first-of-month' : '' }}"
-                             title="{{ $dia->translatedFormat('l, d F Y') }}">
-                            <span class="notion-timeline-day">{{ $dia->format('D') }}</span>
-                            <span class="notion-timeline-daynum">{{ $dia->format('d') }}</span>
+            {{-- Cabeçalho dias (sticky) --}}
+            <div class="g-row g-hd g-hd-sticky" style="min-width:{{ $rowWidth }}px">
+                <div class="g-label-col" style="width:{{ $labelWidth }}px;min-width:{{ $labelWidth }}px"></div>
+                <div class="g-days" style="width:{{ $gridWidth }}px;min-width:{{ $gridWidth }}px">
+                    @foreach($dias as $dia)
+                        <div class="g-day-cell{{ $dia->isToday()?' g-today':'' }}{{ $dia->isWeekend()?' g-wk':'' }}{{ $dia->isMonday()?' g-mon':'' }}"
+                             style="width:{{ $DAY_W }}px;min-width:{{ $DAY_W }}px">
+                            <span class="g-dn">{{ mb_substr($dia->translatedFormat('D'),0,1) }}</span>
+                            <span class="g-dd{{ $dia->isToday()?' g-today-circle':'' }}">{{ $dia->format('d') }}</span>
                         </div>
                     @endforeach
                 </div>
             </div>
 
-            {{-- Linhas de entregas --}}
-            <div class="notion-timeline-body">
+            {{-- Body --}}
+            <div class="g-body" style="position:relative;min-width:{{ $rowWidth }}px">
+
                 @forelse($entregas as $entrega)
                     @php
-                        $prazo = $entrega->dte_prazo;
+                        $prazo   = $entrega->dte_prazo;
                         $criacao = $entrega->created_at->startOfDay();
 
-                        // Se tem prazo, usar prazo como fim. Se não, mostrar apenas no dia de criação
-                        $barraInicio = $criacao->greaterThan($inicio) ? $criacao : $inicio;
-                        $barraFim = $prazo ?: $criacao->copy()->addDays(1);
+                        // Início e fim visíveis da barra
+                        $barIni = $criacao->greaterThan($inicio) ? $criacao->copy() : $inicio->copy();
+                        $barFim = $prazo ? $prazo->copy() : $barIni->copy()->addDay();
+                        if ($barFim < $barIni) $barFim = $barIni->copy()->addDay();
 
-                        // Garante que a barra fim não seja antes da barra início
-                        if ($barraFim->lessThan($barraInicio)) {
-                            $barraFim = $barraInicio->copy()->addDay();
+                        // Clipa barFim ao fim do período
+                        if ($barFim->greaterThan($fim)) $barFim = $fim->copy();
+
+                        // Posição em pixels — sempre positivos e baseados no início da grade
+                        $offDias = (int) $inicio->diffInDays($barIni);
+                        $durDias = max(1, (int) $barIni->diffInDays($barFim) + 1);
+
+                        $barLeft  = $offDias * $DAY_W;           // px a partir da grade
+                        $barWidth = max($DAY_W, $durDias * $DAY_W); // mínimo 1 coluna
+
+                        // Fora do período?
+                        $foraDir = $prazo && $prazo->greaterThan($fim);
+                        $foraEsq = $prazo && $prazo->lessThan($inicio);
+                        $fora    = $foraDir || $foraEsq;
+
+                        // Se a entrega está fora, resetamos barWidth para não tentar renderizar barra
+                        if ($fora) { $barWidth = 0; }
+
+                        // Cor da barra
+                        $isAtrasada = $entrega->isAtrasada();
+                        $cor = $isAtrasada ? '#dc2626' : ($statusColor[$entrega->bln_status] ?? '#64748b');
+
+                        // Progresso temporal
+                        $progPct = 0;
+                        if ($prazo && $criacao->lessThan($prazo)) {
+                            $span    = max(1, $criacao->diffInDays($prazo));
+                            $elapsed = max(0, min((int) $criacao->diffInDays($hoje), $span));
+                            $progPct = (int)(($elapsed / $span) * 100);
+                        } elseif ($entrega->isConcluida()) {
+                            $progPct = 100;
                         }
 
-                        // Calcular offset e width em porcentagem
-                        $offsetDias = max(0, $barraInicio->diffInDays($inicio, false));
-                        $duracaoDias = max(1, $barraFim->diffInDays($barraInicio) + 1);
-
-                        // Limita a barra ao período visível
-                        if ($offsetDias < 0) {
-                            $duracaoDias += $offsetDias;
-                            $offsetDias = 0;
-                        }
-                        if ($offsetDias + $duracaoDias > $totalDias) {
-                            $duracaoDias = $totalDias - $offsetDias;
-                        }
-
-                        $offsetPercent = ($offsetDias / $totalDias) * 100;
-                        $widthPercent = max(2, min(($duracaoDias / $totalDias) * 100, 100 - $offsetPercent));
-
-                        $statusColor = $entrega->getStatusColor();
-                        $prioridadeInfo = $entrega->getPrioridadeInfo();
-
-                        // Verifica se está fora do período visível
-                        $foraDosPeriodo = ($prazo && ($prazo->lessThan($inicio) || $prazo->greaterThan($fim)));
+                        $prazoFmt = $prazo ? $prazo->translatedFormat('d/m/Y') : '—';
+                        $durFmt   = $prazo ? $criacao->diffInDays($prazo).'d' : '—';
                     @endphp
 
-                    <div
-                        class="notion-timeline-row {{ $entrega->isConcluida() ? 'completed' : '' }} {{ $entrega->isAtrasada() ? 'overdue' : '' }}"
-                        wire:key="timeline-row-{{ $entrega->cod_entrega }}"
-                    >
-                        {{-- Label --}}
-                        <div
-                            class="notion-timeline-label"
-                            wire:click="openDetails('{{ $entrega->cod_entrega }}')"
-                            title="{{ $entrega->dsc_entrega }}"
-                        >
-                            <span class="notion-status-dot" style="background-color: {{ $statusColor }}"></span>
-                            @if($prioridadeInfo)
-                                <i class="bi bi-{{ $prioridadeInfo['icon'] }} me-1" style="color: {{ $prioridadeInfo['color'] }}; font-size: 0.7rem;" title="{{ $prioridadeInfo['label'] }}"></i>
-                            @endif
-                            <span class="text-truncate">{{ Str::limit($entrega->dsc_entrega, 22) }}</span>
-                            @if($entrega->bln_arquivado)
-                                <i class="bi bi-archive ms-1 text-muted" title="Arquivada"></i>
+                    <div class="g-row g-data-row{{ $entrega->isConcluida()?' g-done':'' }}{{ $isAtrasada?' g-late':'' }}"
+                         style="min-width:{{ $rowWidth }}px">
+
+                        {{-- Rótulo --}}
+                        <div class="g-label-col g-label"
+                             style="width:{{ $labelWidth }}px;min-width:{{ $labelWidth }}px"
+                             wire:click="openDetails('{{ $entrega->cod_entrega }}')"
+                             title="{{ $entrega->dsc_entrega }}">
+                            <span class="g-status-dot" style="background:{{ $cor }}"></span>
+                            <span class="g-label-text">{{ Str::limit($entrega->dsc_entrega, 25) }}</span>
+                            @if($prazo)
+                                <span class="g-label-date{{ $isAtrasada?' text-danger':'' }}">{{ $prazo->format('d/m') }}</span>
                             @endif
                         </div>
 
-                        {{-- Grid de dias --}}
-                        <div class="notion-timeline-grid">
+                        {{-- Área de grade --}}
+                        <div class="g-grid" style="width:{{ $gridWidth }}px;min-width:{{ $gridWidth }}px;position:relative;height:46px">
+
+                            {{-- Fundo zebrado por dia --}}
                             @foreach($dias as $dia)
-                                <div class="notion-timeline-cell {{ $dia->isToday() ? 'today' : '' }} {{ $dia->isWeekend() ? 'weekend' : '' }}"></div>
+                                <div class="g-cell{{ $dia->isToday()?' g-today':'' }}{{ $dia->isWeekend()?' g-wk':'' }}{{ $dia->isMonday()?' g-mon':'' }}"
+                                     style="width:{{ $DAY_W }}px;min-width:{{ $DAY_W }}px;height:46px"></div>
                             @endforeach
 
-                            {{-- Barra de progresso (se estiver no período) --}}
-                            @if(!$foraDosPeriodo && $widthPercent > 0)
-                                <div
-                                    class="notion-timeline-bar {{ $entrega->isConcluida() ? 'completed' : '' }} {{ $entrega->isAtrasada() ? 'overdue' : '' }}"
-                                    style="left: {{ $offsetPercent }}%; width: {{ $widthPercent }}%; background-color: {{ $statusColor }};"
-                                    wire:click="openDetails('{{ $entrega->cod_entrega }}')"
-                                    x-data="{ dragging: false }"
-                                    @mouseenter="showTooltip($event, '{{ addslashes($entrega->dsc_entrega) }}', '{{ $entrega->bln_status }}', '{{ $prazo ? $prazo->format('d/m/Y') : 'Sem prazo' }}')"
-                                    @mouseleave="hideTooltip()"
-                                >
-                                    @if($widthPercent > 8)
-                                        <span class="notion-timeline-bar-text">
-                                            {{ Str::limit($entrega->dsc_entrega, (int)($widthPercent / 3)) }}
-                                        </span>
+                            {{-- Barra --}}
+                            @if(!$fora && $barWidth > 0)
+                                <div class="g-bar{{ $entrega->isConcluida()?' g-bar-done':'' }}{{ $isAtrasada?' g-bar-late':'' }}"
+                                     style="left:{{ $barLeft }}px;width:{{ $barWidth }}px;background-color:{{ $cor }};"
+                                     wire:click="openDetails('{{ $entrega->cod_entrega }}')"
+                                     @mouseenter="show($event,'{{ addslashes(Str::limit($entrega->dsc_entrega,60)) }}','{{ $entrega->bln_status }}','{{ $prazoFmt }}','{{ $durFmt }}',{{ $progPct }})"
+                                     @mouseleave="hide()">
+
+                                    @if($progPct > 0 && $progPct < 100)
+                                        <div class="g-bar-prog" style="width:{{ $progPct }}%"></div>
                                     @endif
 
-                                    {{-- Indicador de prazo no final da barra --}}
-                                    @if($prazo && $widthPercent > 5)
-                                        <span class="notion-timeline-bar-date">
-                                            {{ $prazo->format('d/m') }}
-                                        </span>
+                                    <span class="g-bar-txt">
+                                        @if($entrega->isConcluida())<i class="bi bi-check-lg me-1"></i>@endif
+                                        {{ Str::limit($entrega->dsc_entrega, max(3, (int)($barWidth / 8))) }}
+                                    </span>
+
+                                    @if($barWidth > 80 && $prazo)
+                                        <span class="g-bar-date">{{ $prazo->format('d/m') }}</span>
                                     @endif
                                 </div>
                             @endif
 
-                            {{-- Indicador de item fora do período --}}
-                            @if($foraDosPeriodo && $prazo)
-                                <div class="notion-timeline-outside">
-                                    <i class="bi bi-arrow-{{ $prazo->lessThan($inicio) ? 'left' : 'right' }}"></i>
-                                    {{ $prazo->format('d/m') }}
+                            {{-- Fora do período --}}
+                            @if($fora && $prazo)
+                                <div class="g-out{{ $foraEsq?' g-out-l':' g-out-r' }}">
+                                    <i class="bi bi-arrow-{{ $foraEsq?'left':'right' }}-circle-fill me-1"></i>
+                                    {{ $prazoFmt }}
                                 </div>
                             @endif
                         </div>
                     </div>
+
                 @empty
-                    <div class="notion-timeline-empty">
-                        <div class="text-center py-5 text-muted">
-                            <i class="bi bi-bar-chart-steps fs-1 opacity-25"></i>
-                            <p class="mb-0 mt-2">Nenhuma entrega para exibir na timeline.</p>
-                            <small>Adicione entregas com prazos para visualizá-las aqui.</small>
-                        </div>
+                    <div class="g-row" style="padding:60px;justify-content:center;color:#9ca3af;text-align:center;display:block">
+                        <i class="bi bi-bar-chart-steps" style="font-size:2rem;opacity:.3"></i>
+                        <p class="mt-2 mb-0 fw-semibold">Nenhuma entrega para exibir no Gantt.</p>
+                        <small>Adicione entregas com prazos para visualizá-las aqui.</small>
                     </div>
                 @endforelse
+
+                {{-- Linha "Hoje" posicionada em pixels absolutos --}}
+                @if($hoje->between($inicio, $fim))
+                    <div class="g-today-line" style="left:{{ $todayPx }}px">
+                        <div class="g-today-badge">Hoje</div>
+                    </div>
+                @endif
             </div>
 
-            {{-- Linha do dia atual --}}
-            @if($hoje->between($inicio, $fim))
-                @php
-                    $todayOffset = $inicio->diffInDays($hoje);
-                    $todayPercent = (($todayOffset + 0.5) / $totalDias) * 100;
-                @endphp
-                <div class="notion-timeline-today-line" style="left: calc(200px + {{ $todayPercent }}% - 1px);">
-                    <div class="notion-timeline-today-marker">Hoje</div>
-                </div>
-            @endif
         </div>
     </div>
 
-    {{-- Entregas sem prazo --}}
-    @php
-        $semPrazo = $entregas->filter(fn($e) => !$e->dte_prazo);
-    @endphp
-
-    @if($semPrazo->count() > 0)
-        <div class="card border-0 shadow-sm mt-4">
-            <div class="card-header bg-warning bg-opacity-10 border-bottom d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold">
-                    <i class="bi bi-exclamation-triangle me-2 text-warning"></i>
-                    Entregas sem prazo
-                    <span class="badge bg-warning text-dark ms-2">{{ $semPrazo->count() }}</span>
-                </h6>
-                <small class="text-muted">Defina prazos para visualizar no Gantt</small>
-            </div>
-            <div class="card-body">
-                <div class="row g-2">
-                    @foreach($semPrazo->take(8) as $entrega)
-                        <div class="col-md-3">
-                            <div
-                                class="p-2 rounded border bg-light d-flex align-items-center gap-2 cursor-pointer"
-                                wire:click="openDetails('{{ $entrega->cod_entrega }}')"
-                                style="cursor: pointer;"
-                            >
-                                <span class="notion-status-dot" style="background-color: {{ $entrega->getStatusColor() }}"></span>
-                                <span class="small text-truncate">{{ Str::limit($entrega->dsc_entrega, 30) }}</span>
-                            </div>
-                        </div>
+    {{-- ─── Sem prazo ─────────────────────────────────────────────────── --}}
+    @php $semPrazo = $entregas->filter(fn($e) => !$e->dte_prazo); @endphp
+    @if($semPrazo->isNotEmpty())
+        <div class="card border-0 shadow-sm mt-3">
+            <div class="card-body py-2 px-3">
+                <p class="small fw-semibold text-warning mb-2">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                    {{ $semPrazo->count() }} entrega(s) sem prazo — não exibidas no Gantt
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach($semPrazo->take(8) as $e)
+                        <span class="badge rounded-pill bg-light text-dark border" wire:click="openDetails('{{ $e->cod_entrega }}')" style="cursor:pointer">
+                            <span class="g-dot" style="background:{{ $statusColor[$e->bln_status] ?? '#64748b' }}"></span>
+                            {{ Str::limit($e->dsc_entrega, 28) }}
+                        </span>
                     @endforeach
+                    @if($semPrazo->count() > 8)<span class="text-muted small align-self-center">+{{ $semPrazo->count() - 8 }} mais</span>@endif
                 </div>
-                @if($semPrazo->count() > 8)
-                    <div class="text-center mt-2">
-                        <small class="text-muted">e mais {{ $semPrazo->count() - 8 }} entregas sem prazo...</small>
-                    </div>
-                @endif
             </div>
         </div>
     @endif
 
-    {{-- Legenda --}}
-    <div class="d-flex flex-wrap gap-4 mt-3 small text-muted justify-content-center">
-        <div class="d-flex align-items-center gap-2">
-            <div class="notion-timeline-legend-line today"></div>
-            <span>Hoje</span>
-        </div>
-        @foreach(\App\Models\ActionPlan\Entrega::STATUS_OPTIONS as $status)
-            <div class="d-flex align-items-center gap-2">
-                <div class="notion-timeline-legend-dot" style="background-color: {{ \App\Models\ActionPlan\Entrega::STATUS_COLORS[$status] }}"></div>
-                <span>{{ $status }}</span>
-            </div>
-        @endforeach
-        <div class="d-flex align-items-center gap-2">
-            <div class="notion-timeline-legend-dot overdue"></div>
-            <span>Atrasada</span>
-        </div>
+    {{-- ─── Legenda ─────────────────────────────────────────────────────── --}}
+    <div class="d-flex flex-wrap gap-4 mt-3 justify-content-center" style="font-size:.75rem;color:#6b7280">
+        <span><span class="g-dot" style="background:#64748b"></span>Não Iniciado</span>
+        <span><span class="g-dot" style="background:#2563eb"></span>Em Andamento</span>
+        <span><span class="g-dot" style="background:#16a34a"></span>Concluído</span>
+        <span><span class="g-dot" style="background:#dc2626"></span>Cancelado / Atrasado</span>
+        <span><span class="g-dot" style="background:#d97706"></span>Suspenso</span>
+        <span><span class="g-dot" style="background:rgba(0,0,0,.2);border:1px solid #ccc"></span>Tempo decorrido</span>
     </div>
 
-    {{-- Tooltip flutuante --}}
-    <div
-        x-show="tooltipVisible"
-        x-transition
-        class="notion-timeline-tooltip"
-        :style="'top: ' + tooltipY + 'px; left: ' + tooltipX + 'px;'"
-    >
-        <div class="fw-bold" x-text="tooltipTitle"></div>
-        <div class="small">
-            <span class="text-muted">Status:</span> <span x-text="tooltipStatus"></span>
-        </div>
-        <div class="small">
-            <span class="text-muted">Prazo:</span> <span x-text="tooltipPrazo"></span>
-        </div>
+    {{-- ─── Tooltip ─────────────────────────────────────────────────────── --}}
+    <div x-show="vis" x-transition.opacity
+         :style="'position:fixed;top:'+y+'px;left:'+x+'px;z-index:1050'"
+         class="g-tooltip" style="display:none">
+        <p class="g-tt-title" x-text="ttl"></p>
+        <div class="g-tt-row"><span>Status</span><strong x-text="sts"></strong></div>
+        <div class="g-tt-row"><span>Prazo</span><strong x-text="pra"></strong></div>
+        <div class="g-tt-row"><span>Duração</span><strong x-text="dur"></strong></div>
+        <div class="g-tt-row" x-show="prg > 0"><span>Decorrido</span><strong x-text="prg+'%'"></strong></div>
     </div>
+
 </div>
 
 <script>
-    function ganttChart() {
-        return {
-            tooltipVisible: false,
-            tooltipX: 0,
-            tooltipY: 0,
-            tooltipTitle: '',
-            tooltipStatus: '',
-            tooltipPrazo: '',
-
-            showTooltip(event, title, status, prazo) {
-                this.tooltipTitle = title;
-                this.tooltipStatus = status;
-                this.tooltipPrazo = prazo;
-                this.tooltipX = event.clientX + 15;
-                this.tooltipY = event.clientY + 15;
-                this.tooltipVisible = true;
-            },
-
-            hideTooltip() {
-                this.tooltipVisible = false;
-            }
-        }
+function peiGantt() {
+    return {
+        vis: false, x: 0, y: 0,
+        ttl: '', sts: '', pra: '', dur: '', prg: 0,
+        show(e, ttl, sts, pra, dur, prg) {
+            this.ttl = ttl; this.sts = sts; this.pra = pra; this.dur = dur; this.prg = prg;
+            let tx = e.clientX + 14, ty = e.clientY + 14;
+            if (tx + 280 > window.innerWidth)  tx = e.clientX - 294;
+            if (ty + 160 > window.innerHeight) ty = e.clientY - 174;
+            this.x = tx; this.y = ty; this.vis = true;
+        },
+        hide() { this.vis = false; }
     }
+}
 </script>
 
 <style>
-    .notion-timeline-container {
-        position: relative;
-        min-height: 300px;
-    }
+/* ── Scroll container ──────────────────────── */
+.g-scroll {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db transparent;
+}
+.g-scroll::-webkit-scrollbar { height: 5px; }
+.g-scroll::-webkit-scrollbar-thumb { background:#d1d5db; border-radius:3px; }
 
-    .notion-timeline-header-months {
-        display: flex;
-        border-bottom: 1px solid #e4e4e4;
-        background: linear-gradient(180deg, #f8f9fa 0%, #fff 100%);
-    }
+/* ── Linhas ────────────────────────────────── */
+.g-row {
+    display: flex;
+    align-items: stretch;
+}
+.g-hd {
+    background: #f8f9fb;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #64748b;
+}
+.g-hd-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #fff;
+    border-bottom: 2px solid #cbd5e1;
+    box-shadow: 0 2px 6px rgba(0,0,0,.06);
+}
+.g-data-row {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background .12s;
+}
+.g-data-row:hover { background: #f8faff; }
+.g-data-row.g-done { opacity: .6; }
+.g-data-row.g-late { background: #fff5f5; }
 
-    .notion-timeline-months-row {
-        display: flex;
-        flex: 1;
-    }
+/* ── Coluna de rótulo ──────────────────────── */
+.g-label-col {
+    flex-shrink: 0;
+    border-right: 2px solid #e2e8f0;
+    background: #fafbfc;
+}
+.g-hd-label {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 14px;
+}
+.g-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 12px;
+    cursor: pointer;
+    min-height: 46px;
+    transition: background .12s;
+}
+.g-label:hover { background: #eff6ff; }
+.g-status-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.g-label-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: .8rem;
+    font-weight: 500;
+    color: #374151;
+}
+.g-label-date {
+    font-size: .68rem;
+    color: #9ca3af;
+    flex-shrink: 0;
+    margin-left: auto;
+}
 
-    .notion-timeline-month {
-        padding: 8px;
-        font-weight: 700;
-        font-size: 0.8rem;
-        text-align: center;
-        border-right: 1px solid #e4e4e4;
-        color: var(--bs-primary);
-        background: rgba(var(--bs-primary-rgb), 0.05);
-    }
+/* ── Cabeçalho meses ───────────────────────── */
+.g-months { display: flex; }
+.g-month {
+    flex-shrink: 0;
+    padding: 6px 10px;
+    border-right: 1px solid #e2e8f0;
+    color: #3b82f6;
+    font-weight: 800;
+    font-size: .68rem;
+    text-align: center;
+    background: rgba(59,130,246,.04);
+    white-space: nowrap;
+    overflow: hidden;
+}
 
-    .notion-timeline-month:last-child {
-        border-right: none;
-    }
+/* ── Cabeçalho dias ────────────────────────── */
+.g-days { display: flex; }
+.g-day-cell {
+    flex-shrink: 0;
+    text-align: center;
+    padding: 4px 0;
+    border-right: 1px solid #f0f4f8;
+}
+.g-day-cell.g-wk  { background: #f9fafb; }
+.g-day-cell.g-mon { border-left: 1px solid #e2e8f0; }
+.g-day-cell.g-today { background: rgba(37,99,235,.07); }
+.g-dn {
+    display: block;
+    font-size: .52rem;
+    color: #9ca3af;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+.g-dd {
+    display: block;
+    font-size: .75rem;
+    font-weight: 700;
+    color: #374151;
+}
+.g-day-cell.g-today .g-dd { color: #2563eb; }
+.g-today-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: #fff;
+    font-size: .65rem;
+}
 
-    .notion-timeline-header {
-        display: flex;
-        border-bottom: 2px solid #e4e4e4;
-        position: sticky;
-        top: 0;
-        background: white;
-        z-index: 10;
-    }
+/* ── Grade (fundo das linhas) ──────────────── */
+.g-grid { display: flex; }
+.g-cell {
+    flex-shrink: 0;
+    border-right: 1px solid #f4f6f8;
+}
+.g-cell.g-wk  { background: #f9fafb; }
+.g-cell.g-mon { border-left: 1px solid #e8ecf0; }
+.g-cell.g-today { background: rgba(37,99,235,.05); }
 
-    .notion-timeline-label-col {
-        width: 200px;
-        min-width: 200px;
-        padding: 10px 12px;
-        font-weight: 600;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        color: #9b9a97;
-        border-right: 2px solid #e4e4e4;
-        background: #f8f9fa;
-    }
+/* ── Barra ─────────────────────────────────── */
+.g-bar {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 26px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 9px;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,.18);
+    transition: box-shadow .15s, filter .15s;
+    z-index: 5;
+}
+.g-bar:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,.24);
+    filter: brightness(1.08);
+    z-index: 10;
+}
+.g-bar.g-bar-late {
+    box-shadow: 0 0 0 2px #dc2626, 0 2px 8px rgba(220,38,38,.25);
+}
+.g-bar.g-bar-done { opacity: .65; }
 
-    .notion-timeline-dates {
-        display: flex;
-        flex: 1;
-        overflow: hidden;
-    }
+.g-bar-prog {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: rgba(0,0,0,.2);
+    border-radius: 5px 0 0 5px;
+    pointer-events: none;
+}
+.g-bar-txt {
+    font-size: .68rem;
+    font-weight: 700;
+    color: rgba(255,255,255,.95);
+    text-shadow: 0 1px 2px rgba(0,0,0,.3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+}
+.g-bar-date {
+    font-size: .6rem;
+    font-weight: 700;
+    color: rgba(255,255,255,.9);
+    background: rgba(0,0,0,.2);
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 6px;
+    flex-shrink: 0;
+}
 
-    .notion-timeline-date {
-        flex: 1;
-        min-width: 28px;
-        text-align: center;
-        padding: 4px 0;
-        font-size: 0.65rem;
-        border-right: 1px solid #f0f0f0;
-        transition: background-color 0.15s ease;
-    }
+/* ── Fora do período ───────────────────────── */
+.g-out {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: .65rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+.g-out-l { left:  8px; background:#fef3c7; color:#92400e; }
+.g-out-r { right: 8px; background:#dbeafe; color:#1e40af; }
 
-    .notion-timeline-date:hover {
-        background-color: #f0f7ff;
-    }
+/* ── Linha Hoje ────────────────────────────── */
+.g-today-line {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: #2563eb;
+    z-index: 15;
+    pointer-events: none;
+}
+.g-today-badge {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2563eb;
+    color: #fff;
+    font-size: .58rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 0 0 4px 4px;
+    letter-spacing: .05em;
+    white-space: nowrap;
+}
 
-    .notion-timeline-date.today {
-        background: linear-gradient(180deg, #dbeafe 0%, #fff 100%);
-        border-left: 2px solid var(--bs-primary);
-        border-right: 2px solid var(--bs-primary);
-    }
+/* ── Dots ──────────────────────────────────── */
+.g-dot {
+    display: inline-block;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
 
-    .notion-timeline-date.weekend {
-        background: #fafafa;
-    }
-
-    .notion-timeline-date.first-of-month {
-        border-left: 2px solid #dee2e6;
-    }
-
-    .notion-timeline-day {
-        display: block;
-        color: #9b9a97;
-        text-transform: uppercase;
-        font-size: 0.55rem;
-        font-weight: 600;
-    }
-
-    .notion-timeline-daynum {
-        display: block;
-        font-weight: 700;
-        color: #37352f;
-        font-size: 0.75rem;
-    }
-
-    .notion-timeline-date.today .notion-timeline-daynum {
-        color: var(--bs-primary);
-    }
-
-    .notion-timeline-body {
-        position: relative;
-    }
-
-    .notion-timeline-row {
-        display: flex;
-        border-bottom: 1px solid #f0f0f0;
-        min-height: 44px;
-        transition: background-color 0.15s ease;
-    }
-
-    .notion-timeline-row:hover {
-        background: #fafafa;
-    }
-
-    .notion-timeline-row.completed {
-        opacity: 0.6;
-    }
-
-    .notion-timeline-row.overdue {
-        background: rgba(220, 53, 69, 0.03);
-    }
-
-    .notion-timeline-label {
-        width: 200px;
-        min-width: 200px;
-        padding: 8px 12px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.8rem;
-        border-right: 2px solid #e4e4e4;
-        cursor: pointer;
-        background: #fafafa;
-        transition: all 0.15s ease;
-    }
-
-    .notion-timeline-label:hover {
-        background: #f0f7ff;
-        color: var(--bs-primary);
-    }
-
-    .notion-status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        flex-shrink: 0;
-    }
-
-    .notion-timeline-grid {
-        display: flex;
-        flex: 1;
-        position: relative;
-    }
-
-    .notion-timeline-cell {
-        flex: 1;
-        min-width: 28px;
-        border-right: 1px solid #f8f8f8;
-    }
-
-    .notion-timeline-cell.today {
-        background: rgba(37, 99, 235, 0.05);
-    }
-
-    .notion-timeline-cell.weekend {
-        background: #fcfcfc;
-    }
-
-    .notion-timeline-bar {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        height: 26px;
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 8px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        overflow: hidden;
-    }
-
-    .notion-timeline-bar:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        transform: translateY(-50%) scale(1.02);
-        z-index: 5;
-    }
-
-    .notion-timeline-bar.completed {
-        opacity: 0.5;
-    }
-
-    .notion-timeline-bar.overdue {
-        border: 2px solid #dc3545;
-        animation: pulse-border 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse-border {
-        0%, 100% { border-color: #dc3545; }
-        50% { border-color: rgba(220, 53, 69, 0.4); }
-    }
-
-    .notion-timeline-bar-text {
-        font-size: 0.7rem;
-        color: #1a202c;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        font-weight: 500;
-    }
-
-    .notion-timeline-bar-date {
-        font-size: 0.6rem;
-        color: rgba(0,0,0,0.5);
-        font-weight: 600;
-        background: rgba(255,255,255,0.7);
-        padding: 1px 4px;
-        border-radius: 3px;
-        margin-left: 4px;
-    }
-
-    .notion-timeline-outside {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 0.65rem;
-        color: #9b9a97;
-        padding: 2px 8px;
-        background: #f5f5f5;
-        border-radius: 4px;
-    }
-
-    .notion-timeline-outside i {
-        margin-right: 4px;
-    }
-
-    .notion-timeline-today-line {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: linear-gradient(180deg, var(--bs-primary) 0%, rgba(var(--bs-primary-rgb), 0.3) 100%);
-        z-index: 15;
-        pointer-events: none;
-    }
-
-    .notion-timeline-today-marker {
-        position: absolute;
-        top: -20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--bs-primary);
-        color: white;
-        font-size: 0.6rem;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 4px;
-        white-space: nowrap;
-    }
-
-    .notion-timeline-legend-dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-    }
-
-    .notion-timeline-legend-dot.overdue {
-        background: #dc3545;
-        animation: pulse-border 2s ease-in-out infinite;
-        border: 2px solid #dc3545;
-    }
-
-    .notion-timeline-legend-line {
-        width: 24px;
-        height: 3px;
-        border-radius: 2px;
-    }
-
-    .notion-timeline-legend-line.today {
-        background: linear-gradient(90deg, var(--bs-primary) 0%, rgba(var(--bs-primary-rgb), 0.3) 100%);
-    }
-
-    .notion-timeline-tooltip {
-        position: fixed;
-        z-index: 1000;
-        background: white;
-        border: 1px solid #e4e4e4;
-        border-radius: 8px;
-        padding: 10px 14px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        max-width: 300px;
-        pointer-events: none;
-    }
-
-    .notion-timeline-empty {
-        padding: 40px;
-    }
-
-    /* Dark mode */
-    [data-bs-theme="dark"] .notion-timeline-header,
-    [data-bs-theme="dark"] .notion-timeline-header-months {
-        background: #2d3748;
-    }
-
-    [data-bs-theme="dark"] .notion-timeline-label-col,
-    [data-bs-theme="dark"] .notion-timeline-label {
-        background: #1a202c;
-        border-color: #4a5568;
-    }
-
-    [data-bs-theme="dark"] .notion-timeline-date,
-    [data-bs-theme="dark"] .notion-timeline-cell {
-        border-color: #4a5568;
-    }
-
-    [data-bs-theme="dark"] .notion-timeline-daynum {
-        color: #e2e8f0;
-    }
-
-    [data-bs-theme="dark"] .notion-timeline-bar-text {
-        color: #1a202c;
-    }
-
-    [data-bs-theme="dark"] .notion-timeline-tooltip {
-        background: #2d3748;
-        border-color: #4a5568;
-        color: #e2e8f0;
-    }
-
-    /* Responsivo */
-    @media (max-width: 992px) {
-        .notion-timeline-label-col {
-            width: 150px;
-            min-width: 150px;
-        }
-
-        .notion-timeline-label {
-            width: 150px;
-            min-width: 150px;
-            font-size: 0.75rem;
-        }
-
-        .notion-timeline-date {
-            min-width: 24px;
-        }
-
-        .notion-timeline-cell {
-            min-width: 24px;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .notion-timeline-label-col {
-            width: 120px;
-            min-width: 120px;
-        }
-
-        .notion-timeline-label {
-            width: 120px;
-            min-width: 120px;
-            font-size: 0.7rem;
-            padding: 6px 8px;
-        }
-
-        .notion-timeline-month {
-            font-size: 0.7rem;
-            padding: 6px;
-        }
-
-        .notion-timeline-day {
-            display: none;
-        }
-
-        .notion-timeline-bar-text {
-            display: none;
-        }
-    }
+/* ── Tooltip ───────────────────────────────── */
+.g-tooltip {
+    background: #1e293b;
+    color: #f1f5f9;
+    border-radius: 10px;
+    padding: 12px 16px;
+    min-width: 220px;
+    max-width: 290px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.3);
+    pointer-events: none;
+    font-size: .76rem;
+}
+.g-tt-title {
+    font-weight: 700;
+    font-size: .82rem;
+    color: #f8fafc;
+    margin: 0 0 8px;
+    line-height: 1.35;
+}
+.g-tt-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 3px 0;
+    border-top: 1px solid rgba(255,255,255,.08);
+    color: #94a3b8;
+}
+.g-tt-row strong { color: #f1f5f9; }
 </style>

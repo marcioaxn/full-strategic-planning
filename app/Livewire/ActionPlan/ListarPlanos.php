@@ -418,9 +418,15 @@ class ListarPlanos extends Component
         if ($this->filtroObjetivo) {
             $query->where('cod_objetivo', $this->filtroObjetivo);
         } elseif ($this->organizacaoId) {
-            // Filtro por organização considerando multivinculação
-            $query->whereHas('organizacoes', function($sub) {
-                $sub->where('tab_organizacoes.cod_organizacao', $this->organizacaoId);
+            // Admin vê planos da org selecionada e todos os descendentes na hierarquia.
+            // Usuário comum vê apenas a org exata.
+            $isAdmin = auth()->user()?->isSuperAdmin();
+            $orgIds = $isAdmin
+                ? (\App\Models\Organization::find($this->organizacaoId)?->getDescendantsAndSelfIds() ?? [$this->organizacaoId])
+                : [$this->organizacaoId];
+
+            $query->whereHas('organizacoes', function ($sub) use ($orgIds) {
+                $sub->whereIn('tab_organizacoes.cod_organizacao', $orgIds);
             });
         }
 
