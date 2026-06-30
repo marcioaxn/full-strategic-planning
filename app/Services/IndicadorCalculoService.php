@@ -801,7 +801,7 @@ class IndicadorCalculoService
             ->orderBy('num_ano')
             ->orderBy('num_mes')
             ->get(['num_ano', 'num_mes', 'vlr_realizado'])
-            ->takeLast($ultimosMeses);
+            ->slice(-$ultimosMeses);
 
         if ($evolucoes->count() < 2) {
             return array_merge($neutro, ['pontos' => $evolucoes->pluck('vlr_realizado')->toArray()]);
