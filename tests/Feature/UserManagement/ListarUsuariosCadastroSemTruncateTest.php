@@ -51,6 +51,10 @@ class ListarUsuariosCadastroSemTruncateTest extends TestCase
             $this->markTestSkipped('O banco precisa ter ao menos uma organizacao e um perfil de acesso cadastrados.');
         }
 
+        // Fonte de verdade de Super Admin é o perfil vinculado, não a flag legada "adm".
+        $admin->perfisAcesso()->attach(PerfilAcesso::SUPER_ADMIN, ['cod_organizacao' => $organizacao->cod_organizacao]);
+        $admin->unsetRelation('perfisAcesso');
+
         $email = 'usuario.cadastro.'.Str::uuid().'@example.test';
         $this->createdEmails[] = $email;
 
@@ -122,6 +126,10 @@ class ListarUsuariosCadastroSemTruncateTest extends TestCase
         if (! $organizacao || ! $perfil) {
             $this->markTestSkipped('O banco precisa ter ao menos uma organizacao e um perfil de acesso cadastrados.');
         }
+
+        // Fonte de verdade de Super Admin é o perfil vinculado, não a flag legada "adm".
+        $admin->perfisAcesso()->attach(PerfilAcesso::SUPER_ADMIN, ['cod_organizacao' => $organizacao->cod_organizacao]);
+        $admin->unsetRelation('perfisAcesso');
 
         $email = 'usuario.cadastro.manual.'.Str::uuid().'@example.test';
         $senha = 'SenhaManual!123';

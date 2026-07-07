@@ -4,10 +4,10 @@ namespace App\Livewire\Admin;
 
 use App\Models\PerfilAcesso;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\Auth;
 
 #[Layout('layouts.app')]
 class GestaoPerfis extends Component
@@ -20,7 +20,7 @@ class GestaoPerfis extends Component
 
     public function mount(): void
     {
-        abort_unless(Auth::user()?->isSuperAdmin(), 403, 'Acesso restrito ao Administrador Geral.');
+        $this->authorize('modulo.acessar', 'admin.perfis');
     }
 
     /**
@@ -44,9 +44,9 @@ class GestaoPerfis extends Component
             ],
             'perfis' => [
                 'Administrador Geral' => ['T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T'],
-                'Admin de Unidade'    => ['—', 'L', '—', 'E', 'E', 'T', 'T', 'E', 'L'],
-                'Gestor Responsável'  => ['—', 'L', '—', 'L', 'L', 'E', 'E', 'L', 'L'],
-                'Gestor Substituto'   => ['—', 'L', '—', 'L', 'L', 'E', 'E', 'L', 'L'],
+                'Admin de Unidade' => ['—', 'L', '—', 'E', 'E', 'T', 'T', 'E', 'L'],
+                'Gestor Responsável' => ['—', 'L', '—', 'L', 'L', 'E', 'E', 'L', 'L'],
+                'Gestor Substituto' => ['—', 'L', '—', 'L', 'L', 'E', 'E', 'L', 'L'],
             ],
         ];
     }
@@ -55,28 +55,28 @@ class GestaoPerfis extends Component
     {
         return [
             'Administrador Geral' => [
-                'icon'  => 'shield-lock-fill',
+                'icon' => 'shield-lock-fill',
                 'color' => 'danger',
-                'desc'  => 'Acesso irrestrito a todos os módulos, configurações e gestão de usuários. Pode assumir a identidade de qualquer usuário.',
-                'flag'  => 'adm = true',
+                'desc' => 'Acesso irrestrito a todos os módulos, configurações e gestão de usuários. Pode assumir a identidade de qualquer usuário.',
+                'flag' => 'adm = true',
             ],
             'Admin de Unidade' => [
-                'icon'  => 'building-gear',
+                'icon' => 'building-gear',
                 'color' => 'primary',
-                'desc'  => 'Gerencia os planos, entregas e dados estratégicos da sua organização. Pode criar e excluir planos da unidade.',
-                'flag'  => 'ADMIN_UNIDADE',
+                'desc' => 'Gerencia os planos, entregas e dados estratégicos da sua organização. Pode criar e excluir planos da unidade.',
+                'flag' => 'ADMIN_UNIDADE',
             ],
             'Gestor Responsável' => [
-                'icon'  => 'person-fill-gear',
+                'icon' => 'person-fill-gear',
                 'color' => 'success',
-                'desc'  => 'Edita os planos de ação e entregas sob sua responsabilidade direta. Não exclui planos.',
-                'flag'  => 'GESTOR_RESPONSAVEL',
+                'desc' => 'Edita os planos de ação e entregas sob sua responsabilidade direta. Não exclui planos.',
+                'flag' => 'GESTOR_RESPONSAVEL',
             ],
             'Gestor Substituto' => [
-                'icon'  => 'person-fill-up',
+                'icon' => 'person-fill-up',
                 'color' => 'info',
-                'desc'  => 'Substitui o gestor responsável na edição de planos e entregas vinculados. Mesmas permissões de edição.',
-                'flag'  => 'GESTOR_SUBSTITUTO',
+                'desc' => 'Substitui o gestor responsável na edição de planos e entregas vinculados. Mesmas permissões de edição.',
+                'flag' => 'GESTOR_SUBSTITUTO',
             ],
         ];
     }
@@ -86,17 +86,17 @@ class GestaoPerfis extends Component
         $perfis = PerfilAcesso::withCount('usuarios')->get();
 
         $usuarios = User::query()
-            ->when($this->buscaUsuario, fn($q) => $q->where(function ($sub) {
-                $sub->where('name', 'ilike', '%' . $this->buscaUsuario . '%')
-                    ->orWhere('email', 'ilike', '%' . $this->buscaUsuario . '%');
+            ->when($this->buscaUsuario, fn ($q) => $q->where(function ($sub) {
+                $sub->where('name', 'ilike', '%'.$this->buscaUsuario.'%')
+                    ->orWhere('email', 'ilike', '%'.$this->buscaUsuario.'%');
             }))
             ->where('id', '!=', Auth::id())
             ->orderBy('name')
             ->paginate(8);
 
         return view('livewire.admin.gestao-perfis', [
-            'perfis'    => $perfis,
-            'usuarios'  => $usuarios,
+            'perfis' => $perfis,
+            'usuarios' => $usuarios,
         ]);
     }
 }

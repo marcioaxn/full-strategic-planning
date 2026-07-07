@@ -3,9 +3,9 @@
 namespace App\Policies;
 
 use App\Models\Organization;
-use App\Models\User;
 use App\Models\PerfilAcesso;
-use Illuminate\Auth\Access\Response;
+use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 
 class OrganizationPolicy
 {
@@ -39,14 +39,17 @@ class OrganizationPolicy
      */
     public function update(User $user, Organization $organization): bool
     {
-        // Super Admin ou Admin da própria unidade
+        if (! Gate::forUser($user)->allows('modulo.editar', 'organizacoes')) {
+            return false;
+        }
+
         if ($user->isSuperAdmin()) {
             return true;
         }
 
-        // Verifica se é Admin da Unidade desta organização
+        // Verifica se é Admin da Unidade desta organização específica
         return $user->perfisAcesso()
-            ->where('cod_perfil', PerfilAcesso::ADMIN_UNIDADE)
+            ->where('tab_perfil_acesso.cod_perfil', PerfilAcesso::ADMIN_UNIDADE)
             ->wherePivot('cod_organizacao', $organization->cod_organizacao)
             ->exists();
     }

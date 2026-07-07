@@ -13,7 +13,7 @@ class DetalharLog extends Component
 
     public function mount($id)
     {
-        abort_unless(auth()->user()?->isSuperAdmin(), 403, 'Acesso restrito ao Super Administrador.');
+        $this->authorize('modulo.acessar', 'auditoria');
 
         $this->log = Audit::with('user')->findOrFail($id);
     }

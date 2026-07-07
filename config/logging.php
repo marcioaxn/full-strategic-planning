@@ -123,6 +123,17 @@ return [
             'handler' => NullHandler::class,
         ],
 
+        // Trilha de decisões de autorização (Gate::after) — negações de
+        // acesso via Gates/Policies. Canal separado do owen-it/laravel-auditing
+        // (que audita mutações de model, não decisões de Gate).
+        'auditoria' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/auditoria.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_AUDITORIA_DAYS', 90),
+            'replace_placeholders' => true,
+        ],
+
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
