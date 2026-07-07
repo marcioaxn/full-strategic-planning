@@ -2,28 +2,35 @@
 
 namespace App\Livewire\Audit;
 
-use OwenIt\Auditing\Models\Audit;
 use App\Models\User;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use OwenIt\Auditing\Models\Audit;
 
 #[Layout('layouts.app')]
 class ListarLogs extends Component
 {
-    use WithPagination;
     use AuthorizesRequests;
+    use WithPagination;
 
     public $search = '';
+
     public $filtroEvento = '';
+
     public $filtroUsuario = '';
+
     public $filtroModel = '';
+
     public $filtroId = '';
+
     public $dataInicio;
+
     public $dataFim;
 
     public bool $showModal = false;
+
     public $auditSelecionada;
 
     protected $queryString = [
@@ -36,9 +43,7 @@ class ListarLogs extends Component
 
     public function mount()
     {
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403);
-        }
+        $this->authorize('modulo.acessar', 'auditoria');
 
         // Se estiver filtrando por um ID específico (ex: histórico de um plano), limpamos datas padrão
         if ($this->filtroId) {
@@ -76,7 +81,7 @@ class ListarLogs extends Component
         }
 
         if ($this->filtroModel) {
-            $query->where('auditable_type', 'like', '%' . $this->filtroModel . '%');
+            $query->where('auditable_type', 'like', '%'.$this->filtroModel.'%');
         }
 
         if ($this->filtroId) {
@@ -92,9 +97,9 @@ class ListarLogs extends Component
         }
 
         if ($this->search) {
-            $query->where(function($q) {
-                $q->where('ip_address', 'like', $this->search . '%')
-                  ->orWhere('tags', 'like', '%' . $this->search . '%');
+            $query->where(function ($q) {
+                $q->where('ip_address', 'like', $this->search.'%')
+                    ->orWhere('tags', 'like', '%'.$this->search.'%');
             });
         }
 
@@ -104,24 +109,24 @@ class ListarLogs extends Component
     public function exportar()
     {
         $query = $this->getQuery();
-        
-        $filename = "audit_logs_" . now()->format('Ymd_His') . ".csv";
+
+        $filename = 'audit_logs_'.now()->format('Ymd_His').'.csv';
         $headers = [
-            "Content-type"        => "text/csv; charset=UTF-8",
-            "Content-Disposition" => "attachment; filename=$filename",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            'Content-type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=$filename",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
-        $callback = function() use ($query) {
+        $callback = function () use ($query) {
             $file = fopen('php://output', 'w');
             // Adicionar BOM para Excel ler UTF-8 corretamente
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
+
             fputcsv($file, ['ID', 'Data', 'Usuario', 'Evento', 'Modulo', 'ID Objeto', 'IP'], ';');
 
-            $query->chunk(200, function($logs) use ($file) {
+            $query->chunk(200, function ($logs) use ($file) {
                 foreach ($logs as $log) {
                     fputcsv($file, [
                         $log->id,
@@ -130,7 +135,7 @@ class ListarLogs extends Component
                         $log->event,
                         str_replace('App\\Models\\', '', $log->auditable_type),
                         $log->auditable_id,
-                        $log->ip_address
+                        $log->ip_address,
                     ], ';');
                 }
             });
@@ -152,7 +157,7 @@ class ListarLogs extends Component
         return view('livewire.audit.listar-logs', [
             'logs' => $query->paginate(15),
             'models' => $modelsDisponiveis,
-            'usuarios' => $usuariosComAudit
+            'usuarios' => $usuariosComAudit,
         ]);
     }
 }

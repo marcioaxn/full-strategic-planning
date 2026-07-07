@@ -2,41 +2,62 @@
 
 namespace App\Livewire\Reports;
 
+use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\Organization;
+use App\Models\Reports\RelatorioGerado;
+use App\Models\StrategicPlanning\MissaoVisaoValores;
+use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Perspectiva;
+use App\Models\StrategicPlanning\TemaNorteador;
+use App\Models\StrategicPlanning\Valor;
+use App\Models\SystemSetting;
+use App\Services\AI\AiServiceFactory;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Illuminate\Support\Facades\Session;
 
 #[Layout('layouts.app')]
 class ListarRelatorios extends Component
 {
     public $organizacaoId;
+
     public $organizacaoNome;
+
     public $organizacoes = [];
 
     // Novos Filtros
     public $anos = [];
+
     public $anoSelecionado;
+
     public $periodoSelecionado = 'anual';
+
     public $perspectivas = [];
+
     public $perspectivaSelecionada = '';
 
     // Dados de Identidade (Disponíveis para a View)
     public $identidade;
+
     public $valores = [];
+
     public $temasNorteadores = [];
 
     public $peiAtivo;
+
     public $aiEnabled = false;
+
     public $includeAi = false; // Opção do usuário - Padrão desmarcado
+
     public $aiInsight = '';
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
         'peiSelecionado' => 'atualizarPEI',
-        'anoSelecionado' => 'atualizarAno'
+        'anoSelecionado' => 'atualizarAno',
     ];
 
     public function atualizarAno($ano)
@@ -46,7 +67,9 @@ class ListarRelatorios extends Component
 
     public function mount()
     {
-        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
+        $this->authorize('modulo.acessar', 'relatorios');
+
+        $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
         $this->includeAi = false; // Padrão agora é desmarcado
         $this->organizacoes = Organization::orderBy('nom_organizacao')->get();
 
@@ -76,10 +99,10 @@ class ListarRelatorios extends Component
             $this->peiAtivo = PEI::find($peiId);
         }
 
-        if (!$this->peiAtivo) {
+        if (! $this->peiAtivo) {
             $this->peiAtivo = PEI::ativos()->first();
         }
-        
+
         $this->carregarPerspectivas();
         $this->carregarIdentidade();
     }
@@ -87,16 +110,16 @@ class ListarRelatorios extends Component
     private function carregarIdentidade()
     {
         if ($this->peiAtivo && $this->organizacaoId) {
-            $this->identidade = \App\Models\StrategicPlanning\MissaoVisaoValores::where('cod_pei', $this->peiAtivo->cod_pei)
+            $this->identidade = MissaoVisaoValores::where('cod_pei', $this->peiAtivo->cod_pei)
                 ->where('cod_organizacao', $this->organizacaoId)
                 ->first();
 
-            $this->valores = \App\Models\StrategicPlanning\Valor::where('cod_pei', $this->peiAtivo->cod_pei)
+            $this->valores = Valor::where('cod_pei', $this->peiAtivo->cod_pei)
                 ->where('cod_organizacao', $this->organizacaoId)
                 ->orderBy('nom_valor')
                 ->get();
 
-            $this->temasNorteadores = \App\Models\StrategicPlanning\TemaNorteador::where('cod_pei', $this->peiAtivo->cod_pei)
+            $this->temasNorteadores = TemaNorteador::where('cod_pei', $this->peiAtivo->cod_pei)
                 ->where('cod_organizacao', $this->organizacaoId)
                 ->get();
         } else {
@@ -141,43 +164,49 @@ class ListarRelatorios extends Component
             'periodo' => $this->periodoSelecionado,
             'perspectiva' => $this->perspectivaSelecionada,
             'organizacao_id' => $this->organizacaoId,
-            'include_ai' => $this->includeAi // Novo parâmetro
+            'include_ai' => $this->includeAi, // Novo parâmetro
         ];
     }
 
     public function gerarInsightIA()
     {
-        if (!$this->aiEnabled) return;
-        if (!$this->organizacaoId) {
+        if (! $this->aiEnabled) {
+            return;
+        }
+        if (! $this->organizacaoId) {
             session()->flash('error', 'Selecione uma organização.');
+
             return;
         }
 
-        if (!$this->peiAtivo) {
+        if (! $this->peiAtivo) {
             session()->flash('error', 'Não há Ciclo PEI ativo selecionado.');
+
             return;
         }
 
         try {
-            $aiService = \App\Services\AI\AiServiceFactory::make();
-            if (!$aiService) return;
+            $aiService = AiServiceFactory::make();
+            if (! $aiService) {
+                return;
+            }
 
             $this->aiInsight = 'Analisando dados estratégicos...';
 
             // Coletar dados básicos para o prompt
-            $objetivos = \App\Models\StrategicPlanning\Objetivo::whereHas('perspectiva', function($q) {
+            $objetivos = Objetivo::whereHas('perspectiva', function ($q) {
                 $q->where('cod_pei', $this->peiAtivo->cod_pei);
             })->get();
-            
-            $planos = \App\Models\ActionPlan\PlanoDeAcao::where('cod_organizacao', $this->organizacaoId)->get();
-            
+
+            $planos = PlanoDeAcao::where('cod_organizacao', $this->organizacaoId)->get();
+
             $prompt = "Gere um resumo executivo estratégico (AI Minute) para a organização {$this->organizacaoNome} no ano {$this->anoSelecionado}.
-            Contexto: Possui " . $objetivos->count() . " objetivos estratégicos e " . $planos->count() . " planos de ação.
-            Destaque pontos de atenção e sugestões de melhoria. Use Markdown para formatação.";
+            Contexto: Possui ".$objetivos->count().' objetivos estratégicos e '.$planos->count().' planos de ação.
+            Destaque pontos de atenção e sugestões de melhoria. Use Markdown para formatação.';
 
             $this->aiInsight = $aiService->suggest($prompt);
         } catch (\Exception $e) {
-            \Log::error('Erro IA Relatórios: ' . $e->getMessage());
+            \Log::error('Erro IA Relatórios: '.$e->getMessage());
             $this->aiInsight = '';
             session()->flash('error', 'Falha ao gerar resumo inteligente.');
         }
@@ -185,25 +214,26 @@ class ListarRelatorios extends Component
 
     public function download($id)
     {
-        $relatorio = \App\Models\Reports\RelatorioGerado::findOrFail($id);
-        
-        if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($relatorio->dsc_caminho_arquivo)) {
+        $relatorio = RelatorioGerado::findOrFail($id);
+
+        if (! Storage::disk('public')->exists($relatorio->dsc_caminho_arquivo)) {
             session()->flash('error', 'Arquivo não encontrado.');
+
             return;
         }
 
-        return \Illuminate\Support\Facades\Storage::disk('public')->download($relatorio->dsc_caminho_arquivo);
+        return Storage::disk('public')->download($relatorio->dsc_caminho_arquivo);
     }
 
     public function render()
     {
-        $recentReports = \App\Models\Reports\RelatorioGerado::where('user_id', \Illuminate\Support\Facades\Auth::id())
+        $recentReports = RelatorioGerado::where('user_id', Auth::id())
             ->latest()
             ->take(3)
             ->get();
 
         return view('livewire.relatorio.listar-relatorios', [
-            'recentReports' => $recentReports
+            'recentReports' => $recentReports,
         ]);
     }
 }
