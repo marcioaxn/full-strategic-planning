@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Models\SystemSetting;
 use App\Services\AI\GeminiProvider;
+use App\Services\AI\VertexAiProvider;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -11,19 +12,24 @@ use Livewire\Component;
 class ConfiguracaoSistema extends Component
 {
     public string $aiProvider = 'gemini-studio';
+
     public string $aiApiKey = '';
+
     public string $aiModel = 'gemini-2.5-flash';
 
     public string $vertexProjectId = '';
+
     public string $vertexLocation = 'us-central1';
+
     public string $vertexServiceAccountJson = '';
 
     public string $connectionStatus = '';
+
     public string $connectionMessage = '';
 
     public function mount()
     {
-        abort_unless(auth()->user()?->isSuperAdmin(), 403, 'Acesso restrito ao Super Administrador.');
+        $this->authorize('modulo.acessar', 'admin.configuracoes');
 
         $this->aiProvider = SystemSetting::getValue('ai_provider', 'gemini-studio');
 
@@ -53,10 +59,11 @@ class ConfiguracaoSistema extends Component
             if (empty($jsonToTest)) {
                 $this->connectionStatus = 'error';
                 $this->connectionMessage = 'JSON da Service Account não informado.';
+
                 return;
             }
 
-            $provider = new \App\Services\AI\VertexAiProvider(
+            $provider = new VertexAiProvider(
                 $this->vertexProjectId,
                 $this->vertexLocation,
                 $this->aiModel,
@@ -72,6 +79,7 @@ class ConfiguracaoSistema extends Component
             if (empty($keyToTest)) {
                 $this->connectionStatus = 'error';
                 $this->connectionMessage = 'Chave de API não informada.';
+
                 return;
             }
 
@@ -94,13 +102,13 @@ class ConfiguracaoSistema extends Component
         SystemSetting::setValue('ai_model', $this->aiModel);
 
         if ($this->aiProvider === 'gemini-studio') {
-            if ($this->aiApiKey !== '********' && !empty($this->aiApiKey)) {
+            if ($this->aiApiKey !== '********' && ! empty($this->aiApiKey)) {
                 SystemSetting::setValue('ai_api_key', $this->aiApiKey);
             }
         } else {
             SystemSetting::setValue('vertex_project_id', $this->vertexProjectId);
             SystemSetting::setValue('vertex_location', $this->vertexLocation);
-            if ($this->vertexServiceAccountJson !== '********' && !empty($this->vertexServiceAccountJson)) {
+            if ($this->vertexServiceAccountJson !== '********' && ! empty($this->vertexServiceAccountJson)) {
                 SystemSetting::setValue('vertex_service_account_json', $this->vertexServiceAccountJson);
             }
         }

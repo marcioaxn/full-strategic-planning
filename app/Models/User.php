@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\ResolveEscopoOrganizacional;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -19,6 +20,7 @@ class User extends Authenticatable
     use HasProfilePhoto;
     use HasUuids;
     use Notifiable;
+    use ResolveEscopoOrganizacional;
     use TwoFactorAuthenticatable;
 
     /**
@@ -196,7 +198,7 @@ class User extends Authenticatable
     public function isGestorResponsavel(string $codPlanoDeAcao): bool
     {
         return $this->perfisAcesso()
-            ->where('cod_perfil', PerfilAcesso::GESTOR_RESPONSAVEL)
+            ->where('tab_perfil_acesso.cod_perfil', PerfilAcesso::GESTOR_RESPONSAVEL)
             ->wherePivot('cod_plano_de_acao', $codPlanoDeAcao)
             ->exists();
     }
@@ -207,7 +209,7 @@ class User extends Authenticatable
     public function isGestorSubstituto(string $codPlanoDeAcao): bool
     {
         return $this->perfisAcesso()
-            ->where('cod_perfil', PerfilAcesso::GESTOR_SUBSTITUTO)
+            ->where('tab_perfil_acesso.cod_perfil', PerfilAcesso::GESTOR_SUBSTITUTO)
             ->wherePivot('cod_plano_de_acao', $codPlanoDeAcao)
             ->exists();
     }

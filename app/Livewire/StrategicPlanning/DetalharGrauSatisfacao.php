@@ -15,7 +15,7 @@ class DetalharGrauSatisfacao extends Component
 
     public function mount($id)
     {
-        abort_unless(auth()->user()?->isSuperAdmin(), 403, 'Acesso restrito ao Super Administrador.');
+        $this->authorize('modulo.acessar', 'graus-satisfacao');
 
         $this->grau = GrauSatisfacao::with('pei')->findOrFail($id);
 
