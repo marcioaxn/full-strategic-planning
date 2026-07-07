@@ -2,36 +2,37 @@
 
 namespace App\Livewire\UserManagement;
 
-use App\Models\User;
 use App\Models\Organization;
 use App\Models\PerfilAcesso;
+use App\Models\User;
 use App\Notifications\WelcomeSetPasswordNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-use Throwable;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Throwable;
 
 #[Layout('layouts.app')]
 class ListarUsuarios extends Component
 {
-    use WithPagination;
     use AuthorizesRequests;
+    use WithPagination;
 
     public string $search = '';
-    
+
     // Filtros
     public string $filtroAtivo = 'todos'; // todos, ativos, inativos
+
     public string $filtroOrganizacao = ''; // '' = todas as organizações
-    
+
     public array $form = [
         'name' => '',
         'email' => '',
@@ -48,19 +49,25 @@ class ListarUsuarios extends Component
     // Dados auxiliares para o modal
     public $vinculoTemporario = [
         'org_id' => '',
-        'perfil_id' => ''
+        'perfil_id' => '',
     ];
 
     public bool $showFormModal = false;
+
     public bool $showDeleteModal = false;
 
     public ?User $editing = null;
 
     public ?string $flashMessage = null;
+
     public string $flashStyle = 'success';
+
     public bool $showTransactionModal = false;
+
     public string $transactionTitle = '';
+
     public string $transactionMessage = '';
+
     public string $transactionStyle = 'success';
 
     protected string $paginationTheme = 'bootstrap';
@@ -73,14 +80,14 @@ class ListarUsuarios extends Component
     ];
 
     protected $listeners = [
-        'organizacaoSelecionada' => '$refresh'
+        'organizacaoSelecionada' => '$refresh',
     ];
 
     protected function rules(): array
     {
         $rules = [
             'form.name' => ['required', 'string', 'max:255'],
-            'form.email' => ['required', 'email', 'max:255', 'unique:users,email' . ($this->editing ? ',' . $this->editing->id : '')],
+            'form.email' => ['required', 'email', 'max:255', 'unique:users,email'.($this->editing ? ','.$this->editing->id : '')],
             'form.ativo' => ['boolean'],
             'form.trocarsenha' => ['integer', 'in:0,1,2'],
             'form.vinculos' => ['required', 'array', 'min:1'],
@@ -89,11 +96,11 @@ class ListarUsuarios extends Component
             'modoSenhaInicial' => ['required', 'in:enviar_link,senha_manual'],
         ];
 
-        if (!$this->editing) {
+        if (! $this->editing) {
             // No modo por link, a senha nunca e informada durante o cadastro.
             if ($this->modoSenhaInicial === 'senha_manual') {
                 $rules['form.password'] = array_merge(['required'], $this->strongPasswordRules());
-                $rules['form.password_confirmation'] = ['required', 'string'];
+                $rules['form.password_confirmation'] = ['required', 'string', 'same:form.password'];
             }
         } else {
             $passwordInformada = trim((string) ($this->form['password'] ?? '')) !== ''
@@ -101,7 +108,7 @@ class ListarUsuarios extends Component
 
             if ($passwordInformada) {
                 $rules['form.password'] = array_merge(['required'], $this->strongPasswordRules());
-                $rules['form.password_confirmation'] = ['required', 'string'];
+                $rules['form.password_confirmation'] = ['required', 'string', 'same:form.password'];
             }
         }
 
@@ -117,7 +124,7 @@ class ListarUsuarios extends Component
             'form.email.email' => 'Informe um e-mail valido para o usuario.',
             'form.email.unique' => 'Ja existe um usuario cadastrado com este e-mail.',
             'form.password.required' => 'Defina a senha inicial do usuario.',
-            'form.password.confirmed' => 'A confirmacao da senha nao confere.',
+            'form.password_confirmation.same' => 'A confirmacao da senha nao confere.',
             'form.password.min' => 'A senha deve ter no minimo 8 caracteres.',
             'form.password.regex' => 'A senha deve conter letra maiuscula, letra minuscula, numero e caractere especial.',
             'form.password_confirmation.required' => 'Confirme a senha inicial do usuario.',
@@ -140,11 +147,22 @@ class ListarUsuarios extends Component
             $this->resetValidation(['form.password', 'form.password_confirmation']);
         }
 
-        if (! array_key_exists($propertyName, $this->rules())) {
+        $rules = $this->rules();
+
+        if (! array_key_exists($propertyName, $rules)) {
             return;
         }
 
         $this->validateOnly($propertyName);
+
+        // Quando a senha muda, re-valida a confirmação se já foi preenchida
+        // para que o erro de "não confere" apareça ou desapareça imediatamente.
+        if ($propertyName === 'form.password'
+            && array_key_exists('form.password_confirmation', $rules)
+            && trim((string) ($this->form['password_confirmation'] ?? '')) !== ''
+        ) {
+            $this->validateOnly('form.password_confirmation');
+        }
     }
 
     public function updatingSearch(): void
@@ -173,14 +191,14 @@ class ListarUsuarios extends Component
     // Propriedades Computadas para Selects
     public function getOrganizacoesOptionsProperty()
     {
-        return Organization::orderBy('sgl_organizacao')->get()->map(function($o) {
-            return ['id' => $o->cod_organizacao, 'label' => $o->sgl_organizacao . ' - ' . $o->nom_organizacao];
+        return Organization::orderBy('sgl_organizacao')->get()->map(function ($o) {
+            return ['id' => $o->cod_organizacao, 'label' => $o->sgl_organizacao.' - '.$o->nom_organizacao];
         });
     }
 
     public function getPerfisOptionsProperty()
     {
-        return PerfilAcesso::orderBy('dsc_perfil')->get()->map(function($p) {
+        return PerfilAcesso::orderBy('dsc_perfil')->get()->map(function ($p) {
             return ['id' => $p->cod_perfil, 'label' => $p->dsc_perfil];
         });
     }
@@ -200,9 +218,9 @@ class ListarUsuarios extends Component
         }
 
         if ($search !== '') {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('email', 'ilike', "%{$search}%");
+                    ->orWhere('email', 'ilike', "%{$search}%");
             });
         }
 
@@ -234,10 +252,10 @@ class ListarUsuarios extends Component
     {
         $this->editing = User::findOrFail($id);
         $this->authorize('update', $this->editing);
-        
+
         // Carregar vínculos existentes
         $vinculos = [];
-        // Precisamos iterar sobre a pivot table. 
+        // Precisamos iterar sobre a pivot table.
         // Como o relacionamento é BelongsToMany, podemos acessar via pivot
         foreach ($this->editing->perfisAcesso as $perfil) {
             $vinculos[] = [
@@ -245,7 +263,7 @@ class ListarUsuarios extends Component
                 'perfil_id' => $perfil->cod_perfil,
                 // Adicionamos labels para exibição na lista
                 'org_label' => Organization::find($perfil->pivot->cod_organizacao)?->sgl_organizacao ?? 'N/A',
-                'perfil_label' => $perfil->dsc_perfil
+                'perfil_label' => $perfil->dsc_perfil,
             ];
         }
 
@@ -254,11 +272,11 @@ class ListarUsuarios extends Component
             'email' => $this->editing->email,
             'password_confirmation' => '',
             'password' => '', // Não carrega senha
-            'ativo' => (bool)$this->editing->ativo,
-            'trocarsenha' => (int)$this->editing->trocarsenha,
+            'ativo' => (bool) $this->editing->ativo,
+            'trocarsenha' => (int) $this->editing->trocarsenha,
             'vinculos' => $vinculos,
         ];
-        
+
         $this->showFormModal = true;
         $this->resetValidation();
     }
@@ -284,6 +302,7 @@ class ListarUsuarios extends Component
         foreach ($this->form['vinculos'] as $v) {
             if ($v['org_id'] == $this->vinculoTemporario['org_id'] && $v['perfil_id'] == $this->vinculoTemporario['perfil_id']) {
                 $this->addError('vinculoTemporario', 'Este vínculo já existe.');
+
                 return;
             }
         }
@@ -296,7 +315,7 @@ class ListarUsuarios extends Component
             'org_id' => $this->vinculoTemporario['org_id'],
             'perfil_id' => $this->vinculoTemporario['perfil_id'],
             'org_label' => $org->sgl_organizacao,
-            'perfil_label' => $perfil->dsc_perfil
+            'perfil_label' => $perfil->dsc_perfil,
         ];
 
         // Limpar temporário e o erro de obrigatoriedade de vínculos
@@ -322,6 +341,7 @@ class ListarUsuarios extends Component
         foreach ($this->form['vinculos'] as $v) {
             if ($v['org_id'] == $orgId && $v['perfil_id'] == $perfilId) {
                 $this->vinculoTemporario = ['org_id' => '', 'perfil_id' => ''];
+
                 return;
             }
         }
@@ -361,70 +381,70 @@ class ListarUsuarios extends Component
 
             $this->validate();
 
-            $isNovoUsuario = !$this->editing;
+            $isNovoUsuario = ! $this->editing;
 
             DB::transaction(function () use ($isNovoUsuario) {
-            $data = [
-                'name' => $this->form['name'],
-                'email' => $this->form['email'],
-                'ativo' => $this->form['ativo'],
-                'trocarsenha' => $this->form['trocarsenha'],
-            ];
+                $data = [
+                    'name' => $this->form['name'],
+                    'email' => $this->form['email'],
+                    'ativo' => $this->form['ativo'],
+                    'trocarsenha' => $this->form['trocarsenha'],
+                ];
 
-            // Preparar acesso inicial conforme o ritual escolhido.
-            if ($isNovoUsuario && $this->modoSenhaInicial === 'enviar_link') {
-                $data['password'] = Hash::make(Str::random(80));
-                $data['trocarsenha'] = 1;
-            } elseif (!empty($this->form['password'])) {
-                $data['password'] = Hash::make($this->form['password']);
-            }
-
-            if ($this->editing) {
-                $this->authorize('update', $this->editing);
-                $this->editing->update($data);
-                $user = $this->editing;
-                $message = __('Usuário atualizado com sucesso.');
-            } else {
-                $this->authorize('create', User::class);
-                $user = User::create($data);
-                $message = __('Usuário criado com sucesso.');
-
-                if ($this->modoSenhaInicial === 'enviar_link') {
-                    $token = Password::broker()->createToken($user);
-                    Notification::sendNow($user, new WelcomeSetPasswordNotification($token));
-                    $message .= ' Boas-vindas com link para cadastro de senha enviadas por e-mail.';
-                } else {
-                    $message .= ' Senha inicial definida pelo gestor.';
+                // Preparar acesso inicial conforme o ritual escolhido.
+                if ($isNovoUsuario && $this->modoSenhaInicial === 'enviar_link') {
+                    $data['password'] = Hash::make(Str::random(80));
+                    $data['trocarsenha'] = 1;
+                } elseif (! empty($this->form['password'])) {
+                    $data['password'] = Hash::make($this->form['password']);
                 }
-            }
 
-            // Atualizar Vínculos (Detach All + Attach All)
-            DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')
-                ->where('user_id', $user->id)
-                ->delete();
+                if ($this->editing) {
+                    $this->authorize('update', $this->editing);
+                    $this->editing->update($data);
+                    $user = $this->editing;
+                    $message = __('Usuário atualizado com sucesso.');
+                } else {
+                    $this->authorize('create', User::class);
+                    $user = User::create($data);
+                    $message = __('Usuário criado com sucesso.');
 
-            foreach ($this->form['vinculos'] as $vinculo) {
-                DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')->insert([
-                    'id' => Str::uuid(),
-                    'user_id' => $user->id,
-                    'cod_organizacao' => $vinculo['org_id'],
-                    'cod_perfil' => $vinculo['perfil_id'],
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
+                    if ($this->modoSenhaInicial === 'enviar_link') {
+                        $token = Password::broker()->createToken($user);
+                        Notification::sendNow($user, new WelcomeSetPasswordNotification($token));
+                        $message .= ' Boas-vindas com link para cadastro de senha enviadas por e-mail.';
+                    } else {
+                        $message .= ' Senha inicial definida pelo gestor.';
+                    }
+                }
 
-            // Manter sincronizada a tabela simples para compatibilidade
-            $user->organizacoes()->sync(collect($this->form['vinculos'])->pluck('org_id')->unique());
+                // Atualizar Vínculos (Detach All + Attach All)
+                DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')
+                    ->where('user_id', $user->id)
+                    ->delete();
 
-            // Sincroniza o flag "adm" conforme o perfil: só é Super Admin quem
-            // tiver o perfil PerfilAcesso::SUPER_ADMIN entre os vínculos.
-            $ehSuperAdmin = collect($this->form['vinculos'])
-                ->contains(fn ($v) => ($v['perfil_id'] ?? null) === PerfilAcesso::SUPER_ADMIN);
-            $user->forceFill(['adm' => $ehSuperAdmin ? 1 : 0])->save();
+                foreach ($this->form['vinculos'] as $vinculo) {
+                    DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')->insert([
+                        'id' => Str::uuid(),
+                        'user_id' => $user->id,
+                        'cod_organizacao' => $vinculo['org_id'],
+                        'cod_perfil' => $vinculo['perfil_id'],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
 
-            $this->notify($message);
-        });
+                // Manter sincronizada a tabela simples para compatibilidade
+                $user->organizacoes()->sync(collect($this->form['vinculos'])->pluck('org_id')->unique());
+
+                // Sincroniza o flag "adm" conforme o perfil: só é Super Admin quem
+                // tiver o perfil PerfilAcesso::SUPER_ADMIN entre os vínculos.
+                $ehSuperAdmin = collect($this->form['vinculos'])
+                    ->contains(fn ($v) => ($v['perfil_id'] ?? null) === PerfilAcesso::SUPER_ADMIN);
+                $user->forceFill(['adm' => $ehSuperAdmin ? 1 : 0])->save();
+
+                $this->notify($message);
+            });
 
             $this->closeFormModal();
             $this->resetPage();
@@ -468,7 +488,7 @@ class ListarUsuarios extends Component
             // User não tem SoftDeletes por padrão no Laravel, mas vamos checar o model.
             // O model User não tem `use SoftDeletes` no arquivo que li anteriormente.
             // Então é delete permanente.
-            
+
             $this->notify(__('Usuário excluído com sucesso.'), 'warning');
         }
 
@@ -515,7 +535,6 @@ class ListarUsuarios extends Component
     {
         return [
             'string',
-            'confirmed',
             'min:8',
             'regex:/[a-z]/',
             'regex:/[A-Z]/',

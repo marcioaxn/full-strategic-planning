@@ -417,7 +417,7 @@
                                             type="password"
                                             class="form-control form-control-modern @error('form.password') is-invalid @enderror"
                                             placeholder="********"
-                                            wire:model.blur="form.password"
+                                            wire:model.live.debounce.300ms="form.password"
                                         >
                                         @error('form.password')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -436,7 +436,7 @@
                                             type="password"
                                             class="form-control form-control-modern @error('form.password_confirmation') is-invalid @enderror"
                                             placeholder="********"
-                                            wire:model.blur="form.password_confirmation"
+                                            wire:model.live.debounce.300ms="form.password_confirmation"
                                         >
                                         @error('form.password_confirmation')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>

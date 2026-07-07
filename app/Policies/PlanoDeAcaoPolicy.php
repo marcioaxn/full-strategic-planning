@@ -3,9 +3,9 @@
 namespace App\Policies;
 
 use App\Models\ActionPlan\PlanoDeAcao;
-use App\Models\User;
 use App\Models\PerfilAcesso;
-use Illuminate\Auth\Access\Response;
+use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 
 class PlanoDeAcaoPolicy
 {
@@ -14,7 +14,7 @@ class PlanoDeAcaoPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true; // Todos usuários logados podem listar (filtro será aplicado na query)
+        return Gate::forUser($user)->allows('modulo.acessar', 'planos-de-acao'); // filtro fino é aplicado na query
     }
 
     /**
@@ -22,12 +22,11 @@ class PlanoDeAcaoPolicy
      */
     public function view(User $user, PlanoDeAcao $planoDeAcao): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
+        if (! Gate::forUser($user)->allows('modulo.acessar', 'planos-de-acao')) {
+            return false;
         }
 
-        // Usuário deve pertencer à mesma organização do plano
-        return $user->organizacoes->contains('cod_organizacao', $planoDeAcao->cod_organizacao);
+        return $user->isSuperAdmin() || $user->podeAcessarOrganizacao($planoDeAcao->cod_organizacao);
     }
 
     /**
@@ -35,19 +34,7 @@ class PlanoDeAcaoPolicy
      */
     public function create(User $user): bool
     {
-        // Super Admin pode criar em qualquer lugar (selecionando a org)
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        // Verificar se usuário tem perfil de Admin Unidade ou Gestor Responsável em alguma organização
-        // A lógica fina de "em qual organização" será feita no formulário, filtrando as opções.
-        // Aqui validamos se ele tem CAPACIDADE de criar.
-        
-        return $user->perfisAcesso()->whereIn('cod_perfil', [
-            PerfilAcesso::ADMIN_UNIDADE,
-            PerfilAcesso::GESTOR_RESPONSAVEL
-        ])->exists();
+        return Gate::forUser($user)->allows('modulo.criar', 'planos-de-acao');
     }
 
     /**
@@ -55,6 +42,10 @@ class PlanoDeAcaoPolicy
      */
     public function update(User $user, PlanoDeAcao $planoDeAcao): bool
     {
+        if (! Gate::forUser($user)->allows('modulo.editar', 'planos-de-acao')) {
+            return false;
+        }
+
         if ($user->isSuperAdmin()) {
             return true;
         }
@@ -62,7 +53,7 @@ class PlanoDeAcaoPolicy
         // 1. Admin da Unidade da organização do plano
         $isAdminUnidade = $user->perfisAcesso()
             ->wherePivot('cod_organizacao', $planoDeAcao->cod_organizacao)
-            ->where('cod_perfil', PerfilAcesso::ADMIN_UNIDADE)
+            ->where('tab_perfil_acesso.cod_perfil', PerfilAcesso::ADMIN_UNIDADE)
             ->exists();
 
         if ($isAdminUnidade) {
@@ -74,7 +65,7 @@ class PlanoDeAcaoPolicy
         if ($user->isGestorResponsavel($planoDeAcao->cod_plano_de_acao)) {
             return true;
         }
-        
+
         // 3. Gestor Substituto vinculado a ESTE plano
         if ($user->isGestorSubstituto($planoDeAcao->cod_plano_de_acao)) {
             return true;
@@ -88,6 +79,10 @@ class PlanoDeAcaoPolicy
      */
     public function delete(User $user, PlanoDeAcao $planoDeAcao): bool
     {
+        if (! Gate::forUser($user)->allows('modulo.excluir', 'planos-de-acao')) {
+            return false;
+        }
+
         if ($user->isSuperAdmin()) {
             return true;
         }
@@ -95,7 +90,7 @@ class PlanoDeAcaoPolicy
         // Apenas Admin da Unidade pode excluir (Gestores não excluem, apenas editam)
         return $user->perfisAcesso()
             ->wherePivot('cod_organizacao', $planoDeAcao->cod_organizacao)
-            ->where('cod_perfil', PerfilAcesso::ADMIN_UNIDADE)
+            ->where('tab_perfil_acesso.cod_perfil', PerfilAcesso::ADMIN_UNIDADE)
             ->exists();
     }
 

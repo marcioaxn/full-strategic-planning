@@ -4,6 +4,9 @@ namespace App\Livewire\StrategicPlanning;
 
 use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\StrategicPlanning\PEI;
+use App\Models\SystemSetting;
+use App\Services\AI\AiServiceFactory;
+use App\Services\NotificationService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -59,9 +62,9 @@ class ListarGrausSatisfacao extends Component
 
     public function mount()
     {
-        abort_unless(auth()->user()?->isSuperAdmin(), 403, 'Acesso restrito ao Super Administrador.');
+        $this->authorize('modulo.acessar', 'graus-satisfacao');
 
-        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
+        $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
     }
 
     public function closeSuccessModal()
@@ -83,7 +86,7 @@ class ListarGrausSatisfacao extends Component
             return;
         }
 
-        $aiService = \App\Services\AI\AiServiceFactory::make();
+        $aiService = AiServiceFactory::make();
         if (! $aiService) {
             return;
         }
@@ -112,6 +115,7 @@ class ListarGrausSatisfacao extends Component
 
         if (! $this->cod_pei) {
             session()->flash('error', 'Selecione um Ciclo PEI antes de aplicar sugestões da IA.');
+
             return;
         }
 
@@ -136,24 +140,31 @@ class ListarGrausSatisfacao extends Component
     protected function rules()
     {
         return [
-            'cod_pei'             => 'required|exists:strategic_planning.tab_pei,cod_pei',
+            'cod_pei' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    if (! PEI::where('cod_pei', $value)->exists()) {
+                        $fail('O Ciclo PEI selecionado é inválido.');
+                    }
+                },
+            ],
             'dsc_grau_satisfacao' => 'required|string|max:100',
-            'cor'                 => 'required|string|max:50',
-            'vlr_minimo'          => 'required|numeric|min:0|max:999.99',
-            'vlr_maximo'          => 'required|numeric|min:0|max:999.99|gte:vlr_minimo',
+            'cor' => 'required|string|max:50',
+            'vlr_minimo' => 'required|numeric|min:0|max:999.99',
+            'vlr_maximo' => 'required|numeric|min:0|max:999.99|gte:vlr_minimo',
         ];
     }
 
     protected $messages = [
-        'cod_pei.required'             => 'O Ciclo PEI é obrigatório.',
-        'cod_pei.exists'               => 'O Ciclo PEI selecionado é inválido.',
+        'cod_pei.required' => 'O Ciclo PEI é obrigatório.',
+        'cod_pei.exists' => 'O Ciclo PEI selecionado é inválido.',
         'dsc_grau_satisfacao.required' => 'A descrição é obrigatória.',
-        'cor.required'                 => 'A cor é obrigatória.',
-        'vlr_minimo.required'          => 'O valor mínimo é obrigatório.',
-        'vlr_minimo.numeric'           => 'O valor mínimo deve ser numérico.',
-        'vlr_maximo.required'          => 'O valor máximo é obrigatório.',
-        'vlr_maximo.numeric'           => 'O valor máximo deve ser numérico.',
-        'vlr_maximo.gte'               => 'O valor máximo deve ser maior ou igual ao mínimo.',
+        'cor.required' => 'A cor é obrigatória.',
+        'vlr_minimo.required' => 'O valor mínimo é obrigatório.',
+        'vlr_minimo.numeric' => 'O valor mínimo deve ser numérico.',
+        'vlr_maximo.required' => 'O valor máximo é obrigatório.',
+        'vlr_maximo.numeric' => 'O valor máximo deve ser numérico.',
+        'vlr_maximo.gte' => 'O valor máximo deve ser maior ou igual ao mínimo.',
     ];
 
     public function updatingSearch()
@@ -253,7 +264,7 @@ class ListarGrausSatisfacao extends Component
                 $nome = $grau->dsc_grau_satisfacao;
                 $grau->delete();
 
-                $alert = \App\Services\NotificationService::sendMentorAlert(
+                $alert = NotificationService::sendMentorAlert(
                     'Grau Removido',
                     "A faixa <strong>{$nome}</strong> foi excluída com sucesso.",
                     'bi-trash',

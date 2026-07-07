@@ -11,12 +11,12 @@ test('password can be updated', function () {
     Livewire::test(UpdatePasswordForm::class)
         ->set('state', [
             'current_password' => 'password',
-            'password' => 'new-password',
-            'password_confirmation' => 'new-password',
+            'password' => 'Senha!Forte123',
+            'password_confirmation' => 'Senha!Forte123',
         ])
         ->call('updatePassword');
 
-    expect(Hash::check('new-password', $user->fresh()->password))->toBeTrue();
+    expect(Hash::check('Senha!Forte123', $user->fresh()->password))->toBeTrue();
 });
 
 test('current password must be correct', function () {
