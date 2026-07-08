@@ -225,8 +225,10 @@ class GerenciarRae extends Component
 
     public function gerarPdf(string $id): mixed
     {
+        // Exportar/visualizar o PDF é uma ação de leitura (não modifica
+        // dados) — não é restrita por organização, no mesmo padrão dos
+        // demais componentes de detalhamento/visualização do sistema.
         $rae = Rae::with(['pei', 'organizacao'])->findOrFail($id);
-        $this->garantirAcesso($rae->cod_organizacao, 'acessar');
 
         $pdf = Pdf::loadView('relatorios.rae', [
             'rae' => $rae,

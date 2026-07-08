@@ -28,8 +28,8 @@ class GerenciarFuturoAlmejado extends Component
 
     public function mount($objetivoId)
     {
-        $this->authorize('modulo.acessar', 'planejamento-estrategico');
-
+        // Visualização é livre para qualquer usuário autenticado. Só a
+        // escrita (create/edit/save/delete) exige capacidade RBAC.
         $this->objetivo = Objetivo::findOrFail($objetivoId);
         $this->carregarFuturos();
     }
