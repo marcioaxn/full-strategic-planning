@@ -66,6 +66,75 @@ Verificado no codigo e no README: este repositorio implementa um Sistema de Plan
 
 ---
 
+## Modelo de autorização RBAC + ABAC centralizado e correções de segurança (2026-07)
+
+> Confiança: `Verificado no código`. Substitui e complementa qualquer descrição anterior de autorização "ad-hoc" (verificações espalhadas por componente) nas seções abaixo — esta é a referência mais atual para controle de acesso. Onde houver divergência com o Inventário de Policies ou com C.4 (`Organization\PerfilAcesso`), este bloco prevalece.
+
+### `App\Services\Authorization\CapacidadeResolver`
+
+Classe stateless nova que centraliza toda a decisão de autorização do sistema. Método principal: `podeNoModulo(User $user, string $nomPath, string $ability): bool`. Traduz os 4 perfis fixos hoje efetivamente usados na matriz de autorização — **Super Admin**, **Admin de Unidade**, **Gestor Responsável**, **Gestor Substituto** — em capacidades por módulo, através de uma matriz estática interna. `Super Admin` sempre retorna `true`, sem exceção, em qualquer módulo ou organização (bypass `isSuperAdmin()` presente em toda a cadeia).
+
+Abilities suportadas por módulo: `acessar`, `ver-sensivel`, `criar`, `editar`, `excluir`, `exportar`.
+
+Módulos cobertos pela matriz (`$nomPath`):
+
+| Módulo | Observação |
+|---|---|
+| `planejamento-estrategico` | Objetivos, Perspectivas, SWOT, PESTEL, Mapa, Identidade |
+| `planos-de-acao` | — |
+| `indicadores` | — |
+| `riscos` | — |
+| `entregas` | Ver `EntregaPolicy` |
+| `organizacoes` | — |
+| `usuarios` | — |
+| `relatorios` | — |
+| `graus-satisfacao` | Restrito a Super Admin |
+| `auditoria` | Restrito a Super Admin |
+| `admin.perfis` | Restrito a Super Admin |
+| `admin.configuracoes` | Restrito a Super Admin |
+
+### Gates nomeados (`App\Providers\AppServiceProvider`)
+
+Seis Gates registrados, todos delegando ao `CapacidadeResolver`: `modulo.acessar`, `modulo.ver-sensivel`, `modulo.criar`, `modulo.editar`, `modulo.excluir`, `modulo.exportar`.
+
+- `Gate::before` veta qualquer ability para usuário com `ativo = false` (conta desativada nunca passa por nenhuma checagem, mesmo Super Admin).
+- `Gate::after` registra toda negação de acesso no canal de log dedicado `auditoria` (novo canal em `config/logging.php`, arquivo `storage/logs/auditoria-*.log`) — complementar, e não substituto, à auditoria de mutações já existente via `owen-it/laravel-auditing`.
+
+### `App\Concerns\ResolveEscopoOrganizacional`
+
+Trait aplicada em `App\Models\User`, responsável pelo componente ABAC (baseado em atributo/organização) da autorização:
+
+- `organizacaoIdsPermitidas()` — lista de organizações às quais o usuário tem vínculo.
+- `podeAcessarOrganizacao(string $codOrganizacao)` — checagem pontual de vínculo.
+- `organizacaoSelecionadaId()` — lê a organização selecionada na sessão, mas **sempre revalida** contra o escopo real do usuário; retorna `null` se a seleção estiver fora do escopo (nunca confia cegamente na sessão).
+- `aplicarEscopoOrganizacional($query, $coluna)` — aplica o filtro de organização a uma query Eloquent.
+
+### Policies atualizadas para delegar aos Gates
+
+`IndicadorPolicy`, `RiscoPolicy`, `PlanoDeAcaoPolicy`, `OrganizationPolicy` e `UserPolicy` passaram a delegar a decisão para os Gates `modulo.*`, sempre via `Gate::forUser($user)->allows(...)` — nunca `Gate::allows()` isolado, que resolveria o usuário do contexto de request ambiente em vez do usuário explícito da Policy. `EntregaPolicy` é nova (`App\Models\ActionPlan\Entrega` não tinha Policy antes).
+
+Módulos sem Model 1:1 claro — Planejamento Estratégico (Objetivos, Perspectivas, SWOT, PESTEL, RAE, Temas Norteadores, Missão/Visão, Futuro Almejado), Relatórios, Auditoria, Admin — são protegidos diretamente nos componentes Livewire via `$this->authorize('modulo.<ability>', '<nomPath>')`, sem Policy artificial criada só para existir.
+
+### Vazamento de responsabilidade organizacional corrigido
+
+Foi identificada e corrigida uma falha de segurança real: o seletor de organização no menu superior (`App\Livewire\Shared\SeletorOrganizacao`) aceitava qualquer organização do banco sem checar se pertencia ao usuário autenticado. Como quase todo o sistema confiava nessa sessão para decidir permissão, isso permitia:
+
+- Um Admin de Unidade editar/excluir indicadores de **qualquer** organização (não só a sua), bastando manter a própria organização selecionada no menu — a checagem antiga nunca cruzava com a organização real do indicador.
+- O módulo de Revisão/RAE (Reuniões de Avaliação Estratégica) não tinha **nenhuma** autorização em nenhuma das suas ações de escrita.
+- As telas de Futuro Almejado, Missão/Visão e Lições Aprendidas também não verificavam nada.
+
+Correção aplicada: `SeletorOrganizacao` agora valida `podeAcessarOrganizacao()` antes de gravar a sessão; `IndicadorPolicy` passou a cruzar a organização real do registro (não mais a organização selecionada na sessão); as 4 telas (RAE, Futuro Almejado, Missão/Visão, Lições Aprendidas) ganharam checagens de capacidade RBAC e/ou escopo de organização.
+
+### Princípio de design: leitura livre, escrita restrita
+
+Estabelecido como princípio do sistema: **navegar e visualizar informação (Mapa Estratégico, detalhes de objetivo/indicador/perspectiva, mesmo de outras organizações) é livre para qualquer usuário autenticado — só a ESCRITA (criar/editar/salvar/excluir, incluindo lançar evolução de indicadores) exige capacidade RBAC e vínculo com a organização responsável.**
+
+### Suíte de testes
+
+A suíte Pest estava com 32 falhas; corrigida para **0 falhas, 64 testes passando**, incluindo uma pasta nova `tests/Feature/Authorization/` dedicada a testes de autorização/segurança. Causa raiz das falhas originais: `URL::forceRootUrl()` rodando durante os testes e quebrando o roteamento, além de `phpunit.xml` desatualizado e testes com namespaces antigos.
+
+---
+
 ## Atualização técnica (2026-06) — Novos módulos e funcionalidades
 
 > Esta seção consolida tudo o que foi adicionado **após** a versão base (2026-05-23). É a referência mais atual e deve prevalecer sobre os inventários antigos abaixo quando houver divergência. Confiança: `Verificado no código` (arquivos, migrations e rotas no repositório). Os inventários originais (Models, Livewire, Rotas, Banco) seguem válidos para o núcleo, mas **não incluem** os itens listados aqui.
@@ -3534,6 +3603,8 @@ Assinaturas extraidas do codigo. Os modulos criticos lidos semanticamente estao 
 
 ## Inventario de Policies
 
+> Atualização (2026-07): `IndicadorPolicy`, `OrganizationPolicy`, `PlanoDeAcaoPolicy`, `RiscoPolicy` e `UserPolicy` passaram a delegar suas decisões aos Gates `modulo.*` (via `Gate::forUser($user)->allows(...)`), que por sua vez consultam `App\Services\Authorization\CapacidadeResolver`. Há também `App\Policies\EntregaPolicy`, nova, para `App\Models\ActionPlan\Entrega` (ainda não coberta no inventário de assinaturas abaixo). Ver seção "Modelo de autorização RBAC + ABAC centralizado e correções de segurança (2026-07)" para o detalhamento completo.
+
 ### `App\Policies\IndicadorPolicy`
 
 - Fonte: verificado no codigo em `app/Policies/IndicadorPolicy.php`.
@@ -3725,7 +3796,7 @@ Assinaturas extraidas do codigo. Os modulos criticos lidos semanticamente estao 
 3. Corrigir inconsistencias conhecidas de validacao/tabela antes de upgrades de framework.
 4. Isolar calculos de mapa/indicadores/planos em services testaveis antes de mexer em Livewire.
 5. Refatorar `DeliverablesBoard` apenas com testes de regressao de board, anexos, comentarios, labels e lixeira.
-6. Revisar policies e filtros de query em conjunto, porque `viewAny=true` depende de filtros corretos para isolamento de dados.
+6. Revisar policies e filtros de query em conjunto, porque `viewAny=true` depende de filtros corretos para isolamento de dados. **(2026-07: item endereçado)** — o vazamento real encontrado (seletor de organização sem validação de vínculo, permitindo escrita cruzada entre organizações) foi corrigido; ver seção "Modelo de autorização RBAC + ABAC centralizado e correções de segurança (2026-07)".
 7. Tratar upgrade de Livewire como frente propria, com auditoria de atributos, eventos, uploads, query string e renderizacao.
 
 ## Conclusao
@@ -4040,6 +4111,8 @@ const VISUALIZADOR = 'Visualizador';
 
 A hierarquia de autorização real é determinada por `User::isSuperAdmin()`, que verifica a presença do perfil `SUPER_ADMIN` no pivot `rel_users_tab_organizacoes_tab_perfil_acesso`, **não** pelo campo `adm` da tabela `users` (mantido apenas por compatibilidade).
 
+> Atualização (2026-07): a decisão de autorização efetiva não é mais feita ponto a ponto contra essas constantes — foi centralizada em `App\Services\Authorization\CapacidadeResolver::podeNoModulo()`, que mapeia estaticamente os 4 perfis com capacidade de escrita (`Super Admin`, `Admin Unidade`, `Gestor Responsável`, `Gestor Substituto`) para capacidades por módulo (`acessar`, `ver-sensivel`, `criar`, `editar`, `excluir`, `exportar`), consumido pelos Gates `modulo.*` registrados em `AppServiceProvider`. `isSuperAdmin()` continua sendo o bypass universal, agora testado e confirmado sem exceção em todas as Policies e no resolver. Ver seção "Modelo de autorização RBAC + ABAC centralizado e correções de segurança (2026-07)".
+
 ---
 
 ### C.5 `Agenda2030\ODS`
@@ -4294,6 +4367,7 @@ tests/
 │   │   └── UpdatePasswordTest.php
 │   ├── Livewire/
 │   │   └── ListarIndicadoresTest.php
+│   ├── Authorization/          ← Nova (2026-07): testes de autorização/segurança (RBAC + ABAC)
 │   └── UserManagement/
 │       └── ListarUsuariosCadastroSemTruncateTest.php
 ├── Unit/
@@ -4302,7 +4376,9 @@ tests/
 └── TestCase.php           ← Base class com helpers de autenticação
 ```
 
-**Cobertura atual:** Majoritariamente focada em auth e profile (Jetstream padrão). Testes de domínio PEI são escassos — apenas `ListarIndicadoresTest` cobre um componente Livewire de negócio. Esta é uma lacuna crítica identificada para evolução.
+**Cobertura atual:** Majoritariamente focada em auth e profile (Jetstream padrão), agora complementada por `tests/Feature/Authorization/`, dedicada a `CapacidadeResolver`, Gates `modulo.*` e ao vazamento de organização corrigido. Testes de domínio PEI seguem escassos fora de autorização — apenas `ListarIndicadoresTest` cobre um componente Livewire de negócio. Esta é uma lacuna identificada para evolução.
+
+**Status (2026-07):** `Verificado no código`. Suíte corrigida de 32 falhas para **0 falhas, 64 testes passando**. Causa raiz das falhas originais: `URL::forceRootUrl()` rodando durante os testes e quebrando o roteamento, além de `phpunit.xml` desatualizado e testes com namespaces antigos.
 
 **Comando de execução:** `php artisan test` ou `vendor/bin/pest --parallel`.
 

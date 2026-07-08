@@ -217,6 +217,8 @@ No **cabeçalho** da tela ficam três seletores que definem o contexto de exibi�
 
 > ⚠️ **Importante:** **sempre mantenha Organização e PEI selecionados** ao iniciar o uso. Mudar qualquer seletor recarrega imediatamente os dados da tela atual. Quando nenhum PEI ou organização está selecionado, várias telas exibem dados vazios.
 
+> 🔒 **Restrição do seletor de Organização:** a lista do seletor mostra apenas as organizações às quais você tem vínculo — e o sistema também garante, ao processar a troca, que só é possível assumir uma organização à qual você realmente pertence. Não é possível, por nenhum meio, operar em nome de uma organização à qual você não está vinculado. A única exceção é o **Super Administrador**, que pode selecionar e operar em qualquer organização do sistema, sem restrição.
+
 ### 3.2 Menu de Navegação (Sidebar)
 
 O menu lateral organiza as funcionalidades em grupos temáticos. Clique no ícone de hambúrguer (☰) para recolher/expandir.
@@ -1195,6 +1197,8 @@ A matriz é uma grade 5×5 (Probabilidade × Impacto) com zonas coloridas. Cada 
 
 **Passo 3:** Clique em **Salvar**. Cada RAE salva tem um botão **PDF** para gerar a ata em documento.
 
+> 🔒 **Quem pode registrar/editar/excluir uma RAE:** somente o **Administrador da Unidade** responsável pela organização à qual a RAE pertence (ou o **Super Administrador**, sem restrição). Qualquer usuário autenticado pode **visualizar** as atas de RAE, encaminhamentos e análises de causa raiz, mesmo de outras organizações — a consulta é sempre livre; apenas criar, editar ou excluir é restrito.
+
 ---
 
 ### 7.3 Relatórios
@@ -1532,10 +1536,24 @@ O sistema tem **quatro perfis de acesso** pré-definidos. Cada usuário pode ter
 
 | Perfil | Escopo de atuação | O que pode fazer |
 |---|---|---|
-| **Super Administrador** | Todo o sistema, sem restrição | Acesso irrestrito a todas as funcionalidades, incluindo o grupo Administração (Organizações, Usuários, Perfis, Graus, Configurações, Auditoria) |
-| **Administrador de Unidade** | Organização à qual está vinculado | Criar, editar e excluir dados estratégicos e operacionais da unidade; gerenciar usuários e planos da unidade; não acessa o grupo Administração do sistema |
+| **Super Administrador** | Todo o sistema, sem restrição | Acesso irrestrito para editar/excluir qualquer dado de qualquer organização, incluindo o grupo Administração (Organizações, Usuários, Perfis, Graus, Configurações, Auditoria). É a única exceção às regras de responsabilidade organizacional abaixo |
+| **Administrador de Unidade** | Organização à qual está vinculado | Criar, editar e excluir dados estratégicos e operacionais **da sua unidade** (Planos de Ação, Entregas, Indicadores, Riscos, RAE, Futuro Almejado, Missão/Visão, Lições Aprendidas etc.); gerenciar usuários e planos da unidade; não acessa o grupo Administração do sistema |
 | **Gestor Responsável** | Planos de ação aos quais está vinculado | Criar e editar indicadores e planos de ação; gerenciar entregas dos planos vinculados; registrar evoluções |
 | **Gestor Substituto** | Planos de ação aos quais está vinculado | Mesmas permissões do Gestor Responsável nos planos vinculados |
+
+### 11.1 A regra de responsabilidade organizacional (quem pode editar o quê)
+
+Uma regra simples vale para **todos os módulos operacionais** do sistema — Planos de Ação, Entregas, Indicadores, Riscos, RAE (Revisão da Estratégia), Futuro Almejado, Missão/Visão institucional e Lições Aprendidas:
+
+> **Só pode CRIAR, EDITAR, LANÇAR EVOLUÇÃO ou EXCLUIR** um registro quem for:
+> - o **Administrador da Unidade** responsável pela organização daquele registro; **ou**
+> - o **Gestor Responsável ou Substituto** especificamente vinculado àquele Plano de Ação; **ou**
+> - (no caso de Riscos) o **responsável pelo monitoramento** designado no próprio risco; **ou**
+> - o **Super Administrador**, que não tem restrição alguma.
+
+> ✅ **Visualizar é sempre livre.** Consultar informações — abrir o Mapa Estratégico, ver o detalhe de um objetivo, indicador, perspectiva ou plano, mesmo de **outra organização** — é permitido a qualquer usuário autenticado do sistema, independentemente de vínculo ou perfil. A restrição de organização/perfil se aplica **apenas** na hora de editar ou salvar algo — nunca para apenas visualizar.
+
+> 🔧 Essa regra foi recentemente reforçada nos módulos de **Indicadores, RAE, Futuro Almejado, Missão/Visão institucional e Lições Aprendidas**, onde havia uma inconsistência que fazia a checagem não considerar corretamente a organização real do registro. Hoje o comportamento é uniforme em todos os módulos.
 
 ### Resumo das Permissões por Funcionalidade
 
@@ -1552,12 +1570,15 @@ O sistema tem **quatro perfis de acesso** pré-definidos. Cada usuário pode ter
 | Gerenciar Entregas (criar/editar/excluir) | ✅ | ✅ | ✅* | ✅* |
 | Identificar e Editar Riscos | ✅ | ✅ | ✅ | ✅ |
 | **Excluir** Riscos | ✅ | ✅ | ❌ | ❌ |
+| Criar/Editar/Excluir RAE (atas, encaminhamentos, causa raiz) | ✅ | ✅ | ❌ | ❌ |
 | Visualizar Dashboard e Relatórios | ✅ | ✅ | ✅ | ✅ |
 | Administração (Usuários, Perfis, Config.) | ✅ | ❌ | ❌ | ❌ |
 
 *\*Gestores só podem gerenciar entregas dos planos aos quais estão vinculados como Responsável ou Substituto.*
 
-> **Visualização:** todos os usuários autenticados podem visualizar dados estratégicos (Dashboard, Mapa, listagens) de acordo com a organização à qual estão vinculados.
+> **Visualização:** todos os usuários autenticados podem visualizar dados estratégicos (Dashboard, Mapa, listagens, RAE, indicadores, planos) de **qualquer** organização do sistema, independente de vínculo. A restrição de organização só entra em jogo para ações de escrita (criar/editar/lançar/excluir).
+
+> **Seletor de Organização:** ao trocar a organização ativa no cabeçalho, você só consegue selecionar organizações às quais realmente pertence — essa validação é garantida tanto na lista exibida quanto no processamento da troca. Exceção: o Super Administrador pode selecionar qualquer organização do sistema.
 
 ---
 

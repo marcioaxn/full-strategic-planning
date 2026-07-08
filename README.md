@@ -1027,12 +1027,19 @@ php artisan migracao:v1-para-v2 --descartar-legado
 
 ## 📚 Documentação relacionada
 
+Todo sistema de gestão estratégica carrega, por trás do código, uma quantidade grande de conhecimento acumulado — decisões de arquitetura, o motivo real de cada correção, como o administrador deve operar o dia a dia. Guardamos esse conhecimento em documentos vivos, e não deixamos que envelheçam escondidos: sempre que uma mudança relevante acontece no sistema, os documentos abaixo são revisados na mesma rodada de trabalho. **Os quatro primeiros itens desta lista** foram atualizados logo depois da implementação do RBAC + ABAC e da correção do vazamento de responsabilidade organizacional, narrada na seção de [Segurança e Controle de Acesso](#-segurança-e-controle-de-acesso-rbac--abac) acima:
+
+- A **documentação técnica** ganhou uma seção inteira dedicada ao novo modelo de autorização (`CapacidadeResolver`, Gates, Policies), à correção do vazamento e ao estado atual da suíte de testes (0 falhas, 64 passando).
+- Os **dois manuais operacionais** (Markdown e Word, o mesmo conteúdo em dois formatos para uso diferente) passaram a explicar, em linguagem de usuário final, a nova regra de "quem pode editar o quê", por que o seletor de organização no menu superior ficou mais rigoroso, e o controle de acesso reforçado no módulo de Revisão (RAE).
+- O **dicionário de dados** foi conferido campo a campo contra o banco real, para confirmar (e deixar registrado) que nenhuma tabela nova foi criada — a lógica de permissões vive inteiramente em código, não no schema do banco.
+
 | Documento | Localização |
 |---|---|
+| Documentação técnica completa (v2) | [documentacao-tecnica-planejamento-estrategico-v2.md](documentacao/harness/documentacao-tecnica-planejamento-estrategico-v2.md) |
+| Manual operacional (Markdown) | [manual-operacional-planejamento-estrategico-v1.md](documentacao/harness/manual-operacional-planejamento-estrategico-v1.md) |
+| Manual operacional (Word/.docx) | [manual-operacional-pei-v4_20260607_15h34.docx](documentacao/harness/manual-operacional-pei-v4_20260607_15h34.docx) |
+| Dicionário de dados PostgreSQL | [dicionario-dados-postgresql-planejamento-estrategico.md](documentacao/harness/dicionario-dados-postgresql-planejamento-estrategico.md) |
 | Documento mestre e roadmap do sistema | [documento-mestre-evolucao-sistema-pei.md](documentacao/documento-mestre-evolucao-sistema-pei.md) |
-| Documentação técnica completa (v2) | [documentacao-tecnica-planejamento-estrategico-v2.md](documentacao/documentacao-tecnica-planejamento-estrategico-v2.md) |
-| Manual operacional do administrador | [manual-operacional-planejamento-estrategico-v1.md](documentacao/manual-operacional-planejamento-estrategico-v1.md) |
-| Dicionário de dados PostgreSQL | [dicionario-dados-postgresql-planejamento-estrategico.md](documentacao/dicionario-dados-postgresql-planejamento-estrategico.md) |
 | Agenda 2030 / ODS — integração | [agenda_2030_ods_agregado_ao_planejamento_estrategico.md](documentacao/agenda_2030_ods_agregado_ao_planejamento_estrategico.md) |
 | Guia de transição completa v1 → v2 | [guia-transicao-completa-v1-para-v2.md](documentacao/guia-transicao-completa-v1-para-v2.md) |
 | Guia GPPEI — MGI 2025 (PDF) | [Guia_PEI_VF.pdf](documentacao/pdf/Guia_PEI_VF.pdf) |
