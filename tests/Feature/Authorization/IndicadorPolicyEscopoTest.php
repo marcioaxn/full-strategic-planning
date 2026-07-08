@@ -30,7 +30,7 @@ function montarIndicadorDeObjetivo(Organization $org): Indicador
         'num_nivel_hierarquico_apresentacao' => 1,
     ]);
 
-    return Indicador::create([
+    $indicador = Indicador::create([
         'cod_objetivo' => $objetivo->cod_objetivo,
         'nom_indicador' => 'Indicador Teste',
         'dsc_indicador' => 'Descrição do indicador de teste',
@@ -39,32 +39,38 @@ function montarIndicadorDeObjetivo(Organization $org): Indicador
         'bln_acumulado' => false,
         'dsc_periodo_medicao' => 'mensal',
     ]);
+    $indicador->organizacoes()->attach($org->cod_organizacao);
+
+    return $indicador;
 }
 
-test('admin unidade só pode editar indicador quando a organização selecionada bate com o vínculo do perfil', function () {
+test('admin unidade da organização real do indicador pode editá-lo, independentemente da organização selecionada na sessão', function () {
     $org = Organization::create(['nom_organizacao' => 'Org A', 'sgl_organizacao' => 'OA', 'cod_organizacao_pai' => null]);
+    $outraOrg = Organization::create(['nom_organizacao' => 'Org B', 'sgl_organizacao' => 'OB', 'cod_organizacao_pai' => null]);
     $indicador = montarIndicadorDeObjetivo($org);
 
     $user = User::factory()->create(['ativo' => true]);
-    $user->organizacoes()->attach($org->cod_organizacao);
+    $user->organizacoes()->attach([$org->cod_organizacao, $outraOrg->cod_organizacao]);
     $user->perfisAcesso()->attach(PerfilAcesso::ADMIN_UNIDADE, ['cod_organizacao' => $org->cod_organizacao]);
 
-    session(['organizacao_selecionada_id' => $org->cod_organizacao]);
+    // A organização selecionada na sessão é irrelevante para esta checagem —
+    // o que importa é a organização REAL do indicador.
+    session(['organizacao_selecionada_id' => $outraOrg->cod_organizacao]);
 
     expect($user->can('update', $indicador))->toBeTrue()
         ->and($user->can('delete', $indicador))->toBeTrue();
 });
 
-test('admin unidade não pode editar indicador se a organização selecionada não é a vinculada ao seu perfil', function () {
+test('admin unidade de uma organização diferente da real do indicador não pode editá-lo, mesmo com essa organização selecionada na sessão', function () {
     $org = Organization::create(['nom_organizacao' => 'Org A', 'sgl_organizacao' => 'OA', 'cod_organizacao_pai' => null]);
     $outraOrg = Organization::create(['nom_organizacao' => 'Org B', 'sgl_organizacao' => 'OB', 'cod_organizacao_pai' => null]);
     $indicador = montarIndicadorDeObjetivo($org);
 
-    // Usuário é Admin Unidade de Org A (a organização do indicador), mas está
-    // com Org B selecionada na sessão — sem nenhum vínculo de perfil em Org B.
+    // Usuário é Admin Unidade de Org B — organização diferente da real do
+    // indicador (Org A) — e está com Org B selecionada na sessão.
     $user = User::factory()->create(['ativo' => true]);
-    $user->organizacoes()->attach([$org->cod_organizacao, $outraOrg->cod_organizacao]);
-    $user->perfisAcesso()->attach(PerfilAcesso::ADMIN_UNIDADE, ['cod_organizacao' => $org->cod_organizacao]);
+    $user->organizacoes()->attach($outraOrg->cod_organizacao);
+    $user->perfisAcesso()->attach(PerfilAcesso::ADMIN_UNIDADE, ['cod_organizacao' => $outraOrg->cod_organizacao]);
 
     session(['organizacao_selecionada_id' => $outraOrg->cod_organizacao]);
 

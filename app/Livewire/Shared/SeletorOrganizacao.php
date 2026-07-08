@@ -9,16 +9,17 @@ use Livewire\Component;
 class SeletorOrganizacao extends Component
 {
     public $organizacoes;
+
     public $selecionadaId;
 
     public function mount()
     {
         $this->carregarOrganizacoes();
-        
+
         // Inicializar com a sessão ou com a primeira da lista
         $this->selecionadaId = Session::get('organizacao_selecionada_id');
 
-        if (!$this->selecionadaId && $this->organizacoes->isNotEmpty()) {
+        if (! $this->selecionadaId && $this->organizacoes->isNotEmpty()) {
             $first = $this->organizacoes->first();
             $id = is_array($first) ? $first['id'] : $first->cod_organizacao;
             $this->atualizarSessao($id);
@@ -37,9 +38,9 @@ class SeletorOrganizacao extends Component
             $this->organizacoes = $user->organizacoes()
                 ->orderBy('sgl_organizacao')
                 ->get()
-                ->map(fn($org) => [
+                ->map(fn ($org) => [
                     'id' => $org->cod_organizacao,
-                    'label' => $org->sgl_organizacao . ' - ' . $org->nom_organizacao
+                    'label' => $org->sgl_organizacao.' - '.$org->nom_organizacao,
                 ]);
         } else {
             // Acesso público: árvore completa
@@ -58,16 +59,32 @@ class SeletorOrganizacao extends Component
     private function atualizarSessao($id)
     {
         $org = Organization::find($id);
-        
+
+        if (! $org) {
+            return false;
+        }
+
+        // Usuário autenticado não-admin só pode selecionar organizações do
+        // seu próprio escopo — evita que qualquer usuário logado assuma,
+        // via manipulação direta da ação Livewire, o contexto de uma
+        // organização à qual não pertence (toda a cadeia de componentes do
+        // sistema confia neste valor de sessão para decisões de acesso).
+        $user = auth()->user();
+        if ($user && ! $user->podeAcessarOrganizacao($id)) {
+            return false;
+        }
+
         if ($org) {
             $this->selecionadaId = $id;
             Session::put('organizacao_selecionada_id', $id);
             Session::put('organizacao_selecionada_nom', $org->nom_organizacao);
             Session::put('organizacao_selecionada_sgl', $org->sgl_organizacao);
-            
+
             $this->dispatch('organizacaoSelecionada', id: $id);
+
             return true;
         }
+
         return false;
     }
 
