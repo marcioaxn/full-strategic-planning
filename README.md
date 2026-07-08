@@ -786,6 +786,28 @@ Módulos sem Model 1:1 (Planejamento Estratégico, Relatórios, Auditoria, Admin
 | **Impersonação controlada** | `App\Http\Controllers\ImpersonateController` | Restrita a Super Admin; bloqueia impersonação aninhada e autoimpersonação |
 | **Hardening de sessão** | `.env` / `config/session.php` | `SESSION_DOMAIN` restrito ao host, `SESSION_SECURE_COOKIE` em produção — ver [Configuração do ambiente](#-configuração-do-ambiente-env) |
 
+### 📖 A história por trás desta seção — o que foi investigado e corrigido em julho de 2026
+
+Tudo o que está descrito acima não nasceu de um planejamento de arquitetura no papel — nasceu de perguntas reais feitas por quem usa o sistema no dia a dia, e de uma decisão de não deixar nenhuma delas sem resposta verificada em código. Registramos aqui o percurso, porque entender *por que* uma proteção existe é tão importante quanto saber que ela existe.
+
+**O ponto de partida foi uma suíte de testes quebrada.** Antes de qualquer coisa, `php artisan test` rodava com **32 falhas de 58 testes**. A causa mais surpreendente não estava na lógica de negócio: `URL::forceRootUrl()`, chamado incondicionalmente no `AppServiceProvider` para o sistema funcionar corretamente atrás de um subdiretório em produção, também rodava durante os testes automatizados — e como o helper interno do Laravel para requisições de teste usa esse mesmo gerador de URL, uma chamada simples como `$this->get('/login')` acabava virando uma requisição para o domínio de produção, que o roteador de teste não reconhecia. Um efeito colateral silencioso, que derrubava dezenas de testes sem relação aparente entre si. Depois de isolar essa causa-raiz (e ajustar o `phpunit.xml` para usar a porta e o domínio corretos do ambiente de teste), a suíte já estava em 46 testes passando, 0 falhas — e esse foi o chão firme sobre o qual construímos tudo o que veio depois.
+
+**Em seguida veio a implementação do RBAC + ABAC descrito nas seções acima** — os Gates `modulo.*`, a matriz de capacidades do `CapacidadeResolver`, o escopo de organização centralizado em `ResolveEscopoOrganizacional`, os hooks globais de `Gate::before`/`Gate::after`. No processo de escrever essa camada, dois bugs sutis, mas reais, apareceram nas Policies que já existiam: uma comparação de coluna ambígua (`cod_perfil`) que o PostgreSQL aceitava silenciosamente em certos casos e rejeitava em outros, e um uso de `Gate::allows()` sem vincular explicitamente o usuário sendo avaliado — o tipo de erro que passa despercebido em um ambiente de desenvolvimento single-user, mas que pode gerar uma decisão de autorização incorreta em produção, jobs em fila ou comandos de linha de comando.
+
+**Depois veio a investigação do erro 500 relatado na apresentação para a diretoria.** A tela de Revisão (RAE) e mais dois módulos falhavam com erro 500 durante a demonstração. Cruzando os logs do servidor com a janela de tempo da apresentação, a causa raiz apareceu clara: três migrations criadas dias antes nunca haviam sido aplicadas ao banco de dados usado naquele ambiente específico — um problema de sincronização de ambiente, não um bug de código. Aproveitamos a investigação para também revisar e reforçar essa suíte de testes recém-estabilizada.
+
+**O momento mais importante, porém, foi quando um cliente que havia clonado o projeto relatou uma suspeita:** ele desconfiava que a atribuição de responsabilidade em lançamentos de evolução (Indicadores, Entregas) pudesse não estar sendo respeitada corretamente. Ele estava certo — e a investigação revelou algo mais amplo do que a suspeita inicial. A causa-raiz era sistêmica: o seletor de organização no menu superior (`SeletorOrganizacao`) aceitava qualquer organização existente no banco, sem checar se o usuário autenticado realmente pertencia a ela. Como praticamente todo o sistema confia na organização selecionada na sessão para decidir permissões, essa única brecha abria caminho para vários vazamentos concretos: um Admin Unidade podia editar ou excluir indicadores de **qualquer** organização, bastando manter a sua própria selecionada no menu (`IndicadorPolicy` nunca cruzava com a organização *real* do indicador); o módulo de Revisão (RAE) não tinha **nenhuma** autorização em nenhum dos seus 11 métodos de escrita; e três outras telas (Futuro Almejado, Missão/Visão, Lições Aprendidas) também não verificavam nada.
+
+Corrigimos a raiz e cada vazamento concreto, com testes de regressão que provam a correção — inclusive revertendo cada correção temporariamente, um de cada vez, só para confirmar que o teste realmente capturava o problema antes de reaplicá-la. Mas o processo não parou aí: ao revisar o próprio trabalho, percebemos (com uma observação valiosa de quem acompanhava de perto) que duas das correções haviam ido longe demais, bloqueando por engano a simples **visualização** de informação em vez de restringir apenas a **escrita**. Esse é um princípio que vale a pena destacar, porque molda toda a filosofia de segurança do sistema:
+
+> **Navegar e "mergulhar" na informação — abrir o Mapa Estratégico, clicar em um objetivo, ver os detalhes de um indicador de outra organização — é livre para qualquer usuário autenticado.** A responsabilidade organizacional entra em cena apenas quando alguém tenta **escrever**: lançar uma evolução, editar um campo, salvar uma alteração, excluir um registro. Leitura é sempre aberta; escrita é sempre controlada por quem é responsável.
+
+Ajustamos as duas telas para refletir exatamente isso e, de brinde, encontramos e corrigimos um bug antigo e não relacionado que só veio à tona durante os novos testes: o tratamento global de erro 403 do sistema tentava redirecionar até em chamadas internas do Livewire, o que quebrava a resposta com um erro técnico em vez de simplesmente negar o acesso de forma limpa.
+
+Por fim, uma pergunta direta fechou o ciclo: **o Super Admin continua com acesso total, sem exceção?** Em vez de simplesmente responder "sim", auditamos cada Policy, o `CapacidadeResolver` e o `ResolveEscopoOrganizacional` em busca do bypass, e escrevemos quatro testes que provam, na prática, um Super Admin sem nenhum vínculo direto criando e editando registros em organizações inteiramente alheias a ele. A resposta era sim — e agora isso está garantido por teste, não apenas por leitura de código.
+
+Ao final de todo esse percurso, a suíte de testes soma **64 testes passando, 0 falhas** — cada correção descrita acima acompanhada de pelo menos um teste que a comprova e que vai continuar protegendo o sistema contra regressões futuras. O trabalho está registrado em três branches (`feat/rbac-abac-autorizacao-testes`, `fix/grau-satisfacao-sugestao-ia-pei` e `fix/vazamento-responsabilidade-organizacao-evolucao`), com análises detalhadas em `documentacao/` para quem quiser entender cada decisão em profundidade.
+
 ---
 
 ## 💻 Desenvolvimento
@@ -1005,12 +1027,19 @@ php artisan migracao:v1-para-v2 --descartar-legado
 
 ## 📚 Documentação relacionada
 
+Todo sistema de gestão estratégica carrega, por trás do código, uma quantidade grande de conhecimento acumulado — decisões de arquitetura, o motivo real de cada correção, como o administrador deve operar o dia a dia. Guardamos esse conhecimento em documentos vivos, e não deixamos que envelheçam escondidos: sempre que uma mudança relevante acontece no sistema, os documentos abaixo são revisados na mesma rodada de trabalho. **Os quatro primeiros itens desta lista** foram atualizados logo depois da implementação do RBAC + ABAC e da correção do vazamento de responsabilidade organizacional, narrada na seção de [Segurança e Controle de Acesso](#-segurança-e-controle-de-acesso-rbac--abac) acima:
+
+- A **documentação técnica** ganhou uma seção inteira dedicada ao novo modelo de autorização (`CapacidadeResolver`, Gates, Policies), à correção do vazamento e ao estado atual da suíte de testes (0 falhas, 64 passando).
+- Os **dois manuais operacionais** (Markdown e Word, o mesmo conteúdo em dois formatos para uso diferente) passaram a explicar, em linguagem de usuário final, a nova regra de "quem pode editar o quê", por que o seletor de organização no menu superior ficou mais rigoroso, e o controle de acesso reforçado no módulo de Revisão (RAE).
+- O **dicionário de dados** foi conferido campo a campo contra o banco real, para confirmar (e deixar registrado) que nenhuma tabela nova foi criada — a lógica de permissões vive inteiramente em código, não no schema do banco.
+
 | Documento | Localização |
 |---|---|
+| Documentação técnica completa (v2) | [documentacao-tecnica-planejamento-estrategico-v2.md](documentacao/harness/documentacao-tecnica-planejamento-estrategico-v2.md) |
+| Manual operacional (Markdown) | [manual-operacional-planejamento-estrategico-v1.md](documentacao/harness/manual-operacional-planejamento-estrategico-v1.md) |
+| Manual operacional (Word/.docx) | [manual-operacional-pei-v4_20260607_15h34.docx](documentacao/harness/manual-operacional-pei-v4_20260607_15h34.docx) |
+| Dicionário de dados PostgreSQL | [dicionario-dados-postgresql-planejamento-estrategico.md](documentacao/harness/dicionario-dados-postgresql-planejamento-estrategico.md) |
 | Documento mestre e roadmap do sistema | [documento-mestre-evolucao-sistema-pei.md](documentacao/documento-mestre-evolucao-sistema-pei.md) |
-| Documentação técnica completa (v2) | [documentacao-tecnica-planejamento-estrategico-v2.md](documentacao/documentacao-tecnica-planejamento-estrategico-v2.md) |
-| Manual operacional do administrador | [manual-operacional-planejamento-estrategico-v1.md](documentacao/manual-operacional-planejamento-estrategico-v1.md) |
-| Dicionário de dados PostgreSQL | [dicionario-dados-postgresql-planejamento-estrategico.md](documentacao/dicionario-dados-postgresql-planejamento-estrategico.md) |
 | Agenda 2030 / ODS — integração | [agenda_2030_ods_agregado_ao_planejamento_estrategico.md](documentacao/agenda_2030_ods_agregado_ao_planejamento_estrategico.md) |
 | Guia de transição completa v1 → v2 | [guia-transicao-completa-v1-para-v2.md](documentacao/guia-transicao-completa-v1-para-v2.md) |
 | Guia GPPEI — MGI 2025 (PDF) | [Guia_PEI_VF.pdf](documentacao/pdf/Guia_PEI_VF.pdf) |
