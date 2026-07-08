@@ -50,8 +50,9 @@ class MissaoVisao extends Component
 
     public function mount()
     {
-        $this->authorize('modulo.acessar', 'planejamento-estrategico');
-
+        // Visualização é livre para qualquer usuário autenticado (navegar e
+        // "mergulhar" na informação não é restrito por perfil/organização).
+        // Só a edição (habilitarEdicao/salvar) exige capacidade RBAC + escopo.
         $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));

@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Middleware\CheckPasswordChange;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -26,7 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
-            \App\Http\Middleware\CheckPasswordChange::class,
+            CheckPasswordChange::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -80,7 +82,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Handle 403 Forbidden (Acesso Negado)
         $exceptions->render(function (AccessDeniedHttpException $e, Request $request) {
-            if ($request->expectsJson()) {
+            // Requisições Livewire (incluindo chamadas de ação via $this->authorize())
+            // não podem ser respondidas com um redirect: o protocolo do Livewire
+            // espera um payload JSON/snapshot, nunca uma resposta de redirecionamento.
+            if ($request->expectsJson() || $request->ajax() || $request->header('X-Livewire')) {
                 return response()->json(['message' => 'Acesso negado.'], 403);
             }
 
@@ -111,7 +116,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // Handle Database Query Exceptions (Integridade Referencial)
-        $exceptions->render(function (\Illuminate\Database\QueryException $e, Request $request) {
+        $exceptions->render(function (QueryException $e, Request $request) {
             $sqlState = $e->errorInfo[0] ?? null;
             $errorCode = $e->errorInfo[1] ?? 0;
 
@@ -136,7 +141,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // Handle 500 Server Errors (Produção / Não Autenticado)
-        $exceptions->render(function (\Throwable $e, Request $request) {
+        $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->expectsJson()) {
                 return null;
             }
