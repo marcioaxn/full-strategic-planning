@@ -2,14 +2,18 @@
 
 namespace App\Livewire\StrategicPlanning;
 
+use App\Models\Organization;
 use App\Models\StrategicPlanning\IdentidadeEstrategica;
 use App\Models\StrategicPlanning\PEI;
-use App\Models\Organization;
+use App\Models\SystemSetting;
+use App\Services\AI\AiServiceFactory;
+use App\Services\NotificationService;
+use App\Services\PeiGuidanceService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Session;
 
 #[Layout('layouts.app')]
 class MissaoVisao extends Component
@@ -17,51 +21,66 @@ class MissaoVisao extends Component
     use AuthorizesRequests;
 
     public $negocio = '';
+
     public $missao = '';
+
     public $visao = '';
+
     #[Locked]
     public $organizacaoId;
+
     public $organizacaoNome;
+
     #[Locked]
     public $identidadeId;
+
     #[Locked]
     public $peiAtivo;
 
     public bool $isEditing = false;
+
     public bool $aiEnabled = false;
+
     public $aiSuggestion = '';
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
-        'peiSelecionado' => 'atualizarPEI'
+        'peiSelecionado' => 'atualizarPEI',
     ];
 
     public function mount()
     {
-        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
+        $this->authorize('modulo.acessar', 'planejamento-estrategico');
+
+        $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
         $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
     }
 
     public function pedirAjudaIA()
     {
-        if (!$this->aiEnabled) return;
+        if (! $this->aiEnabled) {
+            return;
+        }
 
-        if (!$this->organizacaoNome) {
-             session()->flash('error', 'Selecione uma organização primeiro.');
-             return;
+        if (! $this->organizacaoNome) {
+            session()->flash('error', 'Selecione uma organização primeiro.');
+
+            return;
         }
 
         try {
-            $aiService = \App\Services\AI\AiServiceFactory::make();
-            if (!$aiService) return;
+            $aiService = AiServiceFactory::make();
+            if (! $aiService) {
+                return;
+            }
 
             $this->aiSuggestion = 'Pensando...';
-            
+
             $prompt = "Sugira Missão e Visão para a organização: {$this->organizacaoNome}.
             Responda OBRIGATORIAMENTE em formato JSON puro com os campos:
             'missao' (string) e 'visao' (string).";
-            
+
             $response = $aiService->suggest($prompt);
             $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
 
@@ -71,7 +90,7 @@ class MissaoVisao extends Component
                 throw new \Exception('Formato de resposta inválido');
             }
         } catch (\Exception $e) {
-            \Log::error('Erro IA MissaoVisao: ' . $e->getMessage());
+            \Log::error('Erro IA MissaoVisao: '.$e->getMessage());
             $this->aiSuggestion = null;
             session()->flash('error', 'Falha ao processar sugestões.');
         }
@@ -79,7 +98,9 @@ class MissaoVisao extends Component
 
     public function aplicarIdentidade()
     {
-        if (!isset($this->aiSuggestion['missao'])) return;
+        if (! isset($this->aiSuggestion['missao'])) {
+            return;
+        }
 
         $this->missao = $this->aiSuggestion['missao'];
         $this->visao = $this->aiSuggestion['visao'];
@@ -102,7 +123,7 @@ class MissaoVisao extends Component
             $this->peiAtivo = PEI::find($peiId);
         }
 
-        if (!$this->peiAtivo) {
+        if (! $this->peiAtivo) {
             $this->peiAtivo = PEI::ativos()->first();
         }
     }
@@ -110,7 +131,7 @@ class MissaoVisao extends Component
     public function atualizarOrganizacao($id)
     {
         $this->organizacaoId = $id;
-        
+
         if ($id) {
             $org = Organization::find($id);
             $this->organizacaoNome = $org->nom_organizacao;
@@ -118,7 +139,7 @@ class MissaoVisao extends Component
         } else {
             $this->resetarDados();
         }
-        
+
         $this->isEditing = false;
     }
 
@@ -135,7 +156,7 @@ class MissaoVisao extends Component
     {
         // Carregar Missão/Visão
         $dados = IdentidadeEstrategica::where('cod_organizacao', $this->organizacaoId)
-            ->where(function($q) {
+            ->where(function ($q) {
                 // Tenta buscar pelo PEI ativo, ou o último registro se não houver PEI específico
                 if ($this->peiAtivo) {
                     $q->where('cod_pei', $this->peiAtivo->cod_pei);
@@ -160,8 +181,15 @@ class MissaoVisao extends Component
 
     public function habilitarEdicao()
     {
-        if (!$this->peiAtivo) {
+        $this->authorize('modulo.editar', 'planejamento-estrategico');
+
+        if (! auth()->user()->podeAcessarOrganizacao($this->organizacaoId)) {
+            abort(403, 'Você não tem permissão para editar a identidade estratégica desta organização.');
+        }
+
+        if (! $this->peiAtivo) {
             session()->flash('error', 'Não há um Ciclo PEI ativo. Não é possível editar a Identidade Estratégica.');
+
             return;
         }
         $this->isEditing = true;
@@ -176,12 +204,19 @@ class MissaoVisao extends Component
 
     public function salvar()
     {
-        if (!$this->peiAtivo) {
+        $this->authorize('modulo.editar', 'planejamento-estrategico');
+
+        if (! auth()->user()->podeAcessarOrganizacao($this->organizacaoId)) {
+            abort(403, 'Você não tem permissão para salvar a identidade estratégica desta organização.');
+        }
+
+        if (! $this->peiAtivo) {
             session()->flash('error', 'Não é possível salvar sem um Ciclo PEI ativo.');
+
             return;
         }
 
-        $service = app(\App\Services\PeiGuidanceService::class);
+        $service = app(PeiGuidanceService::class);
         $before = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
 
         $this->validate([
@@ -193,7 +228,7 @@ class MissaoVisao extends Component
         IdentidadeEstrategica::updateOrCreate(
             [
                 'cod_organizacao' => $this->organizacaoId,
-                'cod_pei' => $this->peiAtivo->cod_pei
+                'cod_pei' => $this->peiAtivo->cod_pei,
             ],
             [
                 'dsc_negocio' => $this->negocio ?: null,
@@ -204,7 +239,7 @@ class MissaoVisao extends Component
 
         $after = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
 
-        $alert = \App\Services\NotificationService::sendMentorAlert(
+        $alert = NotificationService::sendMentorAlert(
             'Identidade Estratégica Salva!',
             $after['message'],
             'bi-fingerprint'
