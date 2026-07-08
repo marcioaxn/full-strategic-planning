@@ -2,15 +2,20 @@
 
 namespace App\Livewire\Deliverables;
 
-use Livewire\Component;
 use App\Models\ActionPlan\Entrega;
+use App\Models\ActionPlan\EntregaAnexo;
+use App\Models\ActionPlan\EntregaComentario;
 use App\Models\ActionPlan\EntregaLabel;
 use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\StrategicPlanning\Objetivo;
+use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
+use Livewire\Component;
 use Livewire\WithFileUploads;
 
 #[Layout('layouts.app')]
@@ -59,10 +64,12 @@ class DeliverablesBoard extends Component
 
     /** @var string IDs para navegação estratégica */
     public $perspectivaId = '';
+
     public $objetivoId = '';
 
     /** @var array Listas para os seletores */
     public $perspectivasDisponiveis = [];
+
     public $objetivosDisponiveis = [];
 
     // ========================================
@@ -70,6 +77,7 @@ class DeliverablesBoard extends Component
     // ========================================
 
     public bool $showDetails = false;
+
     public ?string $entregaDetalheId = null;
 
     // ========================================
@@ -77,7 +85,9 @@ class DeliverablesBoard extends Component
     // ========================================
 
     public bool $showQuickAdd = false;
+
     public string $quickAddStatus = 'Não Iniciado';
+
     public string $quickAddTitulo = '';
 
     // ========================================
@@ -85,13 +95,21 @@ class DeliverablesBoard extends Component
     // ========================================
 
     public bool $showEditModal = false;
+
     public ?string $editEntregaId = null;
+
     public string $editTitulo = '';
+
     public string $editStatus = 'Não Iniciado';
+
     public string $editPrioridade = 'media';
+
     public ?string $editPrazo = null;
+
     public array $editResponsaveis = [];
+
     public string $editTipo = 'task';
+
     public array $edit5w2h = ['what' => '', 'why' => '', 'who' => '', 'where' => '', 'when' => '', 'how' => '', 'howmuch' => ''];
 
     // ========================================
@@ -99,16 +117,22 @@ class DeliverablesBoard extends Component
     // ========================================
 
     public bool $showLabelsModal = false;
+
     public ?string $labelsEntregaId = null;
+
     public string $novaLabelNome = '';
+
     public string $novaLabelCor = '#1B408E';
 
     public bool $showDeleteModal = false;
+
     public ?string $entregaParaExcluirId = null;
+
     public bool $isPermanentDelete = false;
 
     // Success Modal Properties
     public bool $showSuccessModal = false;
+
     public string $createdDeliverableName = '';
 
     /** @var string|null ID do comentário que está sendo respondido */
@@ -149,7 +173,7 @@ class DeliverablesBoard extends Component
         // Tenta obter o ID do plano da URL, ou do primeiro plano disponível da organização selecionada
         $idParaCarregar = $planoId;
 
-        if (!$idParaCarregar) {
+        if (! $idParaCarregar) {
             $orgId = session('organizacao_selecionada_id');
             if ($orgId) {
                 $idParaCarregar = PlanoDeAcao::where('cod_organizacao', $orgId)->orderBy('created_at', 'desc')->first()?->cod_plano_de_acao;
@@ -160,7 +184,7 @@ class DeliverablesBoard extends Component
             $this->plano = PlanoDeAcao::with(['tipoExecucao', 'organizacao', 'objetivo.perspectiva'])->findOrFail($idParaCarregar);
             $this->authorize('view', $this->plano);
             $this->calcularProgresso();
-            
+
             // Sincroniza os IDs de navegação com o plano atual
             if ($this->plano->objetivo) {
                 $this->objetivoId = $this->plano->cod_objetivo;
@@ -175,7 +199,7 @@ class DeliverablesBoard extends Component
                 $this->plano = $primeiroDisponivel;
                 $this->calcularProgresso();
             } else {
-                $this->plano = new PlanoDeAcao();
+                $this->plano = new PlanoDeAcao;
             }
         }
 
@@ -196,21 +220,21 @@ class DeliverablesBoard extends Component
         $orgId = session('organizacao_selecionada_id');
 
         // 1. Carrega Perspectivas do PEI
-        $this->perspectivasDisponiveis = \App\Models\StrategicPlanning\Perspectiva::where('cod_pei', $peiId)
+        $this->perspectivasDisponiveis = Perspectiva::where('cod_pei', $peiId)
             ->orderBy('num_nivel_hierarquico_apresentacao')
             ->get();
 
         // 2. Carrega Objetivos (Filtrados por Perspectiva se houver)
-        $this->objetivosDisponiveis = \App\Models\StrategicPlanning\Objetivo::query()
-            ->whereHas('perspectiva', fn($q) => $q->where('cod_pei', $peiId))
-            ->when($this->perspectivaId, fn($q) => $q->where('cod_perspectiva', $this->perspectivaId))
+        $this->objetivosDisponiveis = Objetivo::query()
+            ->whereHas('perspectiva', fn ($q) => $q->where('cod_pei', $peiId))
+            ->when($this->perspectivaId, fn ($q) => $q->where('cod_perspectiva', $this->perspectivaId))
             ->orderBy('nom_objetivo')
             ->get();
 
         // 3. Carrega Planos (Filtrados por Objetivo se houver, ou apenas pela Org)
         $this->planosDisponiveis = PlanoDeAcao::query()
             ->where('cod_organizacao', $orgId)
-            ->when($this->objetivoId, fn($q) => $q->where('cod_objetivo', $this->objetivoId))
+            ->when($this->objetivoId, fn ($q) => $q->where('cod_objetivo', $this->objetivoId))
             ->orderBy('dsc_plano_de_acao')
             ->get();
     }
@@ -227,8 +251,8 @@ class DeliverablesBoard extends Component
     public function updatedObjetivoId()
     {
         $this->carregarListasEstrategicas();
-        
-        // Se após filtrar os planos houver apenas um, ou se o usuário selecionou um objetivo, 
+
+        // Se após filtrar os planos houver apenas um, ou se o usuário selecionou um objetivo,
         // ele pode querer pular direto para o primeiro plano disponível
         if ($this->planosDisponiveis->count() === 1) {
             return redirect()->route('planos.entregas', $this->planosDisponiveis->first()->cod_plano_de_acao);
@@ -244,7 +268,7 @@ class DeliverablesBoard extends Component
 
     public function render()
     {
-        if (!$this->plano || !$this->plano->cod_plano_de_acao) {
+        if (! $this->plano || ! $this->plano->cod_plano_de_acao) {
             return view('livewire.entregas.notion-board-vazio');
         }
 
@@ -268,10 +292,10 @@ class DeliverablesBoard extends Component
             ->raiz(); // Apenas entregas sem pai
 
         // Filtros
-        if (!$this->mostrarLixeira) {
+        if (! $this->mostrarLixeira) {
             $query->whereNull('deleted_at');
-            
-            if (!$this->mostrarArquivados) {
+
+            if (! $this->mostrarArquivados) {
                 $query->ativas();
             }
         } else {
@@ -300,12 +324,12 @@ class DeliverablesBoard extends Component
     protected function getEntregasPorStatus(): array
     {
         $entregas = $this->getEntregas();
-        
+
         $resultado = [];
         foreach (Entrega::STATUS_OPTIONS as $status) {
             $resultado[$status] = $entregas->where('bln_status', $status)->values();
         }
-        
+
         return $resultado;
     }
 
@@ -330,6 +354,7 @@ class DeliverablesBoard extends Component
 
         if ($total === 0) {
             $this->progresso = 0;
+
             return;
         }
 
@@ -365,13 +390,13 @@ class DeliverablesBoard extends Component
 
     public function toggleArquivados(): void
     {
-        $this->mostrarArquivados = !$this->mostrarArquivados;
+        $this->mostrarArquivados = ! $this->mostrarArquivados;
         $this->mostrarLixeira = false;
     }
 
     public function toggleLixeira(): void
     {
-        $this->mostrarLixeira = !$this->mostrarLixeira;
+        $this->mostrarLixeira = ! $this->mostrarLixeira;
         $this->mostrarArquivados = false;
     }
 
@@ -430,8 +455,8 @@ class DeliverablesBoard extends Component
      */
     public function timelineAnterior(): void
     {
-        $inicio = \Carbon\Carbon::parse($this->timelineInicio);
-        $fim = \Carbon\Carbon::parse($this->timelineFim);
+        $inicio = Carbon::parse($this->timelineInicio);
+        $fim = Carbon::parse($this->timelineFim);
         $duracao = $inicio->diffInDays($fim);
 
         // Move metade do período para trás
@@ -445,8 +470,8 @@ class DeliverablesBoard extends Component
      */
     public function timelineProximo(): void
     {
-        $inicio = \Carbon\Carbon::parse($this->timelineInicio);
-        $fim = \Carbon\Carbon::parse($this->timelineFim);
+        $inicio = Carbon::parse($this->timelineInicio);
+        $fim = Carbon::parse($this->timelineFim);
         $duracao = $inicio->diffInDays($fim);
 
         // Move metade do período para frente
@@ -469,15 +494,15 @@ class DeliverablesBoard extends Component
      */
     public function timelineZoomIn(): void
     {
-        $inicio = \Carbon\Carbon::parse($this->timelineInicio);
-        $fim = \Carbon\Carbon::parse($this->timelineFim);
+        $inicio = Carbon::parse($this->timelineInicio);
+        $fim = Carbon::parse($this->timelineFim);
         $duracao = $inicio->diffInDays($fim);
 
         if ($duracao > 7) {
             // Reduz o período em 25%
             $reducao = (int) ceil($duracao * 0.25);
-            $this->timelineInicio = $inicio->addDays((int)($reducao / 2))->format('Y-m-d');
-            $this->timelineFim = $fim->subDays((int)($reducao / 2))->format('Y-m-d');
+            $this->timelineInicio = $inicio->addDays((int) ($reducao / 2))->format('Y-m-d');
+            $this->timelineFim = $fim->subDays((int) ($reducao / 2))->format('Y-m-d');
             $this->timelineZoom = 'dia';
         }
     }
@@ -487,15 +512,15 @@ class DeliverablesBoard extends Component
      */
     public function timelineZoomOut(): void
     {
-        $inicio = \Carbon\Carbon::parse($this->timelineInicio);
-        $fim = \Carbon\Carbon::parse($this->timelineFim);
+        $inicio = Carbon::parse($this->timelineInicio);
+        $fim = Carbon::parse($this->timelineFim);
         $duracao = $inicio->diffInDays($fim);
 
         if ($duracao < 120) {
             // Aumenta o período em 50%
             $aumento = (int) ceil($duracao * 0.5);
-            $this->timelineInicio = $inicio->subDays((int)($aumento / 2))->format('Y-m-d');
-            $this->timelineFim = $fim->addDays((int)($aumento / 2))->format('Y-m-d');
+            $this->timelineInicio = $inicio->subDays((int) ($aumento / 2))->format('Y-m-d');
+            $this->timelineFim = $fim->addDays((int) ($aumento / 2))->format('Y-m-d');
             $this->timelineZoom = $duracao > 30 ? 'mes' : 'semana';
         }
     }
@@ -518,12 +543,12 @@ class DeliverablesBoard extends Component
         $this->authorize('update', $this->plano);
 
         $entrega->update([
-            'dte_prazo' => $novoPrazo
+            'dte_prazo' => $novoPrazo,
         ]);
 
         $this->dispatch('notify', [
             'type' => 'success',
-            'message' => 'Prazo atualizado com sucesso!'
+            'message' => 'Prazo atualizado com sucesso!',
         ]);
     }
 
@@ -551,7 +576,7 @@ class DeliverablesBoard extends Component
 
         $this->validate([
             'quickAddTitulo' => 'required|string|min:3|max:500',
-            'quickAddStatus' => 'required|in:' . implode(',', Entrega::STATUS_OPTIONS),
+            'quickAddStatus' => 'required|in:'.implode(',', Entrega::STATUS_OPTIONS),
         ]);
 
         // Calcular próxima ordem
@@ -571,10 +596,10 @@ class DeliverablesBoard extends Component
 
         $this->closeQuickAdd();
         $this->calcularProgresso();
-        
+
         $this->dispatch('notify', [
             'type' => 'success',
-            'message' => 'Entrega criada com sucesso!'
+            'message' => 'Entrega criada com sucesso!',
         ]);
     }
 
@@ -594,7 +619,7 @@ class DeliverablesBoard extends Component
             $this->editPrioridade = $entrega->cod_prioridade;
             $this->editPrazo = $entrega->dte_prazo?->format('Y-m-d');
             $this->editResponsaveis = $entrega->responsaveis->pluck('id')->toArray();
-            $this->editTipo  = $entrega->dsc_tipo;
+            $this->editTipo = $entrega->dsc_tipo;
             $props = $entrega->json_propriedades ?? [];
             $this->edit5w2h = array_merge(['what' => '', 'why' => '', 'who' => '', 'where' => '', 'when' => '', 'how' => '', 'howmuch' => ''], $props['5w2h'] ?? []);
         } else {
@@ -628,12 +653,12 @@ class DeliverablesBoard extends Component
 
         $this->validate([
             'editTitulo' => 'required|string|min:3|max:500',
-            'editStatus' => 'required|in:' . implode(',', Entrega::STATUS_OPTIONS),
-            'editPrioridade' => 'required|in:' . implode(',', array_keys(Entrega::PRIORIDADE_OPTIONS)),
+            'editStatus' => 'required|in:'.implode(',', Entrega::STATUS_OPTIONS),
+            'editPrioridade' => 'required|in:'.implode(',', array_keys(Entrega::PRIORIDADE_OPTIONS)),
             'editPrazo' => 'nullable|date',
             'editResponsaveis' => 'nullable|array',
             'editResponsaveis.*' => 'exists:users,id',
-            'editTipo' => 'required|in:' . implode(',', array_keys(Entrega::TIPO_OPTIONS)),
+            'editTipo' => 'required|in:'.implode(',', array_keys(Entrega::TIPO_OPTIONS)),
         ]);
 
         $w5h2Filtrado = array_filter($this->edit5w2h);
@@ -644,13 +669,13 @@ class DeliverablesBoard extends Component
         $novasProps = array_merge($propsExistentes, $w5h2Filtrado ? ['5w2h' => $this->edit5w2h] : []);
 
         $dados = [
-            'dsc_entrega'      => $this->editTitulo,
-            'bln_status'       => $this->editStatus,
-            'cod_prioridade'   => $this->editPrioridade,
-            'dte_prazo'        => $this->editPrazo,
-            'cod_responsavel'  => !empty($this->editResponsaveis) ? $this->editResponsaveis[0] : null,
-            'dsc_tipo'         => $this->editTipo,
-            'json_propriedades'=> $novasProps ?: null,
+            'dsc_entrega' => $this->editTitulo,
+            'bln_status' => $this->editStatus,
+            'cod_prioridade' => $this->editPrioridade,
+            'dte_prazo' => $this->editPrazo,
+            'cod_responsavel' => ! empty($this->editResponsaveis) ? $this->editResponsaveis[0] : null,
+            'dsc_tipo' => $this->editTipo,
+            'json_propriedades' => $novasProps ?: null,
         ];
 
         if ($this->editEntregaId) {
@@ -668,7 +693,7 @@ class DeliverablesBoard extends Component
                 'num_nivel_hierarquico_apresentacao' => $maxOrdem + 1,
                 'dsc_periodo_medicao' => '',
             ]));
-            
+
             $entrega->responsaveis()->sync($this->editResponsaveis);
             $message = 'Entrega criada com sucesso!';
         }
@@ -719,7 +744,7 @@ class DeliverablesBoard extends Component
     {
         $this->authorize('update', $this->plano);
 
-        if (!in_array($status, Entrega::STATUS_OPTIONS)) {
+        if (! in_array($status, Entrega::STATUS_OPTIONS)) {
             return;
         }
 
@@ -734,7 +759,7 @@ class DeliverablesBoard extends Component
     {
         $this->authorize('update', $this->plano);
 
-        if (!array_key_exists($prioridade, Entrega::PRIORIDADE_OPTIONS)) {
+        if (! array_key_exists($prioridade, Entrega::PRIORIDADE_OPTIONS)) {
             return;
         }
 
@@ -749,9 +774,9 @@ class DeliverablesBoard extends Component
 
         $entrega = Entrega::findOrFail($entregaId);
         $entrega->responsaveis()->sync($userIds);
-        
+
         // Atualiza a coluna legada com o primeiro da lista (para compatibilidade de relatórios antigos)
-        $entrega->update(['cod_responsavel' => !empty($userIds) ? $userIds[0] : null]);
+        $entrega->update(['cod_responsavel' => ! empty($userIds) ? $userIds[0] : null]);
     }
 
     public function atualizarPrazo(string $entregaId, ?string $prazo): void
@@ -784,7 +809,7 @@ class DeliverablesBoard extends Component
     {
         $this->authorize('update', $this->plano);
 
-        if (!in_array($novoStatus, Entrega::STATUS_OPTIONS)) {
+        if (! in_array($novoStatus, Entrega::STATUS_OPTIONS)) {
             return;
         }
 
@@ -811,7 +836,7 @@ class DeliverablesBoard extends Component
 
         $this->dispatch('notify', [
             'type' => 'info',
-            'message' => 'Entrega arquivada. Ative "Mostrar arquivados" para visualizar.'
+            'message' => 'Entrega arquivada. Ative "Mostrar arquivados" para visualizar.',
         ]);
     }
 
@@ -825,7 +850,7 @@ class DeliverablesBoard extends Component
 
         $this->dispatch('notify', [
             'type' => 'success',
-            'message' => 'Entrega restaurada do arquivo.'
+            'message' => 'Entrega restaurada do arquivo.',
         ]);
     }
 
@@ -858,7 +883,7 @@ class DeliverablesBoard extends Component
         $this->closeDetails();
         $this->calcularProgresso();
 
-        $this->dispatch('mentor-notification', 
+        $this->dispatch('mentor-notification',
             title: $title,
             message: $message,
             icon: 'bi-trash',
@@ -876,7 +901,7 @@ class DeliverablesBoard extends Component
 
         $this->dispatch('notify', [
             'type' => 'success',
-            'message' => 'Entrega restaurada com sucesso!'
+            'message' => 'Entrega restaurada com sucesso!',
         ]);
     }
 
@@ -888,7 +913,7 @@ class DeliverablesBoard extends Component
 
         $this->dispatch('notify', [
             'type' => 'danger',
-            'message' => 'Entrega excluída permanentemente.'
+            'message' => 'Entrega excluída permanentemente.',
         ]);
     }
 
@@ -929,15 +954,15 @@ class DeliverablesBoard extends Component
             'cod_plano_de_acao' => $this->plano->cod_plano_de_acao,
             'dsc_label' => $this->novaLabelNome,
             'dsc_cor' => $this->novaLabelCor,
-            'num_ordem' => EntregaLabel::where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)->count() + 1
+            'num_ordem' => EntregaLabel::where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)->count() + 1,
         ]);
 
         $this->novaLabelNome = '';
         $this->novaLabelCor = '#1B408E';
-        
+
         $this->dispatch('notify', [
             'type' => 'success',
-            'message' => 'Label criada com sucesso!'
+            'message' => 'Label criada com sucesso!',
         ]);
     }
 
@@ -971,7 +996,7 @@ class DeliverablesBoard extends Component
         $entrega->comentarios()->create([
             'cod_usuario' => Auth::id(),
             'dsc_comentario' => $conteudo,
-            'cod_comentario_pai' => $comentarioPaiId
+            'cod_comentario_pai' => $comentarioPaiId,
         ]);
 
         $this->respondendoComentarioId = null;
@@ -982,7 +1007,7 @@ class DeliverablesBoard extends Component
     {
         $this->authorize('update', $this->plano);
 
-        \App\Models\ActionPlan\EntregaComentario::where('cod_comentario', $comentarioId)
+        EntregaComentario::where('cod_comentario', $comentarioId)
             ->where('cod_usuario', Auth::id())
             ->delete();
     }
@@ -993,17 +1018,21 @@ class DeliverablesBoard extends Component
 
     public function updatedAnexosUpload(): void
     {
+        $this->authorize('update', $this->plano);
+
         $this->validate([
             'anexosUpload.*' => 'required|file|max:10240', // Max 10MB por arquivo
         ]);
 
-        if (!$this->entregaDetalheId) return;
+        if (! $this->entregaDetalheId) {
+            return;
+        }
 
         foreach ($this->anexosUpload as $file) {
             $nomeOriginal = $file->getClientOriginalName();
             $path = $file->store('entregas/anexos', 'public');
 
-            \App\Models\ActionPlan\EntregaAnexo::create([
+            EntregaAnexo::create([
                 'cod_entrega' => $this->entregaDetalheId,
                 'cod_usuario' => Auth::id(),
                 'dsc_nome_arquivo' => $nomeOriginal,
@@ -1014,10 +1043,10 @@ class DeliverablesBoard extends Component
         }
 
         $this->anexosUpload = []; // Limpa o input
-        
+
         $this->dispatch('notify', [
             'type' => 'success',
-            'message' => 'Arquivo(s) anexado(s) com sucesso!'
+            'message' => 'Arquivo(s) anexado(s) com sucesso!',
         ]);
     }
 
@@ -1025,16 +1054,16 @@ class DeliverablesBoard extends Component
     {
         $this->authorize('update', $this->plano);
 
-        $anexo = \App\Models\ActionPlan\EntregaAnexo::findOrFail($anexoId);
-        
+        $anexo = EntregaAnexo::findOrFail($anexoId);
+
         // Remove arquivo físico se desejar (opcional dependendo da política de backup)
         // Storage::disk('public')->delete($anexo->dsc_caminho);
-        
+
         $anexo->delete();
 
         $this->dispatch('notify', [
             'type' => 'info',
-            'message' => 'Anexo removido.'
+            'message' => 'Anexo removido.',
         ]);
     }
 
