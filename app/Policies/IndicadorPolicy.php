@@ -75,9 +75,9 @@ class IndicadorPolicy
             return true;
         }
 
-        // Admin Unidade da organização atualmente selecionada (só vale se essa
-        // organização estiver dentro do escopo real do usuário).
-        return $this->ehAdminUnidadeDaOrganizacaoSelecionada($user);
+        // Admin Unidade de alguma organização REAL do indicador (nunca da
+        // organização apenas selecionada na sessão — ver ehAdminUnidadeDoIndicador).
+        return $this->ehAdminUnidadeDoIndicador($user, $indicador);
     }
 
     /**
@@ -89,19 +89,38 @@ class IndicadorPolicy
             return false;
         }
 
-        return $user->isSuperAdmin() || $this->ehAdminUnidadeDaOrganizacaoSelecionada($user);
+        return $user->isSuperAdmin() || $this->ehAdminUnidadeDoIndicador($user, $indicador);
     }
 
-    private function ehAdminUnidadeDaOrganizacaoSelecionada(User $user): bool
+    /**
+     * Verifica se o usuário é Admin Unidade de alguma organização à qual o
+     * indicador está REALMENTE vinculado (pivot direto, objetivo ou plano de
+     * ação). Corrige uma falha em que a checagem usava apenas a organização
+     * selecionada na sessão, sem confirmar que o indicador de fato pertence
+     * a ela — permitindo que um Admin Unidade de qualquer organização
+     * editasse/excluísse indicadores de outras organizações bastando manter
+     * a sua própria selecionada no menu superior.
+     */
+    private function ehAdminUnidadeDoIndicador(User $user, Indicador $indicador): bool
     {
-        $orgSelecionada = $user->organizacaoSelecionadaId();
+        $orgsDoIndicador = $indicador->organizacoes()->pluck('tab_organizacoes.cod_organizacao');
 
-        if (! $orgSelecionada) {
+        if ($indicador->objetivo?->cod_organizacao) {
+            $orgsDoIndicador->push($indicador->objetivo->cod_organizacao);
+        }
+
+        if ($indicador->planoDeAcao?->cod_organizacao) {
+            $orgsDoIndicador->push($indicador->planoDeAcao->cod_organizacao);
+        }
+
+        $orgsDoIndicador = $orgsDoIndicador->unique()->filter();
+
+        if ($orgsDoIndicador->isEmpty()) {
             return false;
         }
 
         return $user->perfisAcesso()
-            ->wherePivot('cod_organizacao', $orgSelecionada)
+            ->wherePivotIn('cod_organizacao', $orgsDoIndicador->all())
             ->where('tab_perfil_acesso.cod_perfil', PerfilAcesso::ADMIN_UNIDADE)
             ->exists();
     }

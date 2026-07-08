@@ -30,7 +30,7 @@ final class CapacidadeResolver
      */
     private const MATRIZ = [
         'planejamento-estrategico' => [
-            PerfilAcesso::ADMIN_UNIDADE => ['acessar', 'ver-sensivel', 'criar', 'editar', 'exportar'],
+            PerfilAcesso::ADMIN_UNIDADE => ['acessar', 'ver-sensivel', 'criar', 'editar', 'excluir', 'exportar'],
             PerfilAcesso::GESTOR_RESPONSAVEL => ['acessar', 'ver-sensivel', 'criar', 'editar', 'exportar'],
             PerfilAcesso::GESTOR_SUBSTITUTO => ['acessar', 'ver-sensivel', 'editar'],
         ],
