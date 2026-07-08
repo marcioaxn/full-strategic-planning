@@ -594,7 +594,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 
 - Modulo: Organizacao e acesso institucional.
 - Finalidade: Pivot de perfis por usuario, organizacao e opcionalmente plano de acao.
-- Linhas no momento da consulta: 0.
+- Linhas no momento da consulta: 6.
 - Models relacionados: nao identificado por declaracao explicita de `$table`.
 
 #### Colunas
@@ -663,6 +663,7 @@ Data: 2026-05-23. Fonte primaria: catalogo real do PostgreSQL consultado em modo
 - Finalidade: Catalogo de perfis de acesso usados pelas policies e pivots de usuario.
 - Linhas no momento da consulta: 4.
 - Models relacionados: `App\Models\PerfilAcesso` em `app/Models/PerfilAcesso.php`.
+- Nota (2026-07-08): a estrutura de tabelas de perfis/acesso nao mudou. A partir desta data, a traducao de cada perfil (`cod_perfil`) em capacidades por modulo/tela (o que cada perfil pode ver e fazer) passou a ser centralizada em `app/Services/Authorization/CapacidadeResolver.php` (matriz estatica em codigo, sem persistencia em banco), consumida por Gates e Policies. Nenhuma coluna ou tabela nova foi criada para isso.
 
 #### Colunas
 
