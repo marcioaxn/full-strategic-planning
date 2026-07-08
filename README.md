@@ -20,6 +20,7 @@ Plataforma web de gestão estratégica para **organizações públicas brasileir
 - [Primeiro acesso e passos iniciais](#-primeiro-acesso-e-passos-iniciais)
 - [Filas e relatórios agendados](#-filas-e-relatórios-agendados)
 - [Arquitetura do sistema](#-arquitetura-do-sistema)
+- [Segurança e Controle de Acesso (RBAC + ABAC)](#-segurança-e-controle-de-acesso-rbac--abac)
 - [Desenvolvimento](#-desenvolvimento)
 - [Testes e qualidade de código](#-testes-e-qualidade-de-código)
 - [Solução de problemas frequentes](#-solução-de-problemas-frequentes)
@@ -695,6 +696,95 @@ O middleware `CheckPasswordChange` redireciona o usuário para a troca de senha 
 | `/auditoria` | `ListarLogs` | Trilha de auditoria |
 | `/organizacoes` | `ListarOrganizacoes` | Organizações |
 | `/configuracoes` | `ConfiguracaoSistema` | Configurações do sistema |
+
+---
+
+## 🔐 Segurança e Controle de Acesso (RBAC + ABAC)
+
+A autorização do sistema combina **RBAC** (Role-Based Access Control — *o que o perfil do usuário pode fazer*) com **ABAC** (Attribute-Based Access Control — *sob quais condições/atributos isso vale*), centralizada na camada de **Gates e Policies** do Laravel. A fonte única da verdade é o **banco de dados** — nunca a sessão do navegador.
+
+> **Princípio inquebrável:** a `Session` não é fonte de permissão. Ela guarda apenas uma preferência de navegação (qual organização/PEI o usuário está vendo agora). Toda decisão de acesso deriva do perfil vinculado ao usuário no banco (`perfisAcesso()`), resolvido através de `CapacidadeResolver` e validado contra o escopo real de organizações do usuário.
+
+### RBAC — 4 perfis fixos traduzidos em capacidades por módulo
+
+Os perfis (`App\Models\PerfilAcesso`) são registros fixos vinculados ao usuário via a tabela `organization.rel_users_tab_organizacoes_tab_perfil_acesso` (usuário × organização × perfil × plano de ação, quando aplicável):
+
+| Perfil | Papel |
+|---|---|
+| **Super Admin** | Acesso irrestrito a todos os módulos e organizações |
+| **Admin de Unidade** | Gerencia dados estratégicos e planos da sua organização; cria e exclui |
+| **Gestor Responsável** | Edita planos/entregas/indicadores sob sua responsabilidade direta; não exclui |
+| **Gestor Substituto** | Substitui o Gestor Responsável na edição; mesmas permissões de escrita |
+
+`App\Services\Authorization\CapacidadeResolver` traduz perfil → capacidade por módulo através de uma matriz estática (`nomPath` do módulo × perfil × habilidade), sem depender de tabelas novas:
+
+```php
+CapacidadeResolver::podeNoModulo(User $user, string $nomPath, string $ability): bool
+```
+
+Seis Gates nomeados são registrados em `AppServiceProvider::boot()` e delegam a essa matriz:
+
+```php
+Gate::define('modulo.acessar',     fn (User $u, string $nomPath) => CapacidadeResolver::podeNoModulo($u, $nomPath, 'acessar'));
+Gate::define('modulo.ver-sensivel', ...);
+Gate::define('modulo.criar',       ...);
+Gate::define('modulo.editar',      ...);
+Gate::define('modulo.excluir',     ...);
+Gate::define('modulo.exportar',    ...);
+```
+
+Módulos cobertos hoje: `planejamento-estrategico`, `planos-de-acao`, `indicadores`, `riscos`, `entregas`, `organizacoes`, `usuarios`, `relatorios`, além dos restritos exclusivamente a Super Admin (`auditoria`, `admin.perfis`, `admin.configuracoes`, `graus-satisfacao`).
+
+### ABAC — escopo de organização centralizado
+
+`App\Concerns\ResolveEscopoOrganizacional` (trait aplicada em `User`) resolve "quais organizações o usuário pode ver/operar", eliminando a duplicação de `session('organizacao_selecionada_id')` espalhada por componentes e Policies:
+
+| Método | Função |
+|---|---|
+| `organizacaoIdsPermitidas()` | Todas as organizações (Super Admin) ou apenas as vinculadas ao usuário |
+| `podeAcessarOrganizacao($codOrganizacao)` | Verifica se uma organização específica está no escopo do usuário |
+| `organizacaoSelecionadaId()` | Organização atualmente selecionada na sessão, **já validada** contra o escopo real — retorna `null` se a seleção estiver fora do escopo (sessão desatualizada nunca é aceita como está) |
+| `aplicarEscopoOrganizacional($query, $coluna)` | Aplica `whereIn` a uma query respeitando o escopo (Super Admin não sofre filtro) |
+
+### Hooks globais — estado do usuário e auditoria de negações
+
+Registrados em `AppServiceProvider::registrarGatesDeAutorizacao()`:
+
+- **`Gate::before`** — veto total para usuário inativo (`ativo = false`), antes de qualquer outra checagem.
+- **`Gate::after`** — toda negação de acesso é registrada no canal de log dedicado `auditoria` (`config/logging.php`, `storage/logs/auditoria-*.log`), com usuário, habilidade e apenas classe + chave primária do model envolvido (nunca o conteúdo do registro).
+
+### Policies por domínio
+
+| Policy | Model | Regra |
+|---|---|---|
+| `OrganizationPolicy` | `Organization` | RBAC (`modulo.*`) — criar/excluir restritos a Super Admin |
+| `UserPolicy` | `User` | Super Admin gerencia; usuário só vê o próprio perfil; ninguém se autoexclui |
+| `PlanoDeAcaoPolicy` | `ActionPlan\PlanoDeAcao` | RBAC + ABAC (organização do plano) |
+| `IndicadorPolicy` | `PerformanceIndicators\Indicador` | RBAC + ABAC (organização vinculada, sem depender de sessão bruta) |
+| `RiscoPolicy` | `RiskManagement\Risco` | RBAC + ABAC (organização do risco **e** responsável pelo monitoramento) |
+| `EntregaPolicy` | `ActionPlan\Entrega` | RBAC + ABAC (organização do plano de ação vinculado) |
+
+Módulos sem Model 1:1 (Planejamento Estratégico, Relatórios, Auditoria, Admin) são protegidos diretamente nos componentes Livewire via `$this->authorize('modulo.<ability>', '<nomPath>')`, sem Policy artificial.
+
+### Boas práticas ao estender (obrigatórias)
+
+1. **Nunca** decida permissão a partir de `session(...)` diretamente — use `Gate::forUser($user)->allows(...)` ou `$user->can(...)`, nunca `Gate::allows(...)` sozinho (que resolve o usuário *ambiente* via `Auth::user()`, não necessariamente o `$user` recebido como parâmetro — armadilha real já corrigida neste projeto).
+2. Em Policies que recebem `$user` explicitamente, sempre propague esse `$user` para os Gates internos (`Gate::forUser($user)->allows(...)`) — mantém a decisão correta em testes, jobs e comandos CLI, onde não há usuário autenticado no contexto ambiente.
+3. Ao criar um novo domínio, delegue aos Gates `modulo.*` (adicionando o módulo à matriz do `CapacidadeResolver`) em vez de reimplementar checagem de perfil.
+4. Ao consultar dados por organização, use `$user->podeAcessarOrganizacao(...)` / `$user->organizacaoSelecionadaId()` — nunca leia `session('organizacao_selecionada_id')` cru dentro de uma Policy ou query de escopo.
+5. Testes de autorização devem autenticar o sujeito com `actingAs($user)` para exercitar o caminho real de Gate (veja `tests/Feature/Authorization/`).
+
+### Outras medidas de segurança do sistema
+
+| Medida | Onde | Detalhe |
+|---|---|---|
+| **Senha forte obrigatória** | `app/Actions/Fortify/PasswordValidationRules.php` | Mínimo 8 caracteres, maiúscula, minúscula, número e caractere especial — aplicada em cadastro, troca de senha e reset |
+| **Troca de senha forçada** | `app/Http/Middleware/CheckPasswordChange.php` | Redireciona todo usuário com `trocarsenha = true` para a troca, com lista mínima de exceções (logout, o próprio formulário) |
+| **Auditoria de mutações** | `owen-it/laravel-auditing` | Trilha completa (quem, o quê, quando, valor antes/depois) em todas as entidades de negócio, consultável em `/auditoria` (restrito a Super Admin) |
+| **Auditoria de negações de acesso** | Canal de log `auditoria` (`Gate::after`) | Complementar à auditoria de mutações — registra tentativas negadas pelo Gate, não apenas alterações persistidas |
+| **Credenciais de IA cifradas em repouso** | `pei.system_settings` | API Keys e Service Account JSON armazenados com `Crypt::encryptString` |
+| **Impersonação controlada** | `App\Http\Controllers\ImpersonateController` | Restrita a Super Admin; bloqueia impersonação aninhada e autoimpersonação |
+| **Hardening de sessão** | `.env` / `config/session.php` | `SESSION_DOMAIN` restrito ao host, `SESSION_SECURE_COOKIE` em produção — ver [Configuração do ambiente](#-configuração-do-ambiente-env) |
 
 ---
 
