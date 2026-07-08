@@ -766,14 +766,6 @@ Registrados em `AppServiceProvider::registrarGatesDeAutorizacao()`:
 
 Módulos sem Model 1:1 (Planejamento Estratégico, Relatórios, Auditoria, Admin) são protegidos diretamente nos componentes Livewire via `$this->authorize('modulo.<ability>', '<nomPath>')`, sem Policy artificial.
 
-### Boas práticas ao estender (obrigatórias)
-
-1. **Nunca** decida permissão a partir de `session(...)` diretamente — use `Gate::forUser($user)->allows(...)` ou `$user->can(...)`, nunca `Gate::allows(...)` sozinho (que resolve o usuário *ambiente* via `Auth::user()`, não necessariamente o `$user` recebido como parâmetro — armadilha real já corrigida neste projeto).
-2. Em Policies que recebem `$user` explicitamente, sempre propague esse `$user` para os Gates internos (`Gate::forUser($user)->allows(...)`) — mantém a decisão correta em testes, jobs e comandos CLI, onde não há usuário autenticado no contexto ambiente.
-3. Ao criar um novo domínio, delegue aos Gates `modulo.*` (adicionando o módulo à matriz do `CapacidadeResolver`) em vez de reimplementar checagem de perfil.
-4. Ao consultar dados por organização, use `$user->podeAcessarOrganizacao(...)` / `$user->organizacaoSelecionadaId()` — nunca leia `session('organizacao_selecionada_id')` cru dentro de uma Policy ou query de escopo.
-5. Testes de autorização devem autenticar o sujeito com `actingAs($user)` para exercitar o caminho real de Gate (veja `tests/Feature/Authorization/`).
-
 ### Outras medidas de segurança do sistema
 
 | Medida | Onde | Detalhe |
