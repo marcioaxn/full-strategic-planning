@@ -111,7 +111,10 @@ class ListarGrausSatisfacao extends Component
 
     public function aplicarSugestao($nome, $cor, $min, $max)
     {
-        $this->cod_pei = $this->cod_pei ?? session('pei_selecionado_id');
+        // Sempre lê o PEI atual da sessão (nunca reaproveita um valor já
+        // carregado): evita gravar a sugestão vinculada a um PEI antigo caso
+        // o usuário troque o Ciclo PEI no menu superior antes de aplicar.
+        $this->cod_pei = session('pei_selecionado_id');
 
         if (! $this->cod_pei) {
             session()->flash('error', 'Selecione um Ciclo PEI antes de aplicar sugestões da IA.');
