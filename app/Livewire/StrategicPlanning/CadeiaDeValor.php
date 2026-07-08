@@ -6,9 +6,10 @@ use App\Models\StrategicPlanning\AtividadeCadeiaValor;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\StrategicPlanning\ProcessoAtividadeCadeiaValor;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Illuminate\Support\Facades\Session;
 
 #[Layout('layouts.app')]
 class CadeiaDeValor extends Component
@@ -17,30 +18,35 @@ class CadeiaDeValor extends Component
 
     // Formulário atividade
     public bool $showModalAtividade = false;
-    public ?string $atividadeEditId  = null;
+
+    public ?string $atividadeEditId = null;
 
     public array $formAtividade = [
-        'dsc_atividade'   => '',
-        'dsc_tipo'        => 'Finalística',
+        'dsc_atividade' => '',
+        'dsc_tipo' => 'Finalística',
         'cod_perspectiva' => '',
-        'num_ordem'       => 0,
+        'num_ordem' => 0,
     ];
 
     // Formulário processo
     public bool $showModalProcesso = false;
-    public ?string $processoEditId  = null;
-    public ?string $processoAtivId  = null;
+
+    public ?string $processoEditId = null;
+
+    public ?string $processoAtivId = null;
 
     public array $formProcesso = [
-        'dsc_entrada'       => '',
+        'dsc_entrada' => '',
         'dsc_transformacao' => '',
-        'dsc_saida'         => '',
+        'dsc_saida' => '',
     ];
 
     // Feedback
-    public bool $showDeleteModal  = false;
-    public string $deleteTarget   = '';
-    public string $deleteId       = '';
+    public bool $showDeleteModal = false;
+
+    public string $deleteTarget = '';
+
+    public string $deleteId = '';
 
     protected $listeners = ['peiSelecionado' => 'atualizarPEI'];
 
@@ -59,33 +65,40 @@ class CadeiaDeValor extends Component
 
     public function novaAtividade(): void
     {
+        $this->authorize('modulo.criar', 'planejamento-estrategico');
+
         $this->atividadeEditId = null;
-        $this->formAtividade   = ['dsc_atividade' => '', 'dsc_tipo' => 'Finalística', 'cod_perspectiva' => '', 'num_ordem' => 0];
+        $this->formAtividade = ['dsc_atividade' => '', 'dsc_tipo' => 'Finalística', 'cod_perspectiva' => '', 'num_ordem' => 0];
         $this->showModalAtividade = true;
     }
 
     public function editarAtividade(string $id): void
     {
+        $this->authorize('modulo.editar', 'planejamento-estrategico');
+
         $a = AtividadeCadeiaValor::findOrFail($id);
         $this->atividadeEditId = $id;
-        $this->formAtividade   = [
-            'dsc_atividade'   => $a->dsc_atividade,
-            'dsc_tipo'        => $a->dsc_tipo ?? 'Finalística',
+        $this->formAtividade = [
+            'dsc_atividade' => $a->dsc_atividade,
+            'dsc_tipo' => $a->dsc_tipo ?? 'Finalística',
             'cod_perspectiva' => $a->cod_perspectiva ?? '',
-            'num_ordem'       => $a->num_ordem ?? 0,
+            'num_ordem' => $a->num_ordem ?? 0,
         ];
         $this->showModalAtividade = true;
     }
 
     public function salvarAtividade(): void
     {
+        $this->authorize($this->atividadeEditId ? 'modulo.editar' : 'modulo.criar', 'planejamento-estrategico');
+
         $this->validate([
             'formAtividade.dsc_atividade' => 'required|string|max:500',
-            'formAtividade.dsc_tipo'      => 'required|in:Finalística,Suporte',
+            'formAtividade.dsc_tipo' => 'required|in:Finalística,Suporte',
         ], ['formAtividade.dsc_atividade.required' => 'Informe a descrição da atividade.']);
 
-        if (!$this->peiAtivo) {
+        if (! $this->peiAtivo) {
             $this->dispatch('notify', message: 'Nenhum ciclo PEI selecionado.', style: 'danger');
+
             return;
         }
         $data = array_merge($this->formAtividade, ['cod_pei' => $this->peiAtivo->cod_pei]);
@@ -98,14 +111,14 @@ class CadeiaDeValor extends Component
             : AtividadeCadeiaValor::create($data);
 
         $this->showModalAtividade = false;
-        $this->atividadeEditId    = null;
+        $this->atividadeEditId = null;
         $this->dispatch('notify', message: 'Atividade salva!', style: 'success');
     }
 
     public function confirmarExcluirAtividade(string $id): void
     {
         $this->deleteTarget = 'atividade';
-        $this->deleteId     = $id;
+        $this->deleteId = $id;
         $this->showDeleteModal = true;
     }
 
@@ -113,27 +126,33 @@ class CadeiaDeValor extends Component
 
     public function novoProcesso(string $atividadeId): void
     {
-        $this->processoAtivId  = $atividadeId;
-        $this->processoEditId  = null;
-        $this->formProcesso    = ['dsc_entrada' => '', 'dsc_transformacao' => '', 'dsc_saida' => ''];
+        $this->authorize('modulo.criar', 'planejamento-estrategico');
+
+        $this->processoAtivId = $atividadeId;
+        $this->processoEditId = null;
+        $this->formProcesso = ['dsc_entrada' => '', 'dsc_transformacao' => '', 'dsc_saida' => ''];
         $this->showModalProcesso = true;
     }
 
     public function editarProcesso(string $id): void
     {
+        $this->authorize('modulo.editar', 'planejamento-estrategico');
+
         $p = ProcessoAtividadeCadeiaValor::findOrFail($id);
-        $this->processoAtivId  = $p->cod_atividade_cadeia_valor;
-        $this->processoEditId  = $id;
-        $this->formProcesso    = [
-            'dsc_entrada'       => $p->dsc_entrada ?? '',
+        $this->processoAtivId = $p->cod_atividade_cadeia_valor;
+        $this->processoEditId = $id;
+        $this->formProcesso = [
+            'dsc_entrada' => $p->dsc_entrada ?? '',
             'dsc_transformacao' => $p->dsc_transformacao ?? '',
-            'dsc_saida'         => $p->dsc_saida ?? '',
+            'dsc_saida' => $p->dsc_saida ?? '',
         ];
         $this->showModalProcesso = true;
     }
 
     public function salvarProcesso(): void
     {
+        $this->authorize($this->processoEditId ? 'modulo.editar' : 'modulo.criar', 'planejamento-estrategico');
+
         $this->validate([
             'formProcesso.dsc_transformacao' => 'required|string|max:500',
         ], ['formProcesso.dsc_transformacao.required' => 'Informe a transformação/processo.']);
@@ -151,7 +170,7 @@ class CadeiaDeValor extends Component
     public function confirmarExcluirProcesso(string $id): void
     {
         $this->deleteTarget = 'processo';
-        $this->deleteId     = $id;
+        $this->deleteId = $id;
         $this->showDeleteModal = true;
     }
 
@@ -159,10 +178,12 @@ class CadeiaDeValor extends Component
 
     public function executarExclusao(): void
     {
+        $this->authorize('modulo.excluir', 'planejamento-estrategico');
+
         match ($this->deleteTarget) {
             'atividade' => AtividadeCadeiaValor::findOrFail($this->deleteId)->delete(),
-            'processo'  => ProcessoAtividadeCadeiaValor::findOrFail($this->deleteId)->delete(),
-            default     => null,
+            'processo' => ProcessoAtividadeCadeiaValor::findOrFail($this->deleteId)->delete(),
+            default => null,
         };
         $this->showDeleteModal = false;
         $this->dispatch('notify', message: 'Registro excluído.', style: 'warning');
@@ -178,16 +199,16 @@ class CadeiaDeValor extends Component
             ->get()
             ->groupBy('dsc_tipo');
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('relatorios.cadeia-valor', [
-            'pei'          => $this->peiAtivo,
+        $pdf = Pdf::loadView('relatorios.cadeia-valor', [
+            'pei' => $this->peiAtivo,
             'finalisticas' => $atividades->get('Finalística', collect()),
-            'suporte'      => $atividades->get('Suporte', collect()),
-            'data'         => now()->format('d/m/Y'),
+            'suporte' => $atividades->get('Suporte', collect()),
+            'data' => now()->format('d/m/Y'),
         ])->setPaper('a4', 'landscape');
 
         return response()->streamDownload(
-            fn() => print($pdf->output()),
-            'Cadeia_de_Valor_' . now()->format('Y_m_d') . '.pdf'
+            fn () => print ($pdf->output()),
+            'Cadeia_de_Valor_'.now()->format('Y_m_d').'.pdf'
         );
     }
 
@@ -206,9 +227,9 @@ class CadeiaDeValor extends Component
             : collect();
 
         return view('livewire.p-e-i.cadeia-de-valor', [
-            'atividades'   => $atividades,
+            'atividades' => $atividades,
             'perspectivas' => $perspectivas,
-            'tipos'        => AtividadeCadeiaValor::TIPOS,
+            'tipos' => AtividadeCadeiaValor::TIPOS,
         ]);
     }
 }
