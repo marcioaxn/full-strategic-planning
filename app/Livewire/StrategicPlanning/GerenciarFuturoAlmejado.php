@@ -2,8 +2,8 @@
 
 namespace App\Livewire\StrategicPlanning;
 
-use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\FuturoAlmejado;
+use App\Models\StrategicPlanning\Objetivo;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -11,20 +11,25 @@ use Livewire\Component;
 class GerenciarFuturoAlmejado extends Component
 {
     public $objetivo;
+
     public $futuros = [];
 
     public bool $showModal = false;
+
     public $futuroId;
+
     public array $form = [
-        'dsc_situacao_atual'       => '',
-        'dsc_futuro_almejado'      => '',
+        'dsc_situacao_atual' => '',
+        'dsc_futuro_almejado' => '',
         'dsc_indicador_referencia' => '',
-        'vlr_referencia_meta'      => '',
-        'dte_horizonte'            => '',
+        'vlr_referencia_meta' => '',
+        'dte_horizonte' => '',
     ];
 
     public function mount($objetivoId)
     {
+        // Visualização é livre para qualquer usuário autenticado. Só a
+        // escrita (create/edit/save/delete) exige capacidade RBAC.
         $this->objetivo = Objetivo::findOrFail($objetivoId);
         $this->carregarFuturos();
     }
@@ -36,40 +41,46 @@ class GerenciarFuturoAlmejado extends Component
 
     public function create()
     {
+        $this->authorize('modulo.criar', 'planejamento-estrategico');
+
         $this->resetForm();
         $this->showModal = true;
     }
 
     public function edit($id)
     {
+        $this->authorize('modulo.editar', 'planejamento-estrategico');
+
         $f = FuturoAlmejado::findOrFail($id);
         $this->futuroId = $id;
         $this->form = [
-            'dsc_situacao_atual'       => $f->dsc_situacao_atual ?? '',
-            'dsc_futuro_almejado'      => $f->dsc_futuro_almejado,
+            'dsc_situacao_atual' => $f->dsc_situacao_atual ?? '',
+            'dsc_futuro_almejado' => $f->dsc_futuro_almejado,
             'dsc_indicador_referencia' => $f->dsc_indicador_referencia ?? '',
-            'vlr_referencia_meta'      => $f->vlr_referencia_meta ?? '',
-            'dte_horizonte'            => $f->dte_horizonte?->format('Y-m-d') ?? '',
+            'vlr_referencia_meta' => $f->vlr_referencia_meta ?? '',
+            'dte_horizonte' => $f->dte_horizonte?->format('Y-m-d') ?? '',
         ];
         $this->showModal = true;
     }
 
     public function save()
     {
+        $this->authorize($this->futuroId ? 'modulo.editar' : 'modulo.criar', 'planejamento-estrategico');
+
         $this->validate([
             'form.dsc_futuro_almejado' => 'required|string|max:1000',
             'form.vlr_referencia_meta' => 'nullable|numeric|min:0',
-            'form.dte_horizonte'       => 'nullable|date',
+            'form.dte_horizonte' => 'nullable|date',
         ], ['form.dsc_futuro_almejado.required' => 'Descreva o futuro almejado.']);
 
         FuturoAlmejado::updateOrCreate(
             ['cod_futuro_almejado' => $this->futuroId],
             array_merge($this->form, [
-                'cod_objetivo'         => $this->objetivo->cod_objetivo,
-                'dsc_situacao_atual'   => $this->form['dsc_situacao_atual'] ?: null,
+                'cod_objetivo' => $this->objetivo->cod_objetivo,
+                'dsc_situacao_atual' => $this->form['dsc_situacao_atual'] ?: null,
                 'dsc_indicador_referencia' => $this->form['dsc_indicador_referencia'] ?: null,
-                'vlr_referencia_meta'  => $this->form['vlr_referencia_meta'] !== '' ? $this->form['vlr_referencia_meta'] : null,
-                'dte_horizonte'        => $this->form['dte_horizonte'] ?: null,
+                'vlr_referencia_meta' => $this->form['vlr_referencia_meta'] !== '' ? $this->form['vlr_referencia_meta'] : null,
+                'dte_horizonte' => $this->form['dte_horizonte'] ?: null,
             ])
         );
 
@@ -80,6 +91,8 @@ class GerenciarFuturoAlmejado extends Component
 
     public function delete($id)
     {
+        $this->authorize('modulo.excluir', 'planejamento-estrategico');
+
         FuturoAlmejado::findOrFail($id)->delete();
         $this->carregarFuturos();
         session()->flash('status', 'Futuro almejado excluído com sucesso!');
@@ -89,11 +102,11 @@ class GerenciarFuturoAlmejado extends Component
     {
         $this->futuroId = null;
         $this->form = [
-            'dsc_situacao_atual'       => '',
-            'dsc_futuro_almejado'      => '',
+            'dsc_situacao_atual' => '',
+            'dsc_futuro_almejado' => '',
             'dsc_indicador_referencia' => '',
-            'vlr_referencia_meta'      => '',
-            'dte_horizonte'            => '',
+            'vlr_referencia_meta' => '',
+            'dte_horizonte' => '',
         ];
     }
 
