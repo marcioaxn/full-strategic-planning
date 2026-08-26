@@ -16,6 +16,13 @@ pest()->extend(Tests\TestCase::class)
     ->in('Feature');
 
 /*
+ * Suíte "Seeders": roda contra o banco configurado no .env do projeto, sem
+ * RefreshDatabase — a própria seed é responsável por limpar e repovoar o banco.
+ * Ver tests/Seeders/SeederTestCase.php para as garantias e as travas de segurança.
+ */
+pest()->extend(Tests\Seeders\SeederTestCase::class)->in('Seeders');
+
+/*
 |--------------------------------------------------------------------------
 | Expectations
 |--------------------------------------------------------------------------
