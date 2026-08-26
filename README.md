@@ -381,6 +381,21 @@ Ao final, o próprio comando imprime as credenciais no terminal.
 
 > O comando leva algo entre **10 e 30 segundos**, quase todo esse tempo na etapa 1: o PostgreSQL grava em disco cada arquivo de tabela truncado. É normal — não interrompa.
 
+### Atualizando uma instalação já existente
+
+Se o sistema já está instalado e você vai apenas trazer esta versão das seeders:
+
+```bash
+git pull
+composer dump-autoload
+php artisan optimize:clear
+php artisan db:seed
+```
+
+O `composer dump-autoload` reconstrói o mapa de classes: as seeders antigas deixaram de existir e as novas precisam entrar no lugar. Pular esse passo pode fazer o `db:seed` reclamar de classe não encontrada em servidores que instalaram as dependências com `--optimize-autoloader`.
+
+> Em ambientes XAMPP, use `php artisan optimize:clear` — **nunca** `config:cache` ou `optimize`.
+
 ### ⚠️ O comando apaga dados
 
 `TruncarBancoSeeder` executa um `TRUNCATE` em **todas as tabelas** de `pei`, `strategic_planning`, `action_plan`, `performance_indicators`, `risk_management` e `organization`. A operação é **irreversível**.
