@@ -17,6 +17,7 @@ Plataforma web de gestão estratégica para **organizações públicas brasileir
   - [Opção A — Servidor Linux / Apache](#opção-a--servidor-linux--apache)
   - [Opção B — php artisan serve (desenvolvimento rápido)](#opção-b--php-artisan-serve-desenvolvimento-rápido)
 - [Configuração do ambiente (.env)](#-configuração-do-ambiente-env)
+- [Seeders: o acesso inicial](#-seeders-o-acesso-inicial)
 - [Primeiro acesso e passos iniciais](#-primeiro-acesso-e-passos-iniciais)
 - [Filas e relatórios agendados](#-filas-e-relatórios-agendados)
 - [Arquitetura do sistema](#-arquitetura-do-sistema)
@@ -259,9 +260,12 @@ DB_PASSWORD=senha_forte_aqui
 
 ```bash
 php artisan key:generate
-php artisan migrate --seed
+php artisan migrate
+php artisan db:seed
 php artisan storage:link
 ```
+
+> O `php artisan db:seed` **apaga todos os dados** do banco antes de recriar o acesso inicial. Em uma instalação nova isso é inofensivo, mas leia a seção [Seeders: o acesso inicial](#-seeders-o-acesso-inicial) antes de repetir o comando em um banco que já contenha dados.
 
 ---
 
@@ -294,7 +298,8 @@ DB_PASSWORD=sua_senha
 
 ```bash
 php artisan key:generate
-php artisan migrate --seed
+php artisan migrate
+php artisan db:seed
 php artisan storage:link
 npm run build
 php artisan serve
@@ -353,18 +358,113 @@ As variáveis mais importantes e seus impactos:
 
 ---
 
-## 🖥️ Primeiro acesso e passos iniciais
+## 🌱 Seeders: o acesso inicial
 
-### Credenciais iniciais (criadas pelo seed)
+O sistema tem **uma única seed**, e ela faz uma única coisa: deixar o banco limpo e criar o mínimo necessário para o **Super Administrador conseguir entrar**. Nenhum dado de planejamento (ciclos PEI, objetivos, indicadores, planos, riscos) é criado — tudo isso é cadastrado pela própria instituição na interface.
 
-Após `php artisan migrate --seed`, um Super Admin é criado automaticamente:
+### Como executar
+
+```bash
+php artisan db:seed
+```
+
+É só isso. O comando roda quatro etapas, nessa ordem:
+
+| # | Seeder | O que faz |
+|---|---|---|
+| 1 | `TruncarBancoSeeder` | Esvazia **todas** as tabelas dos seis schemas de domínio |
+| 2 | `PerfilAcessoSeeder` | Recria os 4 perfis de acesso do sistema |
+| 3 | `OrganizacaoRaizSeeder` | Recria a organização raiz da instituição |
+| 4 | `SuperAdministradorSeeder` | Cria o usuário administrador e seus dois vínculos |
+
+Ao final, o próprio comando imprime as credenciais no terminal.
+
+> O comando leva algo entre **10 e 30 segundos**, quase todo esse tempo na etapa 1: o PostgreSQL grava em disco cada arquivo de tabela truncado. É normal — não interrompa.
+
+### ⚠️ O comando apaga dados
+
+`TruncarBancoSeeder` executa um `TRUNCATE` em **todas as tabelas** de `pei`, `strategic_planning`, `action_plan`, `performance_indicators`, `risk_management` e `organization`. A operação é **irreversível**.
+
+- A única tabela preservada é `migrations` — apagá-la faria o Laravel achar que o esquema não existe.
+- Em uma **instalação nova**, isso é inofensivo: não há o que perder.
+- Em um banco que **já tem dados reais**, faça backup antes:
+
+```bash
+pg_dump -h 127.0.0.1 -p 5432 -U pei_user -d pei_producao -f backup_antes_do_seed.sql
+```
+
+A lista de tabelas é descoberta em tempo de execução no `information_schema`, a partir do `search_path` configurado em `config/database.php`. Nenhuma tabela nova precisa ser cadastrada manualmente na seeder.
+
+### Credenciais iniciais
 
 | Campo | Valor |
 |---|---|
-| **E-mail** | `user_adm@user_adm.com` |
-| **Senha** | `1352@765@1452` |
+| **E-mail** | `admin@pei.gov.br` |
+| **Senha** | `Pei@2026#Admin` |
+| **Perfil** | Super Administrador |
+| **Organização** | ORG — Organização Padrão |
 
 > ⚠️ **Troque a senha imediatamente** após o primeiro acesso em qualquer ambiente que não seja sua máquina local de desenvolvimento. Acesse **Perfil → Alterar Senha**.
+
+### Por que o e-mail precisa de um domínio válido
+
+O e-mail anterior era `user_adm@user_adm.com`. O trecho depois do `@` é o **domínio**, e domínios aceitam apenas **letras, dígitos, hífen e ponto** — nunca sublinhado. Esse endereço era rejeitado pela mesma validação (`'email'`) que a tela de cadastro de usuários aplica, o que impedia salvar ou editar o próprio administrador.
+
+Trocar apenas o e-mail, porém, não resolvia: a seeder antiga criava **somente a linha em `pei.users`**. Um Super Administrador funcional depende de **quatro** registros:
+
+| # | Tabela | Papel |
+|---|---|---|
+| 1 | `pei.users` | A conta em si |
+| 2 | `organization.tab_organizacoes` | A organização raiz, auto-referenciada |
+| 3 | `organization.rel_users_tab_organizacoes` | Vínculo usuário ↔ organização |
+| 4 | `organization.rel_users_tab_organizacoes_tab_perfil_acesso` | Vínculo usuário ↔ perfil Super Admin |
+
+O registro **4** é o que concede o privilégio: `User::isSuperAdmin()` consulta o **perfil vinculado**, não a coluna `adm`. Sem ele o usuário até autentica, mas entra sem enxergar organização alguma e sem permissão em nenhum módulo — que era exatamente o sintoma relatado.
+
+### Adaptando à sua instituição
+
+A seed nasce com uma organização genérica (`ORG — Organização Padrão`) e um administrador genérico. **Ajuste os dois antes de colocar o sistema em uso**: edite as constantes no topo dos arquivos e rode `php artisan db:seed` novamente.
+
+| Arquivo | Constantes |
+|---|---|
+| `database/seeders/OrganizacaoRaizSeeder.php` | `SIGLA`, `NOME` |
+| `database/seeders/SuperAdministradorSeeder.php` | `EMAIL`, `SENHA`, `NOME` |
+
+> **Não altere `OrganizacaoRaizSeeder::COD_ORGANIZACAO`.** É o mesmo UUID usado pela migration de criação da tabela; mantê-lo evita organizações duplicadas em bancos já migrados.
+
+A senha escolhida precisa atender à política do sistema (mínimo de 8 caracteres, com maiúscula, minúscula, número e caractere especial) — há um teste automatizado que verifica isso.
+
+### Validando a instalação com os testes
+
+O projeto traz uma suíte dedicada que roda **contra o banco configurado no seu `.env`** e prova, ponta a ponta, que a seed funcionou na sua instalação:
+
+```bash
+php artisan test --testsuite=Seeders
+```
+
+Ela verifica, entre outras coisas: que o truncate zera todas as tabelas e preserva `migrations`; que os 4 perfis têm os UUIDs exigidos pelas Policies; que a organização é auto-referenciada; que a senha do README confere com o hash do banco; que o e-mail passa no validador do Laravel; que `isSuperAdmin()` é verdadeiro; que o **login pela rota `/login` funciona** e abre o Dashboard sem desvio para troca de senha; e que rodar a seed duas vezes não duplica registro nenhum.
+
+Ao terminar, a suíte **recompõe o acesso inicial**: o banco fica no mesmo estado que `php artisan db:seed` produz, com o administrador pronto para entrar. Não é preciso rodar nada depois dela.
+
+> ⚠️ **A suíte é destrutiva** — ela executa a seed, que trunca o banco. Rode-a **logo após a instalação**, antes de cadastrar dados reais, ou em um ambiente de homologação.
+>
+> Como proteção, se o `.env` estiver com `APP_ENV=production` a suíte é **pulada**. Para executá-la mesmo assim, depois de fazer backup:
+>
+> ```bash
+> SEED_TEST_ALLOW_PRODUCTION=true php artisan test --testsuite=Seeders
+> ```
+>
+> No Windows PowerShell:
+>
+> ```powershell
+> $env:SEED_TEST_ALLOW_PRODUCTION='true'; php artisan test --testsuite=Seeders
+> ```
+
+> As demais suítes (`Unit`, `Feature`) continuam usando o banco de laboratório definido em `phpunit.xml` e **não** tocam no banco da aplicação.
+
+---
+
+## 🖥️ Primeiro acesso e passos iniciais
 
 ### O que fazer após o primeiro login
 
@@ -664,7 +764,7 @@ app/
 resources/views/livewire/       # Views Blade organizadas por domínio
 database/
 ├── migrations/                 # Organizadas em subpastas por domínio
-└── seeders/                    # OdsSeeder · BaseStrategicSeeder · PEIDataSeeder
+└── seeders/                    # Acesso inicial: Truncar · PerfilAcesso · OrganizacaoRaiz · SuperAdministrador
 ```
 
 ### Stack de middleware (rotas protegidas)
@@ -814,7 +914,8 @@ npm run build                            # Compilar assets para produção
 # Banco de dados
 php artisan migrate                      # Executar novas migrations
 php artisan migrate --path=database/migrations/Dominio/arquivo.php  # Migration específica
-php artisan db:seed --class=NomeDoSeeder # Seeder específico (nunca rode seeders globais em produção)
+php artisan db:seed                      # Acesso inicial — APAGA todos os dados antes de recriar
+php artisan db:seed --class=PerfilAcessoSeeder  # Etapa isolada, sem truncar o banco
 
 # Cache e otimização
 php artisan optimize:clear               # Limpar todos os caches (obrigatório após alterações de config)
@@ -825,8 +926,9 @@ vendor/bin/pint --dirty                  # Lint apenas dos arquivos modificados
 php -l app/Livewire/MeuComponente.php    # Validar sintaxe de um arquivo PHP
 
 # Testes
-php artisan test                         # Suíte completa (Pest)
+php artisan test                         # Suítes Unit e Feature (banco de laboratório do phpunit.xml)
 php artisan test --filter=NomeTeste      # Teste filtrado por nome
+php artisan test --testsuite=Seeders     # Valida a seed no banco do .env — DESTRUTIVO, veja a seção Seeders
 ```
 
 > ⚠️ **XAMPP com OPcache (Apache):** **nunca** rode `php artisan config:cache` ou `php artisan optimize` nesse ambiente. Esses comandos podem deixar a aplicação servindo uma configuração sem `APP_KEY`, causando erro 500 global. Se isso ocorrer, reinicie o Apache para limpar o OPcache.
@@ -885,11 +987,15 @@ php artisan view:clear
 ## 🧪 Testes e qualidade de código
 
 ```bash
-# Executar toda a suíte de testes
+# Executar as suítes Unit e Feature (banco de laboratório definido em phpunit.xml)
 php artisan test
 
 # Executar apenas um teste específico
 php artisan test --filter=NomeTeste
+
+# Validar a seed de acesso inicial no banco do .env — DESTRUTIVO
+# (trunca as tabelas de domínio; ver a seção "Seeders: o acesso inicial")
+php artisan test --testsuite=Seeders
 
 # Alternativa via Pest diretamente
 vendor/bin/pest
