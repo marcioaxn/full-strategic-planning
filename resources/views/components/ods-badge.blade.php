@@ -8,7 +8,7 @@
 
 @php
     // Mapa oficial ONU (cor + nome abreviado) — embutido para performance e
-    // independência de banco. Espelha o OdsSeeder.
+    // independência de banco.
     $mapaOds = [
         1  => ['Sem Pobreza',              '#e5243b'],
         2  => ['Fome Zero',                '#dda63a'],

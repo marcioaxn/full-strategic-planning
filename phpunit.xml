@@ -11,6 +11,15 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
+        <!--
+            Suite "Seeders": valida "php artisan db:seed" contra o banco configurado
+            no .env do projeto (e nao contra o banco de laboratorio abaixo).
+            E DESTRUTIVA: trunca as tabelas de dominio. Rode com:
+            php artisan test [dois hifens]testsuite=Seeders
+        -->
+        <testsuite name="Seeders">
+            <directory>tests/Seeders</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
