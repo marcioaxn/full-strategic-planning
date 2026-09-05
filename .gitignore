@@ -44,14 +44,21 @@ service-account*.json
 *.sqlite-journal
 /database/database.sqlite
 
-# --- Ferramentas de assistente de IA (configuração local) --------------------
-/.claude/
-/.rtk/
+# --- Harness do assistente ---------------------------------------------------
+# O harness É a regra da equipe: permissões, hooks e guidelines vão junto com o
+# código, ou não sobrevivem a um clone. Fica de fora só o que é da máquina de
+# quem edita — e a nota de segurança, que não se publica em repositório público.
+/.claude/*
+!/.claude/settings.json
+!/.claude/hooks/
+/.claude/settings.local.json
+/.claude/seguranca-em-aberto.md
+/.rtk/*
+!/.rtk/filters.toml
 /.agent
 /ai
 /gemini
 AGENTS.md
-CLAUDE.md
 GEMINI.md
 RTK.md
 

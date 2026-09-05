@@ -1,0 +1,102 @@
+{
+    "gerado_em": "2026-09-05",
+    "como_regerar": "php .claude/hooks/gerar-divida.php",
+    "regra": "Esta lista SÓ ENCOLHE. Ela perdoa o passivo que já existia; nunca código novo.",
+    "apontamentos": 36,
+    "arquivos": {
+        "app/Console/Commands/MigrarLegadoV1ParaV2.php": [
+            "pg93--insertorignore",
+            "pg93--upsert",
+            "pg93-jsonb",
+            "pg93-on"
+        ],
+        "database/migrations/2025_12_27_180001_create_pei_tab_entrega_comentarios_table.php": [
+            "pg93-jsonb"
+        ],
+        "database/migrations/2025_12_27_180005_create_pei_tab_entrega_historico_table.php": [
+            "pg93-jsonb"
+        ],
+        "database/migrations/2026_01_12_231645_create_report_management_tables.php": [
+            "pg93-jsonb"
+        ],
+        "database/migrations/ActionPlan/2025_12_27_180000_alter_pei_tab_entregas_add_notion_fields.php": [
+            "pg93-jsonb"
+        ],
+        "database/migrations/ActionPlan/2026_05_30_000007_add_modelo_logico_to_plano_de_acao.php": [
+            "pg93-jsonb"
+        ],
+        "database/migrations/PerformanceIndicators/2026_05_30_000009_add_smart_to_indicador.php": [
+            "pg93-jsonb"
+        ],
+        "database/migrations/StrategicPlanning/2026_05_30_000010_create_tab_rae_table.php": [
+            "pg93-jsonb"
+        ],
+        "database/migrations/StrategicPlanning/2026_06_25_150000_create_tab_rae_causa_raiz_table.php": [
+            "pg93-jsonb"
+        ],
+        "database/migrations/StrategicPlanning/2026_06_25_160000_add_dsc_negocio_to_tab_missao_visao_valores.php": [
+            "pg93-add"
+        ],
+        "database/migrations/StrategicPlanning/2026_06_25_170000_add_smart_fields_to_tab_futuro_almejado_objetivo.php": [
+            "pg93-add"
+        ],
+        "resources/views/auth/partials/auth-left-panel.blade.php": [
+            "xss-blade"
+        ],
+        "resources/views/components/checkbox.blade.php": [
+            "xss-blade"
+        ],
+        "resources/views/components/input.blade.php": [
+            "xss-blade"
+        ],
+        "resources/views/livewire/shared/seletor-organizacao.blade.php": [
+            "xss-blade"
+        ],
+        "resources/views/livewire/shared/strategic-alerts-bell.blade.php": [
+            "xss-blade"
+        ],
+        "resources/views/policy.blade.php": [
+            "xss-blade"
+        ],
+        "resources/views/profile/two-factor-authentication-form.blade.php": [
+            "xss-blade"
+        ],
+        "resources/views/relatorios/partials/cabecalho.blade.php": [
+            "xss-blade"
+        ],
+        "resources/views/terms.blade.php": [
+            "xss-blade"
+        ],
+        "resources/views/vendor/mail/html/layout.blade.php": [
+            "xss-blade"
+        ],
+        "resources/views/vendor/mail/html/message.blade.php": [
+            "xss-blade"
+        ],
+        "tests/Feature/AuthenticationTest.php": [
+            "segredo-literal"
+        ],
+        "tests/Feature/PasswordConfirmationTest.php": [
+            "segredo-literal"
+        ],
+        "tests/Feature/PasswordResetTest.php": [
+            "segredo-documento",
+            "segredo-literal"
+        ],
+        "tests/Feature/RegistrationTest.php": [
+            "segredo-documento",
+            "segredo-literal"
+        ],
+        "tests/Feature/UpdatePasswordTest.php": [
+            "segredo-documento",
+            "segredo-literal"
+        ],
+        "tests/Feature/UserManagement/ListarUsuariosCadastroSemTruncateTest.php": [
+            "segredo-documento",
+            "segredo-literal"
+        ],
+        "tests/Seeders/AcessoInicialSeederTest.php": [
+            "segredo-literal"
+        ]
+    }
+}
