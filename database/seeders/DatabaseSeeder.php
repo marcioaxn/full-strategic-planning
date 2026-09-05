@@ -8,21 +8,24 @@ use Illuminate\Database\Seeder;
 /**
  * Ponto de entrada de `php artisan db:seed`.
  *
- * Objetivo desta seed: deixar o banco em um estado limpo e mínimo, com apenas o
- * necessário para o Super Administrador conseguir autenticar e navegar. Nenhum
- * dado de planejamento (ciclos PEI, objetivos, indicadores, planos, riscos) é
- * criado — esses são cadastrados pela própria instituição na interface.
+ * Objetivo desta seed: garantir o mínimo necessário para o Super Administrador
+ * conseguir autenticar e navegar. Nenhum dado de planejamento (ciclos PEI,
+ * objetivos, indicadores, planos, riscos) é criado — esses são cadastrados pela
+ * própria instituição na interface.
  *
- * Ordem das etapas (cada uma depende da anterior):
+ * ESTA SEED NÃO APAGA NADA. As três etapas são idempotentes: cada uma verifica
+ * se o registro já existe e o atualiza, ou o cria quando falta. Rodar `db:seed`
+ * em um banco com dados reais é seguro e não duplica registro nenhum.
  *
- *   1. TruncarBancoSeeder        — esvazia todas as tabelas de domínio
- *   2. PerfilAcessoSeeder        — recria os 4 perfis de acesso
- *   3. OrganizacaoRaizSeeder     — recria a organização raiz
- *   4. SuperAdministradorSeeder  — cria o usuário e seus dois vínculos
+ *   1. PerfilAcessoSeeder        — garante os 4 perfis de acesso
+ *   2. OrganizacaoRaizSeeder     — garante a organização raiz
+ *   3. SuperAdministradorSeeder  — garante o usuário e seus dois vínculos
  *
- * ATENÇÃO: a etapa 1 APAGA TODOS OS DADOS do banco configurado no .env
- * (a tabela `migrations` é a única preservada). Faça backup antes de executar
- * em um ambiente que já contenha dados reais.
+ * A truncagem saiu daqui: era exigência de um cliente específico, já atendida no
+ * último deploy, e mantê-la no caminho padrão do `db:seed` colocava todo banco a
+ * um comando de distância de perder os dados. Para limpeza profunda deliberada,
+ * use `php artisan banco:zerar-dominio`, que pede confirmação — ou, para apenas
+ * as tabelas de domínio, `php artisan db:seed --class=TruncarBancoSeeder`.
  */
 class DatabaseSeeder extends Seeder
 {
@@ -31,11 +34,10 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->command?->newLine();
-        $this->command?->warn('  Esta seed APAGA todos os dados do banco antes de recriar o acesso inicial.');
+        $this->command?->info('  Garantindo o acesso inicial. Nenhum dado existente é apagado.');
         $this->command?->newLine();
 
         $this->call([
-            TruncarBancoSeeder::class,
             PerfilAcessoSeeder::class,
             OrganizacaoRaizSeeder::class,
             SuperAdministradorSeeder::class,
@@ -56,7 +58,7 @@ class DatabaseSeeder extends Seeder
             ['Campo', 'Valor'],
             [
                 ['E-mail', SuperAdministradorSeeder::EMAIL],
-                ['Senha', SuperAdministradorSeeder::SENHA],
+                ['Senha', SuperAdministradorSeeder::senhaInicial()],
                 ['Perfil', 'Super Administrador'],
                 ['Organização', OrganizacaoRaizSeeder::SIGLA.' — '.OrganizacaoRaizSeeder::NOME],
             ]

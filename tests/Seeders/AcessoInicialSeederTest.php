@@ -75,10 +75,10 @@ it('mantém os perfis da seeder em sincronia com as constantes do model', functi
 // 2. Organização raiz
 // ---------------------------------------------------------------------------
 
-it('cria uma única organização, e ela é a raiz da hierarquia', function () {
-    expect(Organization::count())->toBe(1);
+it('cria a organização raiz da hierarquia, uma só vez', function () {
+    expect(Organization::where('cod_organizacao', OrganizacaoRaizSeeder::COD_ORGANIZACAO)->count())->toBe(1);
 
-    $org = Organization::first();
+    $org = Organization::where('cod_organizacao', OrganizacaoRaizSeeder::COD_ORGANIZACAO)->first();
 
     expect($org->cod_organizacao)->toBe(OrganizacaoRaizSeeder::COD_ORGANIZACAO)
         ->and($org->sgl_organizacao)->toBe(OrganizacaoRaizSeeder::SIGLA)
@@ -98,8 +98,8 @@ it('devolve a organização raiz pelo scope usado pelo Dashboard', function () {
 // 3. Usuário Super Administrador
 // ---------------------------------------------------------------------------
 
-it('cria um único usuário no sistema', function () {
-    expect(User::count())->toBe(1);
+it('cria o administrador uma única vez, sem duplicar por e-mail', function () {
+    expect(User::where('email', SuperAdministradorSeeder::EMAIL)->count())->toBe(1);
 });
 
 it('cria o Super Administrador com os atributos de conta corretos', function () {
@@ -120,11 +120,11 @@ it('cria o Super Administrador com os atributos de conta corretos', function () 
 it('grava a senha com hash, nunca em texto puro', function () {
     $user = superAdmin();
 
-    expect($user->password)->not->toBe(SuperAdministradorSeeder::SENHA);
+    expect($user->password)->not->toBe(SuperAdministradorSeeder::senhaInicial());
 
     $this->assertTrue(
-        Hash::check(SuperAdministradorSeeder::SENHA, $user->password),
-        'A senha documentada no README não confere com o hash gravado no banco.'
+        Hash::check(SuperAdministradorSeeder::senhaInicial(), $user->password),
+        'A senha resolvida por SuperAdministradorSeeder::senhaInicial() não confere com o hash gravado no banco.'
     );
 });
 
@@ -176,8 +176,8 @@ it('usa uma senha que atende à política de senha forte do sistema', function (
 
     $validador = Validator::make(
         [
-            'password' => SuperAdministradorSeeder::SENHA,
-            'password_confirmation' => SuperAdministradorSeeder::SENHA,
+            'password' => SuperAdministradorSeeder::senhaInicial(),
+            'password_confirmation' => SuperAdministradorSeeder::senhaInicial(),
         ],
         ['password' => $regras->regras()]
     );
@@ -249,10 +249,10 @@ it('dá ao administrador escopo sobre a organização raiz', function () {
 // 6. Login de verdade, pela rota HTTP
 // ---------------------------------------------------------------------------
 
-it('autentica pela tela de login com as credenciais documentadas no README', function () {
+it('autentica pela tela de login com as credenciais criadas pela seed', function () {
     $resposta = $this->post('/login', [
         'email' => SuperAdministradorSeeder::EMAIL,
-        'password' => SuperAdministradorSeeder::SENHA,
+        'password' => SuperAdministradorSeeder::senhaInicial(),
     ]);
 
     $this->assertAuthenticated();
@@ -271,7 +271,7 @@ it('recusa o login com senha incorreta', function () {
 it('permite abrir o Dashboard logo após o login, sem desvio para troca de senha', function () {
     $this->post('/login', [
         'email' => SuperAdministradorSeeder::EMAIL,
-        'password' => SuperAdministradorSeeder::SENHA,
+        'password' => SuperAdministradorSeeder::senhaInicial(),
     ]);
 
     $this->get('/dashboard')->assertOk();
@@ -285,11 +285,13 @@ it('pode ser executada mais de uma vez sem duplicar registros nem falhar', funct
     $this->seed(DatabaseSeeder::class);
     $this->seed(DatabaseSeeder::class);
 
-    expect(User::count())->toBe(1)
-        ->and(Organization::count())->toBe(1)
+    $userId = superAdmin()->id;
+
+    expect(User::where('email', SuperAdministradorSeeder::EMAIL)->count())->toBe(1)
+        ->and(Organization::where('cod_organizacao', OrganizacaoRaizSeeder::COD_ORGANIZACAO)->count())->toBe(1)
         ->and(DB::table('organization.tab_perfil_acesso')->count())->toBe(4)
-        ->and(DB::table('organization.rel_users_tab_organizacoes')->count())->toBe(1)
-        ->and(DB::table('organization.rel_users_tab_organizacoes_tab_perfil_acesso')->count())->toBe(1);
+        ->and(DB::table('organization.rel_users_tab_organizacoes')->where('user_id', $userId)->count())->toBe(1)
+        ->and(DB::table('organization.rel_users_tab_organizacoes_tab_perfil_acesso')->where('user_id', $userId)->count())->toBe(1);
 
     $this->assertTrue(superAdmin()->isSuperAdmin());
 });

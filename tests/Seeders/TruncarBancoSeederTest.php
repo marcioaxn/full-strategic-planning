@@ -11,10 +11,26 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * Os testes deste arquivo truncam o banco por conta própria, invalidando o
- * estado compartilhado que o SeederTestCase mantém entre os testes do processo.
+ * ARQUIVO DESLIGADO POR PADRÃO.
+ *
+ * TruncarBancoSeeder saiu do caminho padrão do `db:seed`, mas continua existindo
+ * para quem precisar chamá-la de propósito — e uma ferramenta destrutiva que
+ * ninguém testa é pior que nenhuma. Estes testes seguem aqui, prontos, e só
+ * rodam quando a truncagem do banco do .env for autorizada explicitamente:
+ *
+ *     SEED_TEST_ALLOW_TRUNCATE=true php artisan test tests/Seeders
+ *
+ * Sem essa variável, o arquivo inteiro é pulado. Nenhum teste desta suíte apaga
+ * dado de ninguém por acidente.
  */
 beforeEach(function () {
+    if (filter_var(env('SEED_TEST_ALLOW_TRUNCATE', false), FILTER_VALIDATE_BOOLEAN) !== true) {
+        $this->markTestSkipped(
+            'Teste destrutivo: trunca as tabelas de domínio do banco do .env. '
+            .'Defina SEED_TEST_ALLOW_TRUNCATE=true para executá-lo de propósito.'
+        );
+    }
+
     $this->invalidarSeedCompartilhada();
 });
 
@@ -167,7 +183,7 @@ it('restaura o acesso inicial ao final da suíte, deixando o banco pronto para u
 
     $this->post('/login', [
         'email' => SuperAdministradorSeeder::EMAIL,
-        'password' => SuperAdministradorSeeder::SENHA,
+        'password' => SuperAdministradorSeeder::senhaInicial(),
     ]);
 
     $this->assertAuthenticated();

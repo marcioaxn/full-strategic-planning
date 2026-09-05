@@ -33,12 +33,18 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
+        <!--
+            Alvo do banco de teste fixado aqui de proposito: host, porta e nome
+            diferentes dos de desenvolvimento impedem que a suite (que usa
+            RefreshDatabase) apague o banco de dev por engano.
+
+            DB_USERNAME e DB_PASSWORD NAO ficam neste arquivo: ele e versionado.
+            As credenciais vem do .env local, que esta no .gitignore.
+        -->
         <env name="DB_CONNECTION" value="pgsql"/>
         <env name="DB_HOST" value="127.0.0.1"/>
         <env name="DB_PORT" value="5434"/>
         <env name="DB_DATABASE" value="projeto_base_test"/>
-        <env name="DB_USERNAME" value="postgres"/>
-        <env name="DB_PASSWORD" value="SENHA-REMOVIDA-DO-HISTORICO"/>
         <env name="SESSION_DOMAIN" value="null"/>
         <env name="SESSION_SECURE_COOKIE" value="false"/>
         <env name="MAIL_MAILER" value="array"/>
