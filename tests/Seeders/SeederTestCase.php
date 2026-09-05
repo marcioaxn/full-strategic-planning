@@ -17,9 +17,13 @@ use Tests\TestCase;
  *
  * Consequências que quem for executar a suíte precisa conhecer:
  *
- * - A suíte é DESTRUTIVA. Cada teste executa a seed, que trunca todas as
- *   tabelas de domínio. Rode-a logo após a instalação, ANTES de cadastrar
- *   qualquer dado real, ou em um ambiente de homologação.
+ * - A seed de acesso inicial NÃO apaga dados: desde a remoção da truncagem do
+ *   caminho padrão do `db:seed`, as três etapas apenas criam o que falta ou
+ *   atualizam o que já existe. Rodar esta suíte em um banco com dados reais não
+ *   destrói nada — no máximo regrava os 4 perfis, a organização raiz e a conta
+ *   do administrador.
+ * - A exceção é TruncarBancoSeederTest, que exercita a seeder destrutiva de
+ *   propósito. Esse arquivo só roda quando SEED_TEST_ALLOW_TRUNCATE=true.
  * - A suíte NÃO usa RefreshDatabase: nenhuma migration é executada e nada é
  *   revertido no final. O estado que sobra no banco é o resultado da seed,
  *   que é exatamente o estado desejado de instalação.

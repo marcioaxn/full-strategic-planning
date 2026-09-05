@@ -368,18 +368,17 @@ O sistema tem **uma única seed**, e ela faz uma única coisa: deixar o banco li
 php artisan db:seed
 ```
 
-É só isso. O comando roda quatro etapas, nessa ordem:
+É só isso. O comando roda três etapas, nessa ordem:
 
 | # | Seeder | O que faz |
 |---|---|---|
-| 1 | `TruncarBancoSeeder` | Esvazia **todas** as tabelas dos seis schemas de domínio |
-| 2 | `PerfilAcessoSeeder` | Recria os 4 perfis de acesso do sistema |
-| 3 | `OrganizacaoRaizSeeder` | Recria a organização raiz da instituição |
-| 4 | `SuperAdministradorSeeder` | Cria o usuário administrador e seus dois vínculos |
+| 1 | `PerfilAcessoSeeder` | Garante os 4 perfis de acesso do sistema |
+| 2 | `OrganizacaoRaizSeeder` | Garante a organização raiz da instituição |
+| 3 | `SuperAdministradorSeeder` | Garante o usuário administrador e seus dois vínculos |
 
 Ao final, o próprio comando imprime as credenciais no terminal.
 
-> O comando leva algo entre **10 e 30 segundos**, quase todo esse tempo na etapa 1: o PostgreSQL grava em disco cada arquivo de tabela truncado. É normal — não interrompa.
+> **O `db:seed` não apaga nada.** As três etapas são idempotentes: cada uma atualiza o registro que já existe, ou cria o que falta. Rodá-lo em um banco com dados reais é seguro, e rodá-lo duas vezes não duplica registro nenhum.
 
 ### Atualizando uma instalação já existente
 
@@ -396,16 +395,23 @@ O `composer dump-autoload` reconstrói o mapa de classes: as seeders antigas dei
 
 > Em ambientes XAMPP, use `php artisan optimize:clear` — **nunca** `config:cache` ou `optimize`.
 
-### ⚠️ O comando apaga dados
+### Limpeza do banco — separada da seed, e deliberada
 
-`TruncarBancoSeeder` executa um `TRUNCATE` em **todas as tabelas** de `pei`, `strategic_planning`, `action_plan`, `performance_indicators`, `risk_management` e `organization`. A operação é **irreversível**.
+A truncagem **não faz mais parte do `db:seed`**. Ela atendia à exigência de um cliente específico, já resolvida, e mantê-la no caminho padrão deixava qualquer banco a um comando de distância de perder tudo.
 
-- A única tabela preservada é `migrations` — apagá-la faria o Laravel achar que o esquema não existe.
-- Em uma **instalação nova**, isso é inofensivo: não há o que perder.
-- Em um banco que **já tem dados reais**, faça backup antes:
+Quando a limpeza for mesmo o que você quer, há dois caminhos explícitos:
 
 ```bash
-pg_dump -h 127.0.0.1 -p 5432 -U pei_user -d pei_producao -f backup_antes_do_seed.sql
+php artisan banco:zerar-dominio                    # limpeza profunda, pede confirmação
+php artisan db:seed --class=TruncarBancoSeeder     # só as tabelas dos schemas de domínio
+```
+
+Ambos executam `TRUNCATE` em **todas as tabelas** de `pei`, `strategic_planning`, `action_plan`, `performance_indicators`, `risk_management` e `organization`. A operação é **irreversível**. A única tabela preservada é `migrations` — apagá-la faria o Laravel achar que o esquema não existe.
+
+Em um banco que **já tem dados reais**, faça backup antes:
+
+```bash
+pg_dump -h 127.0.0.1 -p 5432 -U pei_user -d pei_producao -f backup_antes_da_limpeza.sql
 ```
 
 A lista de tabelas é descoberta em tempo de execução no `information_schema`, a partir do `search_path` configurado em `config/database.php`. Nenhuma tabela nova precisa ser cadastrada manualmente na seeder.

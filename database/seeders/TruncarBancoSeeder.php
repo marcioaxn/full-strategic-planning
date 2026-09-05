@@ -9,6 +9,13 @@ use RuntimeException;
 /**
  * Esvazia TODAS as tabelas de dados dos schemas de domínio do sistema.
  *
+ * NÃO FAZ PARTE DE `php artisan db:seed`. Saiu do caminho padrão porque atendia
+ * a exigência de um cliente específico, já resolvida no último deploy — e deixá-la
+ * ali punha todo banco a um comando de distância de perder os dados. Só roda se
+ * for chamada de propósito:
+ *
+ *     php artisan db:seed --class=TruncarBancoSeeder
+ *
  * Por que existe: em instalações onde as seeders antigas já rodaram, o banco
  * carrega registros inconsistentes (usuários sem perfil vinculado, organizações
  * duplicadas, dados de demonstração). Repovoar sem limpar antes só empilharia
