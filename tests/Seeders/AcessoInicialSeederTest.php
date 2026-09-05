@@ -120,11 +120,11 @@ it('cria o Super Administrador com os atributos de conta corretos', function () 
 it('grava a senha com hash, nunca em texto puro', function () {
     $user = superAdmin();
 
-    expect($user->password)->not->toBe(SuperAdministradorSeeder::SENHA);
+    expect($user->password)->not->toBe(SuperAdministradorSeeder::senhaInicial());
 
     $this->assertTrue(
-        Hash::check(SuperAdministradorSeeder::SENHA, $user->password),
-        'A senha documentada no README não confere com o hash gravado no banco.'
+        Hash::check(SuperAdministradorSeeder::senhaInicial(), $user->password),
+        'A senha resolvida por SuperAdministradorSeeder::senhaInicial() não confere com o hash gravado no banco.'
     );
 });
 
@@ -176,8 +176,8 @@ it('usa uma senha que atende à política de senha forte do sistema', function (
 
     $validador = Validator::make(
         [
-            'password' => SuperAdministradorSeeder::SENHA,
-            'password_confirmation' => SuperAdministradorSeeder::SENHA,
+            'password' => SuperAdministradorSeeder::senhaInicial(),
+            'password_confirmation' => SuperAdministradorSeeder::senhaInicial(),
         ],
         ['password' => $regras->regras()]
     );
@@ -249,10 +249,10 @@ it('dá ao administrador escopo sobre a organização raiz', function () {
 // 6. Login de verdade, pela rota HTTP
 // ---------------------------------------------------------------------------
 
-it('autentica pela tela de login com as credenciais documentadas no README', function () {
+it('autentica pela tela de login com as credenciais criadas pela seed', function () {
     $resposta = $this->post('/login', [
         'email' => SuperAdministradorSeeder::EMAIL,
-        'password' => SuperAdministradorSeeder::SENHA,
+        'password' => SuperAdministradorSeeder::senhaInicial(),
     ]);
 
     $this->assertAuthenticated();
@@ -271,7 +271,7 @@ it('recusa o login com senha incorreta', function () {
 it('permite abrir o Dashboard logo após o login, sem desvio para troca de senha', function () {
     $this->post('/login', [
         'email' => SuperAdministradorSeeder::EMAIL,
-        'password' => SuperAdministradorSeeder::SENHA,
+        'password' => SuperAdministradorSeeder::senhaInicial(),
     ]);
 
     $this->get('/dashboard')->assertOk();

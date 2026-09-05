@@ -415,11 +415,30 @@ A lista de tabelas é descoberta em tempo de execução no `information_schema`,
 | Campo | Valor |
 |---|---|
 | **E-mail** | `admin@pei.gov.br` |
-| **Senha** | `Pei@2026#Admin` |
+| **Senha** | definida por você, ou **sorteada e exibida no console** — veja abaixo |
 | **Perfil** | Super Administrador |
 | **Organização** | ORG — Organização Padrão |
 
-> ⚠️ **Troque a senha imediatamente** após o primeiro acesso em qualquer ambiente que não seja sua máquina local de desenvolvimento. Acesse **Perfil → Alterar Senha**.
+**A senha inicial não fica no repositório.** Há dois caminhos, e a seed escolhe sozinha:
+
+1. **Você define a senha** — coloque no `.env` (que está no `.gitignore`) antes de rodar a seed:
+   ```dotenv
+   SEED_ADMIN_PASSWORD="SuaSenhaForte#2026"
+   ```
+   A senha precisa atender à política do sistema: mínimo de 8 caracteres, com maiúscula,
+   minúscula, número e caractere especial.
+
+2. **Você não define nada** — a seed **sorteia** uma senha forte de 20 caracteres e a imprime no
+   console, uma única vez:
+   ```
+   SENHA SORTEADA PARA O PRIMEIRO ACESSO — anote agora, não será exibida de novo:
+     7kQ#4mZpR2xV!nB9tLwE
+   ```
+   Só o hash vai para o banco. **Perdeu a linha do console?** Defina `SEED_ADMIN_PASSWORD` no
+   `.env` e rode `php artisan db:seed` de novo — a senha do administrador é regravada.
+
+> ⚠️ **Troque a senha após o primeiro acesso** em qualquer ambiente que não seja sua máquina local
+> de desenvolvimento. Acesse **Perfil → Alterar Senha**.
 
 ### Por que o e-mail precisa de um domínio válido
 
@@ -443,7 +462,7 @@ A seed nasce com uma organização genérica (`ORG — Organização Padrão`) e
 | Arquivo | Constantes |
 |---|---|
 | `database/seeders/OrganizacaoRaizSeeder.php` | `SIGLA`, `NOME` |
-| `database/seeders/SuperAdministradorSeeder.php` | `EMAIL`, `SENHA`, `NOME` |
+| `database/seeders/SuperAdministradorSeeder.php` | `EMAIL`, `NOME` (a senha vem do `.env`, em `SEED_ADMIN_PASSWORD`) |
 
 > **Não altere `OrganizacaoRaizSeeder::COD_ORGANIZACAO`.** É o mesmo UUID usado pela migration de criação da tabela; mantê-lo evita organizações duplicadas em bancos já migrados.
 

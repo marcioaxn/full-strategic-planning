@@ -167,7 +167,7 @@ it('restaura o acesso inicial ao final da suíte, deixando o banco pronto para u
 
     $this->post('/login', [
         'email' => SuperAdministradorSeeder::EMAIL,
-        'password' => SuperAdministradorSeeder::SENHA,
+        'password' => SuperAdministradorSeeder::senhaInicial(),
     ]);
 
     $this->assertAuthenticated();
