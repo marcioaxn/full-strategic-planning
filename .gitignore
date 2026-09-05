@@ -1,45 +1,88 @@
-*.log
-.DS_Store
+# =============================================================================
+# .gitignore — Sistema PEI
+# Regra: só vai para o repositório o que a aplicação precisa para ser instalada
+# e executada. Segredo, dependência baixável, artefato gerado e arquivo de
+# ferramenta local ficam de fora.
+# =============================================================================
+
+# --- Segredos: NADA aqui pode ser versionado ---------------------------------
 .env
-.env.backup
-.env.production
-.phpactor.json
-.phpunit.result.cache
-# Claude Code Harness e RTK — não versionar
-/.claude/
-/.rtk/
-/temp
-/.fleet
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/ai
-/documentacao
-/gemini
-/docs
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
 /auth.json
+/storage/*.key
+credentials.json
+service-account*.json
+*service_account*.json
+
+# --- Dependências (reinstaláveis por composer/npm) ---------------------------
+/vendor
 /node_modules
+
+# --- Artefatos gerados em build/execução -------------------------------------
 /public/build
 /public/hot
 /public/storage
-/storage/*.key
 /storage/pail
-/vendor
-Homestead.json
-Homestead.yaml
-Thumbs.db
-/docs
-# Temporary Files
-~$*
+/bootstrap/cache/*.php
+*.log
+/.phpunit.cache
+.phpunit.result.cache
+/temp
 *.tmp
 *.bak
-# Arquivos/pastas fora do padrao Laravel (mantidos apenas no ambiente local)
+~$*
+
+# --- Banco local -------------------------------------------------------------
+*.sqlite
+*.sqlite-journal
+/database/database.sqlite
+
+# --- Ferramentas de assistente de IA (configuração local) --------------------
+/.claude/
+/.rtk/
 /.agent
+/ai
+/gemini
 AGENTS.md
 CLAUDE.md
 GEMINI.md
+RTK.md
+
+# --- Documentação ------------------------------------------------------------
+# Os .md de documentacao/ SÃO versionados: acompanham o deploy.
+# Binários de escritório, não — incham o repositório e não geram diff legível.
+/documentacao/**/*.docx
+/documentacao/**/*.doc
+/documentacao/**/*.xlsx
+/documentacao/**/*.xls
+/documentacao/**/*.pptx
+/documentacao/**/*.pdf
+/docs
 MIGRATIONS_SUMMARY.md
 README_ORIGINAL.md
+
+# --- Scripts de depuração pontuais -------------------------------------------
 /debug_calc.php
+
+# --- Editores e IDEs ---------------------------------------------------------
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+.phpactor.json
+
+# --- Sistema operacional -----------------------------------------------------
+.DS_Store
+Thumbs.db
+
+# --- Ambientes locais Laravel ------------------------------------------------
+Homestead.json
+Homestead.yaml

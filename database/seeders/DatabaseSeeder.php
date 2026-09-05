@@ -56,7 +56,7 @@ class DatabaseSeeder extends Seeder
             ['Campo', 'Valor'],
             [
                 ['E-mail', SuperAdministradorSeeder::EMAIL],
-                ['Senha', SuperAdministradorSeeder::SENHA],
+                ['Senha', SuperAdministradorSeeder::senhaInicial()],
                 ['Perfil', 'Super Administrador'],
                 ['Organização', OrganizacaoRaizSeeder::SIGLA.' — '.OrganizacaoRaizSeeder::NOME],
             ]
