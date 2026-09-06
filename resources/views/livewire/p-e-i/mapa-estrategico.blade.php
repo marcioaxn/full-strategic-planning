@@ -23,12 +23,6 @@
     </div>
     @endauth
 
-    @guest
-    <div class="container mt-4 mb-4 pt-4 pb-4">
-
-    </div>
-    @endguest
-
     @if(!$peiAtivo)
         <div class="container py-5 text-center">
             <div class="alert alert-modern alert-warning d-inline-block p-4 shadow-sm">
@@ -38,57 +32,46 @@
             </div>
         </div>
     @else
-        <div class="container-fluid px-lg-5 py-4">
+        <div class="container-fluid px-lg-5 {{ auth()->check() ? 'py-4' : 'pt-0 pb-4' }}">
             
-            {{-- Título Centralizado --}}
-            <div class="text-center mb-5 mt-2 animate-fade-in">
-                <h5 class="fw-bold text-uppercase letter-spacing-2 text-muted-custom mb-2">Mapa Estratégico</h5>
-                <h3 class="fw-bold text-body-emphasis letter-spacing-1">{{ $organizacaoNome }}</h3>
-                <div class="divider-center"></div>
+            {{-- Título Centralizado.
+                 Fora da sessão, este componente é embutido na página pública,
+                 que já imprime "Mapa Estratégico" como título da seção. Repetir
+                 aqui dava dois títulos idênticos, um debaixo do outro. --}}
+            <div class="text-center {{ auth()->check() ? 'mb-5 mt-2' : 'mb-4' }} animate-fade-in">
+                @auth
+                    <h5 class="fw-bold text-uppercase letter-spacing-2 text-muted-custom mb-2">Mapa Estratégico</h5>
+                    <h3 class="fw-bold text-body-emphasis letter-spacing-1">{{ $organizacaoNome }}</h3>
+                    <div class="divider-center"></div>
+                @endauth
                 
-                @if($viewMode === 'grouped')
-                    <div class="mt-2">
-                        <button class="btn btn-sm btn-info bg-opacity-10 text-white border border-info border-opacity-25 rounded-pill px-3 py-2 shadow-sm" 
+            </div>
+
+            {{-- BARRA DE CONTROLES DO MAPA — os dois controles na MESMA linha --}}
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                <div>
+                    @if($viewMode === 'grouped')
+                        <button class="btn btn-sm btn-info bg-opacity-10 text-white border border-info border-opacity-25 rounded-pill px-3 py-2 shadow-sm"
                                 type="button" data-bs-toggle="collapse" data-bs-target="#collapseOrgs" aria-expanded="false" aria-controls="collapseOrgs">
                             <i class="bi bi-diagram-3-fill me-1"></i> Visualização Consolidada ({{ $qtdUnidadesConsolidadas }} unidades)
                             <i class="bi bi-chevron-down small ms-2"></i>
                         </button>
-                        
-                        <div class="collapse mt-3" id="collapseOrgs">
-                            <div class="card card-body border-info border-opacity-25 bg-info bg-opacity-10 shadow-sm rounded-4 mx-auto" style="max-width: 800px;">
-                                <h6 class="fw-bold text-info mb-3 text-uppercase small letter-spacing-1">Organizações Incluídas no Cálculo</h6>
-                                <div class="d-flex flex-wrap justify-content-center gap-2">
-                                    @foreach($organizacoesConsolidadas as $orgConsolidada)
-                                        <span class="badge bg-white text-dark border shadow-sm px-3 py-2 rounded-pill fw-medium">
-                                            <i class="bi bi-building me-1 text-info"></i>
-                                            {{ $orgConsolidada['sgl_organizacao'] }} - {{ $orgConsolidada['nom_organizacao'] }}
-                                        </span>
-                                    @endforeach
-                                </div>
-                                <p class="text-muted small mt-3 mb-0">
-                                    <i class="bi bi-info-circle me-1"></i> Os valores de atingimento acima representam a média aritmética dos indicadores de todas estas unidades.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                @else
-                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-opacity-25 rounded-pill px-3 py-2 mt-2">
-                        <i class="bi bi-geo-alt me-1"></i> Visualização Estrita (Apenas Unidade Selecionada)
-                    </span>
-                @endif
-            </div>
+                    @else
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-opacity-25 rounded-pill px-3 py-2">
+                            <i class="bi bi-geo-alt me-1"></i> Visualização Estrita (Apenas Unidade Selecionada)
+                        </span>
+                    @endif
+                </div>
 
-            {{-- TOOLBAR PREMIUM (FORA DO SLOT PARA FUNCIONAR O WIRE:CLICK) --}}
-            <div class="d-flex justify-content-end mb-4">
                 <div class="view-mode-selector bg-surface border rounded-pill p-1 d-flex shadow-sm">
-                    <button wire:click="setViewMode('grouped')" 
+                    <button wire:click="setViewMode('grouped')"
                             class="btn btn-sm rounded-pill px-4 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'grouped' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}"
                             wire:loading.attr="disabled">
                         <i class="bi bi-diagram-3-fill" wire:loading.remove wire:target="setViewMode('grouped')"></i>
                         <div class="spinner-border spinner-border-sm" role="status" wire:loading wire:target="setViewMode('grouped')"></div>
                         <span class="fw-bold small">Agrupado</span>
                     </button>
-                    <button wire:click="setViewMode('individual')" 
+                    <button wire:click="setViewMode('individual')"
                             class="btn btn-sm rounded-pill px-4 d-flex align-items-center gap-2 transition-all {{ $viewMode === 'individual' ? 'btn-primary shadow' : 'btn-ghost-secondary text-muted' }}"
                             wire:loading.attr="disabled">
                         <i class="bi bi-geo-alt-fill" wire:loading.remove wire:target="setViewMode('individual')"></i>
@@ -98,6 +81,24 @@
                 </div>
             </div>
 
+            @if($viewMode === 'grouped')
+                <div class="collapse mb-4" id="collapseOrgs">
+                    <div class="card card-body border-info border-opacity-25 bg-info bg-opacity-10 shadow-sm rounded-4 mx-auto" style="max-width: 800px;">
+                        <h6 class="fw-bold text-info mb-3 text-uppercase small letter-spacing-1">Organizações Incluídas no Cálculo</h6>
+                        <div class="d-flex flex-wrap justify-content-center gap-2">
+                            @foreach($organizacoesConsolidadas as $orgConsolidada)
+                                <span class="badge bg-white text-dark border shadow-sm px-3 py-2 rounded-pill fw-medium">
+                                    <i class="bi bi-building me-1 text-info"></i>
+                                    {{ $orgConsolidada['sgl_organizacao'] }} - {{ $orgConsolidada['nom_organizacao'] }}
+                                </span>
+                            @endforeach
+                        </div>
+                        <p class="text-muted small mt-3 mb-0">
+                            <i class="bi bi-info-circle me-1"></i> Os valores de atingimento acima representam a média aritmética dos indicadores de todas estas unidades.
+                        </p>
+                    </div>
+                </div>
+            @endif
             <!-- ========== IDENTIDADE ESTRATÉGICA ========== -->
             <div class="row g-4 mb-5">
                 <div class="col-md-4">
@@ -134,7 +135,12 @@
                     </div>
                 </div>
 
-                {{-- Card de Temas Norteadores --}}
+                {{-- Card de Temas Norteadores.
+                     Some por completo quando não há tema E o leitor é visitante:
+                     um cartão largo dizendo "não definidos" não informa nada a
+                     quem veio ver a estratégia publicada. Dentro do sistema ele
+                     continua, porque ali o vazio é um lembrete de preencher. --}}
+                @if($temasNorteadores->isNotEmpty() || auth()->check())
                 <div class="col-12">
                     <div class="identity-box shadow-sm border h-100 text-center">
                         <div class="d-flex align-items-center justify-content-center mb-3">
@@ -152,6 +158,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
             </div>
 
             <!-- ========== MAPA DE PERSPECTIVAS ========== -->
@@ -215,14 +222,14 @@
                                                             </div>
                                                         </a>
                                                     </div>
-                                                    {{-- Planos (Foco em Atividade e Progresso) --}}
+                                                    {{-- Iniciativas (Foco em Atividade e Progresso) --}}
                                                     <div class="obj-stat-box">
                                                         <a wire:navigate href="{{ route('planos.index') }}?filtroObjetivo={{ $objetivo['cod_objetivo'] }}" 
                                                            class="text-decoration-none plano-link" @auth onclick="event.stopPropagation();" @endauth>
                                                             <div class="d-flex justify-content-between mb-1 align-items-center">
                                                                 {{-- Rótulo com Quantidade --}}
                                                                 <span class="stat-label-modern" style="text-transform: uppercase;">
-                                                                    {{ $pln['quantidade'] }} Planos Ativos
+                                                                    {{ $pln['quantidade'] }} Iniciativas Ativas
                                                                 </span>
                                                                 {{-- Percentual em Destaque --}}
                                                                 <span class="stat-value-modern" style="color: {{ $pln['cor'] }}; font-size: 0.8rem;">
@@ -254,7 +261,22 @@
                 @endforeach
             </div>
 
-            {{-- Legenda Refinada --}}
+            {{-- Legenda dos Graus de Satisfação --}}
+            @if($grausSatisfacao->isEmpty())
+                <div class="legenda-wrapper mt-5 mb-4 text-center">
+                    <div class="d-inline-flex align-items-center gap-2 px-4 py-3 rounded-4 shadow-sm bg-body border">
+                        <i class="bi bi-info-circle text-secondary"></i>
+                        <span class="small text-body">
+                            <strong>Sem faixas de satisfação configuradas neste ciclo.</strong>
+                            Os percentuais acima aparecem em cinza porque a organização ainda não
+                            definiu a partir de que valor um resultado é bom, regular ou crítico.
+                            @can('modulo.acessar', 'graus-satisfacao')
+                                <a href="{{ route('graus-satisfacao.index') }}" class="ms-1">Configurar agora</a>.
+                            @endcan
+                        </span>
+                    </div>
+                </div>
+            @else
             <div class="legenda-wrapper mt-5 mb-4 text-center">
                 <div class="d-inline-flex flex-column gap-3 px-5 py-3 rounded-4 shadow-sm bg-body border">
                     <div class="d-flex align-items-center justify-content-center flex-wrap gap-4">
@@ -268,6 +290,7 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
     @endif
 
@@ -308,11 +331,11 @@
 
                                         <div class="text-muted h3 mb-0 opacity-50">+</div>
 
-                                        <!-- Parte Planos -->
+                                        <!-- Parte de Iniciativas -->
                                         <div class="text-center px-3 border-end">
                                             <div class="h3 mb-0 text-success fw-bold">@brazil_percent($detalhesCalculo['detalhes_calculo']['nota_planos'], 1)</div>
                                             <div class="x-small text-muted fw-bold text-uppercase mt-1">
-                                                Planos (Ano) <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 ms-1">{{ $detalhesCalculo['detalhes_calculo']['peso_planos'] }}%</span>
+                                                Iniciativas (Ano) <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 ms-1">{{ $detalhesCalculo['detalhes_calculo']['peso_planos'] }}%</span>
                                             </div>
                                         </div>
 
@@ -364,12 +387,12 @@
                             </table>
                         </div>
 
-                        {{-- Tabela de Planos e Entregas (NOVO) --}}
+                        {{-- Tabela de Iniciativas e Entregas --}}
                         @if(isset($detalhesCalculo['planos']) && count($detalhesCalculo['planos']) > 0)
                             <div class="divider-center my-4 opacity-25"></div>
                             
                             <div class="d-flex align-items-center mb-3 ps-2">
-                                <h6 class="small fw-bold text-uppercase text-muted mb-0"><i class="bi bi-list-check me-2"></i>Detalhamento de Planos e Entregas</h6>
+                                <h6 class="small fw-bold text-uppercase text-muted mb-0"><i class="bi bi-list-check me-2"></i>Detalhamento de Iniciativas e Entregas</h6>
                             </div>
 
                             <div class="table-responsive rounded-3 border">
@@ -377,7 +400,7 @@
                                     <thead class="bg-body-secondary">
                                         <tr class="small text-muted text-uppercase fw-bold">
                                             <th class="border-0 px-3 py-3" style="width: 25%;">Objetivo</th>
-                                            <th class="border-0 py-3">Plano de Ação / Entregas do Ano</th>
+                                            <th class="border-0 py-3">Iniciativa / Entregas do Ano</th>
                                             <th class="border-0 text-end px-3 py-3" style="width: 120px;">Nota</th>
                                         </tr>
                                     </thead>

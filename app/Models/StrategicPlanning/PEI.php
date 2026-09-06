@@ -17,7 +17,7 @@ class PEI extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_pei';
+    protected $table = 'strategic_planning.tab_pei';
 
     /**
      * Chave primária
@@ -96,7 +96,7 @@ class PEI extends Model
             'cod_pei',
             'num_ods'
         )->withPivot('txt_contribuicao', 'dsc_intensidade')->withTimestamps()
-         ->orderBy('strategic_planning.tab_ods.num_ods');
+            ->orderBy('strategic_planning.tab_ods.num_ods');
     }
 
     /**
@@ -109,6 +109,7 @@ class PEI extends Model
     public function isAtivo(): bool
     {
         $anoAtual = now()->year;
+
         return $anoAtual >= $this->num_ano_inicio_pei && $anoAtual <= $this->num_ano_fim_pei;
     }
 
@@ -122,8 +123,9 @@ class PEI extends Model
     public function scopeAtivos($query)
     {
         $anoAtual = now()->year;
+
         return $query->where('num_ano_inicio_pei', '<=', $anoAtual)
-                     ->where('num_ano_fim_pei', '>=', $anoAtual);
+            ->where('num_ano_fim_pei', '>=', $anoAtual);
     }
 
     /**
@@ -132,6 +134,7 @@ class PEI extends Model
     public function scopeFuturos($query)
     {
         $anoAtual = now()->year;
+
         return $query->where('num_ano_inicio_pei', '>', $anoAtual);
     }
 
@@ -141,6 +144,7 @@ class PEI extends Model
     public function scopePassados($query)
     {
         $anoAtual = now()->year;
+
         return $query->where('num_ano_fim_pei', '<', $anoAtual);
     }
 }

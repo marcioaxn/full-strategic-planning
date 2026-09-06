@@ -29,9 +29,14 @@
 
         // Buscar detalhes dos indicadores para transparencia no calculo
         $indicadoresDiretos = $objetivo->indicadores()->with(['evolucoes', 'metasPorAno'])->get();
-        $indicadoresPlanos = \App\Models\PerformanceIndicators\Indicador::whereHas('planoDeAcao', function ($q) use ($objetivo) {
-            $q->where('cod_objetivo', $objetivo->cod_objetivo);
-        })->with(['evolucoes', 'metasPorAno', 'planoDeAcao'])->get();
+        // Indicadores que chegam pelas Iniciativas do objetivo. Buscados pela
+        // RELAÇÃO do objetivo, não por consulta estática ao Model: o partial é
+        // incluído dentro de telas de listagem, e query em Blade vira N+1 sem
+        // que nenhum teste de componente perceba.
+        $indicadoresPlanos = $objetivo->planosAcao()
+            ->with(['indicadores.evolucoes', 'indicadores.metasPorAno'])
+            ->get()
+            ->flatMap(fn ($plano) => $plano->indicadores);
         $todosIndicadores = $indicadoresDiretos->merge($indicadoresPlanos)->unique('cod_indicador');
 
         // Calcular detalhes de cada indicador
@@ -60,7 +65,7 @@
                 'realizado' => $totalRealizado,
                 'atingimento' => round($atingimento, 1),
                 'contribuicao' => round($atingimento * $peso, 1),
-                'vinculo' => $ind->cod_objetivo ? 'Objetivo' : 'Plano de Acao',
+                'vinculo' => $ind->cod_objetivo ? 'Objetivo' : 'Iniciativa',
             ];
             $somaPesos += $peso;
         }
@@ -83,8 +88,13 @@
             default => 'danger'
         };
 
-        // Buscar graus de satisfacao para legenda
-        $grausSatisfacao = \App\Models\StrategicPlanning\GrauSatisfacao::orderBy('vlr_minimo')->get();
+        // Legenda do farol. O partial NÃO consulta o banco: recebe as faixas
+        // já carregadas pelo componente (ListarIndicadores e ListarPlanos
+        // expõem $grausSatisfacao, com o escopo do ciclo aplicado).
+        //
+        // Query em Blade é N+1 quando o partial entra em laço, e nenhum teste
+        // de componente a alcança. Dado se busca no componente.
+        $grausSatisfacao = $grausSatisfacao ?? collect();
     @endphp
 
     <!-- Card de Contexto Hierarquico -->
@@ -163,19 +173,19 @@
                     </div>
                 </div>
 
-                <!-- Total Planos -->
+                <!-- Total de Iniciativas -->
                 <div class="col-6 col-md-3">
                     <div class="card h-100 border-0 bg-light">
                         <div class="card-body py-2 px-3 text-center">
                             <div class="fs-4 fw-bold text-info">{{ $totalPlanos }}</div>
                             <small class="text-muted">
-                                <i class="bi bi-list-check me-1"></i>Planos
+                                <i class="bi bi-list-check me-1"></i>Iniciativas
                             </small>
                         </div>
                     </div>
                 </div>
 
-                <!-- Status dos Planos -->
+                <!-- Status das Iniciativas -->
                 <div class="col-6 col-md-3">
                     <div class="card h-100 border-0 bg-light"
                          data-bs-toggle="tooltip"
@@ -370,7 +380,7 @@
                     <a href="{{ route('planos.index', ['filtroObjetivo' => $objetivo->cod_objetivo]) }}"
                        class="btn btn-sm btn-outline-info {{ request()->routeIs('planos.*') ? 'active' : '' }}"
                        wire:navigate>
-                        <i class="bi bi-list-check me-1"></i>Planos
+                        <i class="bi bi-list-check me-1"></i>Iniciativas
                     </a>
                 </div>
             </div>

@@ -2,36 +2,50 @@
 
 namespace App\Livewire\StrategicPlanning;
 
+use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\PerformanceIndicators\Indicador;
+use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\PEI;
+use App\Models\StrategicPlanning\Perspectiva;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 #[Layout('layouts.app')]
 class ListarPeis extends Component
 {
-    use WithPagination;
     use AuthorizesRequests;
+    use WithPagination;
 
     public $search = '';
+
     public $filtroStatus = '';
 
     // Modais e Feedback
     public bool $showModal = false;
+
     public bool $showDeleteModal = false;
+
     public bool $showSuccessModal = false;
+
     public bool $showErrorModal = false;
+
     public string $successMessage = '';
+
     public string $errorMessage = '';
+
     public string $createdPeiName = '';
-    
+
     public $peiId;
+
     public $impactoExclusao = [];
 
     // Campos do Formulário
     public $dsc_pei = '';
+
     public $num_ano_inicio_pei;
+
     public $num_ano_fim_pei;
 
     protected $queryString = [
@@ -42,7 +56,7 @@ class ListarPeis extends Component
 
     public function mount()
     {
-        if (!auth()->user()->isSuperAdmin()) {
+        if (! auth()->user()->isSuperAdmin()) {
             abort(403, 'Apenas Super Administradores podem gerenciar PEIs.');
         }
         $this->num_ano_inicio_pei = now()->year;
@@ -109,10 +123,10 @@ class ListarPeis extends Component
 
             if ($this->peiId) {
                 PEI::findOrFail($this->peiId)->update($data);
-                $this->successMessage = "O ciclo de planejamento estratégico foi atualizado com sucesso e todos os vínculos foram preservados.";
+                $this->successMessage = 'O ciclo de planejamento estratégico foi atualizado com sucesso e todos os vínculos foram preservados.';
             } else {
                 PEI::create($data);
-                $this->successMessage = "O novo ciclo de planejamento estratégico foi registrado. Agora você pode prosseguir com a definição da Identidade e Perspectivas.";
+                $this->successMessage = 'O novo ciclo de planejamento estratégico foi registrado. Agora você pode prosseguir com a definição da Identidade e Perspectivas.';
             }
 
             $this->createdPeiName = $this->dsc_pei;
@@ -121,7 +135,11 @@ class ListarPeis extends Component
             $this->showSuccessModal = true;
 
         } catch (\Exception $e) {
-            $this->errorMessage = "Ocorreu um erro técnico ao processar o registro do PEI. Por favor, tente novamente.";
+            // Sem isto, a causa real desaparece: o cliente recebe uma
+            // orientação genérica e não sobra rastro nenhum para investigar.
+            report($e);
+
+            $this->errorMessage = 'Ocorreu um erro técnico ao processar o registro do PEI. Por favor, tente novamente.';
             $this->showErrorModal = true;
         }
     }
@@ -130,13 +148,13 @@ class ListarPeis extends Component
     {
         $this->peiId = $id;
         $pei = PEI::withCount('perspectivas')->findOrFail($id);
-        
-        $perspIds = \App\Models\StrategicPlanning\Perspectiva::where('cod_pei', $id)->pluck('cod_perspectiva');
-        $objCount = \App\Models\StrategicPlanning\Objetivo::whereIn('cod_perspectiva', $perspIds)->count();
-        $indCount = \App\Models\PerformanceIndicators\Indicador::whereHas('objetivo', function($q) use ($perspIds) {
+
+        $perspIds = Perspectiva::where('cod_pei', $id)->pluck('cod_perspectiva');
+        $objCount = Objetivo::whereIn('cod_perspectiva', $perspIds)->count();
+        $indCount = Indicador::whereHas('objetivo', function ($q) use ($perspIds) {
             $q->whereIn('cod_perspectiva', $perspIds);
         })->count();
-        $planCount = \App\Models\ActionPlan\PlanoDeAcao::whereHas('objetivo', function($q) use ($perspIds) {
+        $planCount = PlanoDeAcao::whereHas('objetivo', function ($q) use ($perspIds) {
             $q->whereIn('cod_perspectiva', $perspIds);
         })->count();
 
@@ -171,7 +189,7 @@ class ListarPeis extends Component
         $query = PEI::query()->withCount('perspectivas');
 
         if ($this->search) {
-            $query->where('dsc_pei', 'ilike', '%' . $this->search . '%');
+            $query->where('dsc_pei', 'ilike', '%'.$this->search.'%');
         }
 
         if ($this->filtroStatus === 'ativo') {
@@ -183,7 +201,7 @@ class ListarPeis extends Component
         }
 
         return view('livewire.p-e-i.listar-peis', [
-            'peis' => $query->orderBy('num_ano_inicio_pei', 'desc')->paginate(10)
+            'peis' => $query->orderBy('num_ano_inicio_pei', 'desc')->paginate(10),
         ]);
     }
 }

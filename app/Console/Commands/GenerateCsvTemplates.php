@@ -8,17 +8,18 @@ use Illuminate\Support\Facades\File;
 class GenerateCsvTemplates extends Command
 {
     protected $signature = 'make:export-templates';
-    protected $description = 'Gera templates CSV para importação de Planos, Entregas e Indicadores';
+
+    protected $description = 'Gera templates CSV para importação de Iniciativas, Entregas e Indicadores';
 
     public function handle()
     {
         $path = public_path('templates');
-        if (!File::exists($path)) {
+        if (! File::exists($path)) {
             File::makeDirectory($path, 0755, true);
         }
 
         // ==========================================
-        // 1. PLANOS DE AÇÃO
+        // 1. INICIATIVAS
         // ==========================================
         $this->generatePair(
             $path,
@@ -59,7 +60,7 @@ class GenerateCsvTemplates extends Command
             '2_Entregas',
             [
                 'Título da Entrega' => 'dsc_entrega',
-                'Nome do Plano Vinculado' => 'dsc_plano_vinculado',
+                'Nome da Iniciativa Vinculada' => 'dsc_plano_vinculado',
                 'Tipo (Tarefa/Marco)' => 'dsc_tipo',
                 'Data de Início' => 'dte_inicio', // Entregas podem ter início implícito
                 'Prazo Final (Deadline)' => 'dte_prazo',
@@ -70,7 +71,7 @@ class GenerateCsvTemplates extends Command
             ],
             [
                 'Título da Entrega' => 'Nome da entrega ou tarefa. Ex: "Relatório de Diagnóstico".',
-                'Nome do Plano Vinculado' => 'Nome exato do Plano de Ação ao qual esta entrega pertence.',
+                'Nome da Iniciativa Vinculada' => 'Nome exato da Iniciativa ao qual esta entrega pertence.',
                 'Tipo (Tarefa/Marco)' => 'Classificação: "Tarefa" (padrão) ou "Marco" (entrega principal).',
                 'Data de Início' => 'Data de início da tarefa (Opcional).',
                 'Prazo Final (Deadline)' => 'Data limite para conclusão. Formato: dd/mm/aaaa.',
@@ -97,7 +98,7 @@ class GenerateCsvTemplates extends Command
                 'Fonte de Dados' => 'dsc_fonte',
                 'Meta Global' => 'dsc_meta',
                 'Acumulado (Sim/Não)' => 'bln_acumulado',
-                'Tipo de Vínculo (Objetivo/Plano)' => 'dsc_tipo_vinculo',
+                'Tipo de Vínculo (Objetivo/Iniciativa)' => 'dsc_tipo_vinculo',
                 'Nome do Vínculo' => 'nom_vinculo', // Nome do Obj ou do Plano
             ],
             [
@@ -110,8 +111,8 @@ class GenerateCsvTemplates extends Command
                 'Fonte de Dados' => 'Origem da informação. Ex: "Sistema ERP", "Planilha de Controle".',
                 'Meta Global' => 'Valor alvo geral. Ex: "95%".',
                 'Acumulado (Sim/Não)' => '"Sim" se os valores somam ao longo do ano, "Não" se o valor é pontual no mês.',
-                'Tipo de Vínculo (Objetivo/Plano)' => 'Define se o indicador mede um Objetivo Estratégico ou um Plano de Ação.',
-                'Nome do Vínculo' => 'Nome exato do Objetivo ou Plano ao qual este indicador pertence.',
+                'Tipo de Vínculo (Objetivo/Iniciativa)' => 'Define se o indicador mede um Objetivo Estratégico ou uma Iniciativa.',
+                'Nome do Vínculo' => 'Nome exato do Objetivo ou da Iniciativa a que este indicador pertence.',
             ]
         );
 
@@ -131,7 +132,7 @@ class GenerateCsvTemplates extends Command
         $handleGuide = fopen("{$path}/{$prefix}_Guia_Preenchimento.csv", 'w');
         fprintf($handleGuide, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM para Excel
         fputcsv($handleGuide, ['Coluna', 'O que preencher? (Instruções)'], ';');
-        
+
         foreach ($guideMap as $col => $desc) {
             fputcsv($handleGuide, [$col, $desc], ';');
         }

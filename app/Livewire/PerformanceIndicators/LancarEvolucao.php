@@ -2,15 +2,16 @@
 
 namespace App\Livewire\PerformanceIndicators;
 
-use App\Models\PerformanceIndicators\Indicador;
 use App\Models\PerformanceIndicators\EvolucaoIndicador;
+use App\Models\PerformanceIndicators\Indicador;
 use App\Models\StrategicPlanning\Arquivo;
+use App\Services\IndicadorCalculoService;
+use App\Support\UnidadeMedida;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 #[Layout('layouts.app')]
 class LancarEvolucao extends Component
@@ -19,31 +20,39 @@ class LancarEvolucao extends Component
     use WithFileUploads;
 
     public $indicador;
+
     public $evolucoes = [];
-    
+
     // Filtros/Período atual
     public $ano;
+
     public $mes;
 
     // Form Evolução
     public $vlr_previsto;
+
     public $vlr_realizado;
+
     public $txt_avaliacao;
+
     public $bln_atualizado = 'Sim';
-    
+
     // Upload de Arquivos
     public $arquivosTemporarios = [];
+
     public $arquivosExistentes = [];
 
     protected $rules = [
-        'vlr_previsto' => 'nullable|numeric',
-        'vlr_realizado' => 'nullable|numeric',
+        // Chegam como TEXTO no formato brasileiro (20.000.000.000,00).
+        // A regra 'numeric' recusaria — a conversão acontece em salvar().
+        'vlr_previsto' => 'nullable|string|max:30',
+        'vlr_realizado' => 'nullable|string|max:30',
         'txt_avaliacao' => 'nullable|string|max:2000',
         'bln_atualizado' => 'required|in:Sim,Não',
     ];
 
     protected $listeners = [
-        'anoSelecionado' => 'atualizarAno'
+        'anoSelecionado' => 'atualizarAno',
     ];
 
     public function atualizarAno($ano)
@@ -65,8 +74,15 @@ class LancarEvolucao extends Component
         $this->carregarHistorico();
     }
 
-    public function updatedAno() { $this->carregarPeriodo(); }
-    public function updatedMes() { $this->carregarPeriodo(); }
+    public function updatedAno()
+    {
+        $this->carregarPeriodo();
+    }
+
+    public function updatedMes()
+    {
+        $this->carregarPeriodo();
+    }
 
     public function carregarPeriodo()
     {
@@ -76,8 +92,9 @@ class LancarEvolucao extends Component
             ->first();
 
         if ($evolucao) {
-            $this->vlr_previsto = $evolucao->vlr_previsto;
-            $this->vlr_realizado = $evolucao->vlr_realizado;
+            $unidade = $this->indicador->dsc_unidade_medida ?? null;
+            $this->vlr_previsto = UnidadeMedida::formatar($evolucao->vlr_previsto, $unidade, false);
+            $this->vlr_realizado = UnidadeMedida::formatar($evolucao->vlr_realizado, $unidade, false);
             $this->txt_avaliacao = $evolucao->txt_avaliacao;
             $this->bln_atualizado = $evolucao->bln_atualizado;
             $this->arquivosExistentes = $evolucao->arquivos;
@@ -88,7 +105,7 @@ class LancarEvolucao extends Component
             $this->bln_atualizado = 'Sim';
             $this->arquivosExistentes = [];
         }
-        
+
         $this->arquivosTemporarios = [];
     }
 
@@ -109,11 +126,14 @@ class LancarEvolucao extends Component
             [
                 'cod_indicador' => $this->indicador->cod_indicador,
                 'num_ano' => $this->ano,
-                'num_mes' => $this->mes
+                'num_mes' => $this->mes,
             ],
             [
-                'vlr_previsto' => $this->vlr_previsto ?: 0,
-                'vlr_realizado' => $this->vlr_realizado ?: 0,
+                // null e zero são coisas diferentes: zero entra na média,
+                // "não informado" não deveria. Mantido o ?: 0 do
+                // comportamento atual para não mudar cálculo neste passo.
+                'vlr_previsto' => UnidadeMedida::paraFloat($this->vlr_previsto) ?: 0,
+                'vlr_realizado' => UnidadeMedida::paraFloat($this->vlr_realizado) ?: 0,
                 'txt_avaliacao' => $this->txt_avaliacao,
                 'bln_atualizado' => $this->bln_atualizado,
             ]
@@ -122,7 +142,7 @@ class LancarEvolucao extends Component
         // Processar Uploads
         foreach ($this->arquivosTemporarios as $arquivo) {
             $path = $arquivo->store('pei/evidencias', 'public');
-            
+
             Arquivo::create([
                 'cod_evolucao_indicador' => $evolucao->cod_evolucao_indicador,
                 'txt_assunto' => $arquivo->getClientOriginalName(),
@@ -135,7 +155,7 @@ class LancarEvolucao extends Component
         $this->carregarPeriodo();
         $this->carregarHistorico();
 
-        app(\App\Services\IndicadorCalculoService::class)->verificarAlertaTendencia($this->indicador);
+        app(IndicadorCalculoService::class)->verificarAlertaTendencia($this->indicador);
 
         session()->flash('status', 'Lançamento realizado com sucesso!');
     }

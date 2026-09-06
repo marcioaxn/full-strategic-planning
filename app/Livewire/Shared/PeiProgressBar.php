@@ -2,25 +2,27 @@
 
 namespace App\Livewire\Shared;
 
-use App\Models\StrategicPlanning\PEI;
+use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\PerformanceIndicators\Indicador;
+use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\StrategicPlanning\InauguraPei;
 use App\Models\StrategicPlanning\MissaoVisaoValores;
-use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\StrategicPlanning\Objetivo;
-use App\Models\StrategicPlanning\GrauSatisfacao;
-use App\Models\PerformanceIndicators\Indicador;
-use App\Models\ActionPlan\PlanoDeAcao;
-use Livewire\Component;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\StrategicPlanning\Perspectiva;
 use Illuminate\Support\Facades\Session;
+use Livewire\Component;
 
 class PeiProgressBar extends Component
 {
     public $progresso = 0;
+
     public $steps = [];
+
     public $peiLabel = '';
 
     protected $listeners = [
-        'peiSelecionado'         => '$refresh',
+        'peiSelecionado' => '$refresh',
         'organizacaoSelecionada' => '$refresh',
     ];
 
@@ -32,19 +34,21 @@ class PeiProgressBar extends Component
     public function render()
     {
         $this->calcular();
+
         return view('livewire.shared.pei-progress-bar');
     }
 
     private function calcular(): void
     {
-        $orgId  = Session::get('organizacao_selecionada_id');
-        $peiId  = Session::get('pei_selecionado_id');
-        $pei    = $peiId ? PEI::find($peiId) : PEI::ativos()->first();
+        $orgId = Session::get('organizacao_selecionada_id');
+        $peiId = Session::get('pei_selecionado_id');
+        $pei = $peiId ? PEI::find($peiId) : PEI::ativos()->first();
 
-        if (!$pei || !$orgId) {
+        if (! $pei || ! $orgId) {
             $this->progresso = 0;
             $this->steps = [];
             $this->peiLabel = $pei?->dsc_pei ?? '';
+
             return;
         }
 
@@ -58,13 +62,13 @@ class PeiProgressBar extends Component
         }
 
         $this->steps = [
-            'inaugurar'   => $inaugurou,
-            'identidade'  => MissaoVisaoValores::where('cod_organizacao', $orgId)->where('cod_pei', $codPei)->exists(),
-            'perspectivas'=> Perspectiva::where('cod_pei', $codPei)->exists(),
-            'objetivos'   => Objetivo::whereHas('perspectiva', fn($q) => $q->where('cod_pei', $codPei))->exists(),
-            'graus'       => GrauSatisfacao::where('cod_pei', $codPei)->exists(),
-            'indicadores' => Indicador::whereHas('objetivo.perspectiva', fn($q) => $q->where('cod_pei', $codPei))->exists(),
-            'planos'      => PlanoDeAcao::whereHas('objetivo.perspectiva', fn($q) => $q->where('cod_pei', $codPei))->where('cod_organizacao', $orgId)->exists(),
+            'inaugurar' => $inaugurou,
+            'identidade' => MissaoVisaoValores::where('cod_organizacao', $orgId)->where('cod_pei', $codPei)->exists(),
+            'perspectivas' => Perspectiva::where('cod_pei', $codPei)->exists(),
+            'objetivos' => Objetivo::whereHas('perspectiva', fn ($q) => $q->where('cod_pei', $codPei))->exists(),
+            'graus' => GrauSatisfacao::doPei($codPei)->exists(),
+            'indicadores' => Indicador::whereHas('objetivo.perspectiva', fn ($q) => $q->where('cod_pei', $codPei))->exists(),
+            'planos' => PlanoDeAcao::whereHas('objetivo.perspectiva', fn ($q) => $q->where('cod_pei', $codPei))->where('cod_organizacao', $orgId)->exists(),
         ];
 
         $concluidos = count(array_filter($this->steps));

@@ -13,9 +13,12 @@ class ObjetivoComentario extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
 
-    protected $table = 'tab_objetivo_comentarios';
+    protected $table = 'strategic_planning.tab_objetivo_comentarios';
+
     protected $primaryKey = 'cod_comentario';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [

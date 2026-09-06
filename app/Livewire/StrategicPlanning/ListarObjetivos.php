@@ -10,14 +10,19 @@ use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\SystemSetting;
 use App\Services\AI\AiServiceFactory;
 use App\Services\PeiGuidanceService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
-#[Layout('layouts.app')]
+// Sem #[Layout] fixo: o layout é escolhido no render(), porque esta tela
+// também é servida ao visitante pelo Mapa Estratégico público.
 class ListarObjetivos extends Component
 {
+    use AuthorizesRequests;
+
     public $perspectivas;
 
     #[Locked]
@@ -148,6 +153,11 @@ class ListarObjetivos extends Component
 
     public function aplicarSugestao($nome, $descricao, $ordem)
     {
+        // Escrita exige capacidade. Sem isto, o método é chamável direto
+        // pelo navegador — inclusive por visitante, já que esta tela é
+        // pública para leitura.
+        $this->authorize('modulo.criar', 'planejamento-estrategico');
+
         $this->nom_objetivo = $nome;
         $this->dsc_objetivo = $descricao;
         $this->num_nivel_hierarquico_apresentacao = $ordem;
@@ -168,7 +178,12 @@ class ListarObjetivos extends Component
 
     public function mount()
     {
-        $this->authorize('modulo.acessar', 'planejamento-estrategico');
+        // O visitante ENTRA (a tela é o mergulho vindo do Mapa Estratégico
+        // público) mas não escreve: create(), save() e delete() continuam
+        // exigindo capacidade, e Gate nega quem não tem User.
+        if (Auth::check()) {
+            $this->authorize('modulo.acessar', 'planejamento-estrategico');
+        }
 
         $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
         $this->perspectivas = collect();
@@ -212,7 +227,10 @@ class ListarObjetivos extends Component
                     },
                 ]);
             }])
-            ->ordenadoPorNivel()
+            // Ordem do MAPA: maior nível primeiro. A tela de objetivos agrupa
+            // por perspectiva, e vinha crescente — discordando do mapa e da
+            // tela de perspectivas. Três lugares, três leituras da mesma ordem.
+            ->orderBy('num_nivel_hierarquico_apresentacao', 'desc')
             ->get();
     }
 
@@ -221,6 +239,11 @@ class ListarObjetivos extends Component
      */
     public function toggleOds(int $numOds): void
     {
+        // Escrita exige capacidade. Sem isto, o método é chamável direto
+        // pelo navegador — inclusive por visitante, já que esta tela é
+        // pública para leitura.
+        $this->authorize('modulo.editar', 'planejamento-estrategico');
+
         if (in_array($numOds, $this->odsSelecionados)) {
             $this->odsSelecionados = array_values(array_diff($this->odsSelecionados, [$numOds]));
             unset($this->odsContribuicoes[$numOds]);
@@ -244,6 +267,11 @@ class ListarObjetivos extends Component
 
     public function create($perspectivaId = null, ?PeiGuidanceService $service = null)
     {
+        // Escrita exige capacidade. Sem isto, o método é chamável direto
+        // pelo navegador — inclusive por visitante, já que esta tela é
+        // pública para leitura.
+        $this->authorize('modulo.criar', 'planejamento-estrategico');
+
         // Resolve service if not passed (Livewire handles dependency injection in methods if requested)
         $service = $service ?? app(PeiGuidanceService::class);
         $guidance = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
@@ -263,6 +291,11 @@ class ListarObjetivos extends Component
 
     public function edit($id)
     {
+        // Escrita exige capacidade. Sem isto, o método é chamável direto
+        // pelo navegador — inclusive por visitante, já que esta tela é
+        // pública para leitura.
+        $this->authorize('modulo.editar', 'planejamento-estrategico');
+
         $obj = Objetivo::with(['ods', 'perspectiva'])->findOrFail($id);
         abort_unless($this->peiAtivo && $obj->perspectiva->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->objetivoId = $id;
@@ -294,6 +327,11 @@ class ListarObjetivos extends Component
 
     public function save()
     {
+        // Escrita exige capacidade. Sem isto, o método é chamável direto
+        // pelo navegador — inclusive por visitante, já que esta tela é
+        // pública para leitura.
+        $this->authorize('modulo.editar', 'planejamento-estrategico');
+
         $service = app(PeiGuidanceService::class);
         $this->validate([
             'nom_objetivo' => 'required|string|max:255',
@@ -339,7 +377,7 @@ class ListarObjetivos extends Component
             if ($this->objetivoId) {
                 $this->successMessage = 'As definições do objetivo estratégico foram atualizadas com sucesso e já estão refletidas no mapa estratégico.';
             } else {
-                $this->successMessage = 'O novo objetivo estratégico foi registrado. Agora você pode prosseguir vinculando indicadores e planos de ação a esta meta.';
+                $this->successMessage = 'O novo objetivo estratégico foi registrado. Agora você pode prosseguir vinculando indicadores e iniciativas a esta meta.';
             }
 
             $this->createdObjetivoName = $this->nom_objetivo;
@@ -349,6 +387,10 @@ class ListarObjetivos extends Component
             $this->showSuccessModal = true;
 
         } catch (\Exception $e) {
+            // Sem isto, a causa real desaparece: o cliente recebe uma
+            // orientação genérica e não sobra rastro nenhum para investigar.
+            report($e);
+
             $this->errorMessage = 'Não foi possível processar o registro do objetivo. Por favor, revise as informações e tente novamente.';
             $this->showErrorModal = true;
         }
@@ -356,6 +398,11 @@ class ListarObjetivos extends Component
 
     public function confirmDelete($id)
     {
+        // Escrita exige capacidade. Sem isto, o método é chamável direto
+        // pelo navegador — inclusive por visitante, já que esta tela é
+        // pública para leitura.
+        $this->authorize('modulo.excluir', 'planejamento-estrategico');
+
         $objetivo = Objetivo::with('perspectiva')->withCount(['indicadores', 'planosAcao'])->findOrFail($id);
         abort_unless($this->peiAtivo && $objetivo->perspectiva->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->objetivoId = $id;
@@ -370,6 +417,11 @@ class ListarObjetivos extends Component
 
     public function delete()
     {
+        // Escrita exige capacidade. Sem isto, o método é chamável direto
+        // pelo navegador — inclusive por visitante, já que esta tela é
+        // pública para leitura.
+        $this->authorize('modulo.excluir', 'planejamento-estrategico');
+
         $obj = Objetivo::with('perspectiva')->findOrFail($this->objetivoId);
         abort_unless($this->peiAtivo && $obj->perspectiva->cod_pei === $this->peiAtivo->cod_pei, 403);
         $obj->delete();
@@ -413,9 +465,12 @@ class ListarObjetivos extends Component
                 ->get();
         }
 
+        // Layout dinâmico: o visitante chega aqui pelo Mapa Estratégico público
+        // e não tem menu autenticado. Mesmo critério do MapaEstrategico.
         return view('livewire.p-e-i.listar-objetivos', [
             'todosOds' => ODS::ordenado()->get(),
             'objetivosPossivelPai' => $objetivosPossivelPai,
-        ]);
+        ])
+            ->layout(Auth::check() ? 'layouts.app' : 'layouts.public');
     }
 }

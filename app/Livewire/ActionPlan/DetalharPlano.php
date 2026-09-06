@@ -6,10 +6,12 @@ use App\Models\ActionPlan\LicaoAprendida;
 use App\Models\ActionPlan\PlanoComunicacao;
 use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('layouts.app')]
+// Sem #[Layout] fixo: o layout é escolhido no render(), porque esta tela
+// também é servida ao visitante pelo Mapa Estratégico público.
 class DetalharPlano extends Component
 {
     public PlanoDeAcao $plano;
@@ -58,12 +60,15 @@ class DetalharPlano extends Component
             $licoes = collect();
         }
 
+        // Layout dinâmico: o visitante chega aqui pelo Mapa Estratégico público
+        // e não tem menu autenticado. Mesmo critério do MapaEstrategico.
         return view('livewire.plano-acao.detalhar-plano', [
             'progresso'    => $progresso,
             'responsaveis' => $responsaveis,
             'auditoria'    => $auditoria,
             'comunicacoes' => $comunicacoes,
             'licoes'       => $licoes,
-        ]);
+        ])
+            ->layout(Auth::check() ? 'layouts.app' : 'layouts.public');
     }
 }

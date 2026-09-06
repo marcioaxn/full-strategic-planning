@@ -2,9 +2,9 @@
 
 namespace App\Models\RiskManagement;
 
+use App\Models\Organization;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\PEI;
-use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,11 +14,14 @@ use OwenIt\Auditing\Contracts\Auditable;
 
 class Risco extends Model implements Auditable
 {
-    use HasFactory, HasUuids, SoftDeletes, \OwenIt\Auditing\Auditable;
+    use HasFactory, HasUuids, \OwenIt\Auditing\Auditable, SoftDeletes;
 
-    protected $table = 'tab_risco';
+    protected $table = 'risk_management.tab_risco';
+
     protected $primaryKey = 'cod_risco';
+
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     public const ESTRATEGIAS_RESPOSTA = ['Mitigar', 'Evitar', 'Transferir', 'Aceitar'];
@@ -43,14 +46,14 @@ class Risco extends Model implements Auditable
     ];
 
     protected $casts = [
-        'num_codigo_risco'  => 'integer',
+        'num_codigo_risco' => 'integer',
         'num_probabilidade' => 'integer',
-        'num_impacto'       => 'integer',
-        'num_nivel_risco'   => 'integer',
+        'num_impacto' => 'integer',
+        'num_nivel_risco' => 'integer',
         'dte_proxima_revisao' => 'date',
-        'created_at'        => 'datetime',
-        'updated_at'        => 'datetime',
-        'deleted_at'        => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     // === RELACIONAMENTOS ===
@@ -125,6 +128,7 @@ class Risco extends Model implements Auditable
     public function calcularNivelRisco()
     {
         $this->num_nivel_risco = $this->num_probabilidade * $this->num_impacto;
+
         return $this->num_nivel_risco;
     }
 
@@ -132,9 +136,16 @@ class Risco extends Model implements Auditable
     {
         $nivel = $this->num_nivel_risco;
 
-        if ($nivel >= 16) return 'Crítico';
-        if ($nivel >= 10) return 'Alto';
-        if ($nivel >= 5) return 'Médio';
+        if ($nivel >= 16) {
+            return 'Crítico';
+        }
+        if ($nivel >= 10) {
+            return 'Alto';
+        }
+        if ($nivel >= 5) {
+            return 'Médio';
+        }
+
         return 'Baixo';
     }
 
@@ -142,9 +153,16 @@ class Risco extends Model implements Auditable
     {
         $nivel = $this->num_nivel_risco;
 
-        if ($nivel >= 16) return '#dc2626'; // Vermelho
-        if ($nivel >= 10) return '#f97316'; // Laranja
-        if ($nivel >= 5) return '#eab308';  // Amarelo
+        if ($nivel >= 16) {
+            return '#dc2626';
+        } // Vermelho
+        if ($nivel >= 10) {
+            return '#f97316';
+        } // Laranja
+        if ($nivel >= 5) {
+            return '#eab308';
+        }  // Amarelo
+
         return '#65a30d'; // Verde
     }
 
@@ -152,9 +170,16 @@ class Risco extends Model implements Auditable
     {
         $nivel = $this->num_nivel_risco;
 
-        if ($nivel >= 16) return 'bg-danger';
-        if ($nivel >= 10) return 'bg-warning';
-        if ($nivel >= 5) return 'bg-info';
+        if ($nivel >= 16) {
+            return 'bg-danger';
+        }
+        if ($nivel >= 10) {
+            return 'bg-warning';
+        }
+        if ($nivel >= 5) {
+            return 'bg-info';
+        }
+
         return 'bg-success';
     }
 
@@ -187,7 +212,7 @@ class Risco extends Model implements Auditable
 
     public function getProbabilidadeLabel()
     {
-        return match($this->num_probabilidade) {
+        return match ($this->num_probabilidade) {
             1 => 'Muito Baixa',
             2 => 'Baixa',
             3 => 'Média',
@@ -199,7 +224,7 @@ class Risco extends Model implements Auditable
 
     public function getImpactoLabel()
     {
-        return match($this->num_impacto) {
+        return match ($this->num_impacto) {
             1 => 'Muito Baixo',
             2 => 'Baixo',
             3 => 'Médio',
@@ -222,7 +247,7 @@ class Risco extends Model implements Auditable
             }
 
             // Auto-incrementar código do risco
-            if (!$risco->num_codigo_risco) {
+            if (! $risco->num_codigo_risco) {
                 $ultimoCodigo = static::where('cod_pei', $risco->cod_pei)
                     ->max('num_codigo_risco') ?? 0;
                 $risco->num_codigo_risco = $ultimoCodigo + 1;

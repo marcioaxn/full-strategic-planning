@@ -69,7 +69,7 @@
                         <span class="badge bg-primary rounded-pill">{{ $estatisticas['qtd_organizacoes'] }}</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span>Planos Responsável</span>
+                        <span>Iniciativas sob responsabilidade</span>
                         <span class="badge bg-warning rounded-pill">{{ $estatisticas['qtd_planos'] }}</span>
                     </div>
                 </div>
@@ -85,7 +85,7 @@
                             <button class="nav-link active" id="orgs-tab" data-bs-toggle="tab" data-bs-target="#orgs" type="button" role="tab">Organizações</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="planos-tab" data-bs-toggle="tab" data-bs-target="#planos" type="button" role="tab">Planos de Ação</button>
+                            <button class="nav-link" id="planos-tab" data-bs-toggle="tab" data-bs-target="#planos" type="button" role="tab">Iniciativas</button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="audit-tab" data-bs-toggle="tab" data-bs-target="#audit" type="button" role="tab">Histórico</button>
@@ -128,16 +128,16 @@
                             </div>
                         </div>
 
-                        <!-- Planos de Ação -->
+                        <!-- Iniciativas -->
                         <div class="tab-pane fade" id="planos" role="tabpanel">
                             <div class="alert alert-info py-2 small mb-3">
-                                <i class="bi bi-info-circle me-1"></i> Planos onde o usuário atua como Gestor Responsável ou Substituto.
+                                <i class="bi bi-info-circle me-1"></i> Iniciativas em que o usuário atua como Gestor Responsável ou Substituto.
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>Plano</th>
+                                            <th>Iniciativa</th>
                                             <th>Status</th>
                                             <th>Prazo</th>
                                         </tr>

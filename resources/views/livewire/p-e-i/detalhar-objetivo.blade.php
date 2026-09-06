@@ -65,7 +65,7 @@
             </div>
         </div>
 
-        <!-- Planos de Ação -->
+        <!-- Iniciativas -->
         <div class="col-md-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
@@ -74,7 +74,7 @@
                             <i class="bi bi-kanban text-warning fs-4"></i>
                         </div>
                         <div>
-                            <h6 class="card-subtitle text-muted mb-1">Planos de Ação</h6>
+                            <h6 class="card-subtitle text-muted mb-1">Iniciativas</h6>
                             <h4 class="card-title mb-0">{{ $estatisticas['qtd_planos'] }}</h4>
                         </div>
                     </div>
@@ -201,17 +201,17 @@
                 </div>
             </div>
 
-            <!-- Planos de Ação -->
+            <!-- Iniciativas -->
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0 fw-bold">Planos de Ação</h5>
-                    <a href="{{ route('planos.index') }}" wire:navigate class="btn btn-sm btn-outline-primary">Gerenciar Planos</a>
+                    <h5 class="card-title mb-0 fw-bold">Iniciativas</h5>
+                    <a href="{{ route('planos.index') }}" wire:navigate class="btn btn-sm btn-outline-primary">Gerenciar Iniciativas</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th class="ps-4">Plano</th>
+                                <th class="ps-4">Iniciativa</th>
                                 <th>Prazo</th>
                                 <th>Orçamento</th>
                                 <th>Status</th>
@@ -232,7 +232,7 @@
                             @empty
                                 <tr>
                                     <td colspan="4" class="text-center py-4 text-muted">
-                                        Nenhum plano de ação vinculado.
+                                        Nenhuma iniciativa vinculada.
                                     </td>
                                 </tr>
                             @endforelse
@@ -241,6 +241,23 @@
                 </div>
             </div>
 
+            {{--
+                Comentários e Colaboração — SÓ PARA QUEM ESTÁ AUTENTICADO.
+
+                🔴 Três motivos, e o primeiro é o mais grave:
+
+                1. A linha do botão de excluir chamava auth()->user()->isSuperAdmin()
+                   sem conferir se havia usuário. Para o visitante anônimo isso é
+                   "Call to a member function isSuperAdmin() on null": a página
+                   pública do objetivo quebrava com erro 500.
+                2. O gestor pediu que a área pública NÃO abrisse nada que exija
+                   login. Mostrar caixa de texto e botão "Postar" a quem vai
+                   receber 403 ao clicar é interface que mente.
+                3. Comentário aqui é discussão INTERNA sobre o objetivo, com
+                   nomes e opiniões de servidores. Publicá-lo na transparência
+                   seria uma decisão de divulgação que ninguém tomou.
+            --}}
+            @auth
             <!-- Comentários e Colaboração -->
             <div class="card border-0 shadow-sm mt-4">
                 <div class="card-header bg-white py-3">
@@ -267,7 +284,7 @@
                                         <h6 class="fw-bold mb-0 small">{{ $comment->user->name }}</h6>
                                         <div class="d-flex align-items-center gap-2">
                                             <span class="text-muted x-small">{{ $comment->created_at->diffForHumans() }}</span>
-                                            @if($comment->user_id === auth()->id() || auth()->user()->isSuperAdmin())
+                                            @if($comment->user_id === auth()->id() || auth()->user()?->isSuperAdmin())
                                                 <button wire:click="removerComentario('{{ $comment->cod_comentario }}')" class="btn btn-link text-danger p-0" title="Excluir">
                                                     <i class="bi bi-trash small"></i>
                                                 </button>
@@ -285,6 +302,7 @@
                     </div>
                 </div>
             </div>
+            @endauth
         </div>
 
         <!-- Coluna Direita -->

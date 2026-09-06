@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Gestão de Riscos</title>
-    @include('relatorios.partials.estilos')
+    @include('relatorios.partials.estilos', ['orientacao' => 'landscape'])
     <style>
         .matriz { border-collapse: collapse; margin: 4px auto; }
         .matriz td { width: 44px; height: 36px; text-align: center; vertical-align: middle; border: 2px solid #fff; font-weight: bold; font-size: 10px; color: #fff; border-radius: 4px; }
@@ -16,13 +16,6 @@
     </style>
 </head>
 <body>
-    @include('relatorios.partials.cabecalho', [
-        'rptTitulo'    => 'Gestão de Riscos',
-        'rptEyebrow'   => 'Matriz de Riscos · Módulo 02 — Planejar',
-        'rptSubtitulo' => $organizacao ? $organizacao->nom_organizacao : 'Todas as Unidades',
-        'rptIcon'      => '&#9888;',
-    ])
-    @include('relatorios.partials.rodape')
 
     <main>
         <div class="rpt-filtros">

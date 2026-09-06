@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Model de Histórico de Entrega.
- * 
+ *
  * Registra todas as alterações feitas nas entregas para auditoria
  * e funcionalidade de "histórico de versões".
  */
@@ -21,7 +21,7 @@ class EntregaHistorico extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_entrega_historico';
+    protected $table = 'action_plan.tab_entrega_historico';
 
     /**
      * Chave primária
@@ -148,6 +148,7 @@ class EntregaHistorico extends Model
 
         if ($this->dsc_campo) {
             $campoLabel = $this->getCampoLabel();
+
             return "{$usuario} alterou {$campoLabel}";
         }
 

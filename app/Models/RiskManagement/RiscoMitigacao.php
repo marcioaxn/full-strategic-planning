@@ -12,9 +12,12 @@ class RiscoMitigacao extends Model implements Auditable
 {
     use HasFactory, HasUuids, \OwenIt\Auditing\Auditable;
 
-    protected $table = 'tab_risco_mitigacao';
+    protected $table = 'risk_management.tab_risco_mitigacao';
+
     protected $primaryKey = 'cod_mitigacao';
+
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     protected $fillable = [
@@ -51,7 +54,7 @@ class RiscoMitigacao extends Model implements Auditable
     public function scopeAtrasados($query)
     {
         return $query->where('dte_prazo', '<', now())
-                     ->where('dsc_status', '!=', 'Concluído');
+            ->where('dsc_status', '!=', 'Concluído');
     }
 
     public function scopePorStatus($query, $status)
@@ -87,7 +90,7 @@ class RiscoMitigacao extends Model implements Auditable
 
     public function getStatusBadgeClass()
     {
-        return match($this->dsc_status) {
+        return match ($this->dsc_status) {
             'Concluído' => 'bg-success',
             'Em Andamento' => 'bg-primary',
             'A Fazer' => 'bg-secondary',

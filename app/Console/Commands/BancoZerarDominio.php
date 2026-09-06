@@ -103,7 +103,7 @@ class BancoZerarDominio extends Command
         $this->line('    • Identidade estratégica (missão, visão, valores)');
         $this->line('    • Análise ambiental (SWOT/PESTEL), graus de satisfação');
         $this->line('    • Indicadores, metas, evoluções');
-        $this->line('    • Planos de ação, entregas, RACI, lições aprendidas');
+        $this->line('    • Iniciativas, entregas, RACI, lições aprendidas');
         $this->line('    • Riscos, mitigações, ocorrências');
         $this->line('    • RAE, estratégias TOWS, partes interessadas, cenários');
         $this->info('');

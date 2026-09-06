@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 use Laravel\Jetstream\Features;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
+ * @extends Factory<User>
  */
 class UserFactory extends Factory
 {
@@ -36,6 +36,18 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
             'profile_photo_path' => null,
             'current_team_id' => null,
+
+            /*
+             * Explícitos de propósito. A coluna tem DEFAULT no banco, mas o
+             * default do banco não volta para o modelo em memória depois do
+             * create() — o atributo fica ausente, o cast 'boolean' lê null e
+             * User::isAtivo() devolve false. Como AppServiceProvider registra
+             * um Gate::before que nega TUDO para conta inativa, todo teste de
+             * autorização falhava com 403 sem motivo aparente.
+             */
+            'ativo' => true,
+            'adm' => false,
+            'trocarsenha' => 0,
         ];
     }
 

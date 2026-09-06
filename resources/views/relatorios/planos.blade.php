@@ -2,17 +2,10 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Planos de Ação</title>
-    @include('relatorios.partials.estilos')
+    <title>Iniciativas</title>
+    @include('relatorios.partials.estilos', ['orientacao' => 'landscape'])
 </head>
 <body>
-    @include('relatorios.partials.cabecalho', [
-        'rptTitulo'    => 'Planos de Ação',
-        'rptEyebrow'   => 'Carteira de Iniciativas · Módulo 02 — Planejar',
-        'rptSubtitulo' => ($organizacao ? $organizacao->nom_organizacao : 'Todas as Unidades') . ' · Exercício ' . $ano,
-        'rptIcon'      => '&#10003;',
-    ])
-    @include('relatorios.partials.rodape')
 
     <main>
         <div class="rpt-filtros">
@@ -25,7 +18,7 @@
         <table class="kpi-grid">
             <tr>
                 <td class="kpi-card" style="width:25%;">
-                    <p class="kpi-label">Total de Planos</p>
+                    <p class="kpi-label">Total de Iniciativas</p>
                     <p class="kpi-value">{{ $resumo['total'] }}</p>
                     <p class="kpi-sub">vigentes em {{ $ano }}</p>
                 </td>
@@ -72,11 +65,11 @@
             </div>
         </div>
 
-        <div class="secao-titulo">Detalhamento dos Planos</div>
+        <div class="secao-titulo">Detalhamento das Iniciativas</div>
         <table class="rpt">
             <thead>
                 <tr>
-                    <th style="width:30%;">Plano de Ação</th>
+                    <th style="width:30%;">Iniciativa</th>
                     <th>Objetivo Vinculado</th>
                     <th class="text-center" style="width:62px;">Vigência</th>
                     <th class="text-center" style="width:78px;">Status</th>
@@ -116,7 +109,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="5"><div class="vazio mb-0">Nenhum plano de ação vigente em {{ $ano }}.</div></td></tr>
+                <tr><td colspan="5"><div class="vazio mb-0">Nenhuma iniciativa vigente em {{ $ano }}.</div></td></tr>
                 @endforelse
             </tbody>
         </table>

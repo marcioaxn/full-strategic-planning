@@ -2,7 +2,7 @@
      Parâmetros: $tituloHtml (aceita <span> para gradiente) e $lead. --}}
 @php
     $tituloHtml = $tituloHtml ?? 'Bem-vindo à sua<br>central de <span>governança</span><br>estratégica.';
-    $lead = $lead ?? 'Gerencie ciclos PEI, monitore indicadores SMART e execute planos de ação com o rigor metodológico que a Administração Pública Federal exige.';
+    $lead = $lead ?? 'Gerencie ciclos PEI, monitore indicadores SMART e execute iniciativas com o rigor metodológico que a Administração Pública Federal exige.';
 @endphp
 <div class="lp-login-left d-none d-xl-flex flex-column justify-content-between p-5">
 
@@ -30,7 +30,7 @@
         <div class="position-relative">
             @foreach([
                 ['num'=>'01','title'=>'Inaugurar e Integrar','sub'=>'Planejar o processo · PPA/LOA/ODS','icon'=>'flag-fill','c'=>'#1a3a5c','tx'=>0],
-                ['num'=>'02','title'=>'Planejar','sub'=>'Cadeia de Valor · SWOT · BSC · Planos','icon'=>'diagram-3-fill','c'=>'#1B408E','tx'=>28],
+                ['num'=>'02','title'=>'Planejar','sub'=>'Cadeia de Valor · SWOT · BSC · Iniciativas','icon'=>'diagram-3-fill','c'=>'#1B408E','tx'=>28],
                 ['num'=>'03','title'=>'Monitorar e Avaliar','sub'=>'Dashboard · Indicadores · RAE','icon'=>'graph-up-arrow','c'=>'#2e8b57','tx'=>56],
             ] as $m)
             <div class="lp-login-modcard d-flex align-items-center gap-3 mb-2 p-3 rounded-3"

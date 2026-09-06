@@ -2,12 +2,16 @@
 
 namespace App\Livewire\StrategicPlanning;
 
+use App\Models\SystemSetting;
+use App\Services\Reports\AcabamentoPdf;
 use App\Models\StrategicPlanning\AtividadeCadeiaValor;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\StrategicPlanning\ProcessoAtividadeCadeiaValor;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -93,7 +97,7 @@ class CadeiaDeValor extends Component
 
         $this->validate([
             'formAtividade.dsc_atividade' => 'required|string|max:500',
-            'formAtividade.dsc_tipo' => 'required|in:Finalística,Suporte',
+            'formAtividade.dsc_tipo' => ['required', Rule::in(AtividadeCadeiaValor::TIPOS)],
         ], ['formAtividade.dsc_atividade.required' => 'Informe a descrição da atividade.']);
 
         if (! $this->peiAtivo) {
@@ -201,10 +205,17 @@ class CadeiaDeValor extends Component
 
         $pdf = Pdf::loadView('relatorios.cadeia-valor', [
             'pei' => $this->peiAtivo,
-            'finalisticas' => $atividades->get('Finalística', collect()),
-            'suporte' => $atividades->get('Suporte', collect()),
+            'grupos' => $this->agruparPorTipo($atividades),
             'data' => now()->format('d/m/Y'),
         ])->setPaper('a4', 'landscape');
+
+        // Mesmo acabamento dos outros dez relatórios: um renderizador só.
+        (new AcabamentoPdf('landscape'))->aplicar($pdf, [
+            'esquerda' => $this->peiAtivo?->dsc_pei ?? 'Planejamento Estratégico Institucional',
+            'centro' => 'Cadeia de Valor',
+            'site' => (string) SystemSetting::getValue('orgao_site', ''),
+            'emitido_em' => now()->format('d/m/Y'),
+        ]);
 
         return response()->streamDownload(
             fn () => print ($pdf->output()),
@@ -228,8 +239,42 @@ class CadeiaDeValor extends Component
 
         return view('livewire.p-e-i.cadeia-de-valor', [
             'atividades' => $atividades,
+            'grupos' => $this->agruparPorTipo($atividades),
             'perspectivas' => $perspectivas,
             'tipos' => AtividadeCadeiaValor::TIPOS,
         ]);
+    }
+
+    /**
+     * Monta um grupo por tipo declarado em AtividadeCadeiaValor::TIPOS, na
+     * ordem da constante, já com a apresentação de cada um.
+     *
+     * Substitui o par de grupos fixos ('Finalística' e 'Suporte') que existia
+     * aqui, no PDF e na Blade. Com os grupos fixos, um tipo novo fazia a
+     * atividade ser gravada e nunca exibida — erro silencioso.
+     *
+     * Inclui também tipo encontrado no banco que não esteja mais na constante:
+     * dado antigo de cliente não pode desaparecer da tela sem aviso.
+     *
+     * @param  Collection  $atividadesAgrupadas
+     * @return array<int, array{tipo:string, itens:Collection, cor:string, icone:string, titulo:string, ajuda:string}>
+     */
+    private function agruparPorTipo($atividadesAgrupadas): array
+    {
+        $apresentacao = AtividadeCadeiaValor::apresentacaoDosTipos();
+
+        $tipos = array_values(array_unique(array_merge(
+            AtividadeCadeiaValor::TIPOS,
+            $atividadesAgrupadas->keys()->filter()->all()
+        )));
+
+        return array_map(fn (string $tipo) => [
+            'tipo' => $tipo,
+            'itens' => $atividadesAgrupadas->get($tipo, collect()),
+            'cor' => $apresentacao[$tipo]['cor'] ?? 'dark',
+            'icone' => $apresentacao[$tipo]['icone'] ?? 'bi-diagram-3',
+            'titulo' => $apresentacao[$tipo]['titulo'] ?? $tipo,
+            'ajuda' => $apresentacao[$tipo]['ajuda'] ?? '',
+        ], $tipos);
     }
 }

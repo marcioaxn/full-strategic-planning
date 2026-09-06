@@ -47,6 +47,26 @@ return [
             'report' => false,
         ],
 
+        /*
+         * Relatórios gerados (PDF/Excel do módulo de Relatórios).
+         *
+         * PRIVADO POR CONSTRUÇÃO: fica fora de storage/app/public, portanto o
+         * symlink criado por `php artisan storage:link` NÃO o alcança. O
+         * conteúdo é o planejamento consolidado do órgão — objetivos,
+         * indicadores, iniciativas e riscos — e só sai por rota autenticada,
+         * com verificação de dono e de escopo organizacional
+         * (App\Policies\RelatorioGeradoPolicy).
+         *
+         * Nunca declarar 'url' nem 'visibility' => 'public' aqui.
+         */
+        'relatorios' => [
+            'driver' => 'local',
+            'root' => storage_path('app/relatorios'),
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

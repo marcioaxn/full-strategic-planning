@@ -34,16 +34,24 @@
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
         <!--
-            Alvo do banco de teste fixado aqui de proposito: host, porta e nome
-            diferentes dos de desenvolvimento impedem que a suite (que usa
-            RefreshDatabase) apague o banco de dev por engano.
+            Alvo do banco de teste fixado aqui de proposito.
+
+            O que protege o banco de desenvolvimento e o NOME: a suite usa
+            RefreshDatabase, que apaga tudo do banco que encontrar. Enquanto
+            DB_DATABASE aqui for "projeto_base_test" e o de dev for "fs_v1",
+            nao ha como um apagar o outro.
+
+            A porta apontava para 5434, instancia que nao existe nesta maquina
+            (nunca respondeu) - a suite simplesmente nao rodava. Corrigido em
+            05/09/2026 para 5432, onde "projeto_base_test" ja existe.
+            Ver documentacao/melhorias/12-visao-holistica-achados-transversais.md
 
             DB_USERNAME e DB_PASSWORD NAO ficam neste arquivo: ele e versionado.
             As credenciais vem do .env local, que esta no .gitignore.
         -->
         <env name="DB_CONNECTION" value="pgsql"/>
         <env name="DB_HOST" value="127.0.0.1"/>
-        <env name="DB_PORT" value="5434"/>
+        <env name="DB_PORT" value="5432"/>
         <env name="DB_DATABASE" value="projeto_base_test"/>
         <env name="SESSION_DOMAIN" value="null"/>
         <env name="SESSION_SECURE_COOKIE" value="false"/>

@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+
+  "enabledPlugins": {
+    "laravel-boost@claude-plugins-official": true
+  },
+
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git ls-remote:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git rev-list:*)",
+      "Bash(git for-each-ref:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git remote -v)",
+      "Bash(git stash list)",
+      "Bash(git fetch:*)",
+
+      "Bash(php -l:*)",
+      "Bash(php -v)",
+      "Bash(php artisan --version)",
+      "Bash(php artisan about:*)",
+      "Bash(php artisan route:list:*)",
+      "Bash(php artisan migrate:status)",
+      "Bash(php artisan test:*)",
+      "Bash(php artisan optimize:clear)",
+      "Bash(php artisan view:clear)",
+      "Bash(php artisan config:clear)",
+      "Bash(php artisan cache:clear)",
+
+      "Bash(composer show:*)",
+      "Bash(composer validate:*)",
+      "Bash(npm run build)",
+      "Bash(npm ls:*)",
+      "Bash(./vendor/bin/pint --test:*)",
+
+      "Bash(rtk git status:*)",
+      "Bash(rtk git log:*)",
+      "Bash(rtk git diff:*)",
+      "Bash(rtk git show:*)",
+      "Bash(rtk ls:*)",
+      "Bash(rtk read:*)",
+      "Bash(rtk grep:*)",
+      "Bash(rtk find:*)",
+      "Bash(rtk err:*)",
+      "Bash(rtk gain:*)",
+
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(which:*)",
+      "Bash(php .claude/hooks/gerar-divida.php)"
+    ],
+
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(git tag:*)",
+      "Bash(git rebase:*)",
+      "Bash(git filter-branch:*)",
+      "Bash(git rm:*)",
+      "Bash(php artisan migrate:*)",
+      "Bash(php artisan db:*)",
+      "Bash(php artisan tinker:*)",
+      "Bash(php artisan banco:*)",
+      "Bash(psql:*)",
+      "Bash(pg_dump:*)"
+    ],
+
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(php artisan migrate:fresh:*)",
+      "Bash(php artisan migrate:reset:*)",
+      "Bash(php artisan db:wipe:*)"
+    ]
+  },
+
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "php .claude/hooks/guarda-comando.php",
+            "timeout": 15,
+            "statusMessage": "Guarda de comando"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "php .claude/hooks/guarda-arquivo.php",
+            "timeout": 30,
+            "statusMessage": "Guarda de arquivo"
+          }
+        ]
+      }
+    ]
+  }
+}

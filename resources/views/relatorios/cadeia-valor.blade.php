@@ -3,8 +3,11 @@
 <head>
     <meta charset="utf-8">
     <title>Cadeia de Valor</title>
+    {{-- Entra no sistema de design compartilhado: cabeçalho fixo, rodapé com
+         numeração de página e margens simétricas. Estava fora dele, com @page
+         próprio e sem numeração nenhuma. --}}
+    @include('relatorios.partials.estilos', ['orientacao' => 'landscape'])
     <style>
-        @page { margin: 1cm; size: a4 landscape; }
         body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 9px; color: #333; line-height: 1.4; margin: 0; padding: 0; }
 
         .header { border-bottom: 3px solid #2e6da4; padding-bottom: 10px; margin-bottom: 16px; }
@@ -36,68 +39,38 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <table style="width:100%;">
-            <tr>
-                <td>
-                    <p class="header-title">Cadeia de Valor</p>
-                    <p class="header-sub">{{ $pei->dsc_pei }}</p>
-                </td>
-                <td class="header-meta">
-                    Gerado em: {{ $data }}<br>
-                    Guia GPPEI · Pág. 24
-                </td>
-            </tr>
-        </table>
-    </div>
 
-    {{-- Atividades Finalísticas --}}
-    <div class="block">
-        <div class="block-title block-fin">Atividades Finalísticas — Produtos e serviços entregues à sociedade</div>
-        @forelse($finalisticas as $ativ)
-            <div class="card card-fin">
-                <div class="card-title">{{ $ativ->dsc_atividade }}</div>
-                @if($ativ->perspectiva)
-                    <span class="card-persp">{{ $ativ->perspectiva->dsc_perspectiva }}</span>
-                @endif
-                @foreach($ativ->processos as $proc)
-                    <div class="proc">
-                        @if($proc->dsc_entrada)<span class="proc-label">Entrada:</span> {{ $proc->dsc_entrada }}<br>@endif
-                        <span class="proc-label">Processo:</span> {{ $proc->dsc_transformacao }}
-                        @if($proc->dsc_saida)<br><span class="proc-label">Saída:</span> {{ $proc->dsc_saida }}@endif
-                    </div>
-                @endforeach
+    {{--
+        Um bloco por tipo, na mesma ordem e com a mesma origem da tela
+        (AtividadeCadeiaValor::TIPOS). Antes eram dois blocos fixos aqui, e a
+        divergência entre PDF e tela era questão de tempo.
+
+        Grupo sem item não é impresso: relatório que anuncia o que o cliente
+        ainda não preencheu constrange quem apresenta o documento.
+    --}}
+    @foreach($grupos as $grupo)
+        @continue($grupo['itens']->isEmpty())
+        <div class="block">
+            <div class="block-title block-{{ $loop->first ? 'fin' : 'sup' }}">
+                {{ $grupo['titulo'] }}@if($grupo['ajuda']) — {{ $grupo['ajuda'] }}@endif
             </div>
-        @empty
-            <div class="empty">Nenhuma atividade finalística cadastrada.</div>
-        @endforelse
-    </div>
+            @foreach($grupo['itens'] as $ativ)
+                <div class="card card-{{ $loop->parent->first ? 'fin' : 'sup' }}">
+                    <div class="card-title">{{ $ativ->dsc_atividade }}</div>
+                    @if($ativ->perspectiva)
+                        <span class="card-persp">{{ $ativ->perspectiva->dsc_perspectiva }}</span>
+                    @endif
+                    @foreach($ativ->processos as $proc)
+                        <div class="proc">
+                            @if($proc->dsc_entrada)<span class="proc-label">Entrada:</span> {{ $proc->dsc_entrada }}<br>@endif
+                            <span class="proc-label">Processo:</span> {{ $proc->dsc_transformacao }}
+                            @if($proc->dsc_saida)<br><span class="proc-label">Saída:</span> {{ $proc->dsc_saida }}@endif
+                        </div>
+                    @endforeach
+                </div>
+            @endforeach
+        </div>
+    @endforeach
 
-    {{-- Atividades de Suporte --}}
-    <div class="block">
-        <div class="block-title block-sup">Atividades de Suporte — Infraestrutura e processos internos de apoio</div>
-        @forelse($suporte as $ativ)
-            <div class="card card-sup">
-                <div class="card-title">{{ $ativ->dsc_atividade }}</div>
-                @if($ativ->perspectiva)
-                    <span class="card-persp">{{ $ativ->perspectiva->dsc_perspectiva }}</span>
-                @endif
-                @foreach($ativ->processos as $proc)
-                    <div class="proc">
-                        @if($proc->dsc_entrada)<span class="proc-label">Entrada:</span> {{ $proc->dsc_entrada }}<br>@endif
-                        <span class="proc-label">Processo:</span> {{ $proc->dsc_transformacao }}
-                        @if($proc->dsc_saida)<br><span class="proc-label">Saída:</span> {{ $proc->dsc_saida }}@endif
-                    </div>
-                @endforeach
-            </div>
-        @empty
-            <div class="empty">Nenhuma atividade de suporte cadastrada.</div>
-        @endforelse
-    </div>
-
-    <div class="footer">
-        Documento gerado pelo Sistema de Planejamento Estratégico Institucional (PEI) &mdash;
-        Baseado no Guia Prático de Planejamento Estratégico Institucional (GPPEI/MGI 2025)
-    </div>
 </body>
 </html>

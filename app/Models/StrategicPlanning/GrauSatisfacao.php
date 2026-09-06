@@ -5,6 +5,7 @@ namespace App\Models\StrategicPlanning;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class GrauSatisfacao extends Model
@@ -14,7 +15,7 @@ class GrauSatisfacao extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_grau_satisfacao';
+    protected $table = 'strategic_planning.tab_grau_satisfacao';
 
     /**
      * Chave primária
@@ -46,7 +47,7 @@ class GrauSatisfacao extends Model
     /**
      * Relacionamento: PEI
      */
-    public function pei(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function pei(): BelongsTo
     {
         return $this->belongsTo(PEI::class, 'cod_pei', 'cod_pei');
     }
@@ -58,6 +59,120 @@ class GrauSatisfacao extends Model
         'vlr_minimo' => 'decimal:2',
         'vlr_maximo' => 'decimal:2',
     ];
+
+    /**
+     * As faixas de UM ciclo PEI, na ordem em que se leem.
+     *
+     * 🔴 Use SEMPRE este escopo. Cada ciclo tem a própria régua — é normal que
+     * ela aperte de um ciclo para o outro. Consultar a tabela sem filtrar por
+     * `cod_pei` faz o `first()` devolver a faixa do ciclo errado, e o farol do
+     * indicador acende com o critério de outro PEI. A tela renderiza normalmente:
+     * fica verde, e é mentira.
+     *
+     * 13 dos 17 pontos que consultavam esta tabela não filtravam. Ver
+     * documentacao/melhorias/06-grau-de-satisfacao-antes-do-indicador.md
+     */
+    public function scopeDoPei($query, ?string $codPei, ?int $ano = null)
+    {
+        $query->where('cod_pei', $codPei)->orderBy('vlr_minimo');
+
+        // num_ano nulo = faixa válida para todo o ciclo. Havendo faixa
+        // específica do ano, ela tem precedência sobre a geral.
+        if ($ano !== null) {
+            $query->where(function ($q) use ($ano) {
+                $q->where('num_ano', $ano)->orWhereNull('num_ano');
+            });
+        }
+
+        return $query;
+    }
+
+    /**
+     * A faixa em que um percentual cai, dentro de um ciclo.
+     *
+     * Concentra aqui a regra que estava repetida em seis lugares, cada um com
+     * uma variação sutil de comparação.
+     */
+    public static function faixaDe(float $percentual, ?string $codPei, ?int $ano = null): ?self
+    {
+        if ($codPei === null) {
+            return null;
+        }
+
+        return static::doPei($codPei, $ano)
+            ->where('vlr_minimo', '<=', $percentual)
+            ->where('vlr_maximo', '>=', $percentual)
+            ->orderByRaw('CASE WHEN num_ano IS NULL THEN 1 ELSE 0 END')
+            ->first();
+    }
+
+    /** Cinza neutro: "não há régua para julgar isto", não "isto está ruim". */
+    public const COR_SEM_REGUA = '#6b7280';
+
+    /**
+     * A cor do farol de um percentual.
+     *
+     * 🔴 DUAS MENTIRAS QUE ESTA FUNÇÃO EXISTE PARA IMPEDIR
+     *
+     * 1. SEM RÉGUA, TUDO VERMELHO. Quem não casava com faixa nenhuma recebia
+     *    `#dc3545`. Organização que ainda não configurou os graus de satisfação
+     *    via a tela inteira pintada de crítico — um juízo que ela nunca emitiu.
+     *    Sem régua não há farol: cinza, e a tela diz por quê.
+     *
+     * 2. ACIMA DA MELHOR FAIXA, VERMELHO. Um indicador a 125% da meta caía fora
+     *    da última faixa (que costuma terminar em 100) e era pintado de crítico.
+     *    Superar a meta virava alarme. Fora das pontas, o valor recebe a cor da
+     *    faixa mais próxima: abaixo da primeira, a cor da primeira; acima da
+     *    última, a cor da última.
+     *
+     * O gestor decide onde estão os cortes. O sistema não inventa nenhum.
+     */
+    public static function corDe(float $percentual, ?string $codPei, ?int $ano = null): string
+    {
+        if ($faixa = static::faixaDe($percentual, $codPei, $ano)) {
+            return $faixa->cor;
+        }
+
+        return static::faixaMaisProxima($percentual, $codPei, $ano)?->cor ?? static::COR_SEM_REGUA;
+    }
+
+    /** O rótulo da faixa ("Crítico", "No alvo"), com a mesma regra de borda. */
+    public static function rotuloDe(float $percentual, ?string $codPei, ?int $ano = null): ?string
+    {
+        $faixa = static::faixaDe($percentual, $codPei, $ano)
+            ?? static::faixaMaisProxima($percentual, $codPei, $ano);
+
+        return $faixa?->dsc_grau_satisfacao;
+    }
+
+    /** O ciclo tem régua configurada? Sem ela, não se pinta farol nenhum. */
+    public static function temRegua(?string $codPei, ?int $ano = null): bool
+    {
+        return $codPei !== null && static::doPei($codPei, $ano)->exists();
+    }
+
+    /**
+     * A faixa das pontas, para um valor que caiu fora de todas.
+     *
+     * Devolve null quando não há faixa alguma — e é esse null que distingue
+     * "não há régua" de "está fora da régua".
+     */
+    private static function faixaMaisProxima(float $percentual, ?string $codPei, ?int $ano = null): ?self
+    {
+        if ($codPei === null) {
+            return null;
+        }
+
+        $faixas = static::doPei($codPei, $ano)->get();
+
+        if ($faixas->isEmpty()) {
+            return null;
+        }
+
+        return $percentual < (float) $faixas->first()->vlr_minimo
+            ? $faixas->first()
+            : $faixas->last();
+    }
 
     /**
      * Métodos auxiliares
@@ -78,29 +193,33 @@ class GrauSatisfacao extends Model
         // Tentar Nível 1: Específico por Ano dentro do PEI (Maturidade)
         if ($peiId && $ano) {
             $grau = static::where('cod_pei', $peiId)
-                         ->where('num_ano', $ano)
-                         ->where('vlr_minimo', '<=', $percentual)
-                         ->where('vlr_maximo', '>=', $percentual)
-                         ->first();
-            if ($grau) return $grau;
+                ->where('num_ano', $ano)
+                ->where('vlr_minimo', '<=', $percentual)
+                ->where('vlr_maximo', '>=', $percentual)
+                ->first();
+            if ($grau) {
+                return $grau;
+            }
         }
 
         // Tentar Nível 2: Padrão do PEI (Geral do Ciclo)
         if ($peiId) {
             $grau = static::where('cod_pei', $peiId)
-                         ->whereNull('num_ano')
-                         ->where('vlr_minimo', '<=', $percentual)
-                         ->where('vlr_maximo', '>=', $percentual)
-                         ->first();
-            if ($grau) return $grau;
+                ->whereNull('num_ano')
+                ->where('vlr_minimo', '<=', $percentual)
+                ->where('vlr_maximo', '>=', $percentual)
+                ->first();
+            if ($grau) {
+                return $grau;
+            }
         }
 
         // Nível 3: Fallback Global (Legado ou Padrão de Sistema)
         return static::whereNull('cod_pei')
-                     ->whereNull('num_ano')
-                     ->where('vlr_minimo', '<=', $percentual)
-                     ->where('vlr_maximo', '>=', $percentual)
-                     ->first();
+            ->whereNull('num_ano')
+            ->where('vlr_minimo', '<=', $percentual)
+            ->where('vlr_maximo', '>=', $percentual)
+            ->first();
     }
 
     /**

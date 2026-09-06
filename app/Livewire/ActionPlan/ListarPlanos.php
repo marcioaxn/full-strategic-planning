@@ -3,64 +3,95 @@
 namespace App\Livewire\ActionPlan;
 
 use App\Models\ActionPlan\PlanoDeAcao;
-use App\Models\StrategicPlanning\PEI;
-use App\Models\StrategicPlanning\Objetivo;
 use App\Models\ActionPlan\TipoExecucao;
 use App\Models\Organization;
+use App\Models\StrategicPlanning\GrauSatisfacao;
+use App\Models\StrategicPlanning\Objetivo;
+use App\Models\StrategicPlanning\PEI;
+use App\Models\SystemSetting;
+use App\Services\AI\AiServiceFactory;
+use App\Services\PeiGuidanceService;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Session;
 
-#[Layout('layouts.app')]
+// Sem #[Layout] fixo: o layout é escolhido no render(), porque esta tela
+// também é servida ao visitante pelo Mapa Estratégico público.
 class ListarPlanos extends Component
 {
-    use WithPagination;
     use AuthorizesRequests;
+    use WithPagination;
 
     public $search = '';
+
     public $filtroStatus = '';
+
     public $filtroTipo = '';
+
     public $filtroAno = '';
+
     public $filtroObjetivo = '';
+
     public $organizacaoId;
+
     public $organizacaoNome;
 
     public bool $showModal = false;
+
     public bool $showDeleteModal = false;
+
     public $planoId;
 
     // Campos do Formulário
     public $dsc_plano_de_acao;
+
     public $txt_detalhamento;
+
     public $cod_objetivo;
+
     public $cod_tipo_execucao;
+
     public $dte_inicio;
+
     public $dte_fim;
+
     public $vlr_orcamento_previsto = 0;
+
     public $bln_status = 'Não Iniciado';
+
     public $cod_ppa;
+
     public $cod_loa;
 
     public array $modelo_logico = ['insumos' => '', 'atividades' => '', 'resultados' => '', 'impacto' => '', 'pressupostos' => ''];
 
     public $organizacoes_ids = []; // Suporte a multivinculação
+
     public $organizacoesOptions = []; // Lista em árvore
 
     public bool $aiEnabled = false;
+
     public $aiSuggestion = '';
 
     // Success Modal Properties
     public bool $showSuccessModal = false;
+
     public $createdPlanName = '';
+
     public $createdPlanType = '';
 
     // Listas auxiliares
     public $objetivos = [];
+
     public $tiposExecucao = [];
+
     public $statusOptions = ['Não Iniciado', 'Em Andamento', 'Concluído', 'Atrasado', 'Suspenso', 'Cancelado'];
+
     public $grausSatisfacao = [];
 
     protected $queryString = [
@@ -77,27 +108,27 @@ class ListarPlanos extends Component
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
         'peiSelecionado' => 'atualizarPEI',
-        'anoSelecionado' => 'atualizarAno'
+        'anoSelecionado' => 'atualizarAno',
     ];
 
     public $objetivoContexto = null; // Propriedade para armazenar o objetivo carregado
 
     public function mount()
     {
-        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
-        
+        $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
+
         // Sanitizar filtroObjetivo vindo da URL
-        if ($this->filtroObjetivo && !preg_match('/^[0-9a-fA-F-]{36}$/', $this->filtroObjetivo)) {
+        if ($this->filtroObjetivo && ! preg_match('/^[0-9a-fA-F-]{36}$/', $this->filtroObjetivo)) {
             $this->filtroObjetivo = '';
         }
 
         // Se houver filtroObjetivo válido, carregar o contexto
         if ($this->filtroObjetivo) {
-            $this->objetivoContexto = \App\Models\StrategicPlanning\Objetivo::with(['perspectiva.pei', 'indicadores.evolucoes', 'indicadores.metasPorAno', 'planosAcao.entregas'])
+            $this->objetivoContexto = Objetivo::with(['perspectiva.pei', 'indicadores.evolucoes', 'indicadores.metasPorAno', 'planosAcao.entregas'])
                 ->find($this->filtroObjetivo);
-            
+
             // Se não encontrou, limpa o filtro para evitar problemas
-            if (!$this->objetivoContexto) {
+            if (! $this->objetivoContexto) {
                 $this->filtroObjetivo = '';
             }
         }
@@ -120,35 +151,42 @@ class ListarPlanos extends Component
 
     public function pedirAjudaIA()
     {
-        if (!$this->aiEnabled) return;
-        
-        if (!$this->cod_objetivo) {
-             session()->flash('error', 'Selecione um objetivo no formulário primeiro.');
-             return;
+        if (! $this->aiEnabled) {
+            return;
+        }
+
+        if (! $this->cod_objetivo) {
+            session()->flash('error', 'Selecione um objetivo no formulário primeiro.');
+
+            return;
         }
 
         try {
-            $aiService = \App\Services\AI\AiServiceFactory::make();
-            if (!$aiService) return;
+            $aiService = AiServiceFactory::make();
+            if (! $aiService) {
+                return;
+            }
 
             $objetivo = Objetivo::find($this->cod_objetivo);
-            if (!$objetivo) {
+            if (! $objetivo) {
                 session()->flash('error', 'Objetivo não encontrado.');
+
                 return;
             }
 
             $this->aiSuggestion = 'Pensando...';
-            
-            $prompt = "Sugira 3 planos de ação (iniciativas) para alcançar o objetivo estratégico: '{$objetivo->nom_objetivo}'.
+
+            $prompt = "Sugira 3 iniciativas (iniciativas) para alcançar o objetivo estratégico: '{$objetivo->nom_objetivo}'.
             Leve em conta que a organização é: {$this->organizacaoNome}.
             Responda OBRIGATORIAMENTE em formato JSON puro, contendo um array de objetos com os campos 'nome' e 'justificativa'.
             O campo 'justificativa' deve ser detalhado e explicar como o plano ajuda a alcançar o objetivo.";
-            
+
             $response = $aiService->suggest($prompt);
-            
+
             if (str_contains($response, 'Erro na IA:') || str_contains($response, 'Falha técnica')) {
                 $this->aiSuggestion = null;
                 session()->flash('error', $response);
+
                 return;
             }
 
@@ -160,7 +198,7 @@ class ListarPlanos extends Component
                 throw new \Exception('Falha ao decodificar resposta da IA.');
             }
         } catch (\Exception $e) {
-            \Log::error('Erro IA Planos: ' . $e->getMessage());
+            \Log::error('Erro IA Planos: '.$e->getMessage());
             $this->aiSuggestion = null;
             session()->flash('error', 'Não foi possível gerar sugestões no momento.');
         }
@@ -196,7 +234,7 @@ class ListarPlanos extends Component
             $this->peiAtivo = PEI::find($peiId);
         }
 
-        if (!$this->peiAtivo) {
+        if (! $this->peiAtivo) {
             $this->peiAtivo = PEI::ativos()->first();
         }
     }
@@ -211,38 +249,49 @@ class ListarPlanos extends Component
 
     public function carregarObjetivos()
     {
-        $this->grausSatisfacao = \App\Models\StrategicPlanning\GrauSatisfacao::orderBy('vlr_minimo')->get();
+        $this->grausSatisfacao = GrauSatisfacao::doPei($this->peiAtivo?->cod_pei)->get();
 
         if ($this->peiAtivo) {
             // Carrega objetivos e agrupa por nome da perspectiva, convertendo para array para estabilidade do Livewire
-            $this->objetivos = Objetivo::whereHas('perspectiva', function($query) {
+            $this->objetivos = Objetivo::whereHas('perspectiva', function ($query) {
                 $query->where('cod_pei', $this->peiAtivo->cod_pei);
             })->with('perspectiva')->orderBy('nom_objetivo')->get()
-            ->groupBy('perspectiva.dsc_perspectiva')
-            ->toArray();
+                ->groupBy('perspectiva.dsc_perspectiva')
+                ->toArray();
         }
     }
 
     public function create()
     {
-        $bloqueio = app(\App\Services\PeiGuidanceService::class)
+        // Autorização ANTES do pré-requisito: ver comentário equivalente em
+        // ListarIndicadores::create().
+        $this->authorize('modulo.criar', 'planos-de-acao');
+
+        $bloqueio = app(PeiGuidanceService::class)
             ->verificarPreRequisitos('planos', $this->peiAtivo?->cod_pei ?? null);
         if ($bloqueio) {
             $this->dispatch('notify', message: $bloqueio['mensagem'], style: 'warning');
+
             return;
         }
 
         try {
             $this->authorize('create', PlanoDeAcao::class);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
+            // Sem isto, a causa real desaparece: o cliente recebe uma
+            // orientação genérica e não sobra rastro nenhum para investigar.
+            report($e);
+
             $this->dispatch('notify', message: 'Você não tem permissão para criar planos.', style: 'danger');
+
             return;
         }
 
         $this->resetForm();
 
-        if (!$this->organizacaoId) {
+        if (! $this->organizacaoId) {
             $this->dispatch('notify', message: 'Selecione uma organização no menu superior.', style: 'warning');
+
             return;
         }
 
@@ -288,49 +337,48 @@ class ListarPlanos extends Component
             'cod_objetivo' => 'required|exists:tab_objetivo,cod_objetivo',
             'cod_tipo_execucao' => 'required|exists:tab_tipo_execucao,cod_tipo_execucao',
             'dte_inicio' => [
-                'required', 
-                'date', 
+                'required',
+                'date',
                 function ($attribute, $value, $fail) {
                     // Validar contra PEI associado ao objetivo selecionado
                     if ($this->cod_objetivo) {
                         $objetivo = Objetivo::find($this->cod_objetivo);
                         $pei = $objetivo?->perspectiva?->pei;
-                        
+
                         if ($pei) {
                             $anoInicio = Carbon::create($pei->num_ano_inicio_pei, 1, 1)->startOfDay();
                             $dataInput = Carbon::parse($value);
-                            
+
                             if ($dataInput->lt($anoInicio)) {
                                 $fail("A data de início deve ser igual ou posterior ao início do PEI ({$pei->num_ano_inicio_pei}).");
                             }
                         }
                     }
-                }
+                },
             ],
             'dte_fim' => [
-                'required', 
-                'date', 
+                'required',
+                'date',
                 'after_or_equal:dte_inicio',
                 function ($attribute, $value, $fail) {
                     if ($this->cod_objetivo) {
                         $objetivo = Objetivo::find($this->cod_objetivo);
                         $pei = $objetivo?->perspectiva?->pei;
-                        
+
                         if ($pei) {
                             $anoFim = Carbon::create($pei->num_ano_fim_pei, 12, 31)->endOfDay();
                             $dataInput = Carbon::parse($value);
-                            
+
                             if ($dataInput->gt($anoFim)) {
                                 $fail("A data final deve ser igual ou anterior ao fim do PEI ({$pei->num_ano_fim_pei}).");
                             }
                         }
                     }
-                }
+                },
             ],
             'vlr_orcamento_previsto' => 'nullable|numeric|min:0',
             'organizacoes_ids' => 'required|array|min:1',
         ], $messages);
-
 
         $data = [
             'dsc_plano_de_acao' => $this->dsc_plano_de_acao,
@@ -361,10 +409,10 @@ class ListarPlanos extends Component
         $tipo = TipoExecucao::find($this->cod_tipo_execucao)?->dsc_tipo_execucao ?? 'Item';
         $this->createdPlanType = $tipo;
         $this->createdPlanName = $this->dsc_plano_de_acao;
-        
+
         $this->showModal = false;
         $this->resetForm();
-        
+
         // Show success modal instead of flash message
         $this->showSuccessModal = true;
     }
@@ -379,13 +427,13 @@ class ListarPlanos extends Component
     {
         $plano = PlanoDeAcao::findOrFail($this->planoId);
         $this->authorize('delete', $plano);
-        
+
         $plano->delete();
         $this->showDeleteModal = false;
-        
-        $this->dispatch('mentor-notification', 
+
+        $this->dispatch('mentor-notification',
             title: 'Plano Removido',
-            message: 'O plano de ação foi excluído do sistema.',
+            message: 'A iniciativa foi excluída do sistema.',
             icon: 'bi-trash',
             type: 'warning'
         );
@@ -422,7 +470,7 @@ class ListarPlanos extends Component
             // Usuário comum vê apenas a org exata.
             $isAdmin = auth()->user()?->isSuperAdmin();
             $orgIds = $isAdmin
-                ? (\App\Models\Organization::find($this->organizacaoId)?->getDescendantsAndSelfIds() ?? [$this->organizacaoId])
+                ? (Organization::find($this->organizacaoId)?->getDescendantsAndSelfIds() ?? [$this->organizacaoId])
                 : [$this->organizacaoId];
 
             $query->whereHas('organizacoes', function ($sub) use ($orgIds) {
@@ -431,7 +479,7 @@ class ListarPlanos extends Component
         }
 
         if ($this->search) {
-            $query->where('dsc_plano_de_acao', 'ilike', '%' . $this->search . '%');
+            $query->where('dsc_plano_de_acao', 'ilike', '%'.$this->search.'%');
         }
 
         if ($this->filtroStatus) {
@@ -443,14 +491,17 @@ class ListarPlanos extends Component
         }
 
         if ($this->filtroAno) {
-            $query->where(function($q) {
+            $query->where(function ($q) {
                 $q->whereYear('dte_inicio', $this->filtroAno)
-                  ->orWhereYear('dte_fim', $this->filtroAno);
+                    ->orWhereYear('dte_fim', $this->filtroAno);
             });
         }
 
+        // Layout dinâmico: o visitante chega aqui pelo Mapa Estratégico público
+        // e não tem menu autenticado. Mesmo critério do MapaEstrategico.
         return view('livewire.plano-acao.listar-planos', [
-            'planos' => $query->orderBy('dte_fim')->paginate(10)
-        ]);
+            'planos' => $query->orderBy('dte_fim')->paginate(10),
+        ])
+            ->layout(Auth::check() ? 'layouts.app' : 'layouts.public');
     }
 }

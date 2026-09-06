@@ -3,12 +3,13 @@
 namespace App\Models\ActionPlan;
 
 use App\Models\Organization;
-use App\Models\StrategicPlanning\Objetivo;
 use App\Models\PerformanceIndicators\Indicador;
+use App\Models\StrategicPlanning\Objetivo;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable;
@@ -21,7 +22,7 @@ class PlanoDeAcao extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_plano_de_acao';
+    protected $table = 'action_plan.tab_plano_de_acao';
 
     /**
      * Chave primária
@@ -61,11 +62,11 @@ class PlanoDeAcao extends Model implements Auditable
      * Casts
      */
     protected $casts = [
-        'dte_inicio'                          => 'date',
-        'dte_fim'                             => 'date',
-        'vlr_orcamento_previsto'              => 'decimal:2',
-        'num_nivel_hierarquico_apresentacao'  => 'integer',
-        'json_modelo_logico'                  => 'array',
+        'dte_inicio' => 'date',
+        'dte_fim' => 'date',
+        'vlr_orcamento_previsto' => 'decimal:2',
+        'num_nivel_hierarquico_apresentacao' => 'integer',
+        'json_modelo_logico' => 'array',
     ];
 
     /**
@@ -135,7 +136,7 @@ class PlanoDeAcao extends Model implements Auditable
     /**
      * Indicadores vinculados via pivô (ROAD-005)
      */
-    public function indicadoresVinculados(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function indicadoresVinculados(): BelongsToMany
     {
         return $this->belongsToMany(
             Indicador::class,
@@ -150,7 +151,7 @@ class PlanoDeAcao extends Model implements Auditable
     /**
      * Relacionamento: Organizações (muitos-para-muitos)
      */
-    public function organizacoes(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function organizacoes(): BelongsToMany
     {
         return $this->belongsToMany(
             Organization::class,
@@ -163,7 +164,7 @@ class PlanoDeAcao extends Model implements Auditable
     }
 
     /**
-     * Retorna a definição da legenda de status para os Planos de Ação (Fonte Única da Verdade)
+     * Retorna a definição da legenda de status para as Iniciativas (Fonte Única da Verdade)
      */
     public static function getStatusLegend(): array
     {
@@ -171,17 +172,17 @@ class PlanoDeAcao extends Model implements Auditable
             'nao_iniciado' => [
                 'label' => 'Não Iniciado / Sem Aferição',
                 'color' => '#475569',
-                'class' => 'secondary'
+                'class' => 'secondary',
             ],
             'em_andamento' => [
                 'label' => 'Em Andamento / Atrasado',
                 'color' => '#F3C72B',
-                'class' => 'warning'
+                'class' => 'warning',
             ],
             'concluido' => [
                 'label' => 'Todos os Planos Concluídos',
                 'color' => '#429B22',
-                'class' => 'success'
+                'class' => 'success',
             ],
         ];
     }
@@ -194,11 +195,11 @@ class PlanoDeAcao extends Model implements Auditable
      */
     public function getSatisfacaoColor(): string
     {
-        return match($this->bln_status) {
-            'Concluído'    => '#429B22', // success
+        return match ($this->bln_status) {
+            'Concluído' => '#429B22', // success
             'Em Andamento' => '#F3C72B', // warning
-            'Atrasado'     => '#F3C72B', // warning
-            default        => '#475569', // secondary
+            'Atrasado' => '#F3C72B', // warning
+            default => '#475569', // secondary
         };
     }
 
@@ -207,11 +208,11 @@ class PlanoDeAcao extends Model implements Auditable
      */
     public function getSatisfacaoTextClass(): string
     {
-        return match($this->bln_status) {
+        return match ($this->bln_status) {
             'Em Andamento' => 'text-dark',
-            'Atrasado'     => 'text-dark',
-            'Concluído'    => 'text-white',
-            default        => 'text-white',
+            'Atrasado' => 'text-dark',
+            'Concluído' => 'text-white',
+            default => 'text-white',
         };
     }
 
@@ -234,6 +235,7 @@ class PlanoDeAcao extends Model implements Auditable
         }
 
         $entregasConcluidas = $this->entregas()->where('bln_status', 'Concluído')->count();
+
         return ($entregasConcluidas / $totalEntregas) * 100;
     }
 
@@ -246,7 +248,7 @@ class PlanoDeAcao extends Model implements Auditable
      */
     public function scopePorTipo($query, string $tipo)
     {
-        return $query->whereHas('tipoExecucao', function($q) use ($tipo) {
+        return $query->whereHas('tipoExecucao', function ($q) use ($tipo) {
             $q->where('dsc_tipo_execucao', $tipo);
         });
     }
@@ -265,7 +267,7 @@ class PlanoDeAcao extends Model implements Auditable
     public function scopeAtrasados($query)
     {
         return $query->where('dte_fim', '<', now())
-                     ->where('bln_status', '!=', 'Concluído');
+            ->where('bln_status', '!=', 'Concluído');
     }
 
     /**
@@ -274,8 +276,8 @@ class PlanoDeAcao extends Model implements Auditable
     public function scopeEmAndamento($query)
     {
         return $query->where('dte_inicio', '<=', now())
-                     ->where('dte_fim', '>=', now())
-                     ->where('bln_status', '!=', 'Concluído');
+            ->where('dte_fim', '>=', now())
+            ->where('bln_status', '!=', 'Concluído');
     }
 
     /**

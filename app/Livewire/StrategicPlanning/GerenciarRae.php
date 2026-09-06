@@ -2,6 +2,8 @@
 
 namespace App\Livewire\StrategicPlanning;
 
+use App\Models\SystemSetting;
+use App\Services\Reports\AcabamentoPdf;
 use App\Models\Organization;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Rae;
@@ -235,6 +237,13 @@ class GerenciarRae extends Component
             'data' => now()->format('d/m/Y'),
         ])->setPaper('a4', 'portrait');
 
+        (new AcabamentoPdf('portrait'))->aplicar($pdf, [
+            'esquerda' => $rae->organizacao?->nom_organizacao ?? 'Todas as unidades',
+            'centro' => 'Reunião de Avaliação Estratégica',
+            'site' => (string) SystemSetting::getValue('orgao_site', ''),
+            'emitido_em' => now()->format('d/m/Y'),
+        ]);
+
         return response()->streamDownload(
             fn () => print ($pdf->output()),
             'RAE_'.$rae->dte_referencia->format('Y_m').'.pdf'
@@ -308,7 +317,9 @@ class GerenciarRae extends Component
         $this->validate([
             'encForm.dsc_tipo' => 'required|in:'.implode(',', RaeEncaminhamento::TIPOS),
             'encForm.txt_descricao' => 'required|string|max:2000',
-            'encForm.cod_responsavel' => 'nullable|exists:pei.users,id',
+            // Sem prefixo de schema: o ponto em "exists:x.y" é lido pelo Laravel como
+            // nome de CONEXÃO. Ver documentacao/melhorias/11-*.md
+            'encForm.cod_responsavel' => 'nullable|exists:users,id',
             'encForm.dte_prazo' => 'nullable|date',
             'encForm.dsc_status' => 'required|in:'.implode(',', RaeEncaminhamento::STATUS),
         ], [

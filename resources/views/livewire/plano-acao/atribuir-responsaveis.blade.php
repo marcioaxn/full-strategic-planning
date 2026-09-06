@@ -5,7 +5,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-1">
                     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('planos.index') }}" wire:navigate class="text-decoration-none">Planos de Ação</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('planos.index') }}" wire:navigate class="text-decoration-none">Iniciativas</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('planos.detalhes', $plano->cod_plano_de_acao) }}" wire:navigate class="text-decoration-none">{{ Str::limit($plano->dsc_plano_de_acao, 30) }}</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Responsáveis</li>
                 </ol>
@@ -19,7 +19,7 @@
             </div>
         </div>
         <a href="{{ route('planos.detalhes', $plano->cod_plano_de_acao) }}" wire:navigate class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i> Voltar para o Plano
+            <i class="bi bi-arrow-left me-1"></i> Voltar para a Iniciativa
         </a>
     </div>
 
@@ -74,7 +74,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary gradient-theme-btn w-100 py-2 fw-bold">
-                            <i class="bi bi-plus-lg me-2"></i>Atribuir ao Plano
+                            <i class="bi bi-plus-lg me-2"></i>Atribuir à Iniciativa
                         </button>
                     </form>
                 </div>
@@ -187,7 +187,7 @@
                                         @if($raci->entrega)
                                             <small class="text-muted d-block text-truncate" style="font-size:.65rem;">{{ Str::limit($raci->entrega->dsc_entrega, 30) }}</small>
                                         @else
-                                            <small class="text-muted" style="font-size:.65rem;">Plano inteiro</small>
+                                            <small class="text-muted" style="font-size:.65rem;">Iniciativa inteira</small>
                                         @endif
                                     </div>
                                     <div class="d-flex gap-1 flex-shrink-0">
@@ -238,12 +238,12 @@
                         <div class="mb-0">
                             <label class="form-label fw-bold small text-uppercase text-muted">Entrega (opcional)</label>
                             <select wire:model="formRaci.cod_entrega" class="form-select">
-                                <option value="">Plano inteiro</option>
+                                <option value="">Iniciativa inteira</option>
                                 @foreach($entregasPlano as $ent)
                                     <option value="{{ $ent->cod_entrega }}">{{ Str::limit($ent->dsc_entrega, 50) }}</option>
                                 @endforeach
                             </select>
-                            <small class="text-muted">Deixe em "Plano inteiro" para um papel geral do plano.</small>
+                            <small class="text-muted">Deixe em "Iniciativa inteira" para um papel geral da iniciativa.</small>
                         </div>
                     </div>
                     <div class="modal-footer border-0 px-4 pb-4">

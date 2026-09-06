@@ -8,6 +8,12 @@
 
         <title>{{ config('app.name', 'Laravel') }} | Portal da Transparência</title>
 
+        {{-- Sem meta description, o buscador escolhe sozinho o resumo da página. --}}
+        <meta name="description" content="Portal da Transparência do Planejamento Estratégico Institucional: mapa estratégico, objetivos e desempenho publicados para acompanhamento da sociedade.">
+        <meta property="og:title" content="{{ config('app.name', 'Sistema PEI') }} — Portal da Transparência">
+        <meta property="og:description" content="Mapa estratégico, objetivos e desempenho institucional.">
+        <meta property="og:type" content="website">
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
@@ -60,6 +66,31 @@
                 background: rgba(30, 34, 39, 0.85);
                 border-bottom-color: rgba(255, 255, 255, 0.05);
             }
+            /* ── Altura da navbar ──────────────────────────────────────────
+               A barra ocupava ~82px: o ícone da marca em 44px, duas linhas de
+               texto e alvos de 44px de altura empilhando padding sobre padding.
+               Numa página cujo conteúdo é o mapa estratégico, isso é uma faixa
+               de topo maior que o cabeçalho do relatório impresso.
+
+               🔴 O ALVO DE TOQUE NÃO É SACRIFICADO NO CELULAR. Os 44px são a
+               recomendação AAA da WCAG (2.5.5) e existem para o dedo. Da
+               largura `lg` para cima quem aponta é o mouse, e 36px continua
+               acima do mínimo AA (2.5.8, 24px). Abaixo de `lg`, segue 44. */
+            .pnav-alvo { min-height: 44px; }
+            .pnav-marca-icone {
+                width: 34px; height: 34px; padding: 0;
+                display: flex; align-items: center; justify-content: center;
+            }
+            .pnav-marca-icone i { font-size: .95rem; }
+            .pnav-marca-titulo { font-size: 1.05rem; }
+            .pnav-marca-sub { font-size: .58rem; letter-spacing: 1px; }
+
+            @media (min-width: 992px) {
+                .pnav-alvo { min-height: 36px; }
+                .public-navbar .btn-icon { width: 34px; height: 34px; }
+                .public-navbar .btn-premium { padding-top: .3rem; padding-bottom: .3rem; }
+            }
+
             .btn-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
             .btn-ghost-secondary:hover { background: rgba(var(--bs-secondary-rgb), 0.1); color: var(--bs-primary); }
         </style>
@@ -68,11 +99,23 @@
           x-data="appLayout()"
           x-init="init()">
         
-        @livewire('public-navbar')
+        {{--
+            Link de pular para o conteúdo: sem ele, quem usa leitor de tela
+            percorre a navegação inteira em cada página. Em portal público de
+            órgão federal isso não é conveniência — é a Lei 13.146/2015 e o eMAG.
+            Visível apenas quando recebe foco pelo teclado.
+        --}}
+        <a href="#conteudo" class="visually-hidden-focusable position-absolute top-0 start-0 m-2 btn btn-primary">
+            Pular para o conteúdo
+        </a>
 
-        <div class="min-vh-100">
+        <header>
+            @livewire('public-navbar')
+        </header>
+
+        <main id="conteudo" class="min-vh-100">
             {{ $slot }}
-        </div>
+        </main>
 
         @livewireScripts
 

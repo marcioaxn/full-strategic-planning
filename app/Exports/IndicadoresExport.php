@@ -47,7 +47,7 @@ class IndicadoresExport implements FromCollection, WithHeadings, WithMapping
     {
         $vinculo = $indicador->cod_objetivo 
             ? 'Objetivo: ' . $indicador->objetivo->nom_objetivo 
-            : 'Plano: ' . $indicador->planoDeAcao->dsc_plano_de_acao;
+            : 'Iniciativa: ' . $indicador->planoDeAcao->dsc_plano_de_acao;
 
         return [
             $indicador->nom_indicador,

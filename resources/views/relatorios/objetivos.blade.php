@@ -3,16 +3,9 @@
 <head>
     <meta charset="utf-8">
     <title>Objetivos Estratégicos (BSC)</title>
-    @include('relatorios.partials.estilos')
+    @include('relatorios.partials.estilos', ['orientacao' => 'portrait'])
 </head>
 <body>
-    @include('relatorios.partials.cabecalho', [
-        'rptTitulo'    => 'Objetivos Estratégicos',
-        'rptEyebrow'   => 'Balanced Scorecard · Módulo 02 — Planejar',
-        'rptSubtitulo' => $pei->dsc_pei . ' (' . $pei->num_ano_inicio_pei . '–' . $pei->num_ano_fim_pei . ')',
-        'rptIcon'      => '&#9737;',
-    ])
-    @include('relatorios.partials.rodape')
 
     <main>
         {{-- Filtros --}}
@@ -50,8 +43,16 @@
             </tr>
         </table>
 
-        {{-- Objetivos por Perspectiva --}}
-        @foreach($perspectivas as $p)
+        {{-- Objetivos por Perspectiva.
+
+             🔴 Regra do gestor: "se o relatório vai mostrar uma parte e o
+             cliente ainda não preencheu, não é necessário mostrar". Uma faixa
+             escura com o nome da perspectiva, seguida de uma tabela dizendo
+             "nenhum objetivo nesta perspectiva", ocupa meia página para não
+             informar nada. --}}
+        @php $perspectivasComObjetivos = $perspectivas->filter(fn ($x) => $x->objetivos->isNotEmpty()); @endphp
+
+        @forelse($perspectivasComObjetivos as $p)
         <div class="avoid-break">
             <div class="grupo-band">
                 {{ $p->dsc_perspectiva }}
@@ -66,19 +67,26 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($p->objetivos->sortBy('num_nivel_hierarquico_apresentacao') as $obj)
+                    @foreach($p->objetivos->sortBy('num_nivel_hierarquico_apresentacao') as $obj)
                     <tr>
                         <td class="text-center" style="font-weight:bold; color:#1B408E;">{{ $obj->num_nivel_hierarquico_apresentacao }}</td>
                         <td class="row-titulo">{{ $obj->nom_objetivo }}</td>
                         <td class="row-desc">{{ $obj->dsc_objetivo ?: '—' }}</td>
                     </tr>
-                    @empty
-                    <tr><td colspan="3" class="text-center" style="color:#a0aec0; padding:14px;">Nenhum objetivo nesta perspectiva.</td></tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
-        @endforeach
+        @empty
+            {{-- Só aqui — quando NADA foi preenchido — o relatório fala do vazio.
+                 Documento inteiramente em branco é pior do que a frase. --}}
+            <div class="vazio">
+                Nenhum objetivo estratégico foi cadastrado neste ciclo.
+                @if($perspectivas->isNotEmpty())
+                    As {{ $perspectivas->count() }} perspectivas já existem e aguardam o desdobramento em objetivos.
+                @endif
+            </div>
+        @endforelse
 
         @if($perspectivas->isEmpty())
             <div class="vazio">Nenhuma perspectiva cadastrada para este ciclo PEI.</div>

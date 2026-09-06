@@ -6,6 +6,7 @@ use App\Models\ActionPlan\Entrega;
 use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\Organization;
 use App\Models\PerformanceIndicators\Indicador;
+use App\Models\Reports\RelatorioGerado;
 use App\Models\RiskManagement\Risco;
 use App\Models\User;
 use App\Observers\EntregaObserver;
@@ -13,6 +14,7 @@ use App\Policies\EntregaPolicy;
 use App\Policies\IndicadorPolicy;
 use App\Policies\OrganizationPolicy;
 use App\Policies\PlanoDeAcaoPolicy;
+use App\Policies\RelatorioGeradoPolicy;
 use App\Policies\RiscoPolicy;
 use App\Policies\UserPolicy;
 use App\Services\Authorization\CapacidadeResolver;
@@ -85,6 +87,49 @@ class AppServiceProvider extends ServiceProvider
                     // mensagem de erro mais clara se o banco for inacessível.
                 }
             }
+
+            // gen_random_uuid() é o default de chave primária de praticamente
+            // toda tabela deste projeto. Nativa no PostgreSQL 13+; no 12 vem da
+            // extensão pgcrypto — e precisa ser instalada num schema do
+            // search_path: em "public" (o default do CREATE EXTENSION) a função
+            // existe e mesmo assim não é resolvida, e o migrate morre em
+            // "function gen_random_uuid() does not exist".
+            $primeiroSchema = ((array) $schemas)[0] ?? null;
+
+            if ($primeiroSchema !== null) {
+                $resolve = function () use ($connection): bool {
+                    try {
+                        DB::connection($connection)->select('SELECT gen_random_uuid()');
+
+                        return true;
+                    } catch (\Throwable) {
+                        return false;
+                    }
+                };
+
+                if (! $resolve()) {
+                    try {
+                        DB::connection($connection)->statement(
+                            "CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA \"{$primeiroSchema}\""
+                        );
+                    } catch (\Throwable) {
+                        // Sem privilégio para criar.
+                    }
+
+                    // Se a extensão já existia noutro schema, o comando acima é
+                    // no-op silencioso: só mover resolve.
+                    if (! $resolve()) {
+                        try {
+                            DB::connection($connection)->statement(
+                                "ALTER EXTENSION pgcrypto SET SCHEMA \"{$primeiroSchema}\""
+                            );
+                        } catch (\Throwable) {
+                            // `php artisan app:init-schemas` imprime o comando
+                            // exato para o DBA do cliente.
+                        }
+                    }
+                }
+            }
         });
 
         Schema::defaultStringLength(191);
@@ -108,6 +153,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Indicador::class, IndicadorPolicy::class);
         Gate::policy(Risco::class, RiscoPolicy::class);
         Gate::policy(Entrega::class, EntregaPolicy::class);
+        Gate::policy(RelatorioGerado::class, RelatorioGeradoPolicy::class);
 
         $this->registrarGatesDeAutorizacao();
 

@@ -27,7 +27,7 @@ class DeliverablesBoard extends Component
     // PROPRIEDADES PÚBLICAS
     // ========================================
 
-    /** @var PlanoDeAcao Plano de ação atual */
+    /** @var PlanoDeAcao Iniciativa atual */
     public PlanoDeAcao $plano;
 
     /** @var string View atual: kanban, lista, timeline, calendario */

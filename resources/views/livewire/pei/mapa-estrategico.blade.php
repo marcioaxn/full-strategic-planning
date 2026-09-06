@@ -226,12 +226,12 @@
                                                         </a>
                                                     </div>
 
-                                                    {{-- Planos (Exibição Transparente: Concluídos + Avanço Médio) --}}
+                                                    {{-- Iniciativas (Exibição Transparente: Concluídas + Avanço Médio) --}}
                                                     <div class="obj-stat-box">
                                                         <a wire:navigate href="{{ route('planos.index') }}?filtroObjetivo={{ $objetivo['cod_objetivo'] }}" 
                                                            class="text-decoration-none plano-link" @auth onclick="event.stopPropagation();" @endauth>
                                                             <div class="d-flex justify-content-between mb-1 align-items-center">
-                                                                <span class="stat-label-modern"><i class="bi bi-list-check me-1"></i>Planos</span>
+                                                                <span class="stat-label-modern"><i class="bi bi-list-check me-1"></i>Iniciativas</span>
                                                                 <span class="stat-value-modern" style="color: {{ $pln['cor'] }};">{{ $pln['concluidos'] }}/{{ $pln['quantidade'] }}</span>
                                                             </div>
                                                             {{-- Barra usa o progresso ponderado (media_progresso) --}}
@@ -277,7 +277,7 @@
                         @endforeach
                     </div>
                     <div class="d-flex align-items-center justify-content-center flex-wrap gap-4 border-top pt-3">
-                        <span class="small fw-bold text-muted text-uppercase letter-spacing-1">Status (Planos de Ação):</span>
+                        <span class="small fw-bold text-muted text-uppercase letter-spacing-1">Status (Iniciativas):</span>
                         @foreach(\App\Models\ActionPlan\PlanoDeAcao::getStatusLegend() as $item)
                             <div class="d-flex align-items-center">
                                 <span class="legenda-color-dot me-2 shadow-sm" style="background-color: {{ $item['color'] }};"></span>

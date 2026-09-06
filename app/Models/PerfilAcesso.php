@@ -15,7 +15,7 @@ class PerfilAcesso extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_perfil_acesso';
+    protected $table = 'organization.tab_perfil_acesso';
 
     /**
      * Chave primária
@@ -44,8 +44,11 @@ class PerfilAcesso extends Model
      * Constantes de perfis pré-definidos
      */
     const SUPER_ADMIN = 'c00b9ebc-7014-4d37-97dc-7875e55fff2a';
+
     const ADMIN_UNIDADE = 'c00b9ebc-7014-4d37-97dc-7875e55fff3b';
+
     const GESTOR_RESPONSAVEL = 'c00b9ebc-7014-4d37-97dc-7875e55fff4c';
+
     const GESTOR_SUBSTITUTO = 'c00b9ebc-7014-4d37-97dc-7875e55fff5d';
 
     /**

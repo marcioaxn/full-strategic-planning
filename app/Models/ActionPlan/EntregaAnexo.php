@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Model de Anexo em Entrega.
@@ -20,7 +19,7 @@ class EntregaAnexo extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_entrega_anexos';
+    protected $table = 'action_plan.tab_entrega_anexos';
 
     /**
      * Chave primária
@@ -129,7 +128,7 @@ class EntregaAnexo extends Model
      */
     public function getUrl(): string
     {
-        return asset('storage/' . $this->dsc_caminho);
+        return asset('storage/'.$this->dsc_caminho);
     }
 
     /**
@@ -146,7 +145,7 @@ class EntregaAnexo extends Model
             $index++;
         }
 
-        return round($bytes, 2) . ' ' . $units[$index];
+        return round($bytes, 2).' '.$units[$index];
     }
 
     /**

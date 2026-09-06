@@ -37,7 +37,7 @@ class GestaoPerfis extends Component
                 'Usuários e Perfis',
                 'Ciclo PEI / Identidade',
                 'Objetivos e Indicadores',
-                'Planos de Ação',
+                'Iniciativas',
                 'Entregas',
                 'Riscos',
                 'Relatórios',
@@ -69,7 +69,7 @@ class GestaoPerfis extends Component
             'Gestor Responsável' => [
                 'icon' => 'person-fill-gear',
                 'color' => 'success',
-                'desc' => 'Edita os planos de ação e entregas sob sua responsabilidade direta. Não exclui planos.',
+                'desc' => 'Edita as iniciativas e entregas sob sua responsabilidade direta. Não exclui planos.',
                 'flag' => 'GESTOR_RESPONSAVEL',
             ],
             'Gestor Substituto' => [

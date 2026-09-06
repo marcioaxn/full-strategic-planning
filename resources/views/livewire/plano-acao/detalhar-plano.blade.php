@@ -5,12 +5,12 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-1">
                     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('planos.index') }}" wire:navigate class="text-decoration-none">Planos de Ação</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('planos.index') }}" wire:navigate class="text-decoration-none">Iniciativas</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Ficha Técnica</li>
                 </ol>
             </nav>
             <h2 class="h3 fw-bold mb-0">
-                <i class="bi bi-file-earmark-text me-2 text-primary"></i>Ficha Técnica do Plano
+                <i class="bi bi-file-earmark-text me-2 text-primary"></i>Ficha Técnica da Iniciativa
             </h2>
             <div class="d-flex gap-2 mt-1">
                 <x-projetos-link :page="23" label="TAP/Kick-off" />
@@ -231,7 +231,7 @@
                 <div class="text-center py-3 text-muted">
                     <i class="bi bi-diagram-3 fs-1 opacity-25 d-block mb-2"></i>
                     <p class="small mb-1">Modelo Lógico não preenchido.</p>
-                    <p class="x-small text-muted mb-0">Edite o plano de ação para preencher Insumos, Atividades, Resultados e Impacto.</p>
+                    <p class="x-small text-muted mb-0">Edite a iniciativa para preencher Insumos, Atividades, Resultados e Impacto.</p>
                 </div>
             @else
                 <div class="row g-3 align-items-stretch">
@@ -356,7 +356,7 @@
         </div>
     </div>
 
-    {{-- Lições Aprendidas do Plano --}}
+    {{-- Lições Aprendidas da Iniciativa --}}
     @if($licoes->isNotEmpty())
     <div class="card border-0 shadow-sm mt-4">
         <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between py-3 px-4">

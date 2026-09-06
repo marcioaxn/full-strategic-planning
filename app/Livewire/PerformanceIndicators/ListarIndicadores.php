@@ -7,15 +7,21 @@ use App\Models\Organization;
 use App\Models\PerformanceIndicators\Indicador;
 use App\Models\PerformanceIndicators\LinhaBaseIndicador;
 use App\Models\PerformanceIndicators\MetaPorAno;
+use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\PEI;
+use App\Models\SystemSetting;
+use App\Services\PeiGuidanceService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('layouts.app')]
+// Sem #[Layout] fixo: o layout é escolhido no render(), porque esta tela
+// também é servida ao visitante pelo Mapa Estratégico público.
 class ListarIndicadores extends Component
 {
     use AuthorizesRequests;
@@ -140,7 +146,7 @@ class ListarIndicadores extends Component
 
         $this->carregarListasAuxiliares();
 
-        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
+        $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
     }
 
     public function atualizarOrganizacao($id)
@@ -158,7 +164,7 @@ class ListarIndicadores extends Component
 
     public function carregarListasAuxiliares()
     {
-        $this->grausSatisfacao = \App\Models\StrategicPlanning\GrauSatisfacao::orderBy('vlr_minimo')->get();
+        $this->grausSatisfacao = GrauSatisfacao::doPei($this->peiAtivo?->cod_pei)->get();
         $this->unidadesMedida = Indicador::UNIDADES_MEDIDA;
         $this->polaridades = Indicador::POLARIDADES;
         $this->calculationTypes = Indicador::CALCULATION_TYPES;
@@ -199,11 +205,17 @@ class ListarIndicadores extends Component
         }
     }
 
-    public function create(\App\Services\PeiGuidanceService $service)
+    public function create(PeiGuidanceService $service)
     {
+        // Autorização ANTES do pré-requisito. Com a ordem invertida, quem não
+        // tem permissão (inclusive o visitante) saía pelo return do bloqueio
+        // sem nunca passar pela verificação — e a tela é pública para leitura.
+        $this->authorize('modulo.criar', 'indicadores');
+
         $bloqueio = $service->verificarPreRequisitos('indicadores', $this->peiAtivo?->cod_pei ?? null);
         if ($bloqueio) {
             $this->dispatch('notify', message: $bloqueio['mensagem'], style: 'warning');
+
             return;
         }
         $this->authorize('create', Indicador::class);
@@ -222,7 +234,7 @@ class ListarIndicadores extends Component
         $this->form = [
             'nom_indicador' => $indicador->nom_indicador,
             'dsc_indicador' => $indicador->dsc_indicador,
-            'dsc_tipo' => $indicador->dsc_tipo ?? ($indicador->cod_plano_de_acao ? 'Plano' : 'Objetivo'),
+            'dsc_tipo' => $indicador->dsc_tipo ?? ($indicador->cod_plano_de_acao ? 'Iniciativa' : 'Objetivo'),
             'dsc_calculation_type' => $indicador->dsc_calculation_type ?? 'manual',
             'cod_objetivo' => $indicador->cod_objetivo,
             'cod_plano_de_acao' => $indicador->cod_plano_de_acao,
@@ -254,7 +266,7 @@ class ListarIndicadores extends Component
         ];
 
         // Validação condicional: Se tipo é Plano E cálculo é automático, plano é obrigatório
-        if ($this->form['dsc_tipo'] === 'Plano') {
+        if ($this->form['dsc_tipo'] === 'Iniciativa') {
             $rules['form.cod_plano_de_acao'] = 'required|uuid|exists:tab_plano_de_acao,cod_plano_de_acao';
 
             // Se cálculo automático, reforçar mensagem
@@ -266,14 +278,14 @@ class ListarIndicadores extends Component
         }
 
         $messages = [
-            'form.cod_plano_de_acao.required' => 'Para indicadores com cálculo automático, é obrigatório selecionar um Plano de Ação.',
+            'form.cod_plano_de_acao.required' => 'Para indicadores com cálculo automático, é obrigatório selecionar uma Iniciativa.',
             'form.cod_objetivo.required' => 'Selecione o Objetivo Estratégico vinculado a este indicador.',
         ];
 
         $this->validate($rules, $messages);
 
         try {
-            $data   = $this->form;
+            $data = $this->form;
             $orgIds = $data['organizacoes_ids'] ?? [];
             unset($data['organizacoes_ids']);
             $data['json_smart'] = $data['smart'] ?? [];
@@ -286,7 +298,7 @@ class ListarIndicadores extends Component
                 $data['cod_objetivo'] = null;
             }
 
-            \Illuminate\Support\Facades\DB::transaction(function () use ($data, $orgIds) {
+            DB::transaction(function () use ($data, $orgIds) {
                 if ($this->indicadorId) {
                     $indicador = Indicador::findOrFail($this->indicadorId);
                     $this->authorize('update', $indicador);
@@ -306,6 +318,10 @@ class ListarIndicadores extends Component
             $this->showSuccessModal = true;
 
         } catch (\Exception $e) {
+            // Sem isto, a causa real desaparece: o cliente recebe uma
+            // orientação genérica e não sobra rastro nenhum para investigar.
+            report($e);
+
             $this->errorMessage = 'Não foi possível processar o registro do indicador. Por favor, revise as informações e tente novamente.';
             $this->showErrorModal = true;
         }
@@ -321,8 +337,21 @@ class ListarIndicadores extends Component
         $this->showMetasModal = true;
     }
 
+    /**
+     * 🔴 A AUTORIZAÇÃO ESTAVA SÓ EM abrirMetas().
+     *
+     * Todo método público de um componente Livewire é invocável direto do
+     * navegador — o cliente não precisa passar pelo modal para chegar aqui.
+     * Autorizar ao ABRIR e não ao SALVAR protege a tela, não o dado. E desde
+     * que /indicadores passou a ser servida também na área pública de
+     * transparência, a chamada nem exige sessão: /livewire/update não passa
+     * pelo middleware que barra escrita nas rotas públicas.
+     */
     public function salvarMeta()
     {
+        abort_unless($this->indicadorSelecionado, 403);
+        $this->authorize('update', $this->indicadorSelecionado);
+
         $this->validate([
             'metaAno' => 'required|integer|min:2000|max:2100',
             'metaValor' => 'required|numeric',
@@ -337,9 +366,23 @@ class ListarIndicadores extends Component
         $this->dispatch('notify', message: 'Meta salva!', style: 'success');
     }
 
+    /**
+     * 🔴 APAGAVA POR ID, SEM AUTORIZAÇÃO E SEM CONFERIR O DONO.
+     *
+     * Recebia um id qualquer e apagava. Nem verificava se a meta pertencia ao
+     * indicador aberto — bastava chamar o método com o id de outra para apagar
+     * a meta de qualquer indicador do sistema, de qualquer organização.
+     */
     public function excluirMeta($id)
     {
-        MetaPorAno::findOrFail($id)->delete();
+        abort_unless($this->indicadorSelecionado, 403);
+        $this->authorize('update', $this->indicadorSelecionado);
+
+        $meta = MetaPorAno::findOrFail($id);
+
+        abort_unless($meta->cod_indicador === $this->indicadorSelecionado->cod_indicador, 403);
+
+        $meta->delete();
         $this->abrirMetas($this->indicadorSelecionado->cod_indicador);
     }
 
@@ -355,6 +398,9 @@ class ListarIndicadores extends Component
 
     public function salvarLinhaBase()
     {
+        abort_unless($this->indicadorSelecionado, 403);
+        $this->authorize('update', $this->indicadorSelecionado);
+
         $this->validate([
             'linhaBaseAno' => 'required|integer|min:2000|max:2100',
             'linhaBaseValor' => 'required|numeric',
@@ -369,9 +415,17 @@ class ListarIndicadores extends Component
         $this->dispatch('notify', message: 'Linha de base salva!', style: 'success');
     }
 
+    /** Mesmo defeito de excluirMeta(): apagava por id, sem dono e sem guarda. */
     public function excluirLinhaBase($id)
     {
-        LinhaBaseIndicador::findOrFail($id)->delete();
+        abort_unless($this->indicadorSelecionado, 403);
+        $this->authorize('update', $this->indicadorSelecionado);
+
+        $linha = LinhaBaseIndicador::findOrFail($id);
+
+        abort_unless($linha->cod_indicador === $this->indicadorSelecionado->cod_indicador, 403);
+
+        $linha->delete();
         $this->abrirLinhaBase($this->indicadorSelecionado->cod_indicador);
     }
 
@@ -453,7 +507,7 @@ class ListarIndicadores extends Component
         // Se há filtro por objetivo específico, prioriza esse filtro
         if ($this->filtroObjetivo) {
             // Busca indicadores diretamente vinculados ao objetivo
-            // OU vinculados a planos de ação desse objetivo
+            // OU vinculados a iniciativas desse objetivo
             $query->where(function ($q) {
                 $q->where('cod_objetivo', $this->filtroObjetivo)
                     ->orWhereHas('planoDeAcao', function ($sub) {
@@ -487,12 +541,15 @@ class ListarIndicadores extends Component
 
         if ($this->filtroVinculo === 'Objetivo') {
             $query->deObjetivo();
-        } elseif ($this->filtroVinculo === 'Plano') {
+        } elseif ($this->filtroVinculo === 'Iniciativa') {
             $query->dePlano();
         }
 
+        // Layout dinâmico: o visitante chega aqui pelo Mapa Estratégico público
+        // e não tem menu autenticado. Mesmo critério do MapaEstrategico.
         return view('livewire.indicador.listar-indicadores', [
             'indicadores' => $query->paginate(10),
-        ]);
+        ])
+            ->layout(Auth::check() ? 'layouts.app' : 'layouts.public');
     }
 }

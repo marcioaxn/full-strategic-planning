@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Models\StrategicPlanning\MissaoVisaoValores;
 use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\StrategicPlanning\MissaoVisaoValores;
 use App\Models\StrategicPlanning\Valor;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,7 +20,7 @@ class Organization extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_organizacoes';
+    protected $table = 'organization.tab_organizacoes';
 
     /**
      * Chave primária
@@ -78,7 +78,7 @@ class Organization extends Model
     }
 
     /**
-     * Relacionamento: Planos de Ação
+     * Relacionamento: Iniciativas
      */
     public function planosAcao(): HasMany
     {
@@ -112,11 +112,11 @@ class Organization extends Model
     public function getDescendantsAndSelfIds(): array
     {
         $ids = [$this->cod_organizacao];
-        
+
         foreach ($this->filhas()->where('cod_organizacao', '!=', $this->cod_organizacao)->get() as $filha) {
             $ids = array_merge($ids, $filha->getDescendantsAndSelfIds());
         }
-        
+
         return array_unique($ids);
     }
 
@@ -126,13 +126,13 @@ class Organization extends Model
     public static function getTreeForSelector(?string $excludeId = null, $parentId = null, $level = 0): array
     {
         $query = self::query();
-        
+
         if ($parentId === null) {
             // Inicia pelas raízes
             $query->whereColumn('cod_organizacao', 'rel_cod_organizacao');
         } else {
             $query->where('rel_cod_organizacao', $parentId)
-                  ->where('cod_organizacao', '!=', $parentId);
+                ->where('cod_organizacao', '!=', $parentId);
         }
 
         if ($excludeId) {
@@ -143,10 +143,10 @@ class Organization extends Model
         foreach ($query->orderBy('nom_organizacao')->get() as $org) {
             $results[] = [
                 'id' => $org->cod_organizacao,
-                'label' => str_repeat('   ', $level) . ($level > 0 ? '↳ ' : '') . $org->sgl_organizacao . ' - ' . $org->nom_organizacao,
-                'level' => $level
+                'label' => str_repeat('   ', $level).($level > 0 ? '↳ ' : '').$org->sgl_organizacao.' - '.$org->nom_organizacao,
+                'level' => $level,
             ];
-            
+
             // Busca filhos recursivamente
             $results = array_merge($results, self::getTreeForSelector($excludeId, $org->cod_organizacao, $level + 1));
         }
@@ -196,6 +196,6 @@ class Organization extends Model
     public function scopeFilhasDe($query, string $codOrganizacaoPai)
     {
         return $query->where('rel_cod_organizacao', $codOrganizacaoPai)
-                     ->where('cod_organizacao', '!=', $codOrganizacaoPai);
+            ->where('cod_organizacao', '!=', $codOrganizacaoPai);
     }
 }

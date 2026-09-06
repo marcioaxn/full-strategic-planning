@@ -12,7 +12,7 @@
     --lp-primary: #1B408E;
     --lp-accent:  #e07b39;
     --lp-accent2: #f5a623;
-    --lp-green:   #2e8b57;
+    --lp-green:   #237347; /* era #2e8b57: branco sobre ele dava 4,25 — abaixo do mínimo WCAG AA de 4,5 */
     --lp-purple:  #6a4c9c;
 }
 
@@ -35,28 +35,18 @@
 [data-bs-theme="dark"] .lp-card-surface:hover { background: #263347; }
 
 /* ── Hero (tom claro/pastel — textos escuros) ── */
+/* Hero SEM fundo: o gradiente, os dois brilhos radiais e as três manchas
+   desfocadas saíram. O que fica é o fundo do corpo — e, sem eles, o número e
+   o texto do hero passam a ter contraste previsível, em vez de depender de
+   onde a mancha caiu na tela de cada um. */
 .lp-hero {
-    background: linear-gradient(135deg, #cfe0f6 0%, #dde9fa 40%, #e9f1fc 70%, #f4f8fd 100%);
-    min-height: 100vh;
+    background: var(--bs-body-bg);
+    min-height: auto;
+    padding: 3.5rem 0 4rem;
     position: relative;
-    overflow: hidden;
     display: flex;
     align-items: center;
 }
-.lp-hero::before {
-    content: '';
-    position: absolute; inset: 0; pointer-events: none;
-    background:
-        radial-gradient(ellipse 80% 60% at 70% 40%, rgba(67,97,238,.10) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 50% at 20% 80%, rgba(224,123,57,.08) 0%, transparent 55%);
-}
-.lp-shape {
-    position: absolute; border-radius: 50%;
-    filter: blur(60px); opacity: .3; pointer-events: none;
-}
-.lp-shape-1 { width: 400px; height: 400px; background: #4361EE; top: -100px; right: -100px; }
-.lp-shape-2 { width: 300px; height: 300px; background: #e07b39; bottom: 50px; left: 30%; }
-.lp-shape-3 { width: 200px; height: 200px; background: #22a06b; top: 40%; left: -50px; }
 
 /* ── Badge pill ── */
 .lp-hero-badge {
@@ -76,6 +66,11 @@
     background: linear-gradient(90deg, #1B408E, #e07b39);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
+.lp-hero-orgao {
+    font-size: .95rem; font-weight: 700; color: #3f5170;
+    letter-spacing: .02em; margin: 0 0 .35rem 0; line-height: 1.35;
+}
+.lp-hero-orgao span { font-weight: 500; color: #6b7c99; }
 .lp-hero-sub { font-size: 1.05rem; color: #3f5170; line-height: 1.75; max-width: 540px; }
 
 /* ── Botões hero ── */
@@ -146,6 +141,8 @@
 [data-bs-theme="dark"] .lp-hero-badge { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.2); color: rgba(255,255,255,.92); }
 [data-bs-theme="dark"] .lp-hero-title { color: #f1f5f9; }
 [data-bs-theme="dark"] .lp-hero-title span { background: linear-gradient(90deg,#7fb3f5,#f5a623); -webkit-background-clip: text; background-clip: text; }
+[data-bs-theme="dark"] .lp-hero-orgao { color: #cbd5e1; }
+[data-bs-theme="dark"] .lp-hero-orgao span { color: #94a3b8; }
 [data-bs-theme="dark"] .lp-hero-sub { color: rgba(226,232,240,.78); }
 [data-bs-theme="dark"] .lp-hero-eyebrow { color: #7fb3f5; }
 [data-bs-theme="dark"] .lp-hero-muted { color: rgba(148,163,184,.85); }
@@ -222,7 +219,7 @@
 
 .mod-monitorar .lp-module-icon { background: linear-gradient(135deg, #2e8b57, #22a06b); color: #fff; }
 .mod-monitorar .lp-module-num  { color: #2e8b57; }
-.mod-monitorar .lp-module-badge { background: #e8f5ef; color: #2e8b57; }
+.mod-monitorar .lp-module-badge { background: #e8f5ef; color: #1c5c39; } /* era #2e8b57: 3,79 sobre este fundo, abaixo de 4,5 */
 .mod-monitorar .lp-module-bar   { background: linear-gradient(90deg, #2e8b57, #22a06b); }
 [data-bs-theme="dark"] .mod-monitorar .lp-module-badge { background: rgba(46,139,87,.4); color: #6ee7b7; }
 
@@ -303,9 +300,6 @@
      HERO — idêntico em ambos os modos, mas data-driven quando PEI ativo
 ════════════════════════════════════════════════════════════ --}}
 <section class="lp-hero lp-body">
-    <div class="lp-shape lp-shape-1"></div>
-    <div class="lp-shape lp-shape-2"></div>
-    <div class="lp-shape lp-shape-3"></div>
 
     <div class="container py-5 position-relative">
         <div class="row align-items-center g-5">
@@ -320,8 +314,22 @@
                     &nbsp;·&nbsp;
                     {{ $pei->num_ano_inicio_pei ?? '' }}–{{ $pei->num_ano_fim_pei ?? '' }}
                 </div>
+                {{--
+                    A identificação do órgão vem ANTES do título, em corpo de
+                    linha-fina.
+
+                    🔴 Estava como primeira linha do <h1>, em 3,6rem: a página
+                    abria com a sigla sozinha, do tamanho do título, e lia-se
+                    "ORG / Planejamento Estratégico / Institucional". E o valor
+                    padrão era 'SEAE' — a sigla de um órgão real escrita no
+                    código de um produto multicliente.
+                --}}
+                @if($organizacao)
+                    <p class="lp-hero-orgao">
+                        {{ $organizacao->nom_organizacao }}@if($organizacao->sgl_organizacao && $organizacao->sgl_organizacao !== $organizacao->nom_organizacao) <span>({{ $organizacao->sgl_organizacao }})</span>@endif
+                    </p>
+                @endif
                 <h1 class="lp-hero-title mb-3">
-                    {{ $organizacao?->sgl_organizacao ?? 'SEAE' }}<br>
                     <span>Planejamento Estratégico</span><br>
                     Institucional
                 </h1>
@@ -360,9 +368,11 @@
                         {{ $temDados ? 'Acessar o Sistema' : 'Entrar no Sistema' }}
                     </a>
                     @if($temDados)
-                    <a href="#panorama" class="lp-hero-cta-ghost">
+                    {{-- Apontava para a seção Panorama, que não existe mais.
+                         Âncora quebrada é botão que não faz nada. --}}
+                    <a href="#mapa" class="lp-hero-cta-ghost">
                         <i class="bi bi-chevron-down"></i>
-                        Ver Panorama Estratégico
+                        Ver o Mapa Estratégico
                     </a>
                     @else
                     <a href="{{ route('documentos.viewer-gppei') }}" class="lp-hero-cta-ghost">
@@ -388,7 +398,7 @@
                         <div class="lp-stat-divider d-none d-sm-block" style="height:36px;"></div>
                         <div class="col">
                             <div class="lp-stat-value">{{ $stats['planos'] }}</div>
-                            <div class="lp-stat-label">Planos</div>
+                            <div class="lp-stat-label">Iniciativas</div>
                         </div>
                         <div class="lp-stat-divider d-none d-sm-block" style="height:36px;"></div>
                         <div class="col">
@@ -418,18 +428,42 @@
                 @if($temDados)
                 {{-- Atingimento global + cards de perspectiva --}}
                 <div class="text-center mb-4">
-                    <div class="lp-achieve-ring mx-auto mb-2" style="border-color:{{ $stats['corGlobal'] }};">
-                        <div class="lp-achieve-num" style="color:{{ $stats['corGlobal'] }};">{{ $stats['atingimentoGlobal'] }}%</div>
-                        <div class="lp-achieve-sub">Atingimento<br>Global</div>
-                    </div>
-                    <p class="lp-hero-muted" style="font-size:.75rem;margin:0;">
-                        Média consolidada de {{ $stats['perspectivas'] }} perspectivas BSC
-                    </p>
+                    @if($stats['temMedicao'] ?? false)
+                        <div class="lp-achieve-ring mx-auto mb-2" style="border-color:{{ $stats['corGlobal'] }};">
+                            <div class="lp-achieve-num" style="color:{{ $stats['corGlobal'] }};">{{ $stats['atingimentoGlobal'] }}%</div>
+                            <div class="lp-achieve-sub">Atingimento<br>Global</div>
+                        </div>
+                        <p class="lp-hero-muted" style="font-size:.75rem;margin:0;">
+                            {{ $stats['perspectivasNaMedia'] == 1 ? 'Resultado da' : 'Média das' }}
+                            {{ $stats['perspectivasNaMedia'] }}
+                            {{ $stats['perspectivasNaMedia'] == 1 ? 'perspectiva' : 'perspectivas' }}
+                            com indicadores ou iniciativas
+                            @if($stats['perspectivasNaMedia'] < $stats['perspectivas'])
+                                (de {{ $stats['perspectivas'] }} no ciclo)
+                            @endif
+                        </p>
+                    @else
+                        {{--
+                            Estado vazio no lugar de "0%". O zero é verdadeiro e a
+                            leitura que induz é falsa: num Portal da Transparência,
+                            0% não diz "ciclo em preenchimento" — diz "este órgão
+                            não executou nada".
+                        --}}
+                        <div class="lp-achieve-ring mx-auto mb-2" style="border-color:#cbd5e1;">
+                            <div class="lp-achieve-num" style="color:#94a3b8;font-size:1.6rem;">
+                                <i class="bi bi-hourglass-split"></i>
+                            </div>
+                            <div class="lp-achieve-sub">Em<br>preenchimento</div>
+                        </div>
+                        <p class="lp-hero-muted" style="font-size:.75rem;margin:0;">
+                            O desempenho será publicado a partir do primeiro lançamento de evolução dos indicadores.
+                        </p>
+                    @endif
                 </div>
 
                 <div class="position-relative ps-2">
                     @foreach($perspectivas->take(3) as $i => $persp)
-                    <div class="lp-mod-card" style="border-left:4px solid {{ $persp->cor_atingimento }};transform:translateX({{ $i * 22 }}px);">
+                    <div class="lp-mod-card" style="border-left:4px solid {{ $persp->cor_atingimento }};">
                         <div class="lp-mod-icon" style="background:rgba({{ hexdec(substr($persp->cor_atingimento,1,2)) }},{{ hexdec(substr($persp->cor_atingimento,3,2)) }},{{ hexdec(substr($persp->cor_atingimento,5,2)) }},.16);">
                             <i class="bi bi-layers" style="font-size:1.1rem;color:{{ $persp->cor_atingimento }};"></i>
                         </div>
@@ -457,7 +491,7 @@
                 <div class="position-relative ps-4">
                     @foreach([
                         ['num'=>'01','title'=>'Inaugurar e Integrar','sub'=>'Planejar o processo · Integração PPA/LOA/ODS','icon'=>'flag-fill','c'=>'#1a3a5c'],
-                        ['num'=>'02','title'=>'Planejar','sub'=>'Cadeia de Valor · SWOT · Indicadores · Planos','icon'=>'diagram-3-fill','c'=>'#1B408E'],
+                        ['num'=>'02','title'=>'Planejar','sub'=>'Cadeia de Valor · SWOT · Indicadores · Iniciativas','icon'=>'diagram-3-fill','c'=>'#1B408E'],
                         ['num'=>'03','title'=>'Monitorar e Avaliar','sub'=>'Dashboard · RAE · Relatórios · Alertas','icon'=>'graph-up-arrow','c'=>'#2e8b57'],
                     ] as $i => $m)
                     <div class="lp-mod-card" style="border-left:4px solid {{ $m['c'] }};transform:translateX({{ $i * 20 }}px);">
@@ -489,130 +523,41 @@
      MODO DASHBOARD — Panorama Estratégico Real
 ══════════════════════════════════════════════════════════ --}}
 
-{{-- ── MAPA BSC (perspectivas com atingimento) ── --}}
-<section id="panorama" class="lp-section-light lp-body" style="padding: 5rem 0; scroll-margin-top: 80px;">
-    <div class="container">
-        <div class="text-center mb-5">
-            <div class="lp-section-eyebrow lp-eyebrow mb-2">Mapa Estratégico</div>
-            <h2 class="fw-bold lp-heading" style="font-size:clamp(1.6rem,2.5vw,2.4rem);letter-spacing:-.02em;">
-                Panorama Estratégico — BSC
-            </h2>
-            <p class="lp-subtext mx-auto mb-0" style="max-width:520px;font-size:1rem;line-height:1.7;">
-                Atingimento consolidado por perspectiva do Balanced Scorecard.
-                Atualizado em tempo real conforme os indicadores são lançados.
-            </p>
-        </div>
+{{-- A seção "Panorama Estratégico — BSC" foi removida a pedido do gestor.
+     Ela repetia, em cartões próprios, o mesmo atingimento por perspectiva
+     que o Mapa Estratégico embutido logo abaixo já mostra — e mostrava com
+     outro desenho, o que é a divergência entre módulos que o CEO cobra. --}}
 
-        @php
-            $coresNivel = [1 => '#475569', 2 => '#2e8b57', 3 => '#0891b2', 4 => '#d97706', 5 => '#1B408E'];
-        @endphp
-
-        <div class="row g-4">
-            @forelse($perspectivas as $persp)
-            @php
-                $corBand = $coresNivel[$persp->num_nivel_hierarquico_apresentacao] ?? '#1B408E';
-                $pct = min(100, max(0, $persp->atingimento_medio));
-            @endphp
-            <div class="col-12 col-md-6">
-                <div class="lp-persp-card lp-card-surface">
-                    {{-- Header colorido --}}
-                    <div class="lp-persp-header" style="background:{{ $corBand }};">
-                        <div>
-                            <div style="font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.65;">
-                                Perspectiva {{ $loop->iteration }}
-                            </div>
-                            <div style="font-weight:700;font-size:.95rem;">{{ $persp->dsc_perspectiva }}</div>
-                        </div>
-                        <div style="font-size:1.75rem;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.18);">
-                            {{ $persp->atingimento_medio }}%
-                        </div>
-                    </div>
-
-                    {{-- Body --}}
-                    <div class="lp-persp-body lp-section-white">
-                        <div class="lp-progress-track mb-2">
-                            <div class="lp-progress-fill" style="width:{{ $pct }}%;background:{{ $persp->cor_atingimento }};"></div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div style="font-size:.8rem;" class="lp-subtext">
-                                <i class="bi bi-bullseye me-1"></i>
-                                {{ $persp->objetivos->count() }} {{ Str::plural('objetivo', $persp->objetivos->count()) }}
-                                @if($persp->objetivos_abaixo > 0)
-                                &nbsp;·&nbsp;
-                                <span style="color:#dc3545;">{{ $persp->objetivos_abaixo }} abaixo de 50%</span>
-                                @endif
-                            </div>
-                            <div style="font-size:.72rem;font-weight:700;padding:.2rem .7rem;border-radius:999px;background:{{ $persp->cor_atingimento }}22;color:{{ $persp->cor_atingimento }};">
-                                {{ $pct >= 80 ? 'No alvo' : ($pct >= 50 ? 'Atenção' : 'Crítico') }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @empty
-            <div class="col-12 text-center py-5 lp-subtext">
-                <i class="bi bi-layers fs-1 d-block mb-3 opacity-25"></i>
-                Nenhuma perspectiva cadastrada ainda.
-            </div>
-            @endforelse
-        </div>
-    </div>
-</section>
-
-{{-- ── INDICADORES E RISCOS ── --}}
+{{-- ── RISCOS AGREGADOS ──
+     A seção inteira depende da chave que o órgão liga: sem ela, não existe
+     conteúdo aqui, e uma <section> vazia é 8rem de nada entre o hero e o
+     Mapa Estratégico. --}}
+@if($stats['publicaRiscos'] ?? false)
 <section class="lp-section-white lp-body" style="padding: 4rem 0;">
     <div class="container">
         <div class="row g-4 align-items-stretch">
 
-            {{-- Card: Visão Geral --}}
-            <div class="col-md-4">
-                <div class="lp-card-surface rounded-4 p-4 h-100">
-                    <div style="width:48px;height:48px;background:linear-gradient(135deg,#1a3a5c,#1B408E);border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;">
-                        <i class="bi bi-speedometer2 text-white fs-5"></i>
-                    </div>
-                    <h5 class="fw-bold lp-heading mb-3">Visão Geral</h5>
-                    <div class="d-flex flex-column gap-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="lp-subtext small">Perspectivas</span>
-                            <span class="fw-bold lp-heading">{{ $stats['perspectivas'] }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="lp-subtext small">Objetivos Estratégicos</span>
-                            <span class="fw-bold lp-heading">{{ $stats['objetivos'] }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="lp-subtext small">Indicadores (KPIs)</span>
-                            <span class="fw-bold lp-heading">{{ $stats['indicadores'] }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="lp-subtext small">Planos de Ação</span>
-                            <span class="fw-bold lp-heading">{{ $stats['planos'] }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {{--
+                Os cartões "Visão Geral" e "Atingimento Global" foram removidos
+                a pedido do gestor, junto com a seção Panorama Estratégico — BSC.
 
-            {{-- Card: Atingimento Global --}}
-            <div class="col-md-4">
-                <div class="lp-card-surface rounded-4 p-4 h-100 text-center d-flex flex-column justify-content-center">
-                    <div style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1rem;" class="lp-subtext">
-                        Atingimento Global
-                    </div>
-                    <div style="font-size:4.5rem;font-weight:900;line-height:1;color:{{ $stats['corGlobal'] }};letter-spacing:-.04em;">
-                        {{ $stats['atingimentoGlobal'] }}%
-                    </div>
-                    <div class="mt-3 px-4">
-                        <div class="lp-progress-track">
-                            <div class="lp-progress-fill" style="width:{{ min(100, $stats['atingimentoGlobal']) }}%;background:{{ $stats['corGlobal'] }};"></div>
-                        </div>
-                    </div>
-                    <div class="mt-3 lp-subtext" style="font-size:.82rem;line-height:1.5;">
-                        Média ponderada de<br>{{ $stats['perspectivas'] }} perspectivas BSC
-                    </div>
-                </div>
-            </div>
+                Eram a MESMA informação do topo da página: as quatro contagens e
+                o mesmo percentual global, repetidos em outro desenho, ocupando a
+                altura de uma tela inteira antes do Mapa Estratégico. Quem chega
+                ao portal vem ver o mapa; a repetição só o empurrava para baixo.
+            --}}
 
-            {{-- Card: Riscos e Alertas --}}
+            {{--
+                Card: Riscos e Alertas.
+
+                Só aparece se o ÓRGÃO tiver ligado a publicação de informação de
+                risco (SystemSetting "transparencia_exibe_riscos_agregado", que
+                nasce desligada). Antes ele era publicado sempre, sem chave e sem
+                que ninguém tivesse decidido — inclusive a contagem de riscos
+                críticos de um órgão da Presidência da República.
+                Ver documentacao/melhorias/07-mapa-estrategico-publico.md
+            --}}
+            @if($stats['publicaRiscos'] ?? false)
             <div class="col-md-4">
                 <div class="lp-card-surface rounded-4 p-4 h-100">
                     <div style="width:48px;height:48px;background:linear-gradient(135deg,#dc3545,#ea580c);border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;">
@@ -649,12 +594,14 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
     </div>
 </section>
+@endif
 
 {{-- ── MAPA ESTRATÉGICO (read-only) ── --}}
-<section class="lp-section-white lp-body" style="padding: 4rem 0;">
+<section id="mapa" class="lp-section-white lp-body" style="padding: 4rem 0; scroll-margin-top: 72px;">
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow lp-eyebrow mb-2">Visão Integrada</div>
@@ -667,40 +614,21 @@
             </p>
         </div>
 
-        @php $coresNivelMapa = [1 => '#475569', 2 => '#2e8b57', 3 => '#0891b2', 4 => '#d97706', 5 => '#1B408E']; @endphp
+        {{--
+            O MAPA ESTRATÉGICO DE VERDADE — o mesmo componente de /pei/mapa.
 
-        @foreach($perspectivas as $persp)
-            @php $corBandMapa = $coresNivelMapa[$persp->num_nivel_hierarquico_apresentacao] ?? '#1B408E'; @endphp
-            <div class="lp-map-row lp-card-surface">
-                <div class="lp-map-band" style="background:{{ $corBandMapa }};">
-                    <span class="lp-map-band-name">{{ $persp->dsc_perspectiva }}</span>
-                    <span class="lp-map-band-pct">{{ $persp->atingimento_medio }}%</span>
-                </div>
-                <div class="lp-map-objs">
-                    @forelse($persp->objetivos as $obj)
-                        <div class="lp-map-obj" style="border-left:3px solid {{ $obj->lp_cor }};">
-                            <span class="lp-map-obj-dot" style="background:{{ $obj->lp_cor }};"></span>
-                            <span class="lp-map-obj-name">{{ $obj->nom_objetivo }}</span>
-                            <span class="lp-map-obj-pct" style="color:{{ $obj->lp_cor }};">{{ $obj->lp_atingimento }}%</span>
-                        </div>
-                    @empty
-                        <span class="lp-subtext" style="font-size:.8rem;font-style:italic;">Sem objetivos vinculados a esta perspectiva.</span>
-                    @endforelse
-                </div>
-            </div>
-        @endforeach
+            Esta seção desenhava uma releitura própria: barras e cores montadas
+            aqui dentro, que divergiam do mapa real. O pedido é que o cidadão
+            veja na home exatamente o que vê em /pei/mapa, e navegue nele —
+            inclusive mergulhando nos dados pelos cliques.
 
-        {{-- Legenda dos graus de satisfação --}}
-        @if($grausSatisfacao && $grausSatisfacao->isNotEmpty())
-        <div class="d-flex flex-wrap gap-3 justify-content-center mt-4">
-            @foreach($grausSatisfacao as $g)
-                <span class="lp-subtext" style="font-size:.75rem;">
-                    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:{{ $g->cor }};margin-right:5px;vertical-align:middle;"></span>
-                    {{ $g->dsc_grau_satisfcao ?? $g->dsc_grau_satisfacao ?? '' }}
-                </span>
-            @endforeach
+            O componente troca sozinho de layout quando não há sessão, e todo
+            método de escrita dele passa por Policy, que exige um User: o
+            visitante lê tudo e não grava nada.
+        --}}
+        <div class="lp-mapa-embutido">
+            @livewire('strategic-planning.mapa-estrategico')
         </div>
-        @endif
     </div>
 </section>
 
@@ -716,7 +644,7 @@
                 Acesse o painel completo
             </h3>
             <p style="color:rgba(255,255,255,.72);max-width:480px;margin:0 auto 2rem;font-size:1rem;line-height:1.7;">
-                Indicadores detalhados, planos de ação, relatórios executivos, gestão de riscos
+                Indicadores detalhados, iniciativas, relatórios executivos, gestão de riscos
                 e muito mais — disponível para usuários autorizados.
             </p>
             <a href="{{ route('login') }}" class="lp-hero-cta" style="font-size:1.05rem;padding:1rem 2.8rem;">
@@ -831,7 +759,7 @@
             $features = [
                 ['icon'=>'bullseye',           'color'=>'#1B408E','bg'=>'#e8f0ff','title'=>'Objetivos Estratégicos',  'desc'=>'Estruture objetivos por perspectiva BSC vinculados ao mapa estratégico.'],
                 ['icon'=>'graph-up',           'color'=>'#2e8b57','bg'=>'#e8f5ef','title'=>'Indicadores de Desempenho','desc'=>'Defina KPIs com metas SMART, linha de base e evolução mensal.'],
-                ['icon'=>'list-task',          'color'=>'#e07b39','bg'=>'#fdf0e5','title'=>'Planos e Entregas',        'desc'=>'Gerencie projetos com Modelo Lógico, 5W2H, RACI e quadro Kanban.'],
+                ['icon'=>'list-task',          'color'=>'#e07b39','bg'=>'#fdf0e5','title'=>'Iniciativas e Entregas',        'desc'=>'Gerencie projetos com Modelo Lógico, 5W2H, RACI e quadro Kanban.'],
                 ['icon'=>'shield-exclamation', 'color'=>'#dc3545','bg'=>'#fde8ea','title'=>'Gestão de Riscos',         'desc'=>'Mapeie riscos por probabilidade × impacto e defina mitigações.'],
                 ['icon'=>'arrow-repeat',       'color'=>'#6a4c9c','bg'=>'#f0ebfa','title'=>'RAE — Revisão Estratégica','desc'=>'Registre revisões periódicas com destaques e encaminhamentos.'],
                 ['icon'=>'map-fill',           'color'=>'#1a3a5c','bg'=>'#e5ecf5','title'=>'Mapa Estratégico',        'desc'=>'Visualize a estratégia em diagrama BSC interativo com indicadores de farol.'],
@@ -917,10 +845,19 @@
                 <span style="font-size:.85rem;">Alinhado ao GPPEI/MGI 2025</span>
             </div>
             <div class="col-12 col-md-6 text-md-end">
-                <a href="{{ route('login') }}" style="color:rgba(255,255,255,.5);font-size:.85rem;text-decoration:none;" class="me-3">
+                {{--
+                    Alvo de toque >= 44x44 (WCAG 2.5.5): estes links tinham 18px
+                    de altura, menos da metade do mínimo. E a cor branca a 50%
+                    ficava no limite do contraste — subiu para 82%.
+                --}}
+                <a href="{{ route('login') }}"
+                   class="d-inline-flex align-items-center px-3 me-2 text-decoration-none"
+                   style="color:rgba(255,255,255,.82);font-size:.85rem;min-height:44px;">
                     Entrar no Sistema
                 </a>
-                <a href="{{ route('documentos.viewer-gppei') }}" style="color:rgba(255,255,255,.5);font-size:.85rem;text-decoration:none;">
+                <a href="{{ route('documentos.viewer-gppei') }}"
+                   class="d-inline-flex align-items-center px-3 text-decoration-none"
+                   style="color:rgba(255,255,255,.82);font-size:.85rem;min-height:44px;">
                     Guia GPPEI
                 </a>
             </div>

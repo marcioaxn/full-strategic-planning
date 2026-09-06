@@ -30,6 +30,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             CheckPasswordChange::class,
         ]);
+
+        // Área pública de Transparência: somente leitura, com limite de taxa.
+        // Ver App\Http\Middleware\TransparenciaPublica e o bloco de rotas
+        // "Transparência" em routes/web.php.
+        $middleware->alias([
+            'transparencia' => \App\Http\Middleware\TransparenciaPublica::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Handle Authentication Exception (Sessão Expirada / Não Autenticado)

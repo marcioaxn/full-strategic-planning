@@ -3,8 +3,9 @@
 <head>
     <meta charset="utf-8">
     <title>RAE — Revisão e Avaliação da Estratégia</title>
+    {{-- Entra no sistema de design compartilhado. --}}
+    @include('relatorios.partials.estilos', ['orientacao' => 'portrait'])
     <style>
-        @page { margin: 1.5cm; size: a4 portrait; }
         body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 10px; color: #333; line-height: 1.4; margin: 0; padding: 0; }
 
         .header { border-bottom: 3px solid #1B408E; padding-bottom: 10px; margin-bottom: 20px; }
@@ -78,7 +79,13 @@
         <div class="meta-cell">
             <span class="meta-label">Progresso Geral</span>
             <span class="meta-val">{{ number_format($rae->num_progresso_geral, 1) }}%</span>
-            @php $cor = $rae->num_progresso_geral >= 70 ? '#198754' : ($rae->num_progresso_geral >= 40 ? '#ffc107' : '#dc3545'); @endphp
+            @php
+                $cor = \App\Models\StrategicPlanning\GrauSatisfacao::corDe(
+                    (float) $rae->num_progresso_geral,
+                    $rae->pei?->cod_pei,
+                    (int) ($rae->dte_referencia?->year ?? date('Y'))
+                );
+            @endphp
             <div class="progress-bar-container">
                 <div class="progress-bar-fill" style="width:{{ min(100, $rae->num_progresso_geral) }}%;background-color:{{ $cor }};"></div>
             </div>

@@ -449,6 +449,10 @@ class ListarUsuarios extends Component
             $this->closeFormModal();
             $this->resetPage();
         } catch (ValidationException $exception) {
+            // Sem isto, a causa real desaparece: o cliente recebe uma
+            // orientação genérica e não sobra rastro nenhum para investigar.
+            report($exception);
+
             $this->notify(
                 'O cadastro nao foi concluido. Revise os campos destacados e tente novamente.',
                 'danger',

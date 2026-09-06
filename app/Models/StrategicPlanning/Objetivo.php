@@ -5,6 +5,7 @@ namespace App\Models\StrategicPlanning;
 use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\Agenda2030\ODS;
 use App\Models\PerformanceIndicators\Indicador;
+use App\Support\CalculoPolaridade;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,7 +23,7 @@ class Objetivo extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_objetivo';
+    protected $table = 'strategic_planning.tab_objetivo';
 
     /**
      * Chave primária
@@ -56,7 +57,7 @@ class Objetivo extends Model implements Auditable
      */
     protected $casts = [
         'num_nivel_hierarquico_apresentacao' => 'integer',
-        'num_nivel_desdobramento'            => 'integer',
+        'num_nivel_desdobramento' => 'integer',
     ];
 
     /**
@@ -93,7 +94,7 @@ class Objetivo extends Model implements Auditable
     }
 
     /**
-     * Relacionamento: Planos de Ação
+     * Relacionamento: Iniciativas
      */
     public function planosAcao(): HasMany
     {
@@ -137,7 +138,7 @@ class Objetivo extends Model implements Auditable
             'cod_objetivo',
             'num_ods'
         )->withPivot('txt_contribuicao')->withTimestamps()
-         ->orderBy('strategic_planning.tab_ods.num_ods');
+            ->orderBy('strategic_planning.tab_ods.num_ods');
     }
 
     /**
@@ -155,14 +156,14 @@ class Objetivo extends Model implements Auditable
     /**
      * Calcular percentual de atingimento consolidado do objetivo.
      *
-     * Considera todos os indicadores vinculados ao objetivo (diretos e via planos de ação),
+     * Considera todos os indicadores vinculados ao objetivo (diretos e via iniciativas),
      * calculando a média ponderada pelo peso de cada indicador.
      *
-     * @param int|null $ano Ano para cálculo (padrão: ano atual)
-     * @param int|null $mes Mês limite para cálculo
+     * @param  int|null  $ano  Ano para cálculo (padrão: ano atual)
+     * @param  int|null  $mes  Mês limite para cálculo
      * @return float Percentual de atingimento consolidado (0-100+)
      */
-    public function calcularAtingimentoConsolidado(int $ano = null, int $mes = null): float
+    public function calcularAtingimentoConsolidado(?int $ano = null, ?int $mes = null): float
     {
         $ano = $ano ?? session('ano_selecionado', now()->year);
 
@@ -181,7 +182,7 @@ class Objetivo extends Model implements Auditable
         // Buscar indicadores diretos do objetivo
         $indicadoresDiretos = $this->indicadores()->with(['evolucoes', 'metasPorAno'])->get();
 
-        // Buscar indicadores dos planos de ação vinculados ao objetivo
+        // Buscar indicadores das iniciativas vinculadas ao objetivo
         $indicadoresPlanos = Indicador::whereHas('planoDeAcao', function ($query) {
             $query->where('cod_objetivo', $this->cod_objetivo);
         })->with(['evolucoes', 'metasPorAno'])->get();
@@ -198,8 +199,13 @@ class Objetivo extends Model implements Auditable
         $somaAtingimentoPonderado = 0;
 
         foreach ($todosIndicadores as $indicador) {
-            // Ignora indicadores informativos no cálculo da média consolidada
-            if ($indicador->dsc_polaridade === 'Não Aplicável') {
+            // Ignora indicadores informativos no cálculo da média consolidada.
+            //
+            // A comparação era com a chave curta apenas. Um indicador gravado
+            // com o rótulo longo ("Não Aplicável (Informativo)") — como vem de
+            // importação e do legado — NÃO era ignorado: entrava na média
+            // pesando 0%, e derrubava o atingimento do objetivo inteiro.
+            if (CalculoPolaridade::ehInformativo($indicador->dsc_polaridade)) {
                 continue;
             }
 
@@ -220,28 +226,31 @@ class Objetivo extends Model implements Auditable
     /**
      * Obter cor do farol consolidado do objetivo.
      *
-     * @param int|null $ano Ano para cálculo
-     * @param int|null $mes Mês limite para cálculo
+     * @param  int|null  $ano  Ano para cálculo
+     * @param  int|null  $mes  Mês limite para cálculo
      * @return string|null Cor hexadecimal do grau de satisfação
      */
-    public function getCorFarolConsolidado(int $ano = null, int $mes = null): ?string
+    public function getCorFarolConsolidado(?int $ano = null, ?int $mes = null): ?string
     {
         $percentual = $this->calcularAtingimentoConsolidado($ano, $mes);
 
-        $grau = GrauSatisfacao::where('vlr_minimo', '<=', $percentual)
-            ->where('vlr_maximo', '>=', $percentual)
-            ->first();
-
-        return $grau->cor ?? null;
+        // A régua é a do ciclo a que este objetivo pertence. A consulta anterior
+        // não filtrava por PEI: com dois ciclos cadastrados, o farol do mapa
+        // podia acender com a faixa do ciclo errado — sem erro, sem aviso.
+        return GrauSatisfacao::faixaDe(
+            (float) $percentual,
+            $this->perspectiva?->cod_pei,
+            $ano
+        )?->cor;
     }
 
     /**
      * Obter resumo de desempenho do objetivo.
      *
-     * @param int|null $ano Ano para cálculo
+     * @param  int|null  $ano  Ano para cálculo
      * @return array Resumo com totais e percentuais
      */
-    public function getResumoDesempenho(int $ano = null): array
+    public function getResumoDesempenho(?int $ano = null): array
     {
         $ano = $ano ?? session('ano_selecionado', now()->year);
 
@@ -255,7 +264,7 @@ class Objetivo extends Model implements Auditable
 
         $todosIndicadores = $indicadoresDiretos->merge($indicadoresPlanos)->unique('cod_indicador');
 
-        // Planos de ação
+        // Iniciativas
         $planos = $this->planosAcao()->whereYear('dte_inicio', '<=', $ano)
             ->whereYear('dte_fim', '>=', $ano)
             ->get();
@@ -263,7 +272,7 @@ class Objetivo extends Model implements Auditable
         // Contar status dos planos
         $planosConcluidos = $planos->where('bln_status', 'Concluído')->count();
         $planosEmAndamento = $planos->where('bln_status', 'Em Andamento')->count();
-        $planosAtrasados = $planos->filter(fn($p) => $p->dte_fim < now() && $p->bln_status !== 'Concluído')->count();
+        $planosAtrasados = $planos->filter(fn ($p) => $p->dte_fim < now() && $p->bln_status !== 'Concluído')->count();
 
         // Calcular atingimento
         $atingimento = $this->calcularAtingimentoConsolidado($ano);
@@ -284,7 +293,7 @@ class Objetivo extends Model implements Auditable
      * Atingimento considerando objetivos filhos (média simples entre próprio e filhos).
      * Usado no Mapa Estratégico para objetivos que têm desdobramento.
      */
-    public function calcularAtingimentoCascata(int $ano = null, int $mes = null): float
+    public function calcularAtingimentoCascata(?int $ano = null, ?int $mes = null): float
     {
         $proprio = $this->calcularAtingimentoConsolidado($ano, $mes);
 

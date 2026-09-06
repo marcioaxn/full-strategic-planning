@@ -6,12 +6,12 @@
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Planos de Ação</li>
+                        <li class="breadcrumb-item active" aria-current="page">Iniciativas</li>
                     </ol>
                 </nav>
             </div>
             <div class="d-flex align-items-center gap-2">
-                <h1 class="h3 fw-bold mb-0">Planos de Ação</h1>
+                <h1 class="h3 fw-bold mb-0">Iniciativas</h1>
                 <div class="mt-1 d-flex gap-2">
                     <x-gppei-link :page="32" label="Carteira de Iniciativas" />
                     <x-projetos-link :page="23" label="TAP e Kick-off" />
@@ -21,19 +21,21 @@
 
         <div class="d-flex align-items-center gap-2">
             @if($organizacaoId)
+                @auth
                 <button wire:click.prevent="create" wire:loading.attr="disabled" class="btn btn-primary gradient-theme-btn shadow-sm">
                     <span wire:loading.remove wire:target="create">
-                        <i class="bi bi-plus-lg me-2"></i>Novo Plano
+                        <i class="bi bi-plus-lg me-2"></i>Nova Iniciativa
                     </span>
                     <span wire:loading wire:target="create">
                         <span class="spinner-border spinner-border-sm me-2" role="status"></span>Carregando...
                     </span>
                 </button>
+                @endauth
             @endif
         </div>
     </div>
 
-    {{-- Seção Educativa: O que são Planos de Ação --}}
+    {{-- Seção Educativa: O que são Iniciativas --}}
     <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
         <div class="card-header bg-transparent border-0 p-4">
             <div class="d-flex align-items-center justify-content-between">
@@ -43,7 +45,7 @@
                     </div>
                     <div>
                         <h5 class="fw-bold mb-1 text-white">
-                            <i class="bi bi-mortarboard me-2"></i>{{ __('O que são Planos de Ação?') }}
+                            <i class="bi bi-mortarboard me-2"></i>{{ __('O que são Iniciativas?') }}
                         </h5>
                         <p class="mb-0 text-white-50 small">
                             {{ __('Aprenda a transformar objetivos estratégicos em ações concretas') }}
@@ -61,16 +63,16 @@
                 {{-- Introdução --}}
                 <div class="mb-4 pb-4 border-bottom">
                     <h6 class="fw-bold text-primary mb-3">
-                        <i class="bi bi-info-circle me-2"></i>{{ __('O que é um Plano de Ação?') }}
+                        <i class="bi bi-info-circle me-2"></i>{{ __('O que é uma Iniciativa?') }}
                     </h6>
                     <p class="text-muted mb-3">
-                        Um <strong>Plano de Ação</strong> é o conjunto de atividades organizadas para alcançar um <strong>objetivo estratégico</strong>.
+                        Um <strong>Iniciativa</strong> é o conjunto de atividades organizadas para alcançar um <strong>objetivo estratégico</strong>.
                         Ele detalha <strong>o quê</strong> será feito, <strong>quem</strong> será responsável, <strong>quando</strong> será executado,
                         <strong>onde</strong> acontecerá, <strong>por quê</strong> é necessário, <strong>como</strong> será feito e <strong>quanto</strong> custará.
                     </p>
                     <p class="text-muted mb-0">
                         <i class="bi bi-lightbulb text-warning me-2"></i>
-                        <strong>Por que é importante?</strong> Sem planos de ação, os objetivos estratégicos ficam apenas no papel.
+                        <strong>Por que é importante?</strong> Sem iniciativas, os objetivos estratégicos ficam apenas no papel.
                         Os planos garantem execução prática, alocação de recursos e acompanhamento de resultados.
                     </p>
                 </div>
@@ -81,7 +83,7 @@
                         <i class="bi bi-grid-3x3 me-2"></i>{{ __('Metodologia 5W2H') }}
                     </h6>
                     <p class="small text-muted mb-3">
-                        A ferramenta <strong>5W2H</strong> estrutura o plano de ação respondendo 7 perguntas essenciais:
+                        A ferramenta <strong>5W2H</strong> estrutura a iniciativa respondendo 7 perguntas essenciais:
                     </p>
 
                     <div class="row g-3">
@@ -216,7 +218,7 @@
                 {{-- Exemplo Completo --}}
                 <div class="mb-4 pb-4 border-bottom">
                     <h6 class="fw-bold text-primary mb-3">
-                        <i class="bi bi-star me-2"></i>{{ __('Exemplo de Plano de Ação Completo') }}
+                        <i class="bi bi-star me-2"></i>{{ __('Exemplo de Iniciativa Completo') }}
                     </h6>
 
                     <div class="card border-0 bg-light">
@@ -225,7 +227,7 @@
                                 <div class="icon-circle-mini bg-primary bg-opacity-10 text-primary">
                                     <i class="bi bi-clipboard-check"></i>
                                 </div>
-                                <h6 class="fw-bold mb-0">Plano: Modernizar Atendimento ao Cidadão</h6>
+                                <h6 class="fw-bold mb-0">Iniciativa: Modernizar Atendimento ao Cidadão</h6>
                             </div>
 
                             <div class="table-responsive">
@@ -275,7 +277,7 @@
                 {{-- Dicas Profissionais --}}
                 <div>
                     <h6 class="fw-bold text-primary mb-3">
-                        <i class="bi bi-trophy me-2"></i>{{ __('Dicas para Planos de Ação Eficazes') }}
+                        <i class="bi bi-trophy me-2"></i>{{ __('Dicas para Iniciativas Eficazes') }}
                     </h6>
                     <div class="row g-2">
                         <div class="col-md-6">
@@ -342,7 +344,7 @@
             <i class="bi bi-building-exclamation fs-2 me-4"></i>
             <div>
                 <h5 class="alert-heading fw-bold mb-1">Selecione uma Organizacao</h5>
-                <p class="mb-0">Selecione uma organizacao no menu superior para gerenciar os planos de acao.</p>
+                <p class="mb-0">Selecione uma organizacao no menu superior para gerenciar as iniciativas.</p>
             </div>
         </div>
     @else
@@ -352,9 +354,9 @@
             @endphp
 
             {{-- Contexto Completo do Objetivo --}}
-            @include('livewire.partials.objetivo-contexto', ['objetivo' => $objetivoFiltrado])
+            @include('livewire.partials.objetivo-contexto', ['objetivo' => $objetivoFiltrado, 'grausSatisfacao' => $grausSatisfacao])
 
-            {{-- Cards de Resumo e Grafico dos Planos --}}
+            {{-- Cards de Resumo e Gráfico das Iniciativas --}}
             @if($objetivoFiltrado && $objetivoFiltrado->planosAcao->count() > 0)
                 @php
                     $planosDoObjetivo = $objetivoFiltrado->planosAcao;
@@ -385,7 +387,7 @@
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-header bg-white py-3">
                                 <h6 class="mb-0 fw-bold">
-                                    <i class="bi bi-pie-chart text-info me-2"></i>Status dos Planos
+                                    <i class="bi bi-pie-chart text-info me-2"></i>Status das Iniciativas
                                 </h6>
                             </div>
                             <div class="card-body">
@@ -556,13 +558,13 @@
         {{-- Legenda de Status (Dinâmica via Model/Partial) --}}
         @include('livewire.partials.legenda-status-planos')
 
-        <!-- Lista de Planos -->
+        <!-- Lista de Iniciativas -->
         <div class="card border-0 shadow-sm overflow-hidden">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-4">Descrição do Plano</th>
+                            <th class="ps-4">Descrição da Iniciativa</th>
                             <th>Tipo</th>
                             <th>Status</th>
                             <th>Período</th>
@@ -656,15 +658,19 @@
                                                 </a>
                                             </li>
                                             <li>
+                                                @auth
                                                 <button class="dropdown-item" wire:click="edit('{{ $plano->cod_plano_de_acao }}')">
                                                     <i class="bi bi-pencil me-2 text-secondary"></i> Editar
                                                 </button>
+                                                @endauth
                                             </li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li>
+                                                @auth
                                                 <button class="dropdown-item text-danger" wire:click="confirmDelete('{{ $plano->cod_plano_de_acao }}')">
                                                     <i class="bi bi-trash me-2"></i> Excluir
                                                 </button>
+                                                @endauth
                                             </li>
                                         </ul>
                                         </div>{{-- /dropdown --}}
@@ -714,7 +720,7 @@
                             <i class="bi bi-{{ $planoId ? 'pencil-square' : 'plus-circle' }}"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold mb-0">{{ $planoId ? 'Editar Plano de Ação' : 'Novo Plano de Ação' }}</h5>
+                            <h5 class="modal-title fw-bold mb-0">{{ $planoId ? 'Editar Iniciativa' : 'Nova Iniciativa' }}</h5>
                             <p class="mb-0 small text-white-50">Planejamento Tático e Operacional</p>
                         </div>
                     </div>
@@ -784,6 +790,7 @@
                                                     </div>
                                                     
                                                     @if(!$aiSuggestion)
+                                                        @auth
                                                         <button type="button" 
                                                                 wire:click="pedirAjudaIA" 
                                                                 @if(!$cod_objetivo) disabled @endif
@@ -795,6 +802,7 @@
                                                                 <span class="spinner-border spinner-border-sm me-1"></span>Pensando...
                                                             </span>
                                                         </button>
+                                                        @endauth
                                                     @endif
                                                 </div>
 
@@ -806,6 +814,7 @@
                                                         </div>
                                                         <div class="list-group list-group-flush rounded-3 border">
                                                             @foreach($aiSuggestion as $sug)
+                                                                @auth
                                                                 <button type="button" wire:click="aplicarSugestao(@js($sug['nome']), @js($sug['justificativa']))" class="list-group-item list-group-item-action py-2 px-3 hover-bg-primary-subtle transition-all">
                                                                     <div class="d-flex w-100 justify-content-between align-items-center">
                                                                         <h6 class="mb-1 fw-bold text-dark" style="font-size: 0.9rem;">{{ $sug['nome'] }}</h6>
@@ -813,6 +822,7 @@
                                                                     </div>
                                                                     <p class="mb-1 x-small text-muted lh-sm">{{ $sug['justificativa'] }}</p>
                                                                 </button>
+                                                                @endauth
                                                             @endforeach
                                                         </div>
                                                     </div>
@@ -1046,6 +1056,7 @@
     </div>
 
     {{-- Modal de Exclusão --}}
+    @auth
     <x-confirmation-modal wire:model.live="showDeleteModal">
         <x-slot name="title">
             <div class="modal-header-modern">
@@ -1053,7 +1064,7 @@
                     <i class="bi bi-exclamation-triangle"></i>
                 </div>
                 <div>
-                    <h5 class="mb-1 fw-bold text-dark">{{ __('Excluir Plano de Ação') }}</h5>
+                    <h5 class="mb-1 fw-bold text-dark">{{ __('Excluir Iniciativa') }}</h5>
                     <p class="text-muted small mb-0">{{ __('Esta ação é irreversível') }}</p>
                 </div>
             </div>
@@ -1062,7 +1073,7 @@
         <x-slot name="content">
             <div class="delete-confirmation text-start">
                 <p class="mb-2 text-dark">
-                    {{ __('Tem certeza que deseja excluir este plano de ação?') }}
+                    {{ __('Tem certeza que deseja excluir esta iniciativa?') }}
                 </p>
                 <div class="alert alert-warning bg-warning-subtle border-0">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -1087,6 +1098,7 @@
             </x-danger-button>
         </x-slot>
     </x-confirmation-modal>
+    @endauth
 
     {{-- Success Modal Premium --}}
     @if($showSuccessModal)

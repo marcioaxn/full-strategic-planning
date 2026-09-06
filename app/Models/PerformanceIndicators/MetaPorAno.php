@@ -15,7 +15,7 @@ class MetaPorAno extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_meta_por_ano';
+    protected $table = 'performance_indicators.tab_meta_por_ano';
 
     /**
      * Chave primária

@@ -23,9 +23,11 @@
 
         <div class="d-flex align-items-center gap-2">
             @if($peiAtivo)
+                @auth
                 <button type="button" class="btn btn-primary gradient-theme-btn px-4 shadow-sm" wire:click="create">
                     <i class="bi bi-plus-lg me-1"></i> {{ __('Novo Objetivo') }}
                 </button>
+                @endauth
             @endif
         </div>
     </div>
@@ -403,6 +405,8 @@
     @if($peiAtivo && $perspectivas->isNotEmpty() && $aiEnabled)
         <div class="ai-mentor-wrapper animate-fade-in mb-4">
             <div class="d-flex flex-wrap align-items-center gap-3">
+                @auth
+                @auth
                 <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="ai-magic-button shadow-sm">
                     <span wire:loading.remove wire:target="pedirAjudaIA">
                         <i class="bi bi-robot"></i> {{ __('Gerar Objetivos com IA') }}
@@ -411,6 +415,8 @@
                         <span class="spinner-border spinner-border-sm me-2"></span>{{ __('Analisando e gerando...') }}
                     </span>
                 </button>
+                @endauth
+                @endauth
 
                 <div class="d-flex align-items-center gap-2 bg-white rounded-pill px-3 py-1 shadow-sm border">
                     <i class="bi bi-funnel text-muted small"></i>
@@ -441,10 +447,12 @@
                                             <div class="fw-bold text-dark">{{ $obj['nome'] }}</div>
                                             <p class="small text-muted mb-0 mt-1 lh-sm">{{ $obj['descricao'] }}</p>
                                         </div>
+                                        @auth
                                         <button wire:click="aplicarSugestao('{{ $obj['nome'] }}', '{{ $obj['descricao'] }}', {{ $obj['ordem'] ?? 1 }})" 
                                                 class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
                                             <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}
                                         </button>
+                                        @endauth
                                     </div>
                                 @endforeach
                             </div>
@@ -527,12 +535,16 @@
                                             <a href="{{ route('objetivos.detalhes', $objetivo->cod_objetivo) }}" wire:navigate class="btn btn-sm btn-icon btn-ghost-info rounded-circle" title="{{ __('Detalhar') }}">
                                                 <i class="bi bi-eye"></i>
                                             </a>
+                                            @auth
                                             <button wire:click="edit('{{ $objetivo->cod_objetivo }}')" class="btn btn-sm btn-icon btn-ghost-primary rounded-circle" title="{{ __('Editar') }}">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
+                                            @endauth
+                                            @auth
                                             <button wire:click="confirmDelete('{{ $objetivo->cod_objetivo }}')" class="btn btn-sm btn-icon btn-ghost-danger rounded-circle" title="{{ __('Excluir') }}">
                                                 <i class="bi bi-trash"></i>
                                             </button>
+                                            @endauth
                                         </div>
                                     </td>
                                 </tr>
@@ -566,12 +578,16 @@
                                             <a href="{{ route('objetivos.detalhes', $filho->cod_objetivo) }}" wire:navigate class="btn btn-sm btn-icon btn-ghost-info rounded-circle" title="{{ __('Detalhar') }}">
                                                 <i class="bi bi-eye"></i>
                                             </a>
+                                            @auth
                                             <button wire:click="edit('{{ $filho->cod_objetivo }}')" class="btn btn-sm btn-icon btn-ghost-primary rounded-circle" title="{{ __('Editar') }}">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
+                                            @endauth
+                                            @auth
                                             <button wire:click="confirmDelete('{{ $filho->cod_objetivo }}')" class="btn btn-sm btn-icon btn-ghost-danger rounded-circle" title="{{ __('Excluir') }}">
                                                 <i class="bi bi-trash"></i>
                                             </button>
+                                            @endauth
                                         </div>
                                     </td>
                                 </tr>
@@ -580,7 +596,9 @@
                                 <tr>
                                     <td colspan="4" class="text-center py-4 text-muted small italic">
                                         <i class="bi bi-inbox me-1"></i> {{ __('Nenhum objetivo cadastrado nesta perspectiva.') }}
+                                        @auth
                                         <button wire:click="create('{{ $perspectiva->cod_perspectiva }}')" class="btn btn-link btn-sm p-0 text-primary fw-bold ms-1">{{ __('Adicionar o primeiro') }}</button>
+                                        @endauth
                                     </td>
                                 </tr>
                             @endforelse
@@ -625,7 +643,25 @@
                                 <p class="mb-0 small text-white-50">Definição de metas e resultados de médio prazo</p>
                             </div>
                         </div>
-                        <button type="button" class="btn-close btn-close-white" wire:click="$set('showModal', false)"></button>
+                        <div class="d-flex align-items-center gap-3">
+                            {{--
+                                Estado do vínculo com a Agenda 2030 VISÍVEL sem rolar.
+                                O bloco de ODS fica no fim de um modal alto: o cliente
+                                preenchia o essencial, achava "Salvar" com o olhar e
+                                nunca descia até lá — e concluía que o sistema não
+                                permitia vincular ODS.
+                            --}}
+                            <a href="#bloco-ods"
+                               onclick="document.getElementById('bloco-ods')?.scrollIntoView({behavior:'smooth', block:'center'}); return false;"
+                               class="text-decoration-none">
+                                <span class="badge rounded-pill {{ count($odsSelecionados) > 0 ? 'bg-white text-success' : 'bg-warning text-dark' }}"
+                                      title="Objetivos de Desenvolvimento Sustentável vinculados. Clique para ir ao bloco.">
+                                    <i class="bi bi-globe-americas me-1"></i>
+                                    Agenda 2030: {{ count($odsSelecionados) }}/{{ \App\Livewire\StrategicPlanning\ListarObjetivos::MAX_ODS }}
+                                </span>
+                            </a>
+                            <button type="button" class="btn-close btn-close-white" wire:click="$set('showModal', false)"></button>
+                        </div>
                     </div>
 
                     <form wire:submit.prevent="save">
@@ -726,7 +762,7 @@
                             </div>
 
                             {{-- ═══════════ Agenda 2030 — Vínculo de ODS ═══════════ --}}
-                            <div class="mt-4">
+                            <div class="mt-4" id="bloco-ods">
                                 <div class="card border-0 bg-light rounded-4">
                                     <div class="card-body p-4">
                                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom pb-2 mb-3">
@@ -798,6 +834,7 @@
     @endif
 
     {{-- Modal de Exclusão --}}
+    @auth
     <x-confirmation-modal wire:model.live="showDeleteModal">
         <x-slot name="title">
             <div class="modal-header-modern">
@@ -821,7 +858,7 @@
                     <strong>Atenção:</strong> A exclusão deste objetivo afetará:
                     <ul class="mb-0 mt-2">
                         <li>{{ $impactoExclusao['indicadores'] ?? 0 }} Indicadores vinculados</li>
-                        <li>{{ $impactoExclusao['planos'] ?? 0 }} Planos de Ação vinculados</li>
+                        <li>{{ $impactoExclusao['planos'] ?? 0 }} Iniciativas vinculadas</li>
                     </ul>
                 </div>
             </div>
@@ -843,6 +880,7 @@
             </x-danger-button>
         </x-slot>
     </x-confirmation-modal>
+    @endauth
 
     {{-- Success Modal Premium --}}
     @if($showSuccessModal)

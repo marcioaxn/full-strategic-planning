@@ -2,10 +2,12 @@
 
 namespace App\Models\PerformanceIndicators;
 
-use App\Models\Organization;
 use App\Models\ActionPlan\PlanoDeAcao;
-use App\Models\StrategicPlanning\Objetivo;
+use App\Models\Organization;
 use App\Models\StrategicPlanning\GrauSatisfacao;
+use App\Models\StrategicPlanning\Objetivo;
+use App\Services\IndicadorCalculoService;
+use App\Support\CalculoPolaridade;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,7 +25,7 @@ class Indicador extends Model implements Auditable
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_indicador';
+    protected $table = 'performance_indicators.tab_indicador';
 
     /**
      * Chave primária
@@ -45,7 +47,7 @@ class Indicador extends Model implements Auditable
      */
     const CALCULATION_TYPES = [
         'manual' => 'Medição Manual',
-        'action_plan' => 'Baseado em Plano de Ação',
+        'action_plan' => 'Baseado em Iniciativa',
     ];
 
     /**
@@ -105,18 +107,19 @@ class Indicador extends Model implements Auditable
      * Casts
      */
     protected $casts = [
-        'num_peso'   => 'integer',
+        'num_peso' => 'integer',
         'json_smart' => 'array',
     ];
 
     public function isSmartValido(): bool
     {
         $smart = $this->json_smart ?? [];
+
         return count(array_filter($smart)) === 5;
     }
 
     /**
-     * Relacionamento: Plano de Ação (opcional)
+     * Relacionamento: Iniciativa (opcional)
      */
     public function planoDeAcao(): BelongsTo
     {
@@ -156,7 +159,7 @@ class Indicador extends Model implements Auditable
     }
 
     /**
-     * Planos de Ação vinculados via pivô (ROAD-005)
+     * Iniciativas vinculadas via pivô (ROAD-005)
      */
     public function planosDeAcaoVinculados(): BelongsToMany
     {
@@ -209,21 +212,22 @@ class Indicador extends Model implements Auditable
      * - '-' (quanto menor, melhor): (previsto / realizado) × 100 (invertido)
      * - '=' (manter estável): mesmo cálculo do '+'
      *
-     * @param int|null $ano Ano para cálculo (padrão: ano atual)
-     * @param int|null $mes Mês limite para cálculo (padrão: mês atual ou 12 se ano passado)
+     * @param  int|null  $ano  Ano para cálculo (padrão: ano atual)
+     * @param  int|null  $mes  Mês limite para cálculo (padrão: mês atual ou 12 se ano passado)
      * @return float Percentual de atingimento (0-100+)
      */
-    public function calcularAtingimento(int $ano = null, int $mes = null): float
+    public function calcularAtingimento(?int $ano = null, ?int $mes = null): float
     {
-        // Se for cálculo automático baseado em plano de ação, usar o service
+        // Se for cálculo automático baseado em iniciativa, usar o service
         if ($this->dsc_calculation_type === 'action_plan' && $this->cod_plano_de_acao) {
-            $service = app(\App\Services\IndicadorCalculoService::class);
+            $service = app(IndicadorCalculoService::class);
+
             return $service->calcularProgressoPlano($this->planoDeAcao);
         }
 
         // Pega o ano da sessão se não for passado
         $ano = $ano ?? session('ano_selecionado', now()->year);
-        
+
         // Determina o mês limite de forma inteligente
         if ($mes === null) {
             $anoAtual = now()->year;
@@ -270,7 +274,7 @@ class Indicador extends Model implements Auditable
         // Se não houver valor previsto, tentar usar meta anual como fallback
         if ($totalPrevisto == 0) {
             $meta = $this->metasPorAno()->where('num_ano', $ano)->first();
-            if (!$meta || $meta->meta == 0) {
+            if (! $meta || $meta->meta == 0) {
                 return 0;
             }
 
@@ -306,43 +310,58 @@ class Indicador extends Model implements Auditable
      * - '-' (quanto menor, melhor): (previsto / realizado) × 100 (invertido)
      * - '=' (manter estável): mesmo cálculo do '+'
      *
-     * @param float $realizado Valor realizado
-     * @param float $previsto Valor previsto
+     * @param  float  $realizado  Valor realizado
+     * @param  float  $previsto  Valor previsto
      * @return float Percentual calculado
      */
     protected function calcularPercentualPorTipo(float $realizado, float $previsto): float
     {
-        if ($previsto == 0) {
-            return 0;
-        }
-
-        $polaridade = $this->dsc_polaridade ?? 'Positiva';
-
-        return match ($polaridade) {
-            'Negativa' => $realizado > 0 ? ($previsto / $realizado) * 100 : 100,
-            'Não Aplicável' => 0,
-            'Positiva', 'Estabilidade' => ($realizado / $previsto) * 100,
-            default => ($realizado / $previsto) * 100,
-        };
+        /*
+         * A conta vive em App\Support\CalculoPolaridade — num lugar só.
+         *
+         * Estava duplicada aqui e em EvolucaoIndicador, com os MESMOS três
+         * erros nas duas cópias:
+         *
+         *  1. Meta ZERO devolvia 0% em qualquer polaridade. Em polaridade
+         *     negativa, meta zero é a mais ambiciosa que existe — zero
+         *     acidentes, zero fraudes. Quem alcançava zero recebia 0% de
+         *     atingimento: o número dizia fracasso total onde houve êxito.
+         *  2. Estabilidade usava a fórmula positiva: estourar o alvo em 50%
+         *     marcava 150%, premiando o desvio que a polaridade existe para
+         *     evitar.
+         *  3. O rótulo longo ("Negativa (Quanto menor, melhor)") caía no
+         *     default e era calculado como POSITIVA, sem erro e sem aviso.
+         */
+        return CalculoPolaridade::atingimento($realizado, $previsto, $this->dsc_polaridade);
     }
 
     /**
      * Obter cor do farol de desempenho
      */
-    public function getCorFarol(int $ano = null): ?string
+    public function getCorFarol(?int $ano = null): string
     {
         $percentual = $this->calcularAtingimento($ano);
 
-        $grau = GrauSatisfacao::where('vlr_minimo', '<=', $percentual)
-            ->where('vlr_maximo', '>=', $percentual)
-            ->first();
-
-        return $grau->cor ?? null;
+        // A régua é a do ciclo a que este indicador pertence, via
+        // objetivo → perspectiva → PEI. A consulta anterior não filtrava por
+        // ciclo: com dois PEIs de faixas diferentes, o farol acendia com o
+        // critério do ciclo errado. Verde, e mentira.
+        //
+        // 🔴 Usa corDe(), não faixaDe(): um indicador a 125% da meta não casa
+        // com faixa nenhuma (a última costuma terminar em 100) e devolvia
+        // null — que cada tela traduzia num cinza ou num vermelho diferente.
+        // corDe() trata as pontas e devolve o cinza neutro quando não há régua
+        // configurada, que é a única resposta honesta nesse caso.
+        return GrauSatisfacao::corDe(
+            (float) $percentual,
+            $this->objetivo?->perspectiva?->cod_pei,
+            $ano
+        );
     }
 
     public function tendenciaAtual(int $meses = 3): array
     {
-        return app(\App\Services\IndicadorCalculoService::class)
+        return app(IndicadorCalculoService::class)
             ->calcularTendencia($this->cod_indicador, $meses);
     }
 
@@ -359,7 +378,7 @@ class Indicador extends Model implements Auditable
     }
 
     /**
-     * Scope: Indicadores de plano de ação
+     * Scope: Indicadores de iniciativa
      */
     public function scopeDePlano($query)
     {
