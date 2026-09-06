@@ -45,23 +45,21 @@ service-account*.json
 /database/database.sqlite
 
 # --- Harness do assistente ---------------------------------------------------
-# O harness É a regra da equipe: permissões, hooks e guidelines vão junto com o
-# código, ou não sobrevivem a um clone. Fica de fora só o que é da máquina de
-# quem edita — e a nota de segurança, que não se publica em repositório público.
-/.claude/*
-!/.claude/settings.json
-!/.claude/hooks/
-/.claude/settings.local.json
-/.claude/seguranca-em-aberto.md
+# Ferramental de quem desenvolve, NÃO produto. Decisão do gestor: nada daqui
+# vai para o repositório remoto, que é público. Permissões, hooks e notas de
+# trabalho ficam na máquina de quem edita.
+/.claude/
 
 # CLAUDE.md e contexto de trabalho, nao produto: carrega premissas herdadas de
 # outros projetos, o perfil de quem le as entregas e o mapa da arquitetura.
 # Este repositorio e publico. O que e regra do CODIGO vive em CONTRIBUTING.md.
 /CLAUDE.md
-/.rtk/*
-!/.rtk/filters.toml
+/.rtk/
 /.agent
 /ai
+
+# Ferramentas de apoio ao desenvolvimento (auditoria de UI e afins).
+ferramentas/
 /gemini
 AGENTS.md
 GEMINI.md
