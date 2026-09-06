@@ -2,8 +2,8 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Dossiê Estratégico Integrado</title>
-    @include('relatorios.partials.estilos')
+    <title>Relatório Estratégico Integrado</title>
+    @include('relatorios.partials.estilos', ['orientacao' => 'landscape'])
     <style>
         /* Capa */
         .capa { text-align: center; padding-top: 120px; page-break-after: always; }
@@ -44,13 +44,6 @@
     </style>
 </head>
 <body>
-    @include('relatorios.partials.cabecalho', [
-        'rptTitulo'    => 'Dossiê Estratégico Integrado',
-        'rptEyebrow'   => 'Documento Consolidado · GPPEI/MGI 2025',
-        'rptSubtitulo' => $organizacao->nom_organizacao . ' · Exercício ' . $filtros['ano'],
-        'rptIcon'      => '&#9733;',
-    ])
-    @include('relatorios.partials.rodape')
 
     @php
         $getCorSatisfacao = function($percentual) use ($grausSatisfacao) {
@@ -67,7 +60,7 @@
     {{-- ═══════════════ CAPA ═══════════════ --}}
     <div class="capa">
         <div class="capa-org">{{ $organizacao->nom_organizacao }}</div>
-        <div class="capa-titulo">Dossiê Estratégico Integrado</div>
+        <div class="capa-titulo">Relatório Estratégico Integrado</div>
         <div class="capa-linha"></div>
         <div class="capa-sub">Documento consolidado de Planejamento Estratégico Institucional</div>
 
@@ -400,7 +393,7 @@
     {{-- ═══════════════ CAP 7 — PLANOS, ENTREGAS, MODELO LÓGICO E RACI ═══════════════ --}}
     <div class="page-break"></div>
     <div class="cap">Capítulo 7 · Módulo 02 — Planejar</div>
-    <div class="cap-titulo">Portfólio de Planos e Entregas</div>
+    <div class="cap-titulo">Portfólio de Iniciativas e Entregas</div>
 
     @forelse($planos as $plano)
         @php
@@ -474,7 +467,7 @@
             @endif
         </div>
     @empty
-        <div class="vazio">Nenhum plano de ação vigente no período.</div>
+        <div class="vazio">Nenhuma iniciativa vigente no período.</div>
     @endforelse
 
     {{-- ═══════════════ CAP 8 — RISCOS ═══════════════ --}}

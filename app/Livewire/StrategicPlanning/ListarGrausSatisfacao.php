@@ -203,6 +203,11 @@ class ListarGrausSatisfacao extends Component
 
     public function save()
     {
+        // Todo método público de componente Livewire é invocável direto pelo
+        // navegador: autorizar só no mount() deixaria a escrita aberta para
+        // quem tem apenas leitura (Gestor Responsável e Substituto).
+        $this->authorize($this->isEditing ? 'modulo.editar' : 'modulo.criar', 'graus-satisfacao');
+
         $this->validate();
 
         try {
@@ -231,6 +236,10 @@ class ListarGrausSatisfacao extends Component
             $this->showSuccessModal = true;
 
         } catch (\Exception $e) {
+            // Sem isto, a causa real desaparece: o cliente recebe uma
+            // orientação genérica e não sobra rastro nenhum para investigar.
+            report($e);
+
             $this->errorMessage = 'Ocorreu um erro técnico ao processar sua solicitação. Por favor, verifique os dados e tente novamente.';
             $this->showErrorModal = true;
         }
@@ -238,6 +247,8 @@ class ListarGrausSatisfacao extends Component
 
     public function edit($id)
     {
+        $this->authorize('modulo.editar', 'graus-satisfacao');
+
         $grau = GrauSatisfacao::find($id);
 
         if ($grau) {
@@ -255,12 +266,16 @@ class ListarGrausSatisfacao extends Component
 
     public function confirmDelete($id)
     {
+        $this->authorize('modulo.excluir', 'graus-satisfacao');
+
         $this->grauId = $id;
         $this->showDeleteModal = true;
     }
 
     public function delete()
     {
+        $this->authorize('modulo.excluir', 'graus-satisfacao');
+
         if ($this->grauId) {
             $grau = GrauSatisfacao::find($this->grauId);
             if ($grau) {

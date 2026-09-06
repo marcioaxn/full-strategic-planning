@@ -5,11 +5,11 @@
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-1">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('planos.index') }}" class="text-decoration-none">Planos de Ação</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('planos.index') }}" class="text-decoration-none">Iniciativas</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Gerenciar Entregas</li>
                     </ol>
                 </nav>
-                <h2 class="h4 fw-bold mb-0">Entregas do Plano</h2>
+                <h2 class="h4 fw-bold mb-0">Entregas da Iniciativa</h2>
                 <p class="text-muted small mb-0">
                     <span class="badge bg-light text-dark border me-2">{{ $plano->tipoExecucao->dsc_tipo_execucao }}</span>
                     {{ $plano->dsc_plano_de_acao }}
@@ -31,7 +31,7 @@
         </div>
     @endif
 
-    <!-- Barra de Progresso do Plano -->
+    <!-- Barra de Progresso da Iniciativa -->
     <div class="card border-0 shadow-sm mb-4 overflow-hidden">
         <div class="card-body p-4">
             <div class="row g-4">
@@ -188,7 +188,7 @@
                                     <i class="bi bi-box fs-1 opacity-25"></i>
                                 </div>
                                 <h5 class="text-muted">Nenhuma entrega cadastrada.</h5>
-                                <p class="text-muted small">Defina os marcos e entregas para este plano de ação.</p>
+                                <p class="text-muted small">Defina os marcos e entregas para esta iniciativa.</p>
                             </td>
                         </tr>
                     @endforelse

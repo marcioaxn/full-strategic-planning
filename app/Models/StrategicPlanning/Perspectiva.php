@@ -16,9 +16,12 @@ class Perspectiva extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
 
-    protected $table = 'tab_perspectiva';
+    protected $table = 'strategic_planning.tab_perspectiva';
+
     protected $primaryKey = 'cod_perspectiva';
+
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     protected $fillable = [
@@ -72,8 +75,8 @@ class Perspectiva extends Model
 
     /**
      * Calcula o desempenho global da perspectiva no ano, considerando os pesos configurados.
-     * 
-     * @param int|null $ano Ano de referência (default: ano atual)
+     *
+     * @param  int|null  $ano  Ano de referência (default: ano atual)
      * @return float Desempenho de 0 a 100
      */
     public function calcularDesempenho(?int $ano = null): float
@@ -83,16 +86,18 @@ class Perspectiva extends Model
         // 1. Calcular Desempenho dos Indicadores (Lagging)
         $desempenhoIndicadores = $this->calcularDesempenhoIndicadores($ano);
 
-        // 2. Calcular Desempenho dos Planos de Ação (Leading)
+        // 2. Calcular Desempenho das Iniciativas (Leading)
         $desempenhoPlanos = $this->calcularDesempenhoPlanos($ano);
 
         // 3. Aplicar Ponderação
         $pesoInd = $this->num_peso_indicadores ?? 100;
         $pesoPlanos = $this->num_peso_planos ?? 0;
-        
+
         // Garantir que soma 100
         $totalPesos = $pesoInd + $pesoPlanos;
-        if ($totalPesos == 0) return 0;
+        if ($totalPesos == 0) {
+            return 0;
+        }
 
         return (($desempenhoIndicadores * $pesoInd) + ($desempenhoPlanos * $pesoPlanos)) / $totalPesos;
     }
@@ -121,18 +126,18 @@ class Perspectiva extends Model
     }
 
     /**
-     * Calcula o progresso dos planos de ação vinculados, considerando apenas entregas DO ANO.
+     * Calcula o progresso das iniciativas vinculadas, considerando apenas entregas DO ANO.
      */
     protected function calcularDesempenhoPlanos(int $ano): float
     {
         // Buscar Planos vinculados aos Objetivos desta Perspectiva
         $objetivosIds = $this->objetivos->pluck('cod_objetivo');
-        
+
         // Buscar entregas que pertencem a planos desses objetivos E que ocorrem no ano
         // Regra: Entregas com data_fim_prevista dentro do ano
-        $entregasNoAno = Entrega::whereHas('planoDeAcao', function($q) use ($objetivosIds) {
-                $q->whereIn('cod_objetivo', $objetivosIds);
-            })
+        $entregasNoAno = Entrega::whereHas('planoDeAcao', function ($q) use ($objetivosIds) {
+            $q->whereIn('cod_objetivo', $objetivosIds);
+        })
             ->whereYear('dte_prazo', $ano) // Filtro Temporal Crucial
             ->where('bln_arquivado', false)
             ->whereNull('deleted_at')
@@ -149,9 +154,11 @@ class Perspectiva extends Model
 
         foreach ($entregasNoAno as $entrega) {
             // Se entrega cancelada, ignora
-            if ($entrega->bln_status === 'Cancelado') continue;
+            if ($entrega->bln_status === 'Cancelado') {
+                continue;
+            }
 
-            $statusDecimal = match($entrega->bln_status) {
+            $statusDecimal = match ($entrega->bln_status) {
                 'Concluído' => 1.0,
                 'Em Andamento' => 0.5,
                 'Suspenso' => 0.25,
@@ -159,12 +166,14 @@ class Perspectiva extends Model
             };
 
             $peso = $entrega->num_peso > 0 ? $entrega->num_peso : 1; // Se peso 0, assume 1 para média simples
-            
+
             $somaProgresso += ($peso * $statusDecimal);
             $somaPesos += $peso;
         }
 
-        if ($somaPesos == 0) return 0;
+        if ($somaPesos == 0) {
+            return 0;
+        }
 
         return ($somaProgresso / $somaPesos) * 100;
     }

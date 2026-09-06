@@ -2,31 +2,35 @@
 
 namespace App\Services;
 
-use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\ActionPlan\Entrega;
-use App\Models\PerformanceIndicators\Indicador;
+use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\PerformanceIndicators\EvolucaoIndicador;
+use App\Models\PerformanceIndicators\Indicador;
+use App\Models\StrategicAlert;
+use App\Models\StrategicPlanning\GrauSatisfacao;
+use App\Models\StrategicPlanning\Objetivo;
+use App\Models\StrategicPlanning\Perspectiva;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Service responsável pelo cálculo automático de indicadores
- * baseado no progresso ponderado das entregas de um Plano de Ação.
- * 
+ * baseado no progresso ponderado das entregas de uma Iniciativa.
+ *
  * ## Fórmula de Cálculo
- * 
+ *
  * ```
  *                     Σ (Peso_i × Progresso_i)
  * Progresso (%) = ─────────────────────────────── × 100
  *                          Σ Peso_i
  * ```
- * 
+ *
  * Onde:
  * - Progresso_i = valor entre 0.0 e 1.0 (decimal)
  * - Peso_i = peso da entrega (0-100)
- * 
+ *
  * ## Mapeamento de Status
- * 
+ *
  * | Status        | Decimal | Descrição                    |
  * |---------------|---------|------------------------------|
  * | Concluído     | 1.0     | 100% completo                |
@@ -34,51 +38,54 @@ use Illuminate\Support\Facades\Log;
  * | Suspenso      | 0.25    | 25% (trabalho parcial feito) |
  * | Não Iniciado  | 0.0     | Ainda não começou            |
  * | Cancelado     | N/A     | Excluído do cálculo          |
- * 
+ *
  * @author SEAE Strategic Planning Team
+ *
  * @since 2026-02
+ *
  * @version 2.0 - Refatoração com clareza matemática
  */
 class IndicadorCalculoService
 {
     /**
      * Mapeamento de status para fração decimal (0.0 a 1.0).
-     * 
+     *
      * IMPORTANTE: Usar escala decimal para evitar multiplicações
      * duplicadas e manter clareza matemática.
      */
     const STATUS_DECIMAL = [
-        'Concluído'     => 1.0,
-        'Em Andamento'  => 0.5,
-        'Suspenso'      => 0.25,
-        'Não Iniciado'  => 0.0,
+        'Concluído' => 1.0,
+        'Em Andamento' => 0.5,
+        'Suspenso' => 0.25,
+        'Não Iniciado' => 0.0,
         // Cancelado não está aqui - é excluído do cálculo
     ];
 
     /**
      * Mapeamento legado para percentual (mantido para compatibilidade).
+     *
      * @deprecated Use STATUS_DECIMAL para novos cálculos
      */
     const STATUS_PERCENTUAL = [
-        'Concluído'     => 100,
-        'Em Andamento'  => 50,
-        'Suspenso'      => 25,
-        'Não Iniciado'  => 0,
-        'Cancelado'     => 0,
+        'Concluído' => 100,
+        'Em Andamento' => 50,
+        'Suspenso' => 25,
+        'Não Iniciado' => 0,
+        'Cancelado' => 0,
     ];
 
     /**
-     * Calcula o progresso ponderado de um Plano de Ação.
-     * 
+     * Calcula o progresso ponderado de uma Iniciativa.
+     *
      * ## Lógica de Cálculo
-     * 
+     *
      * 1. Busca entregas válidas (não deletadas, não arquivadas, não canceladas)
      * 2. Se há pesos definidos: usa média ponderada
      * 3. Se não há pesos: usa média simples
      * 4. Para entregas com sub-entregas: calcula recursivamente
-     * 
-     * @param PlanoDeAcao $plano O plano de ação a calcular
-     * @param bool $apenasRaiz Se true, considera apenas entregas raiz (sem pai)
+     *
+     * @param  PlanoDeAcao  $plano  A iniciativa a calcular
+     * @param  bool  $apenasRaiz  Se true, considera apenas entregas raiz (sem pai)
      * @return float Percentual de progresso (0.0 a 100.0)
      */
     public function calcularProgressoPlano(PlanoDeAcao $plano, bool $apenasRaiz = true): float
@@ -91,7 +98,7 @@ class IndicadorCalculoService
 
         // Filtrar entregas canceladas (não participam do cálculo)
         $entregasAtivas = $entregas->filter(
-            fn(Entrega $e) => $e->bln_status !== 'Cancelado'
+            fn (Entrega $e) => $e->bln_status !== 'Cancelado'
         );
 
         if ($entregasAtivas->isEmpty()) {
@@ -100,7 +107,7 @@ class IndicadorCalculoService
 
         // Verificar se plano usa pesos
         $somaPesos = $entregasAtivas->sum('num_peso');
-        
+
         // Se nenhum peso definido, usar média simples
         if ($somaPesos <= 0) {
             return $this->calcularMediaSimples($entregasAtivas);
@@ -112,10 +119,10 @@ class IndicadorCalculoService
 
     /**
      * Calcula média simples quando não há pesos definidos.
-     * 
+     *
      * Fórmula: (Σ Progresso_i) / N × 100
-     * 
-     * @param Collection $entregas Entregas para calcular
+     *
+     * @param  Collection  $entregas  Entregas para calcular
      * @return float Percentual de progresso (0.0 a 100.0)
      */
     protected function calcularMediaSimples(Collection $entregas): float
@@ -132,17 +139,17 @@ class IndicadorCalculoService
 
         // Média simples × 100 para converter decimal para percentual
         $media = $somaProgresso / $entregas->count();
-        
+
         return round($media * 100, 2);
     }
 
     /**
      * Calcula média ponderada com base nos pesos das entregas.
-     * 
+     *
      * Fórmula: Σ(peso × progresso) / Σ(peso) × 100
-     * 
-     * @param Collection $entregas Entregas para calcular
-     * @param float $somaPesos Soma total dos pesos
+     *
+     * @param  Collection  $entregas  Entregas para calcular
+     * @param  float  $somaPesos  Soma total dos pesos
      * @return float Percentual de progresso (0.0 a 100.0)
      */
     protected function calcularMediaPonderada(Collection $entregas, float $somaPesos): float
@@ -170,11 +177,11 @@ class IndicadorCalculoService
 
     /**
      * Obtém o progresso de uma entrega como fração decimal (0.0 a 1.0).
-     * 
+     *
      * Se a entrega tem sub-entregas, calcula recursivamente.
      * Caso contrário, mapeia o status para decimal.
-     * 
-     * @param Entrega $entrega A entrega
+     *
+     * @param  Entrega  $entrega  A entrega
      * @return float Progresso decimal (0.0 a 1.0)
      */
     protected function getProgressoEntrega(Entrega $entrega): float
@@ -190,8 +197,8 @@ class IndicadorCalculoService
 
     /**
      * Calcula o progresso de uma entrega pai baseado em suas sub-entregas.
-     * 
-     * @param Entrega $entrega A entrega pai
+     *
+     * @param  Entrega  $entrega  A entrega pai
      * @return float Progresso decimal (0.0 a 1.0)
      */
     protected function calcularProgressoSubEntregas(Entrega $entrega): float
@@ -215,6 +222,7 @@ class IndicadorCalculoService
             foreach ($subEntregas as $sub) {
                 $somaProgresso += $this->getProgressoEntrega($sub);
             }
+
             return $somaProgresso / $subEntregas->count();
         }
 
@@ -232,10 +240,9 @@ class IndicadorCalculoService
 
     /**
      * Obtém entregas válidas de um plano (não deletadas, não arquivadas).
-     * 
-     * @param PlanoDeAcao $plano O plano de ação
-     * @param bool $apenasRaiz Se true, retorna apenas entregas raiz
-     * @return Collection
+     *
+     * @param  PlanoDeAcao  $plano  A iniciativa
+     * @param  bool  $apenasRaiz  Se true, retorna apenas entregas raiz
      */
     protected function getEntregasValidas(PlanoDeAcao $plano, bool $apenasRaiz = true): Collection
     {
@@ -252,11 +259,11 @@ class IndicadorCalculoService
 
     /**
      * Atualiza a evolução de um indicador calculado automaticamente.
-     * 
+     *
      * Cria ou atualiza o registro de evolução para o mês/ano atual
      * com o valor realizado baseado no progresso do plano.
-     * 
-     * @param Indicador $indicador O indicador a atualizar
+     *
+     * @param  Indicador  $indicador  O indicador a atualizar
      * @return EvolucaoIndicador|null A evolução criada/atualizada ou null se manual
      */
     public function atualizarIndicadorAutomatico(Indicador $indicador): ?EvolucaoIndicador
@@ -267,8 +274,9 @@ class IndicadorCalculoService
         }
 
         // Verificar se tem plano vinculado
-        if (!$indicador->cod_plano_de_acao || !$indicador->planoDeAcao) {
+        if (! $indicador->cod_plano_de_acao || ! $indicador->planoDeAcao) {
             Log::warning("Indicador {$indicador->cod_indicador} configurado para cálculo automático mas sem plano vinculado.");
+
             return null;
         }
 
@@ -289,7 +297,7 @@ class IndicadorCalculoService
             [
                 'vlr_realizado' => $progresso,
                 'vlr_previsto' => 100, // Meta padrão: 100% de conclusão
-                'txt_observacao' => 'Valor calculado automaticamente com base no progresso das entregas ponderadas do plano de ação.',
+                'txt_observacao' => 'Valor calculado automaticamente com base no progresso das entregas ponderadas da iniciativa.',
             ]
         );
 
@@ -299,11 +307,11 @@ class IndicadorCalculoService
     }
 
     /**
-     * Atualiza todos os indicadores automáticos de um plano de ação.
-     * 
+     * Atualiza todos os indicadores automáticos de uma iniciativa.
+     *
      * Chamado quando uma entrega do plano é alterada (created, updated, deleted).
-     * 
-     * @param PlanoDeAcao $plano O plano de ação modificado
+     *
+     * @param  PlanoDeAcao  $plano  A iniciativa modificada
      * @return int Número de indicadores atualizados
      */
     public function atualizarIndicadoresDoPlano(PlanoDeAcao $plano): int
@@ -324,8 +332,8 @@ class IndicadorCalculoService
 
     /**
      * Valida se os pesos das entregas de um plano somam 100.
-     * 
-     * @param PlanoDeAcao $plano O plano de ação
+     *
+     * @param  PlanoDeAcao  $plano  A iniciativa
      * @return array ['valid' => bool, 'total' => float, 'message' => string]
      */
     public function validarPesosPlano(PlanoDeAcao $plano): array
@@ -353,16 +361,16 @@ class IndicadorCalculoService
         return [
             'valid' => $isValid,
             'total' => round($totalPesos, 2),
-            'message' => $isValid 
-                ? 'Pesos corretamente distribuídos (100%).' 
+            'message' => $isValid
+                ? 'Pesos corretamente distribuídos (100%).'
                 : "A soma dos pesos é {$totalPesos}%. Ajuste para totalizar 100%.",
         ];
     }
 
     /**
      * Redistribui pesos igualitários entre entregas de um plano.
-     * 
-     * @param PlanoDeAcao $plano O plano de ação
+     *
+     * @param  PlanoDeAcao  $plano  A iniciativa
      * @return int Número de entregas atualizadas
      */
     public function redistribuirPesosIguais(PlanoDeAcao $plano): int
@@ -397,8 +405,8 @@ class IndicadorCalculoService
 
     /**
      * Retorna estatísticas do plano para exibição na UI.
-     * 
-     * @param PlanoDeAcao $plano O plano de ação
+     *
+     * @param  PlanoDeAcao  $plano  A iniciativa
      * @return array Estatísticas detalhadas
      */
     public function getEstatisticasPlano(PlanoDeAcao $plano): array
@@ -422,8 +430,8 @@ class IndicadorCalculoService
 
     /**
      * Simula o cálculo para debug/preview.
-     * 
-     * @param PlanoDeAcao $plano O plano de ação
+     *
+     * @param  PlanoDeAcao  $plano  A iniciativa
      * @return array Detalhes do cálculo passo a passo
      */
     public function simularCalculo(PlanoDeAcao $plano): array
@@ -442,6 +450,7 @@ class IndicadorCalculoService
                     'progresso' => 'N/A (excluído)',
                     'contribuicao' => 0,
                 ];
+
                 continue;
             }
 
@@ -453,7 +462,7 @@ class IndicadorCalculoService
                 'entrega' => $entrega->dsc_entrega,
                 'peso' => $peso,
                 'status' => $entrega->bln_status,
-                'progresso' => round($progresso * 100, 1) . '%',
+                'progresso' => round($progresso * 100, 1).'%',
                 'contribuicao' => round($contribuicao, 2),
             ];
 
@@ -468,19 +477,20 @@ class IndicadorCalculoService
             'resultado' => $divisor > 0 ? round(($soma / $divisor) * 100, 2) : 0,
         ];
     }
+
     /**
      * Calcula o progresso de um plano considerando APENAS entregas com prazo no ano especificado.
-     * 
-     * @param PlanoDeAcao $plano O plano de ação
-     * @param int $ano O ano de referência
+     *
+     * @param  PlanoDeAcao  $plano  A iniciativa
+     * @param  int  $ano  O ano de referência
      * @return array ['progresso' => float, 'total_entregas' => int, 'detalhes' => array]
      */
     public function calcularProgressoPlanoNoAno(PlanoDeAcao $plano, int $ano): array
     {
         // 1. Filtrar entregas do ano (usando a relação já carregada se possível, ou query)
         // Preferir filter na coleção se já estiver carregada para evitar N+1 em loops
-        $entregasAno = $plano->entregas->filter(function($entrega) use ($ano) {
-            return $entrega->dte_prazo && 
+        $entregasAno = $plano->entregas->filter(function ($entrega) use ($ano) {
+            return $entrega->dte_prazo &&
                    $entrega->dte_prazo->year == $ano &&
                    $entrega->bln_status !== 'Cancelado' &&
                    $entrega->cod_entrega_pai === null; // Apenas raiz
@@ -491,7 +501,7 @@ class IndicadorCalculoService
                 'progresso' => 0.0,
                 'total_entregas' => 0,
                 'detalhes' => [],
-                'status_calculado' => 'Sem Entregas'
+                'status_calculado' => 'Sem Entregas',
             ];
         }
 
@@ -504,16 +514,18 @@ class IndicadorCalculoService
             // Média Ponderada
             $progressoAcumulado = 0.0;
             foreach ($entregasAno as $entrega) {
-                if ($entrega->num_peso <= 0) continue;
+                if ($entrega->num_peso <= 0) {
+                    continue;
+                }
                 $progressoUnitario = $this->getProgressoEntrega($entrega);
                 $progressoAcumulado += $entrega->num_peso * $progressoUnitario;
-                
+
                 $detalhes[] = [
                     'entrega' => $entrega->dsc_entrega,
                     'prazo' => $entrega->dte_prazo->format('d/m/Y'),
                     'status' => $entrega->bln_status,
                     'peso' => $entrega->num_peso,
-                    'progresso_item' => $progressoUnitario
+                    'progresso_item' => $progressoUnitario,
                 ];
             }
             $progressoGeral = round(($progressoAcumulado / $somaPesos) * 100, 2);
@@ -529,7 +541,7 @@ class IndicadorCalculoService
                     'prazo' => $entrega->dte_prazo->format('d/m/Y'),
                     'status' => $entrega->bln_status,
                     'peso' => 0, // Peso zero ou indefinido
-                    'progresso_item' => $progressoUnitario
+                    'progresso_item' => $progressoUnitario,
                 ];
             }
             $progressoGeral = round(($somaProgresso / $entregasAno->count()) * 100, 2);
@@ -539,19 +551,17 @@ class IndicadorCalculoService
             'progresso' => $progressoGeral,
             'total_entregas' => $entregasAno->count(),
             'detalhes' => $detalhes,
-            'status_calculado' => $progressoGeral >= 100 ? 'Concluído' : ($progressoGeral > 0 ? 'Em Andamento' : 'Não Iniciado')
+            'status_calculado' => $progressoGeral >= 100 ? 'Concluído' : ($progressoGeral > 0 ? 'Em Andamento' : 'Não Iniciado'),
         ];
     }
 
     /**
      * Calcula o atingimento global de uma perspectiva para um determinado ano.
      * Segue EXATAMENTE a lógica do Mapa Estratégico para garantir Single Source of Truth.
-     * 
-     * @param \App\Models\StrategicPlanning\Perspectiva $perspectiva
-     * @param int $ano
+     *
      * @return float Percentual (0-100)
      */
-    public function calcularAtingimentoPerspectiva(\App\Models\StrategicPlanning\Perspectiva $perspectiva, int $ano): float
+    public function calcularAtingimentoPerspectiva(Perspectiva $perspectiva, int $ano): float
     {
         $pesoInd = $perspectiva->num_peso_indicadores ?? 100;
         $pesoPlan = $perspectiva->num_peso_planos ?? 0;
@@ -559,50 +569,52 @@ class IndicadorCalculoService
         // 1. Calcular Média Indicadores
         $somaAtingInd = 0;
         $totalInd = 0;
-        
+
         foreach ($perspectiva->objetivos as $obj) {
             foreach ($obj->indicadores as $ind) {
-                // Assume que o model Indicador tem este método. 
+                // Assume que o model Indicador tem este método.
                 // Se não tiver, o Mapa Estratégico quebraria, então DEVE ter.
-                $ating = $ind->calcularAtingimento($ano); 
+                $ating = $ind->calcularAtingimento($ano);
                 $somaAtingInd += $ating;
                 $totalInd++;
             }
         }
-        
+
         $mediaIndicadores = $totalInd > 0 ? ($somaAtingInd / $totalInd) : 0;
 
         // 2. Calcular Média Planos (Ponderada Globalmente)
         $somaProgressoPlan = 0;
         $somaPesoPlan = 0;
-        
+
         foreach ($perspectiva->objetivos as $obj) {
             foreach ($obj->planosAcao as $plano) {
                 // Filtrar entregas do ano
-                $entregasAno = $plano->entregas->filter(function($entrega) use ($ano) {
-                    return $entrega->dte_prazo && 
+                $entregasAno = $plano->entregas->filter(function ($entrega) use ($ano) {
+                    return $entrega->dte_prazo &&
                            $entrega->dte_prazo->year == $ano &&
                            $entrega->bln_status !== 'Cancelado' &&
                            $entrega->cod_entrega_pai === null;
                 });
 
-                if ($entregasAno->isEmpty()) continue;
+                if ($entregasAno->isEmpty()) {
+                    continue;
+                }
 
                 foreach ($entregasAno as $entrega) {
-                    $statusDecimal = match($entrega->bln_status) {
-                        'Concluído' => 1.0, 
-                        'Em Andamento' => 0.5, 
-                        'Suspenso' => 0.25, 
+                    $statusDecimal = match ($entrega->bln_status) {
+                        'Concluído' => 1.0,
+                        'Em Andamento' => 0.5,
+                        'Suspenso' => 0.25,
                         default => 0.0
                     };
                     $peso = $entrega->num_peso > 0 ? $entrega->num_peso : 1;
-                    
+
                     $somaProgressoPlan += ($peso * $statusDecimal);
                     $somaPesoPlan += $peso;
                 }
             }
         }
-        
+
         $mediaPlanos = $somaPesoPlan > 0 ? ($somaProgressoPlan / $somaPesoPlan) * 100 : 0;
 
         // 3. Cálculo Final Híbrido
@@ -612,19 +624,17 @@ class IndicadorCalculoService
         if ($somaPesosConfig > 0) {
             $atingimentoFinal = (($mediaIndicadores * $pesoInd) + ($mediaPlanos * $pesoPlan)) / $somaPesosConfig;
         }
-        
+
         return round($atingimentoFinal, 1);
     }
 
     /**
      * Calcula o atingimento de um Objetivo específico para um determinado ano.
      * Segue a mesma lógica híbrida da Perspectiva (Indicadores + Planos), usando os pesos da Perspectiva pai.
-     * 
-     * @param \App\Models\StrategicPlanning\Objetivo $objetivo
-     * @param int $ano
+     *
      * @return float Percentual (0-100)
      */
-    public function calcularAtingimentoObjetivo(\App\Models\StrategicPlanning\Objetivo $objetivo, int $ano): float
+    public function calcularAtingimentoObjetivo(Objetivo $objetivo, int $ano): float
     {
         // Pesos vêm da Perspectiva Pai
         $perspectiva = $objetivo->perspectiva;
@@ -634,44 +644,46 @@ class IndicadorCalculoService
         // 1. Calcular Média Indicadores do Objetivo
         $somaAtingInd = 0;
         $totalInd = 0;
-        
+
         foreach ($objetivo->indicadores as $ind) {
-            $ating = $ind->calcularAtingimento($ano); 
+            $ating = $ind->calcularAtingimento($ano);
             $somaAtingInd += $ating;
             $totalInd++;
         }
-        
+
         $mediaIndicadores = $totalInd > 0 ? ($somaAtingInd / $totalInd) : 0;
 
         // 2. Calcular Média Planos do Objetivo (Ponderada)
         $somaProgressoPlan = 0;
         $somaPesoPlan = 0;
-        
+
         foreach ($objetivo->planosAcao as $plano) {
             // Filtrar entregas do ano
-            $entregasAno = $plano->entregas->filter(function($entrega) use ($ano) {
-                return $entrega->dte_prazo && 
+            $entregasAno = $plano->entregas->filter(function ($entrega) use ($ano) {
+                return $entrega->dte_prazo &&
                        $entrega->dte_prazo->year == $ano &&
                        $entrega->bln_status !== 'Cancelado' &&
                        $entrega->cod_entrega_pai === null;
             });
 
-            if ($entregasAno->isEmpty()) continue;
+            if ($entregasAno->isEmpty()) {
+                continue;
+            }
 
             foreach ($entregasAno as $entrega) {
-                $statusDecimal = match($entrega->bln_status) {
-                    'Concluído' => 1.0, 
-                    'Em Andamento' => 0.5, 
-                    'Suspenso' => 0.25, 
+                $statusDecimal = match ($entrega->bln_status) {
+                    'Concluído' => 1.0,
+                    'Em Andamento' => 0.5,
+                    'Suspenso' => 0.25,
                     default => 0.0
                 };
                 $peso = $entrega->num_peso > 0 ? $entrega->num_peso : 1;
-                
+
                 $somaProgressoPlan += ($peso * $statusDecimal);
                 $somaPesoPlan += $peso;
             }
         }
-        
+
         $mediaPlanos = $somaPesoPlan > 0 ? ($somaProgressoPlan / $somaPesoPlan) * 100 : 0;
 
         // 3. Cálculo Final Híbrido
@@ -681,7 +693,7 @@ class IndicadorCalculoService
         if ($somaPesosConfig > 0) {
             $atingimentoFinal = (($mediaIndicadores * $pesoInd) + ($mediaPlanos * $pesoPlan)) / $somaPesosConfig;
         }
-        
+
         return round($atingimentoFinal, 1);
     }
 
@@ -693,18 +705,18 @@ class IndicadorCalculoService
      *
      * @return array{valor: float, tendencia: string, perspectivas: array, grau: mixed}
      */
-    public function calcularIQG(string $codPei, int $ano, int $mes = null): array
+    public function calcularIQG(string $codPei, int $ano, ?int $mes = null): array
     {
         $mes = $mes ?? now()->month;
 
-        $perspectivas = \App\Models\StrategicPlanning\Perspectiva::where('cod_pei', $codPei)
+        $perspectivas = Perspectiva::where('cod_pei', $codPei)
             ->with(['objetivos.indicadores.evolucoes', 'objetivos.planosAcao.entregas'])
             ->orderBy('num_nivel_hierarquico_apresentacao')
             ->get();
 
         $somaAtingimento = 0.0;
-        $somaPeso        = 0;
-        $detalhes        = [];
+        $somaPeso = 0;
+        $detalhes = [];
 
         foreach ($perspectivas as $perspectiva) {
             // Só inclui perspectivas que têm ao menos 1 evolução registrada
@@ -721,27 +733,27 @@ class IndicadorCalculoService
             $peso = max(1, $perspectiva->num_nivel_hierarquico_apresentacao ?? 1);
 
             $somaAtingimento += $atingimento * $peso;
-            $somaPeso        += $peso;
+            $somaPeso += $peso;
 
             $detalhes[] = [
                 'perspectiva' => $perspectiva->dsc_perspectiva,
                 'atingimento' => round($atingimento, 1),
-                'peso'        => $peso,
+                'peso' => $peso,
             ];
         }
 
         $valor = $somaPeso > 0 ? round($somaAtingimento / $somaPeso, 1) : 0.0;
 
-        $grau = \App\Models\StrategicPlanning\GrauSatisfacao::where('cod_pei', $codPei)
-            ->where('vlr_minimo', '<=', $valor)
-            ->where('vlr_maximo', '>=', $valor)
-            ->first();
+        // Mesma regra usada por todo o sistema, num lugar só: a faixa vem do
+        // ciclo E do ano, com a faixa específica do ano tendo precedência
+        // sobre a geral do ciclo.
+        $grau = GrauSatisfacao::faixaDe($valor, $codPei, $ano);
 
         return [
-            'valor'        => $valor,
+            'valor' => $valor,
             'perspectivas' => $detalhes,
-            'grau'         => $grau,
-            'tem_dados'    => $somaPeso > 0,
+            'grau' => $grau,
+            'tem_dados' => $somaPeso > 0,
         ];
     }
 
@@ -757,7 +769,7 @@ class IndicadorCalculoService
             return;
         }
 
-        $jaAlertado = \App\Models\StrategicAlert::where('title', 'like', '%' . $indicador->nom_indicador . '%')
+        $jaAlertado = StrategicAlert::where('title', 'like', '%'.$indicador->nom_indicador.'%')
             ->whereNull('read_at')
             ->where('created_at', '>=', now()->subHours(24))
             ->exists();
@@ -771,15 +783,15 @@ class IndicadorCalculoService
             return;
         }
 
-        \App\Models\StrategicAlert::create([
-            'user_id'         => $userId,
+        StrategicAlert::create([
+            'user_id' => $userId,
             'cod_organizacao' => session('organizacao_selecionada_id'),
-            'title'           => 'Tendência Desfavorável: ' . $indicador->nom_indicador,
-            'message'         => 'O indicador apresenta tendência ' . strtolower($tendencia['direcao'])
-                . ' (' . ($tendencia['variacao_pct'] >= 0 ? '+' : '') . $tendencia['variacao_pct'] . '% por período), '
-                . 'desfavorável para a polaridade ' . ($indicador->dsc_polaridade ?? 'Positiva') . '. Avalie ação corretiva.',
-            'icon'            => 'bi-graph-down-arrow',
-            'type'            => 'danger',
+            'title' => 'Tendência Desfavorável: '.$indicador->nom_indicador,
+            'message' => 'O indicador apresenta tendência '.strtolower($tendencia['direcao'])
+                .' ('.($tendencia['variacao_pct'] >= 0 ? '+' : '').$tendencia['variacao_pct'].'% por período), '
+                .'desfavorável para a polaridade '.($indicador->dsc_polaridade ?? 'Positiva').'. Avalie ação corretiva.',
+            'icon' => 'bi-graph-down-arrow',
+            'type' => 'danger',
         ]);
     }
 
@@ -807,11 +819,11 @@ class IndicadorCalculoService
             return array_merge($neutro, ['pontos' => $evolucoes->pluck('vlr_realizado')->toArray()]);
         }
 
-        $n      = $evolucoes->count();
-        $xs     = range(1, $n);
-        $ys     = $evolucoes->pluck('vlr_realizado')->map(fn($v) => (float) $v)->toArray();
-        $meanX  = array_sum($xs) / $n;
-        $meanY  = array_sum($ys) / $n;
+        $n = $evolucoes->count();
+        $xs = range(1, $n);
+        $ys = $evolucoes->pluck('vlr_realizado')->map(fn ($v) => (float) $v)->toArray();
+        $meanX = array_sum($xs) / $n;
+        $meanY = array_sum($ys) / $n;
 
         $num = 0.0;
         $den = 0.0;
@@ -825,28 +837,28 @@ class IndicadorCalculoService
         // threshold relativo: 1% do valor médio para evitar falsos positivos em séries estáveis
         $threshold = $meanY != 0 ? abs($meanY) * 0.01 : 0.01;
 
-        $direcao = match(true) {
-            $slope >  $threshold  => 'Crescente',
-            $slope < -$threshold  => 'Decrescente',
-            default               => 'Estável',
+        $direcao = match (true) {
+            $slope > $threshold => 'Crescente',
+            $slope < -$threshold => 'Decrescente',
+            default => 'Estável',
         };
 
         $variacaoPct = $meanY != 0 ? round(($slope / abs($meanY)) * 100, 1) : 0.0;
 
         // Favorável depende da polaridade
         $polaridade = $indicador->dsc_polaridade ?? 'Positiva';
-        $favoravel  = match($polaridade) {
-            'Positiva'    => $direcao === 'Crescente',
-            'Negativa'    => $direcao === 'Decrescente',
+        $favoravel = match ($polaridade) {
+            'Positiva' => $direcao === 'Crescente',
+            'Negativa' => $direcao === 'Decrescente',
             'Estabilidade' => $direcao === 'Estável',
-            default       => null,
+            default => null,
         };
 
         return [
-            'direcao'      => $direcao,
-            'favoravel'    => $favoravel,
+            'direcao' => $direcao,
+            'favoravel' => $favoravel,
             'variacao_pct' => $variacaoPct,
-            'pontos'       => $ys,
+            'pontos' => $ys,
         ];
     }
 }

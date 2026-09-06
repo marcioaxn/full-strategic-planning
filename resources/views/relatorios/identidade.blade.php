@@ -3,11 +3,12 @@
 <head>
     <meta charset="utf-8">
     <title>Mapa Estratégico — {{ $organizacao->nom_organizacao }}</title>
-    @include('relatorios.partials.estilos')
+    {{-- Orientação vai por parâmetro. Este arquivo incluía o sistema de design
+         E redefinia o @page logo depois — o <style> posterior vencia, e o
+         cabeçalho fixo, posicionado para uma margem, era desenhado sobre outra.
+         Sobreposição silenciosa: não dava erro, só saía torto. --}}
+    @include('relatorios.partials.estilos', ['orientacao' => 'landscape'])
     <style>
-        /* ── Orientação Paisagem ── */
-        @page { size: a4 landscape; margin: 95px 28px 52px 28px; }
-        .rpt-header { top: -78px; height: 70px; }
 
         /* ── Swimlanes BSC ── */
         .persp-row { margin-bottom: 7px; border: 1px solid #e2e8f0; border-radius: 7px; overflow: hidden; page-break-inside: avoid; }
@@ -29,35 +30,39 @@
     </style>
 </head>
 <body>
-    @include('relatorios.partials.cabecalho', [
-        'rptTitulo'    => 'Mapa Estratégico',
-        'rptEyebrow'   => 'Balanced Scorecard · Módulo 02 — Planejar',
-        'rptSubtitulo' => $organizacao->nom_organizacao . ' · Exercício ' . $filtros['ano'],
-        'rptIcon'      => '&#9737;',
-    ])
-    @include('relatorios.partials.rodape')
 
     @php
         $coresNivel = [1 => '#475569', 2 => '#2e8b57', 3 => '#0891b2', 4 => '#d97706', 5 => '#1B408E'];
     @endphp
 
-    {{-- Missão / Visão --}}
+    @php
+        $temMissao = trim((string) ($identidade->dsc_missao ?? '')) !== '';
+        $temVisao  = trim((string) ($identidade->dsc_visao ?? '')) !== '';
+    @endphp
+
+    {{-- Missão / Visão — cada uma só aparece se estiver preenchida --}}
+    @if($temMissao || $temVisao)
     <table style="width:100%; border-collapse:separate; border-spacing:6px 0; margin-bottom:6px;">
         <tr>
-            <td style="width:50%;">
-                <div class="id-card-l">
-                    <span class="id-label" style="color:#1B408E;">Missão</span>
-                    <div class="id-text">{{ $identidade->dsc_missao ?? 'Não definida' }}</div>
+            @if($temMissao)
+            <td style="width:{{ $temVisao ? '50%' : '100%' }};">
+                <div class="id-card-l" style="border-left-color:#EDC009;">
+                    <span class="id-label" style="color:#8A7200;">Missão</span>
+                    <div class="id-text">{{ $identidade->dsc_missao }}</div>
                 </div>
             </td>
-            <td style="width:50%;">
-                <div class="id-card-r">
-                    <span class="id-label" style="color:#e07b39;">Visão</span>
-                    <div class="id-text">{{ $identidade->dsc_visao ?? 'Não definida' }}</div>
+            @endif
+            @if($temVisao)
+            <td style="width:{{ $temMissao ? '50%' : '100%' }};">
+                <div class="id-card-r" style="border-left-color:#3550A0;">
+                    <span class="id-label" style="color:#3550A0;">Visão</span>
+                    <div class="id-text">{{ $identidade->dsc_visao }}</div>
                 </div>
             </td>
+            @endif
         </tr>
     </table>
+    @endif
 
     {{-- Valores · Temas Norteadores · Legenda --}}
     <table style="width:100%; border-collapse:separate; border-spacing:6px 0; margin-bottom:10px;">
@@ -78,21 +83,42 @@
                 @endforeach
             </td>
             @endif
-            <td style="background:#f7fafc; border:1px solid #e2e8f0; border-radius:7px; padding:7px 12px; vertical-align:middle;">
-                <div style="color:#718096; font-weight:bold; font-size:7px; text-transform:uppercase; margin-bottom:4px; letter-spacing:.5px;">Legenda de Atingimento</div>
-                @foreach($grausSatisfacao as $grau)
-                    <span style="font-size:7.5px; margin-right:8px; white-space:nowrap;">
-                        <span class="farol" style="background:{{ $grau->cor }};"></span>
-                        {{ $grau->dsc_grau_satisfcao ?? $grau->dsc_grau_satisfacao ?? '' }}
-                        ({{ number_format($grau->vlr_minimo, 0) }}–{{ number_format($grau->vlr_maximo, 0) }}%)
-                    </span>
-                @endforeach
+            <td style="background:#F4FBF3; border:1px solid #D3EED1; padding:7px 12px; vertical-align:middle;">
+                @if($grausSatisfacao->isNotEmpty())
+                    <div style="color:#595959; font-weight:bold; font-size:7px; text-transform:uppercase; margin-bottom:4px; letter-spacing:.5px;">Legenda de Atingimento</div>
+                    @foreach($grausSatisfacao as $grau)
+                        <span style="font-size:7.5px; margin-right:8px; white-space:nowrap;">
+                            <span class="farol" style="background:{{ $grau->cor }};"></span>
+                            {{ $grau->dsc_grau_satisfacao }}
+                            ({{ number_format((float) $grau->vlr_minimo, 0) }}–{{ number_format((float) $grau->vlr_maximo, 0) }}%)
+                        </span>
+                    @endforeach
+                @else
+                    <div style="font-size:7.5px; color:#595959;">
+                        <strong>Sem graus de satisfação configurados neste ciclo.</strong>
+                        Os percentuais aparecem em cinza: a organização ainda não definiu a
+                        partir de que valor um resultado é bom, regular ou crítico.
+                    </div>
+                @endif
             </td>
         </tr>
     </table>
 
-    {{-- Swimlanes BSC --}}
-    @forelse($perspectivas->sortByDesc('num_nivel_hierarquico_apresentacao') as $persp)
+    {{-- Swimlanes BSC.
+
+         🔴 Regra do gestor: parte que o cliente não preencheu não aparece.
+         Uma faixa colorida com "0 objetivo(s)" e a frase "sem objetivos
+         vinculados" ocupa espaço para não informar nada.
+
+         O que NÃO se esconde é o fato: a nota ao final diz quantas camadas
+         ficaram de fora. Omitir sem avisar faria o mapa parecer completo. --}}
+    @php
+        $ordenadas = $perspectivas->sortByDesc('num_nivel_hierarquico_apresentacao');
+        $comObjetivos = $ordenadas->filter(fn ($x) => $x->objetivos->isNotEmpty());
+        $omitidas = $ordenadas->count() - $comObjetivos->count();
+    @endphp
+
+    @forelse($comObjetivos as $persp)
         @php $corP = $coresNivel[$persp->num_nivel_hierarquico_apresentacao] ?? '#1B408E'; @endphp
         <div class="persp-row">
             <div class="persp-header" style="background:{{ $corP }};">
@@ -102,7 +128,7 @@
                 </span>
             </div>
             <div class="persp-body">
-                @forelse($persp->objetivos as $obj)
+                @foreach($persp->objetivos as $obj)
                     @php
                         $at  = $obj->atingimento_calculado ?? 0;
                         $cor = $getCorSatisfacao($at);
@@ -114,13 +140,24 @@
                             <strong style="color:{{ $cor }};">{{ number_format($at, 1, ',', '.') }}%</strong>
                         </div>
                     </div>
-                @empty
-                    <span style="font-style:italic; color:#a0aec0; font-size:8px; padding:8px; display:block;">Sem objetivos vinculados nesta perspectiva.</span>
-                @endforelse
+                @endforeach
             </div>
         </div>
     @empty
-        <div class="vazio">Nenhuma perspectiva cadastrada para este ciclo PEI.</div>
+        <div class="vazio">
+            @if($perspectivas->isEmpty())
+                Nenhuma perspectiva cadastrada para este ciclo PEI.
+            @else
+                As {{ $perspectivas->count() }} perspectivas deste ciclo ainda não têm objetivos vinculados.
+            @endif
+        </div>
     @endforelse
+
+    @if($omitidas > 0 && $comObjetivos->isNotEmpty())
+        <p style="font-size:7.5px; color:#595959; margin-top:8px;">
+            {{ $omitidas }} {{ $omitidas == 1 ? 'perspectiva deste ciclo ainda não tem' : 'perspectivas deste ciclo ainda não têm' }}
+            objetivo vinculado e não {{ $omitidas == 1 ? 'foi exibida' : 'foram exibidas' }} acima.
+        </p>
+    @endif
 </body>
 </html>

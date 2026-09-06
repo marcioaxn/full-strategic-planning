@@ -79,6 +79,15 @@ $proibidos = [
     'trust-proxies' => ['/trustProxies\(\s*at:\s*[\'"]\*[\'"]/', 'trustProxies(at: "*") permite IP spoofing.'],
     // Só as formas inequívocas: "=======" sozinho é sublinhado legítimo em Markdown.
     'conflito-git' => ['/^(?:<{7}|>{7}) /m', 'Marcador de conflito do git no arquivo — quebra a aplicação.'],
+    // O Laravel lê o ponto em "exists:x.y" / "unique:x.y" como nome de CONEXÃO,
+    // não como schema. "exists:pei.users,id" produz, em runtime,
+    // "Database connection [pei] not configured" — a tela quebra ao salvar.
+    // Só os seis schemas deste projeto: "exists:pgsql.users" seria conexão de fato.
+    'exists-com-schema' => [
+        '/\b(?:exists|unique):(?:pei|strategic_planning|action_plan|performance_indicators|risk_management|organization)\./',
+        'Regra exists/unique com schema no nome da tabela. O ponto é lido como CONEXÃO e quebra em runtime. '
+        .'Remova o prefixo: o search_path da conexão pgsql resolve a tabela.',
+    ],
 ];
 
 // Documentação DESCREVE os padrões proibidos — é o oposto de cometê-los. Em
@@ -106,6 +115,27 @@ foreach ($proibidos as $codigo => [$regex, $motivo]) {
 if (str_ends_with($relativo, '.blade.php') && preg_match('/\{!!\s*\$/', $conteudo)) {
     $problemas['xss-blade'] = 'XSS: {!! $variavel !!} em Blade. Use {{ }} ou strip_tags() com allowlist. '
         .'Se a origem do dado é comprovadamente segura, diga isso ao gestor antes de manter.';
+}
+
+// $table de Model sem schema. O search_path começa em "pei": uma query sem
+// schema resolve por AUSÊNCIA DE COLISÃO, não por construção. No dia em que
+// existir tabela homônima num schema anterior da lista, o Model lê a errada —
+// em silêncio, sem erro, com a tela respondendo normalmente.
+// Os 51 Models foram qualificados em 05/09/2026; isto impede o próximo nascer torto.
+if (str_starts_with($relativo, 'app/Models/')
+    && preg_match("/protected \\\$table\s*=\s*'([^']+)'/", $conteudo, $mTabela)
+    && ! str_contains($mTabela[1], '.')) {
+    $problemas['model-sem-schema'] = "Model com \$table = '{$mTabela[1]}' sem schema. "
+        .'Qualifique (ex.: "action_plan.tab_x"): o search_path começa em "pei" e a '
+        .'resolução sem schema depende de não existir homônima antes na lista.';
+}
+
+// Query de Model dentro de Blade: N+1 se o partial for incluído em laço, e
+// nenhum teste de componente alcança. Dado se busca no componente.
+if (str_ends_with($relativo, '.blade.php')
+    && preg_match('/\\\\App\\\\Models\\\\[A-Za-z\\\\]+::[a-zA-Z_]\w*\s*\(/', $conteudo)) {
+    $problemas['query-em-blade'] = 'Consulta a Model dentro de Blade. Busque o dado no '
+        .'componente Livewire ou no Controller e passe pronto para a view.';
 }
 
 // -----------------------------------------------------------------------

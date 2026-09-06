@@ -93,7 +93,7 @@
 
                 <i class="bi bi-chevron-right text-muted small"></i>
 
-                {{-- 3. Plano de Ação --}}
+                {{-- 3. Iniciativa --}}
                 <div class="flex-grow-1">
                     <select class="form-select form-select-sm border-0 bg-primary bg-opacity-10 text-primary fw-bold shadow-xs" 
                             onchange="$wire.mudarPlano(this.value)">

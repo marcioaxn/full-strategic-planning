@@ -3,6 +3,20 @@
         <h6 class="fw-bold text-dark mb-0"><i class="bi bi-calendar-check me-2 text-primary"></i>Agendamentos Ativos</h6>
     </div>
     <div class="card-body pt-2">
+        {{--
+            🔴 O agendamento só funciona se a tarefa do servidor estiver rodando.
+            Sem ela, o usuário salva, a tela confirma, e o e-mail nunca chega —
+            em silêncio. Aqui a tela diz a verdade antes de o usuário confiar
+            num envio que não vai acontecer.
+        --}}
+        @php $avisoAgendador = App\Support\AgendadorDeRelatorios::aviso(); @endphp
+        @if($avisoAgendador)
+            <div class="alert alert-warning d-flex gap-2 py-2 px-3 small mb-3">
+                <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+                <span>{{ $avisoAgendador }}</span>
+            </div>
+        @endif
+
         <div class="list-group list-group-flush">
             @forelse($agendamentos as $item)
                 <div class="list-group-item border-0 px-0 py-3">

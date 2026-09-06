@@ -16,7 +16,7 @@ class Acao extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'acoes';
+    protected $table = 'action_plan.acoes';
 
     /**
      * Chave primária
@@ -85,6 +85,6 @@ class Acao extends Model
     public function scopeRecentes($query, int $dias = 7)
     {
         return $query->where('created_at', '>=', now()->subDays($dias))
-                     ->orderBy('created_at', 'desc');
+            ->orderBy('created_at', 'desc');
     }
 }

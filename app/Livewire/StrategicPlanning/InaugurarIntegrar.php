@@ -237,6 +237,10 @@ class InaugurarIntegrar extends Component
             $this->odsContribuicoes = $vinculos->pluck('pivot.txt_contribuicao', 'num_ods')->toArray();
             $this->odsIntensidades = $vinculos->pluck('pivot.dsc_intensidade', 'num_ods')->toArray();
         } catch (\Throwable $e) {
+            // Sem isto, a causa real desaparece: o cliente recebe uma
+            // orientação genérica e não sobra rastro nenhum para investigar.
+            report($e);
+
             // Tabela rel_pei_ods ainda não migrada — degrada graciosamente.
         }
     }

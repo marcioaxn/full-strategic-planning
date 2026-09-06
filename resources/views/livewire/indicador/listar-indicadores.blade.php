@@ -33,9 +33,11 @@
                         <li><a class="dropdown-item" href="{{ route('relatorios.indicadores.excel') }}"><i class="bi bi-file-earmark-excel text-success me-2"></i> Excel</a></li>
                     </ul>
                 </div>
+                @auth
                 <button wire:click="create" class="btn btn-primary gradient-theme-btn px-4 shadow-sm">
                     <i class="bi bi-plus-lg me-2"></i>Novo Indicador
                 </button>
+                @endauth
             @endif
         </div>
     </div>
@@ -383,6 +385,8 @@
     {{-- Mentor de IA --}}
     @if($organizacaoId && $aiEnabled)
         <div class="ai-mentor-wrapper animate-fade-in">
+            @auth
+            @auth
             <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="ai-magic-button shadow-sm">
                 <span wire:loading.remove wire:target="pedirAjudaIA">
                     <i class="bi bi-robot"></i> {{ __('Sugerir Indicadores (KPIs) com IA') }}
@@ -391,6 +395,8 @@
                     <span class="spinner-border spinner-border-sm me-2"></span>{{ __('Definindo métricas ideais...') }}
                 </span>
             </button>
+            @endauth
+            @endauth
 
             @if($aiSuggestion)
                 <div class="ai-insight-card animate-fade-in">
@@ -414,10 +420,12 @@
                                                 <span class="badge bg-secondary-subtle text-secondary small border-0">{{ __('Fórmula: ') }}{{ $kpi['formula'] }}</span>
                                             </div>
                                         </div>
+                                        @auth
                                         <button wire:click="aplicarSugestao('{{ $kpi['nome'] }}', '{{ $kpi['descricao'] }}', '{{ $kpi['unidade'] }}', '{{ $kpi['formula'] }}')" 
                                                 class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
                                             <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}
                                         </button>
+                                        @endauth
                                     </div>
                                 @endforeach
                             </div>
@@ -438,7 +446,7 @@
             @endphp
 
             {{-- Contexto Completo do Objetivo --}}
-            @include('livewire.partials.objetivo-contexto', ['objetivo' => $objetivoFiltrado])
+            @include('livewire.partials.objetivo-contexto', ['objetivo' => $objetivoFiltrado, 'grausSatisfacao' => $grausSatisfacao])
 
             {{-- Grafico de Evolucao dos Indicadores --}}
             @if($objetivoFiltrado && $objetivoFiltrado->indicadores->count() > 0)
@@ -550,7 +558,7 @@
                         <select wire:model.live="filtroVinculo" class="form-select">
                             <option value="">Todos os Vínculos</option>
                             <option value="Objetivo">Vínculo com Objetivo</option>
-                            <option value="Plano">Vínculo com Plano</option>
+                            <option value="Plano">Vínculo com Iniciativa</option>
                         </select>
                     </div>
                     <div class="col-md-3 text-end">
@@ -586,7 +594,7 @@
                             <th>Período / Unidade</th>
                             <th class="text-center">Polaridade</th>
                             <th>Performance</th>
-                            <th class="text-center" title="Planos de Ação vinculados (ROAD-005)">Planos</th>
+                            <th class="text-center" title="Iniciativas vinculadas (ROAD-005)">Iniciativas</th>
                             <th class="text-end pe-4">Ações</th>
                         </tr>
                     </thead>
@@ -606,7 +614,7 @@
                                     @else
                                         <div class="d-flex align-items-center gap-2 flex-wrap">
                                             <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3">
-                                                <i class="bi bi-list-task me-1"></i> Plano
+                                                <i class="bi bi-list-task me-1"></i> Iniciativa
                                             </span>
                                             @if($ind->dsc_calculation_type === 'action_plan')
                                                 <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2" 
@@ -668,7 +676,7 @@
                                         @endif
                                     </div>
                                 </td>
-                                {{-- Coluna: Planos de Ação vinculados (ROAD-005) --}}
+                                {{-- Coluna: Iniciativas vinculadas (ROAD-005) --}}
                                 <td class="text-center">
                                     @php $qtdPlanos = $ind->planosDeAcaoVinculados->count(); @endphp
                                     @if($qtdPlanos > 0)
@@ -679,7 +687,7 @@
                                         </span>
                                     @else
                                         <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-2"
-                                              data-bs-toggle="tooltip" title="Sem plano de ação vinculado">
+                                              data-bs-toggle="tooltip" title="Sem iniciativa vinculada">
                                             <i class="bi bi-exclamation-triangle"></i>
                                         </span>
                                     @endif
@@ -708,8 +716,12 @@
                                                 <li><button class="dropdown-item" wire:click="abrirLinhaBase('{{ $ind->cod_indicador }}')"><i class="bi bi-bar-chart-steps me-2 text-warning"></i> Linha de Base</button></li>
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li><h6 class="dropdown-header small text-uppercase">Configuração</h6></li>
+                                                @auth
                                                 <li><button class="dropdown-item" wire:click="edit('{{ $ind->cod_indicador }}')"><i class="bi bi-pencil me-2"></i> Editar</button></li>
+                                                @endauth
+                                                @auth
                                                 <li><button class="dropdown-item text-danger" wire:click="confirmDelete('{{ $ind->cod_indicador }}')"><i class="bi bi-trash me-2"></i> Excluir</button></li>
+                                                @endauth
                                             </ul>
                                         </div>
                                     </div>
@@ -828,7 +840,7 @@
 
                                                     <input type="radio" class="btn-check" wire:model.live="form.dsc_tipo" value="Plano" id="v_plan" autocomplete="off">
                                                     <label class="btn btn-outline-info border-0 rounded-pill flex-grow-1 py-2 fw-bold" for="v_plan">
-                                                        <i class="bi bi-list-task me-1"></i> Plano
+                                                        <i class="bi bi-list-task me-1"></i> Iniciativa
                                                     </label>
                                                 </div>
                                             </div>
@@ -850,7 +862,7 @@
                                                 </div>
                                             @else
                                                 <div class="mb-4 animate-fade-in">
-                                                    <label class="form-label text-muted small text-uppercase fw-bold">Selecionar Plano <span class="text-danger">*</span></label>
+                                                    <label class="form-label text-muted small text-uppercase fw-bold">Selecionar Iniciativa <span class="text-danger">*</span></label>
                                                     <select wire:model="form.cod_plano_de_acao" class="form-select bg-white border-0 shadow-sm fw-bold">
                                                         <option value="">Escolha o plano...</option>
                                                         @foreach($planosAgrupados as $objetivo => $plns)
@@ -864,7 +876,7 @@
                                                     @error('form.cod_plano_de_acao') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
                                                 </div>
 
-                                                {{-- Tipo de Cálculo: aparece apenas para Planos --}}
+                                                {{-- Tipo de Cálculo: aparece apenas para Iniciativas --}}
                                                 <div class="mb-4 animate-fade-in">
                                                     <label class="form-label text-muted small text-uppercase fw-bold">
                                                         <i class="bi bi-calculator me-1"></i>Método de Cálculo
@@ -1074,6 +1086,7 @@
     </style>
 
     {{-- Modal de Exclusão --}}
+    @auth
     <x-confirmation-modal wire:model.live="showDeleteModal">
         <x-slot name="title">
             <div class="modal-header-modern">
@@ -1115,6 +1128,7 @@
             </x-danger-button>
         </x-slot>
     </x-confirmation-modal>
+    @endauth
 
     <!-- Modal Metas -->
     <div class="modal fade @if($showMetasModal) show @endif" tabindex="-1" style="@if($showMetasModal) display: block; background: rgba(0,0,0,0.5); @else display: none; @endif">

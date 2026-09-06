@@ -15,7 +15,7 @@ class LinhaBaseIndicador extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_linha_base_indicador';
+    protected $table = 'performance_indicators.tab_linha_base_indicador';
 
     /**
      * Chave primária

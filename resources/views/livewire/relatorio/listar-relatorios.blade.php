@@ -105,6 +105,91 @@
                 </div>
             </div>
 
+            {{--
+                Relatório de Gestão — o documento que o órgão presta à sociedade.
+
+                Fica FORA do catálogo, e acima dele, de propósito: é o único
+                relatório aqui que sai também em .docx para a unidade completar,
+                e o único com duas variantes. Enfiá-lo no grid uniforme
+                esconderia justamente a escolha que o usuário precisa fazer.
+
+                🔴 Os dois botões dizem o que entregam. "Modelo oficial" traz o
+                esqueleto completo com as seções de fonte externa marcadas;
+                "Somente o que está preenchido" não traz seção vazia. Rótulo
+                que não avisa isso engana quem clica.
+            --}}
+            <h6 class="text-uppercase text-muted fw-bold mb-3 small tracking-wide ps-1">Relatório de Gestão</h6>
+            <div class="card border-0 shadow-sm rounded-4 mb-4 report-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="icon-shape icon-lg bg-success bg-opacity-10 text-success rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0"
+                             style="width: 48px; height: 48px;">
+                            <i class="bi bi-journal-richtext fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1">Relatório de Gestão {{ $anoSelecionado }}</h5>
+                            <p class="text-muted small mb-0">
+                                Prestação de contas anual do órgão, na estrutura do modelo oficial:
+                                visão geral, resultados do ciclo, gestão administrativa, riscos e
+                                informações contábeis. Sai em PDF para leitura e em Word para a
+                                unidade completar as seções que vêm de outros sistemas.
+                            </p>
+                        </div>
+                    </div>
+
+                    @if($organizacaoId)
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="border rounded-3 p-3 h-100">
+                                    <p class="fw-bold text-dark mb-1 small">Modelo oficial completo</p>
+                                    <p class="text-muted mb-3" style="font-size: .8rem;">
+                                        Todos os capítulos do modelo. As seções alimentadas por
+                                        Tesouro Gerencial, SIAPE, Comprasnet e SIOP aparecem marcadas,
+                                        com a fonte que as preenche.
+                                    </p>
+                                    <div class="d-flex gap-2">
+                                        <a class="btn btn-sm btn-outline-danger rounded-3"
+                                           href="{{ route('relatorios.gestao.pdf', ['organizacao_id' => $organizacaoId, 'ano' => $anoSelecionado, 'variante' => 'replica']) }}"
+                                           target="_blank">
+                                            <i class="bi bi-file-pdf me-1"></i>PDF
+                                        </a>
+                                        <a class="btn btn-sm btn-outline-primary rounded-3"
+                                           href="{{ route('relatorios.gestao.docx', ['organizacao_id' => $organizacaoId, 'ano' => $anoSelecionado, 'variante' => 'replica']) }}">
+                                            <i class="bi bi-file-word me-1"></i>Word
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded-3 p-3 h-100">
+                                    <p class="fw-bold text-dark mb-1 small">Somente o que está preenchido</p>
+                                    <p class="text-muted mb-3" style="font-size: .8rem;">
+                                        Apenas as seções com informação registrada no Planejamento
+                                        Estratégico Institucional. Nenhuma seção vazia, nenhuma
+                                        marcação — pronto para apresentar.
+                                    </p>
+                                    <div class="d-flex gap-2">
+                                        <a class="btn btn-sm btn-outline-danger rounded-3"
+                                           href="{{ route('relatorios.gestao.pdf', ['organizacao_id' => $organizacaoId, 'ano' => $anoSelecionado, 'variante' => 'autoral']) }}"
+                                           target="_blank">
+                                            <i class="bi bi-file-pdf me-1"></i>PDF
+                                        </a>
+                                        <a class="btn btn-sm btn-outline-primary rounded-3"
+                                           href="{{ route('relatorios.gestao.docx', ['organizacao_id' => $organizacaoId, 'ano' => $anoSelecionado, 'variante' => 'autoral']) }}">
+                                            <i class="bi bi-file-word me-1"></i>Word
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <p class="text-muted small mb-0">
+                            <i class="bi bi-info-circle me-1"></i>Selecione uma organização para gerar o Relatório de Gestão.
+                        </p>
+                    @endif
+                </div>
+            </div>
+
             <!-- Reports Grid -->
             <h6 class="text-uppercase text-muted fw-bold mb-3 small tracking-wide ps-1">Catálogo de Relatórios</h6>
             <div class="row g-3">
@@ -113,7 +198,7 @@
                 @php
                     $reports = [
                         [
-                            'title' => 'Dossiê Estratégico Integrado',
+                            'title' => 'Relatório Estratégico Integrado',
                             'desc' => 'Relatório completo unificando todas as visões estratégicas.',
                             'icon' => 'bi-collection-play',
                             'color' => 'success', // Alterado para success para garantir visual Premium com opacidade
@@ -156,7 +241,7 @@
                             'type' => 'indicadores'
                         ],
                         [
-                            'title' => 'Planos de Ação',
+                            'title' => 'Iniciativas',
                             'desc' => 'Cronogramas e status.',
                             'icon' => 'bi-list-check',
                             'color' => 'secondary',
@@ -203,11 +288,24 @@
                                                 </li>
                                                 @endif
                                                 <li><hr class="dropdown-divider"></li>
+                                                {{-- "Agendar Envio" só aparece se houver como enviar.
+                                                     Oferecer o agendamento com o serviço parado é
+                                                     prometer um e-mail que nunca sai. --}}
+                                                @if(App\Support\AgendadorDeRelatorios::ativo())
                                                 <li>
                                                     <button class="dropdown-item py-2" wire:click="$dispatch('abrirAgendamento', { tipo: '{{ $report['type'] }}', filtros: @js($this->getQueryParamsProperty()) })">
                                                         <i class="bi bi-clock-history text-primary me-2"></i>Agendar Envio
                                                     </button>
                                                 </li>
+                                                @else
+                                                <li>
+                                                    <span class="dropdown-item py-2 text-muted small" style="white-space: normal; max-width: 260px;">
+                                                        <i class="bi bi-clock-history me-2"></i>
+                                                        Envio automático indisponível — a tarefa agendada do
+                                                        servidor não está em execução.
+                                                    </span>
+                                                </li>
+                                                @endif
                                             @else
                                                 <li><span class="dropdown-item disabled text-muted">Selecione uma organização</span></li>
                                             @endif

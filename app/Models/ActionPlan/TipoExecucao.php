@@ -15,7 +15,7 @@ class TipoExecucao extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_tipo_execucao';
+    protected $table = 'action_plan.tab_tipo_execucao';
 
     /**
      * Chave primária
@@ -43,11 +43,13 @@ class TipoExecucao extends Model
      * Constantes de tipos pré-definidos
      */
     const ACAO = 'c00b9ebc-7014-4d37-97dc-7875e55fff1b';
+
     const INICIATIVA = 'ecef6a50-c010-4cda-afc3-cbda245b55b0';
+
     const PROJETO = '57518c30-3bc5-4305-a998-8ce8b11550ed';
 
     /**
-     * Relacionamento: Planos de Ação deste tipo
+     * Relacionamento: Iniciativas deste tipo
      */
     public function planosAcao(): HasMany
     {

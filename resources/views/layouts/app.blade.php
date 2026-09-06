@@ -155,7 +155,7 @@
                             'icon'  => 'graph-up',
                         ],
                         [
-                            'label' => 'Planos de Ação',
+                            'label' => 'Iniciativas',
                             'route' => 'planos.index',
                             'icon'  => 'list-task',
                         ],
@@ -264,6 +264,11 @@
                             'label' => 'Usuários',
                             'route' => 'usuarios.index',
                             'icon'  => 'people',
+                        ],
+                        [
+                            'label' => 'Papéis e Responsabilidades',
+                            'route' => 'ajuda.papeis',
+                            'icon'  => 'question-circle',
                         ],
                         [
                             'label' => 'Perfis de Acesso',

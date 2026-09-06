@@ -20,6 +20,11 @@ use Illuminate\Database\Seeder;
  *   1. PerfilAcessoSeeder        — garante os 4 perfis de acesso
  *   2. OrganizacaoRaizSeeder     — garante a organização raiz
  *   3. SuperAdministradorSeeder  — garante o usuário e seus dois vínculos
+ *   4. TipoExecucaoSeeder        — garante os tipos de Iniciativa (Ação, Projeto)
+ *
+ * A etapa 4 é o que faz a opção nova chegar ao cliente JÁ INSTALADO: vocabulário
+ * controlado semeado dentro do up() de uma migration nunca alcança quem já rodou
+ * aquela migration. Aqui, o mesmo `db:seed` serve instalação nova e antiga.
  *
  * A truncagem saiu daqui: era exigência de um cliente específico, já atendida no
  * último deploy, e mantê-la no caminho padrão do `db:seed` colocava todo banco a
@@ -41,6 +46,7 @@ class DatabaseSeeder extends Seeder
             PerfilAcessoSeeder::class,
             OrganizacaoRaizSeeder::class,
             SuperAdministradorSeeder::class,
+            TipoExecucaoSeeder::class,
         ]);
 
         $this->exibirCredenciais();

@@ -192,7 +192,7 @@
                     <a href="{{ route('pei.pestel') }}" wire:navigate class="btn btn-xs btn-outline-success py-1 px-2 small"><i class="bi bi-diagram-3 me-1"></i>PESTEL</a>
                     <a href="{{ route('objetivos.index') }}" wire:navigate class="btn btn-xs btn-outline-success py-1 px-2 small"><i class="bi bi-bullseye me-1"></i>Objetivos</a>
                     <a href="{{ route('indicadores.index') }}" wire:navigate class="btn btn-xs btn-outline-success py-1 px-2 small"><i class="bi bi-graph-up me-1"></i>Indicadores</a>
-                    <a href="{{ route('planos.index') }}" wire:navigate class="btn btn-xs btn-outline-success py-1 px-2 small"><i class="bi bi-list-check me-1"></i>Planos</a>
+                    <a href="{{ route('planos.index') }}" wire:navigate class="btn btn-xs btn-outline-success py-1 px-2 small"><i class="bi bi-list-check me-1"></i>Iniciativas</a>
                 </div>
             </div>
         </div>
@@ -305,7 +305,7 @@
             'mapa' => ['label' => 'Mapa', 'icon' => 'bi-map'],
             'objetivos' => ['label' => 'Objetivos', 'icon' => 'bi-bullseye'],
             'indicadores' => ['label' => 'Indicadores', 'icon' => 'bi-graph-up'],
-            'planos' => ['label' => 'Planos', 'icon' => 'bi-list-check']
+            'planos' => ['label' => 'Iniciativas', 'icon' => 'bi-list-check']
         ];
     @endphp
     
@@ -480,7 +480,7 @@
             <div class="d-flex flex-column gap-4 h-100">
                 <div class="glass-panel flex-grow-1 d-flex flex-column border"> <!-- Border restaurado -->
                     <div class="glass-header bg-transparent border-bottom border-light py-3">
-                        <h5 class="fw-bold text-dark mb-0 fs-6">Status dos Planos</h5>
+                        <h5 class="fw-bold text-dark mb-0 fs-6">Status das Iniciativas</h5>
                         <small class="text-muted d-block" style="font-size: 0.75rem;">Distribuição dos planos ativos no ano.</small>
                     </div>
                     <div class="p-4 flex-grow-1 d-flex align-items-center justify-content-center">

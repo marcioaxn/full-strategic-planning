@@ -26,33 +26,37 @@
         </div>
     @else
 
-    {{-- Diagrama Visual --}}
-    @php
-        $finalisticas = $atividades->get('Finalística', collect());
-        $suporte      = $atividades->get('Suporte', collect());
-    @endphp
+    {{--
+        Diagrama Visual — um bloco por tipo declarado em
+        AtividadeCadeiaValor::TIPOS, montado em CadeiaDeValor::agruparPorTipo().
 
-    {{-- Atividades Finalísticas --}}
+        Antes havia dois blocos escritos à mão ('Finalística' e 'Suporte'). Com
+        eles, acrescentar um tipo fazia a opção aparecer no combo, o cliente
+        salvar — e a atividade sumir da tela, porque nenhum bloco a lia.
+    --}}
+    @foreach($grupos as $grupo)
     <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-primary bg-opacity-10 border-0 py-3 px-4">
+        <div class="card-header bg-{{ $grupo['cor'] }} bg-opacity-10 border-0 py-3 px-4">
             <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-arrow-right-circle-fill text-primary fs-5"></i>
+                <i class="bi {{ $grupo['icone'] }} text-{{ $grupo['cor'] }} fs-5"></i>
                 <div>
-                    <h6 class="fw-bold mb-0 text-primary">Atividades Finalísticas</h6>
-                    <small class="text-muted">Produtos e serviços entregues diretamente à sociedade</small>
+                    <h6 class="fw-bold mb-0 text-{{ $grupo['cor'] }}">{{ $grupo['titulo'] }}</h6>
+                    @if($grupo['ajuda'])
+                        <small class="text-muted">{{ $grupo['ajuda'] }}</small>
+                    @endif
                 </div>
-                <span class="badge bg-primary ms-auto">{{ $finalisticas->count() }}</span>
+                <span class="badge bg-{{ $grupo['cor'] }} ms-auto">{{ $grupo['itens']->count() }}</span>
             </div>
         </div>
         <div class="card-body p-3">
-            @if($finalisticas->isEmpty())
+            @if($grupo['itens']->isEmpty())
                 <div class="text-center py-4 text-muted">
-                    <i class="bi bi-arrow-right-circle fs-1 opacity-25 d-block mb-2"></i>
-                    <p class="small mb-0">Nenhuma atividade finalística cadastrada.</p>
+                    <i class="bi {{ $grupo['icone'] }} fs-1 opacity-25 d-block mb-2"></i>
+                    <p class="small mb-0">Nenhum item cadastrado em {{ $grupo['titulo'] }}.</p>
                 </div>
             @else
                 <div class="row g-3">
-                    @foreach($finalisticas as $ativ)
+                    @foreach($grupo['itens'] as $ativ)
                     <div class="col-md-4">
                         @include('livewire.p-e-i.partials.cadeia-card', ['ativ' => $ativ])
                     </div>
@@ -61,41 +65,12 @@
             @endif
         </div>
     </div>
-
-    {{-- Atividades de Suporte --}}
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-secondary bg-opacity-10 border-0 py-3 px-4">
-            <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-columns-gap text-secondary fs-5"></i>
-                <div>
-                    <h6 class="fw-bold mb-0 text-secondary">Atividades de Suporte</h6>
-                    <small class="text-muted">Infraestrutura, RH, tecnologia e processos internos de apoio</small>
-                </div>
-                <span class="badge bg-secondary ms-auto">{{ $suporte->count() }}</span>
-            </div>
-        </div>
-        <div class="card-body p-3">
-            @if($suporte->isEmpty())
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-columns-gap fs-1 opacity-25 d-block mb-2"></i>
-                    <p class="small mb-0">Nenhuma atividade de suporte cadastrada.</p>
-                </div>
-            @else
-                <div class="row g-3">
-                    @foreach($suporte as $ativ)
-                    <div class="col-md-4">
-                        @include('livewire.p-e-i.partials.cadeia-card', ['ativ' => $ativ])
-                    </div>
-                    @endforeach
-                </div>
-            @endif
-        </div>
-    </div>
+    @endforeach
 
     {{-- Modal: Atividade --}}
     @if($showModalAtividade)
     <div class="modal fade show" tabindex="-1" style="display:block;background:rgba(0,0,0,.5);z-index:1055;" wire:click.self="$set('showModalAtividade',false)">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-header gradient-theme-header text-white border-0 py-3 px-4">
                     <h5 class="modal-title fw-bold"><i class="bi bi-diagram-2 me-2"></i>{{ $atividadeEditId ? 'Editar' : 'Nova' }} Atividade</h5>

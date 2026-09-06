@@ -1,5 +1,9 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Seeders\SeederTestCase;
+use Tests\TestCase;
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -11,8 +15,8 @@
 |
 */
 
-pest()->extend(Tests\TestCase::class)
-    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
     ->in('Feature');
 
 /*
@@ -20,7 +24,7 @@ pest()->extend(Tests\TestCase::class)
  * RefreshDatabase — a própria seed é responsável por limpar e repovoar o banco.
  * Ver tests/Seeders/SeederTestCase.php para as garantias e as travas de segurança.
  */
-pest()->extend(Tests\Seeders\SeederTestCase::class)->in('Seeders');
+pest()->extend(SeederTestCase::class)->in('Seeders');
 
 /*
 |--------------------------------------------------------------------------

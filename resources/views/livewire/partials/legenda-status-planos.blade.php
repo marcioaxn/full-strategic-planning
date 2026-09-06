@@ -6,7 +6,7 @@
     <div class="card-body py-2 px-4 bg-white rounded-3">
         <div class="d-flex align-items-center flex-wrap gap-4">
             <span class="small fw-bold text-muted text-uppercase me-2">
-                <i class="bi bi-info-circle me-1"></i>Legenda Status (Planos):
+                <i class="bi bi-info-circle me-1"></i>Legenda de Status (Iniciativas):
             </span>
             @foreach($legendaPlanos as $item)
                 <div class="d-flex align-items-center">

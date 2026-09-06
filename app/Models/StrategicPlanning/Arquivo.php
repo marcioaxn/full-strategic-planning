@@ -16,7 +16,7 @@ class Arquivo extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_arquivos';
+    protected $table = 'strategic_planning.tab_arquivos';
 
     /**
      * Chave primária
@@ -70,6 +70,7 @@ class Arquivo extends Model
     public function isImagem(): bool
     {
         $extensoes = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'];
+
         return in_array(strtolower($this->getExtensao()), $extensoes);
     }
 
@@ -99,6 +100,6 @@ class Arquivo extends Model
     public function scopeRecentes($query, int $dias = 30)
     {
         return $query->where('created_at', '>=', now()->subDays($dias))
-                     ->orderBy('created_at', 'desc');
+            ->orderBy('created_at', 'desc');
     }
 }

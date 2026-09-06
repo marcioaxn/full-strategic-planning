@@ -26,7 +26,7 @@
                     'objetivos'    => ['icon' => 'bullseye',    'tip' => 'Objetivos'],
                     'graus'        => ['icon' => 'palette',     'tip' => 'Graus'],
                     'indicadores'  => ['icon' => 'graph-up',    'tip' => 'Indicadores'],
-                    'planos'       => ['icon' => 'list-check',  'tip' => 'Planos'],
+                    'planos'       => ['icon' => 'list-check',  'tip' => 'Iniciativas'],
                 ];
             @endphp
             @foreach($stepIcons as $key => $meta)

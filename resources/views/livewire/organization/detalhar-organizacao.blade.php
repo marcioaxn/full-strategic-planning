@@ -65,7 +65,7 @@
                             <i class="bi bi-kanban text-warning fs-4"></i>
                         </div>
                         <div>
-                            <h6 class="card-subtitle text-muted mb-1">Planos de Ação</h6>
+                            <h6 class="card-subtitle text-muted mb-1">Iniciativas</h6>
                             <h4 class="card-title mb-0">{{ $estatisticas['qtd_planos'] }}</h4>
                         </div>
                     </div>
@@ -170,7 +170,7 @@
                             <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">Usuários</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="planos-tab" data-bs-toggle="tab" data-bs-target="#planos" type="button" role="tab">Planos de Ação</button>
+                            <button class="nav-link" id="planos-tab" data-bs-toggle="tab" data-bs-target="#planos" type="button" role="tab">Iniciativas</button>
                         </li>
                     </ul>
                 </div>
@@ -215,13 +215,13 @@
                             </div>
                         </div>
 
-                        <!-- Planos Tab -->
+                        <!-- Aba de Iniciativas -->
                         <div class="tab-pane fade" id="planos" role="tabpanel">
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>Plano</th>
+                                            <th>Iniciativa</th>
                                             <th>Responsável</th>
                                             <th>Status</th>
                                         </tr>
@@ -236,7 +236,7 @@
                                         @empty
                                             <tr>
                                                 <td colspan="3" class="text-center py-4 text-muted">
-                                                    Nenhum plano de ação vinculado.
+                                                    Nenhuma iniciativa vinculada.
                                                 </td>
                                             </tr>
                                         @endforelse

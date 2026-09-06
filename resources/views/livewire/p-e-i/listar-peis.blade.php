@@ -216,7 +216,7 @@
                                     <div class="bg-white rounded-3 p-3 h-100 text-body shadow-sm border">
                                         <div class="d-flex align-items-center gap-2 mb-2">
                                             <span class="badge bg-primary text-white fw-bold px-2 py-1">6º</span>
-                                            <h6 class="fw-bold mb-0 small text-dark">Planos de Ação</h6>
+                                            <h6 class="fw-bold mb-0 small text-dark">Iniciativas</h6>
                                         </div>
                                         <p class="small mb-2 text-muted">Crie projetos e iniciativas para alcançar os objetivos.</p>
                                         <div class="bg-light rounded p-2 small border">
@@ -613,7 +613,7 @@
                         <li>{{ $impactoExclusao['perspectivas'] ?? 0 }} Perspectivas</li>
                         <li>{{ $impactoExclusao['objetivos'] ?? 0 }} Objetivos</li>
                         <li>{{ $impactoExclusao['indicadores'] ?? 0 }} Indicadores</li>
-                        <li>{{ $impactoExclusao['planos'] ?? 0 }} Planos de Ação</li>
+                        <li>{{ $impactoExclusao['planos'] ?? 0 }} Iniciativas</li>
                     </ul>
                 </div>
             </div>

@@ -1277,3 +1277,8 @@ body {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
+
+
+// Alvo de toque minimo (WCAG 2.5.5). O botao de icone da navbar publica
+// tinha 40x40 no desktop e 46x30 no celular.
+.btn-icon { min-width: 44px; min-height: 44px; }

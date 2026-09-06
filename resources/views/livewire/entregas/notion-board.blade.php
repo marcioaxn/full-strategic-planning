@@ -6,7 +6,7 @@
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('planos.index') }}" wire:navigate class="text-decoration-none">Planos de Ação</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('planos.index') }}" wire:navigate class="text-decoration-none">Iniciativas</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Entregas</li>
                     </ol>
                 </nav>
@@ -64,8 +64,8 @@
                         <i class="bi bi-info-circle me-2"></i>{{ __('O que são Entregas?') }}
                     </h6>
                     <p class="text-muted mb-3">
-                        <strong>Entregas</strong> (ou Marcos) são os <strong>passos operacionais concretos</strong> que compõem um Plano de Ação.
-                        Enquanto o Plano de Ação define o "o quê" em alto nível, as Entregas detalham o "como" passo a passo,
+                        <strong>Entregas</strong> (ou Marcos) são os <strong>passos operacionais concretos</strong> que compõem uma Iniciativa.
+                        Enquanto a Iniciativa define o "o quê" em alto nível, as Entregas detalham o "como" passo a passo,
                         transformando grandes projetos em <strong>tarefas gerenciáveis</strong>.
                     </p>
                     <p class="text-muted mb-0">
@@ -239,7 +239,7 @@
                 {{-- Exemplo Prático --}}
                 <div class="mb-4 pb-4 border-bottom">
                     <h6 class="fw-bold text-primary mb-3">
-                        <i class="bi bi-star me-2"></i>{{ __('Exemplo: Plano "Modernizar Atendimento" dividido em Entregas') }}
+                        <i class="bi bi-star me-2"></i>{{ __('Exemplo: Iniciativa "Modernizar Atendimento" dividida em Entregas') }}
                     </h6>
 
                     <div class="table-responsive">

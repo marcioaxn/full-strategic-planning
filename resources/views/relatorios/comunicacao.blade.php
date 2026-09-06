@@ -3,16 +3,9 @@
 <head>
     <meta charset="utf-8">
     <title>Plano de Comunicação — {{ $organizacao?->nom_organizacao }}</title>
-    @include('relatorios.partials.estilos')
+    @include('relatorios.partials.estilos', ['orientacao' => 'portrait'])
 </head>
 <body>
-    @include('relatorios.partials.cabecalho', [
-        'rptTitulo'    => 'Plano de Comunicação',
-        'rptEyebrow'   => 'Guia de Projetos · Domínio 5 — Partes Interessadas e Comunicação',
-        'rptSubtitulo' => ($organizacao?->nom_organizacao ?? 'Todas as Unidades') . ($pei ? ' · ' . $pei->dsc_pei : ''),
-        'rptIcon'      => '&#9993;',
-    ])
-    @include('relatorios.partials.rodape')
 
     @php
         $totalItems  = $planos->sum(fn($p) => $p->comunicacoes->count());
@@ -33,7 +26,7 @@
     <table class="kpi-grid">
         <tr>
             <td class="kpi-card" style="width:33%;">
-                <p class="kpi-label">Planos com Comunicação</p>
+                <p class="kpi-label">Iniciativas com Comunicação</p>
                 <p class="kpi-value">{{ $totalPlanos }}</p>
                 <p class="kpi-sub">iniciativas com plano definido</p>
             </td>
@@ -80,7 +73,7 @@
         </table>
     </div>
     @empty
-    <div class="vazio">Nenhum item de comunicação cadastrado nos planos de ação desta organização/ciclo PEI.</div>
+    <div class="vazio">Nenhum item de comunicação cadastrado nas iniciativas desta organização/ciclo PEI.</div>
     @endforelse
 </body>
 </html>

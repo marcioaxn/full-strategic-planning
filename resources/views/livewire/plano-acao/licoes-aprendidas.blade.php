@@ -20,7 +20,7 @@
             <div class="row g-2 align-items-center">
                 <div class="col-md-5">
                     <select wire:model.live="planoFiltro" class="form-select">
-                        <option value="">Todos os Planos de Ação</option>
+                        <option value="">Todos as Iniciativas</option>
                         @foreach($planos as $pl)
                             <option value="{{ $pl->cod_plano_de_acao }}">{{ Str::limit($pl->dsc_plano_de_acao, 60) }}</option>
                         @endforeach
@@ -102,7 +102,7 @@
                     <div class="modal-body p-4">
                         <div class="row g-3">
                             <div class="col-12">
-                                <label class="form-label fw-bold small text-uppercase text-muted">Plano de Ação <span class="text-danger">*</span></label>
+                                <label class="form-label fw-bold small text-uppercase text-muted">Iniciativa <span class="text-danger">*</span></label>
                                 <select wire:model="form.cod_plano_de_acao" class="form-select @error('form.cod_plano_de_acao') is-invalid @enderror">
                                     <option value="">Selecione o plano...</option>
                                     @foreach($planos as $pl)

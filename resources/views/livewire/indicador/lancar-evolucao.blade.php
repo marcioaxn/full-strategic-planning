@@ -55,19 +55,56 @@
 
                     <form wire:submit.prevent="salvar">
                         <div class="row g-3 mb-4">
+                            {{--
+                                Campo de TEXTO, não type="number".
+
+                                O input numérico do HTML só aceita o formato
+                                neutro (20000000000.00). Em navegador pt-BR ele
+                                recusa ponto de milhar e vírgula decimal SEM
+                                mensagem nenhuma — foi assim que
+                                R$ 20.000.000.000,00 não entrou.
+
+                                A máscara e o número de casas vêm da unidade de
+                                medida do indicador (App\Support\UnidadeMedida).
+                            --}}
+                            @php
+                                $regraUnidade = \App\Support\UnidadeMedida::regra($indicador->dsc_unidade_medida);
+                                $ajudaUnidade = \App\Support\UnidadeMedida::ajuda($indicador->dsc_unidade_medida);
+                            @endphp
+
                             <div class="col-md-6">
                                 <label class="form-label text-muted small text-uppercase fw-bold">Valor Previsto</label>
                                 <div class="input-group">
-                                    <input type="number" step="0.01" wire:model="vlr_previsto" class="form-control" placeholder="0,00">
+                                    @if($regraUnidade['prefixo'])
+                                        <span class="input-group-text bg-white small text-muted">{{ $regraUnidade['prefixo'] }}</span>
+                                    @endif
+                                    <input type="text"
+                                           inputmode="decimal"
+                                           wire:model="vlr_previsto"
+                                           x-mask:dynamic="$money($input, ',', '.', {{ $regraUnidade['casas'] }})"
+                                           class="form-control text-end"
+                                           placeholder="{{ $regraUnidade['casas'] > 0 ? '0,' . str_repeat('0', $regraUnidade['casas']) : '0' }}">
                                     <span class="input-group-text bg-white small text-muted">{{ $indicador->dsc_unidade_medida }}</span>
                                 </div>
+                                <small class="text-muted x-small">{{ $ajudaUnidade }}</small>
+                                @error('vlr_previsto') <div class="text-danger x-small">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-muted small text-uppercase fw-bold">Valor Realizado</label>
                                 <div class="input-group">
-                                    <input type="number" step="0.01" wire:model="vlr_realizado" class="form-control fw-bold" placeholder="0,00">
+                                    @if($regraUnidade['prefixo'])
+                                        <span class="input-group-text bg-white small text-muted">{{ $regraUnidade['prefixo'] }}</span>
+                                    @endif
+                                    <input type="text"
+                                           inputmode="decimal"
+                                           wire:model="vlr_realizado"
+                                           x-mask:dynamic="$money($input, ',', '.', {{ $regraUnidade['casas'] }})"
+                                           class="form-control fw-bold text-end"
+                                           placeholder="{{ $regraUnidade['casas'] > 0 ? '0,' . str_repeat('0', $regraUnidade['casas']) : '0' }}">
                                     <span class="input-group-text bg-white small text-muted">{{ $indicador->dsc_unidade_medida }}</span>
                                 </div>
+                                <small class="text-muted x-small">{{ $ajudaUnidade }}</small>
+                                @error('vlr_realizado') <div class="text-danger x-small">{{ $message }}</div> @enderror
                             </div>
                         </div>
 

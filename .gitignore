@@ -53,6 +53,11 @@ service-account*.json
 !/.claude/hooks/
 /.claude/settings.local.json
 /.claude/seguranca-em-aberto.md
+
+# CLAUDE.md e contexto de trabalho, nao produto: carrega premissas herdadas de
+# outros projetos, o perfil de quem le as entregas e o mapa da arquitetura.
+# Este repositorio e publico. O que e regra do CODIGO vive em CONTRIBUTING.md.
+/CLAUDE.md
 /.rtk/*
 !/.rtk/filters.toml
 /.agent

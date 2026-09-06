@@ -1,119 +1,176 @@
-{{-- Sistema de Design compartilhado dos Relatórios PDF — alinhado ao GPPEI --}}
+{{--
+    SISTEMA DE DESIGN DOS RELATÓRIOS EM PDF.
+
+    Um arquivo só, para os onze relatórios. Não foi inventado: a linguagem
+    visual veio de medição do Relatório de Gestão 2025 da Presidência da
+    República (documentacao/relatorios/RelatriodeGesto2025PReVPR31mar.pdf),
+    rasterizado página a página — paleta por amostragem de pixel, grid e
+    tipografia conferidos na página impressa.
+
+    🔴 O QUE ESTE ARQUIVO **NÃO** DECLARA: cabeçalho e rodapé.
+
+    Os dois são desenhados no canvas, por App\Services\Reports\AcabamentoPdf,
+    para os onze relatórios. Motivo: elemento `position: fixed` do DomPDF é
+    desenhado também na capa e permanece na camada de texto mesmo coberto —
+    quem selecionasse a capa copiaria "PÁGINA 1" de uma página que não mostra
+    nada disso. A margem de `@page` aqui é o que RESERVA o espaço deles.
+
+    PARÂMETROS
+      $orientacao  'portrait' (padrão) ou 'landscape'
+
+    A orientação é escolha de cada relatório: uma tabela de indicadores com
+    meta, realizado e farol por ano pede paisagem; uma lista de objetivos ou um
+    texto executivo se lê melhor em retrato.
+--}}
 <style>
-    @page { margin: 110px 35px 70px 35px; }
+    /*
+       Margem SIMÉTRICA em cima e embaixo (74px), e igual nos lados (52px).
+
+       Os 74px verticais reservam a faixa de cabeçalho e de rodapé, que o
+       AcabamentoPdf desenha a 46,5pt de cada borda — a mesma constante nas
+       duas pontas, para a simetria não poder quebrar pela metade.
+    */
+    @page { size: a4 {{ $orientacao ?? 'portrait' }}; margin: 74px 52px 74px 52px; }
 
     * { box-sizing: border-box; }
+
     body {
-        font-family: 'Helvetica', 'Arial', sans-serif;
-        font-size: 10px; color: #2d3748; line-height: 1.5;
+        font-family: 'DejaVu Sans', 'Helvetica', sans-serif;
+        font-size: 9.5px;
+        color: #2C2E35;              /* grafite do modelo */
+        line-height: 1.5;
         margin: 0; padding: 0;
     }
 
-    /* ─── Paleta GPPEI ─── */
-    /* primary #1B408E · navy #1a3a5c · accent #e07b39 · success #2e8b57 */
+    /* ─────────────── Paleta medida no modelo ───────────────
+       verde #54B347 · verde escuro #3D9B33 · grafite #2C2E35
+       cinza #95969A · cinza escuro #595959 · amarelo #EDC009
+       azul #3550A0 · vermelho #FF361E · verde claro #F4FBF3   */
 
-    /* ─── Cabeçalho fixo (repete em todas as páginas) ─── */
-    .rpt-header {
-        position: fixed; top: -85px; left: 0; right: 0; height: 78px;
-        background: linear-gradient(120deg, #1a3a5c 0%, #1B408E 60%, #2e5aa8 100%);
-        border-radius: 0 0 10px 10px;
-        padding: 12px 22px; color: #fff;
+    /* ─────────────── Títulos ─────────────── */
+    .rpt-doc-titulo {
+        font-size: 17px; font-weight: bold; color: #3D9B33;
+        margin: 0 0 4px 0; page-break-after: avoid;
     }
-    .rpt-header-table { width: 100%; border-collapse: collapse; }
-    .rpt-header-icon {
-        width: 46px; height: 46px; border-radius: 10px;
-        background: rgba(255,255,255,.16); text-align: center; vertical-align: middle;
-    }
-    .rpt-header-icon span { font-size: 22px; line-height: 46px; color: #fff; }
-    .rpt-eyebrow { font-size: 7.5px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,.65); margin: 0; }
-    .rpt-title { font-size: 17px; font-weight: bold; color: #fff; margin: 1px 0 0 0; letter-spacing: -.3px; }
-    .rpt-subtitle { font-size: 9px; color: rgba(255,255,255,.8); margin: 2px 0 0 0; }
-    .rpt-header-meta { text-align: right; vertical-align: middle; font-size: 8px; color: rgba(255,255,255,.85); }
-    .rpt-header-meta strong { color: #fff; }
-    .rpt-accent-bar { height: 3px; background: #e07b39; border-radius: 2px; margin-top: 6px; }
+    .rpt-doc-sub { font-size: 9.5px; color: #595959; margin: 0 0 14px 0; }
 
-    /* ─── Rodapé fixo com numeração ─── */
-    .rpt-footer {
-        position: fixed; bottom: -48px; left: 0; right: 0; height: 38px;
-        border-top: 1px solid #e2e8f0; padding-top: 6px;
-        font-size: 7.5px; color: #a0aec0;
-    }
-    .rpt-footer-table { width: 100%; border-collapse: collapse; }
-    .rpt-footer .pagenum:after { content: counter(page); }
-    .rpt-footer .pagecount:after { content: counter(pages); }
-
-    /* ─── Faixa de filtros ─── */
-    .rpt-filtros {
-        background: #f7fafc; border: 1px solid #e2e8f0; border-left: 3px solid #1B408E;
-        border-radius: 6px; padding: 8px 14px; margin-bottom: 18px; font-size: 8.5px;
-    }
-    .rpt-filtros span { margin-right: 18px; color: #4a5568; }
-    .rpt-filtros strong { color: #1a3a5c; }
-
-    /* ─── Cards de KPI ─── */
-    .kpi-grid { width: 100%; border-collapse: separate; border-spacing: 8px 0; margin-bottom: 18px; }
-    .kpi-card {
-        background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
-        border-top: 3px solid #1B408E; padding: 12px 14px; vertical-align: top;
-    }
-    .kpi-card.accent { border-top-color: #e07b39; }
-    .kpi-card.success { border-top-color: #2e8b57; }
-    .kpi-card.danger  { border-top-color: #dc3545; }
-    .kpi-card.warning { border-top-color: #d97706; }
-    .kpi-label { font-size: 7.5px; font-weight: bold; text-transform: uppercase; letter-spacing: .5px; color: #718096; margin: 0; }
-    .kpi-value { font-size: 24px; font-weight: bold; color: #1a3a5c; margin: 3px 0 0 0; line-height: 1; }
-    .kpi-sub { font-size: 7.5px; color: #a0aec0; margin: 3px 0 0 0; }
-
-    /* ─── Títulos de seção ─── */
     .secao-titulo {
-        font-size: 12px; font-weight: bold; color: #1a3a5c;
-        border-bottom: 2px solid #e07b39; padding-bottom: 5px; margin: 22px 0 12px 0;
+        font-size: 12px; font-weight: bold; color: #2C2E35;
+        border-bottom: 1.5px solid #54B347; padding-bottom: 4px;
+        margin: 18px 0 9px 0; page-break-after: avoid;
     }
-    .secao-titulo .bi-num { color: #e07b39; }
+    .secao-sub { font-size: 9px; color: #595959; margin: -4px 0 9px 0; }
 
-    /* ─── Faixa de perspectiva/grupo ─── */
+    .rpt-corpo { text-align: justify; margin: 0 0 8px 0; }
+
+    /* ─────────────── Corpo em colunas ───────────────
+       O DomPDF 3 não implementa column-count. As colunas são reproduzidas com
+       tabela: o texto não flui sozinho de uma para a outra, então quem monta a
+       seção decide o que vai em cada coluna. */
+    table.rpt-colunas { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+    table.rpt-colunas td { vertical-align: top; text-align: justify; padding-right: 22px; }
+    table.rpt-colunas td.rpt-ultima { padding-right: 0; }
+
+    /* ─────────────── Faixa de filtros aplicados ───────────────
+       O leitor precisa saber de que recorte o número saiu. Sem isto, dois
+       relatórios do mesmo módulo com totais diferentes parecem contradição. */
+    .rpt-filtros {
+        border: 1px solid #D3EED1; background: #F4FBF3;
+        padding: 7px 12px; margin-bottom: 14px; font-size: 8.5px;
+    }
+    .rpt-filtros span { margin-right: 18px; color: #595959; }
+    .rpt-filtros strong { color: #2C2E35; }
+
+    /* ─────────────── Cartões de número (KPI) ───────────────
+       Nomes mantidos (`kpi-*`): são os que os onze relatórios já usam. O que
+       mudou foi só a linguagem visual — do azul/laranja anterior para a paleta
+       medida no modelo. Renomear a classe daria churn em dez arquivos sem
+       entregar nada ao cliente. */
+    table.kpi-grid { width: 100%; border-collapse: separate; border-spacing: 7px 0; margin-bottom: 14px; }
+    .kpi-card {
+        border: 1px solid #D3EED1; background: #F4FBF3;
+        border-top: 2.5px solid #54B347;
+        padding: 11px 12px; text-align: center; vertical-align: top;
+    }
+    .kpi-label { font-size: 7.5px; font-weight: bold; text-transform: uppercase; letter-spacing: .05em; color: #595959; margin: 0; }
+    .kpi-value { font-size: 20px; font-weight: bold; color: #3D9B33; margin: 4px 0 0 0; line-height: 1.1; }
+    .kpi-sub { font-size: 7.5px; color: #95969A; margin: 3px 0 0 0; }
+
+    /* Variantes: a cor só entra quando o número CARREGA um juízo. Cartão de
+       contagem ("total de indicadores") não tem juízo nenhum e fica neutro. */
+    .kpi-card.accent  { border-top-color: #EDC009; }
+    .kpi-card.accent .kpi-value  { color: #8A7200; }
+    .kpi-card.success { border-top-color: #54B347; }
+    .kpi-card.danger  { border-top-color: #FF361E; background: #FDF1F0; border-color: #F0B3AC; }
+    .kpi-card.danger .kpi-value  { color: #A82214; }
+    .kpi-card.warning { border-top-color: #EDC009; background: #FDF8E7; border-color: #EBD98C; }
+    .kpi-card.warning .kpi-value { color: #8A7200; }
+    .kpi-card.info    { border-top-color: #3550A0; background: #F2F5FC; border-color: #B9C6E6; }
+    .kpi-card.info .kpi-value    { color: #2B4487; }
+    .kpi-card.neutro  { border-color: #DDDEE0; background: #FAFAFA; border-top-color: #95969A; }
+    .kpi-card.neutro .kpi-value  { color: #595959; }
+
+    /* ─────────────── Faixa de grupo (perspectiva, categoria) ─────────────── */
     .grupo-band {
-        background: linear-gradient(90deg, #1B408E, #2e5aa8);
-        color: #fff; padding: 7px 14px; font-weight: bold; font-size: 10.5px;
-        border-radius: 6px 6px 0 0; margin-top: 16px;
+        background: #2C2E35; color: #fff;
+        padding: 6px 12px; font-weight: bold; font-size: 10px;
+        margin-top: 14px; page-break-after: avoid;
     }
-    .grupo-band .contador { float: right; background: rgba(255,255,255,.2); border-radius: 10px; padding: 1px 9px; font-size: 8.5px; }
+    .grupo-band .contador { float: right; font-weight: normal; opacity: .8; font-size: 8.5px; }
 
-    /* ─── Tabelas modernas ─── */
-    table.rpt { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+    /* ─────────────── Tabelas (p. 28 do modelo) ─────────────── */
+    .rpt-tabela-titulo { font-size: 9.5px; color: #2C2E35; margin: 12px 0 4px 0; }
+    table.rpt { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 8.5px; }
     table.rpt thead th {
-        background: #edf2f7; color: #1a3a5c; font-size: 8px; font-weight: bold;
-        text-transform: uppercase; letter-spacing: .4px; text-align: left;
-        padding: 7px 9px; border-bottom: 2px solid #cbd5e0;
+        background: #2C2E35; color: #fff; font-weight: normal;
+        text-align: center; padding: 4px 6px; border: 1px solid #2C2E35;
+        font-size: 8.5px;
     }
-    table.rpt tbody td { padding: 7px 9px; border-bottom: 1px solid #edf2f7; font-size: 9px; vertical-align: top; }
-    table.rpt tbody tr:nth-child(even) td { background: #f9fafb; }
-    table.rpt.bordered tbody td, table.rpt.bordered thead th { border: 1px solid #e2e8f0; }
+    table.rpt tbody td {
+        border: 1px solid #B9BABD; padding: 5px 7px;
+        vertical-align: middle; text-align: justify;
+    }
+    table.rpt tbody td.text-center, table.rpt td.rpt-centro { text-align: center; }
+    table.rpt tbody td.text-end { text-align: right; }
+    table.rpt tr { page-break-inside: avoid; }
 
-    .row-titulo { font-weight: bold; color: #2d3748; }
-    .row-desc { font-size: 8px; color: #718096; }
+    .row-titulo { font-weight: bold; color: #2C2E35; }
+    .row-desc { font-size: 8px; color: #595959; }
 
-    /* ─── Pills de status ─── */
-    .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 8px; font-weight: bold; }
-    .pill-success  { background: #d1fae5; color: #065f46; }
-    .pill-info     { background: #dbeafe; color: #1e40af; }
-    .pill-warning  { background: #fef3c7; color: #92400e; }
-    .pill-danger   { background: #fee2e2; color: #991b1b; }
-    .pill-neutral  { background: #e5e7eb; color: #374151; }
+    .rpt-lista { margin: 0; padding-left: 11px; }
+    .rpt-lista li { margin-bottom: 2px; text-align: justify; }
 
-    /* ─── Barra de progresso ─── */
-    .progress-track { background: #edf2f7; border-radius: 999px; height: 9px; width: 100%; overflow: hidden; }
-    .progress-fill { height: 9px; border-radius: 999px; }
+    /* ─────────────── Pílulas de status ───────────────
+       Cores discretas: a cor forte fica reservada ao farol, que é o único
+       lugar da página onde ela significa desempenho. */
+    .pill { display: inline-block; padding: 2px 8px; font-size: 8px; font-weight: bold; border: 1px solid; }
+    .pill-success  { background: #F4FBF3; color: #2F7A28; border-color: #A9DDA3; }
+    .pill-info     { background: #F2F5FC; color: #2B4487; border-color: #B9C6E6; }
+    .pill-warning  { background: #FDF8E7; color: #8A7200; border-color: #EBD98C; }
+    .pill-danger   { background: #FDF1F0; color: #A82214; border-color: #F0B3AC; }
+    .pill-neutral  { background: #F5F5F6; color: #595959; border-color: #D6D7D9; }
 
-    /* ─── Farol ─── */
-    .farol { width: 11px; height: 11px; border-radius: 50%; display: inline-block; vertical-align: middle; }
+    /* ─────────────── Barra de progresso e farol ─────────────── */
+    .progress-track { background: #EDEEEF; height: 8px; width: 100%; }
+    .progress-fill { height: 8px; }
+    .farol { width: 10px; height: 10px; border-radius: 50%; display: inline-block; vertical-align: middle; }
 
-    /* ─── Estado vazio ─── */
-    .vazio { text-align: center; padding: 26px; color: #a0aec0; font-style: italic; font-size: 9px;
-             background: #f9fafb; border: 1px dashed #cbd5e0; border-radius: 8px; }
+    /* ─────────────── Estado vazio ───────────────
+       Regra do gestor: seção que o cliente não preencheu NÃO aparece. Quando
+       aparecer mesmo assim, tem de dizer o que falta — título seguido de
+       espaço em branco não informa nada a quem lê. */
+    .vazio {
+        text-align: center; padding: 18px; color: #95969A; font-style: italic;
+        font-size: 9px; background: #FAFAFA; border: 1px dashed #C8C9CB;
+    }
+
+    /* Bordas em toda a tabela — usado onde a leitura é célula a célula. */
+    table.rpt.bordered tbody td, table.rpt.bordered thead th { border: 1px solid #B9BABD; }
 
     .avoid-break { page-break-inside: avoid; }
+    .page-break { page-break-before: always; }
     .text-center { text-align: center; }
     .text-end { text-align: right; }
     .mb-0 { margin-bottom: 0; }
+    .rpt-link { color: #3550A0; }
 </style>

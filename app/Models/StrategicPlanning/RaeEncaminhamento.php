@@ -34,7 +34,7 @@ class RaeEncaminhamento extends Model
         'dte_prazo' => 'date',
     ];
 
-    public const TIPOS = ['Novo Plano', 'Revisão de Meta', 'Revisão de Objetivo', 'Revisão de Risco', 'Outro'];
+    public const TIPOS = ['Nova Iniciativa', 'Revisão de Meta', 'Revisão de Objetivo', 'Revisão de Risco', 'Outro'];
 
     public const STATUS = ['Pendente', 'Em Execução', 'Concluído'];
 

@@ -3,7 +3,7 @@
 
 É com satisfação que confirmamos a criação do seu acesso ao **Sistema de Planejamento Estratégico Integrado (PEI)** do Ministério da Integração e do Desenvolvimento Regional (MIDR).
 
-A partir de agora, você terá em um único ambiente os instrumentos para conduzir a estratégia institucional: ciclos de planejamento, identidade estratégica, objetivos, indicadores de desempenho, planos de ação, gestão de riscos e relatórios gerenciais.
+A partir de agora, você terá em um único ambiente os instrumentos para conduzir a estratégia institucional: ciclos de planejamento, identidade estratégica, objetivos, indicadores de desempenho, iniciativas, gestão de riscos e relatórios gerenciais.
 
 ## Falta apenas um passo: criar a sua senha
 

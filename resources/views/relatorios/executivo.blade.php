@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Relatório Executivo — {{ $organizacao->nom_organizacao }}</title>
-    @include('relatorios.partials.estilos')
+    @include('relatorios.partials.estilos', ['orientacao' => 'portrait'])
     <style>
         .page-break { page-break-after: always; }
         .swot-cell { width: 50%; vertical-align: top; padding: 10px; border-radius: 6px; }
@@ -14,13 +14,6 @@
     </style>
 </head>
 <body>
-    @include('relatorios.partials.cabecalho', [
-        'rptTitulo'    => 'Relatório Executivo',
-        'rptEyebrow'   => 'Gestão Estratégica Consolidada · GPPEI/MGI 2025',
-        'rptSubtitulo' => $organizacao->nom_organizacao . ' · Exercício ' . $filtros['ano'],
-        'rptIcon'      => '&#9733;',
-    ])
-    @include('relatorios.partials.rodape')
 
     @php
         $ano       = $filtros['ano'];
@@ -85,7 +78,7 @@
                 <p class="kpi-sub" style="color:{{ $getCorSatisfacao($mediaAtingimento) }};">desempenho geral</p>
             </td>
             <td class="kpi-card {{ $planosAtrasados > 0 ? 'warning' : 'success' }}" style="width:25%;">
-                <p class="kpi-label">Planos de Ação</p>
+                <p class="kpi-label">Iniciativas</p>
                 <p class="kpi-value">{{ $totalPlanos }}</p>
                 <p class="kpi-sub">{{ $planosConcluidos }} concluídos · {{ $planosAtrasados }} atrasados</p>
             </td>
@@ -255,8 +248,8 @@
     </table>
     @endif
 
-    {{-- ══ PLANOS DE AÇÃO ══ --}}
-    <div class="secao-titulo">Carteira de Planos de Ação — {{ $ano }}</div>
+    {{-- ══ INICIATIVAS ══ --}}
+    <div class="secao-titulo">Carteira de Iniciativas — {{ $ano }}</div>
 
     @php $tot = max(1, $totalPlanos); @endphp
     <div style="margin-bottom:10px;">
@@ -277,7 +270,7 @@
     <table class="rpt">
         <thead>
             <tr>
-                <th style="width:34%;">Plano de Ação</th>
+                <th style="width:34%;">Iniciativa</th>
                 <th>Perspectiva / Objetivo</th>
                 <th class="text-center" style="width:80px;">Status</th>
                 <th class="text-center" style="width:100px;">Progresso</th>
@@ -311,7 +304,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="4"><div class="vazio mb-0">Nenhum plano de ação vigente em {{ $ano }}.</div></td></tr>
+            <tr><td colspan="4"><div class="vazio mb-0">Nenhuma iniciativa vigente em {{ $ano }}.</div></td></tr>
             @endforelse
         </tbody>
     </table>

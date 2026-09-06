@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Reports;
 
+use App\Concerns\BaixaRelatorioGerado;
 use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\Organization;
 use App\Models\Reports\RelatorioGerado;
@@ -15,13 +16,14 @@ use App\Models\SystemSetting;
 use App\Services\AI\AiServiceFactory;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class ListarRelatorios extends Component
 {
+    use BaixaRelatorioGerado;
+
     public $organizacaoId;
 
     public $organizacaoNome;
@@ -201,7 +203,7 @@ class ListarRelatorios extends Component
             $planos = PlanoDeAcao::where('cod_organizacao', $this->organizacaoId)->get();
 
             $prompt = "Gere um resumo executivo estratégico (AI Minute) para a organização {$this->organizacaoNome} no ano {$this->anoSelecionado}.
-            Contexto: Possui ".$objetivos->count().' objetivos estratégicos e '.$planos->count().' planos de ação.
+            Contexto: Possui ".$objetivos->count().' objetivos estratégicos e '.$planos->count().' iniciativas.
             Destaque pontos de atenção e sugestões de melhoria. Use Markdown para formatação.';
 
             $this->aiInsight = $aiService->suggest($prompt);
@@ -212,18 +214,8 @@ class ListarRelatorios extends Component
         }
     }
 
-    public function download($id)
-    {
-        $relatorio = RelatorioGerado::findOrFail($id);
-
-        if (! Storage::disk('public')->exists($relatorio->dsc_caminho_arquivo)) {
-            session()->flash('error', 'Arquivo não encontrado.');
-
-            return;
-        }
-
-        return Storage::disk('public')->download($relatorio->dsc_caminho_arquivo);
-    }
+    // O download vive em App\Concerns\BaixaRelatorioGerado, com verificação de
+    // autorização. Não reimplementar aqui.
 
     public function render()
     {

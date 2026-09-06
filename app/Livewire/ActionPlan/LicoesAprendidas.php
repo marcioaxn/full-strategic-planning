@@ -89,7 +89,7 @@ class LicoesAprendidas extends Component
             'form.dsc_tipo' => 'required|string',
             'form.txt_descricao' => 'required|string|max:2000',
         ], [
-            'form.cod_plano_de_acao.required' => 'Selecione o plano de ação.',
+            'form.cod_plano_de_acao.required' => 'Selecione a iniciativa.',
             'form.txt_descricao.required' => 'Descreva a lição aprendida.',
         ]);
 

@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * Model de Entrega com suporte a funcionalidades estilo Notion.
- * 
+ *
  * Suporta hierarquia (sub-entregas), tipos de bloco, prioridades,
  * labels, comentários, anexos e histórico de alterações.
  */
@@ -25,7 +25,7 @@ class Entrega extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_entregas';
+    protected $table = 'action_plan.tab_entregas';
 
     /**
      * Chave primária
@@ -122,7 +122,7 @@ class Entrega extends Model
     // ========================================
 
     /**
-     * Relacionamento: Plano de Ação
+     * Relacionamento: Iniciativa
      */
     public function planoDeAcao(): BelongsTo
     {
@@ -143,7 +143,7 @@ class Entrega extends Model
     public function subEntregas(): HasMany
     {
         return $this->hasMany(Entrega::class, 'cod_entrega_pai', 'cod_entrega')
-                    ->orderBy('num_ordem');
+            ->orderBy('num_ordem');
     }
 
     /**
@@ -175,8 +175,8 @@ class Entrega extends Model
     public function comentarios(): HasMany
     {
         return $this->hasMany(EntregaComentario::class, 'cod_entrega', 'cod_entrega')
-                    ->whereNull('cod_comentario_pai')
-                    ->orderBy('created_at', 'desc');
+            ->whereNull('cod_comentario_pai')
+            ->orderBy('created_at', 'desc');
     }
 
     /**
@@ -206,7 +206,7 @@ class Entrega extends Model
     public function historico(): HasMany
     {
         return $this->hasMany(EntregaHistorico::class, 'cod_entrega', 'cod_entrega')
-                    ->orderBy('created_at', 'desc');
+            ->orderBy('created_at', 'desc');
     }
 
     // ========================================
@@ -226,9 +226,10 @@ class Entrega extends Model
      */
     public function isAtrasada(): bool
     {
-        if (!$this->dte_prazo || $this->isConcluida()) {
+        if (! $this->dte_prazo || $this->isConcluida()) {
             return false;
         }
+
         return now()->greaterThan($this->dte_prazo);
     }
 
@@ -237,7 +238,7 @@ class Entrega extends Model
      */
     public function isSubEntrega(): bool
     {
-        return !is_null($this->cod_entrega_pai);
+        return ! is_null($this->cod_entrega_pai);
     }
 
     /**
@@ -288,6 +289,7 @@ class Entrega extends Model
         $props = $this->json_propriedades ?? [];
         $props[$key] = $value;
         $this->json_propriedades = $props;
+
         return $this;
     }
 
@@ -302,6 +304,7 @@ class Entrega extends Model
         }
 
         $concluidas = $this->subEntregas()->where('bln_status', 'Concluído')->count();
+
         return ($concluidas / $total) * 100;
     }
 
@@ -410,8 +413,8 @@ class Entrega extends Model
     public function scopeAtrasadas($query)
     {
         return $query->whereNotNull('dte_prazo')
-                     ->where('dte_prazo', '<', now())
-                     ->where('bln_status', '!=', 'Concluído');
+            ->where('dte_prazo', '<', now())
+            ->where('bln_status', '!=', 'Concluído');
     }
 
     /**
@@ -428,7 +431,7 @@ class Entrega extends Model
     public function scopeDeletadasRecentemente($query)
     {
         return $query->onlyTrashed()
-                     ->where('deleted_at', '>=', now()->subHours(24));
+            ->where('deleted_at', '>=', now()->subHours(24));
     }
 
     // ========================================
@@ -450,7 +453,7 @@ class Entrega extends Model
             $changes = $entrega->getDirty();
 
             foreach ($changes as $campo => $valorNovo) {
-                if (!in_array($campo, ['updated_at', 'json_propriedades'])) {
+                if (! in_array($campo, ['updated_at', 'json_propriedades'])) {
                     $entrega->registrarHistorico(
                         'updated',
                         $campo,

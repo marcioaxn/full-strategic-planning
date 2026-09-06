@@ -18,7 +18,7 @@ class EntregaLabel extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_entrega_labels';
+    protected $table = 'action_plan.tab_entrega_labels';
 
     /**
      * Chave primária
@@ -75,7 +75,7 @@ class EntregaLabel extends Model
     // ========================================
 
     /**
-     * Relacionamento: Plano de Ação
+     * Relacionamento: Iniciativa
      */
     public function planoDeAcao(): BelongsTo
     {
@@ -105,6 +105,7 @@ class EntregaLabel extends Model
     public function getCorRgb(): array
     {
         $hex = ltrim($this->dsc_cor, '#');
+
         return [
             'r' => hexdec(substr($hex, 0, 2)),
             'g' => hexdec(substr($hex, 2, 2)),
@@ -120,6 +121,7 @@ class EntregaLabel extends Model
         $rgb = $this->getCorRgb();
         // Fórmula de luminância relativa
         $luminancia = ($rgb['r'] * 0.299 + $rgb['g'] * 0.587 + $rgb['b'] * 0.114) / 255;
+
         return $luminancia < 0.5;
     }
 

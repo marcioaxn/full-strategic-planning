@@ -11,9 +11,12 @@ class RiscoOcorrencia extends Model implements Auditable
 {
     use HasFactory, HasUuids, \OwenIt\Auditing\Auditable;
 
-    protected $table = 'tab_risco_ocorrencia';
+    protected $table = 'risk_management.tab_risco_ocorrencia';
+
     protected $primaryKey = 'cod_ocorrencia';
+
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     protected $fillable = [
@@ -55,7 +58,7 @@ class RiscoOcorrencia extends Model implements Auditable
 
     public function getImpactoRealLabel()
     {
-        return match($this->num_impacto_real) {
+        return match ($this->num_impacto_real) {
             1 => 'Muito Baixo',
             2 => 'Baixo',
             3 => 'Médio',
@@ -67,7 +70,7 @@ class RiscoOcorrencia extends Model implements Auditable
 
     public function getImpactoRealCor()
     {
-        return match($this->num_impacto_real) {
+        return match ($this->num_impacto_real) {
             5 => '#dc2626', // Vermelho
             4 => '#f97316', // Laranja
             3 => '#eab308', // Amarelo

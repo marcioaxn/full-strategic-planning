@@ -685,6 +685,54 @@
 
                                 {{-- Coluna Lateral: Avaliação e Vínculos --}}
                                 <div class="col-lg-4">
+                                    {{--
+                                        VÍNCULO ESTRATÉGICO — primeiro cartão da coluna.
+
+                                        🔴 Estava enterrado no fim do último cartão, depois de
+                                        Monitoramento e de Resposta ao Risco, com rolagem própria: o
+                                        cliente registrava o risco sem nunca ver esta parte. E é a
+                                        única que justifica o módulo existir dentro de um PEI — risco
+                                        sem objetivo vinculado é risco órfão, que não entra em
+                                        relatório nenhum nem aparece no mapa.
+                                    --}}
+                                    <div class="card border-0 bg-light rounded-4 mb-4">
+                                        <div class="card-body p-4">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-1">
+                                                <i class="bi bi-diagram-3 me-1 text-primary"></i>Vínculo Estratégico
+                                            </h6>
+                                            <p class="text-muted small mb-3">
+                                                A que objetivos do ciclo este risco ameaça. Sem vínculo, ele não
+                                                aparece no mapa estratégico nem nos relatórios do PEI.
+                                            </p>
+
+                                            @if(count($objetivos) === 0)
+                                                <div class="bg-white rounded-4 shadow-sm p-3 text-center">
+                                                    <span class="small text-muted">
+                                                        Nenhum objetivo cadastrado neste ciclo para vincular.
+                                                    </span>
+                                                </div>
+                                            @else
+                                                <div class="bg-white rounded-4 shadow-sm p-3 overflow-auto" style="max-height: 260px;">
+                                                    @foreach($objetivos as $perspectiva => $itens)
+                                                        <div class="mb-3">
+                                                            <div class="small fw-bold text-primary text-uppercase border-bottom pb-1 mb-2" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                                                                <i class="bi bi-layers me-1"></i>{{ $perspectiva }}
+                                                            </div>
+                                                            @foreach($itens as $obj)
+                                                                <div class="form-check mb-2">
+                                                                    <input class="form-check-input" type="checkbox" value="{{ $obj['cod_objetivo'] }}"
+                                                                           wire:model="form.objetivos_vinculados" id="obj_{{ $obj['cod_objetivo'] }}">
+                                                                    <label class="form-check-label small fw-medium text-dark" for="obj_{{ $obj['cod_objetivo'] }}">
+                                                                        {{ $obj['nom_objetivo'] }}
+                                                                    </label>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
                                     {{-- Card Matriz --}}
                                     <div class="card border-0 bg-light rounded-4 mb-4">
                                         <div class="card-body p-4">
@@ -774,26 +822,6 @@
                                                        class="form-control bg-white border-0 shadow-sm">
                                             </div>
 
-                                            <div class="mb-0">
-                                                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Vínculo Estratégico</h6>
-                                                                                            <div class="bg-white rounded-4 shadow-sm p-3 overflow-auto" style="max-height: 250px;">
-                                                                                                @foreach($objetivos as $perspectiva => $itens)
-                                                                                                    <div class="mb-3">
-                                                                                                        <div class="small fw-bold text-primary text-uppercase border-bottom pb-1 mb-2" style="font-size: 0.65rem; letter-spacing: 0.5px;">
-                                                                                                            <i class="bi bi-layers me-1"></i>{{ $perspectiva }}
-                                                                                                        </div>
-                                                                                                        @foreach($itens as $obj)
-                                                                                                            <div class="form-check mb-2">
-                                                                                                                <input class="form-check-input" type="checkbox" value="{{ $obj['cod_objetivo'] }}" 
-                                                                                                                       wire:model="form.objetivos_vinculados" id="obj_{{ $obj['cod_objetivo'] }}">
-                                                                                                                <label class="form-check-label small fw-medium text-dark" for="obj_{{ $obj['cod_objetivo'] }}">
-                                                                                                                    {{ $obj['nom_objetivo'] }}
-                                                                                                                </label>
-                                                                                                            </div>
-                                                                                                        @endforeach
-                                                                                                    </div>
-                                                                                                @endforeach
-                                                                                            </div>                                            </div>
                                         </div>
                                     </div>
                                 </div>

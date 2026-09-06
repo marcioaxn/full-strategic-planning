@@ -54,7 +54,7 @@
                         @if($indicador->cod_objetivo)
                             <small class="text-primary fw-bold"><i class="bi bi-bullseye"></i> Objetivo: {{ $indicador->objetivo->nom_objetivo }}</small>
                         @else
-                            <small class="text-info fw-bold"><i class="bi bi-list-task"></i> Plano: {{ $indicador->planoDeAcao->dsc_plano_de_acao }}</small>
+                            <small class="text-info fw-bold"><i class="bi bi-list-task"></i> Iniciativa: {{ $indicador->planoDeAcao->dsc_plano_de_acao }}</small>
                         @endif
                     </div>
                 </div>

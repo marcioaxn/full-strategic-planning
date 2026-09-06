@@ -82,7 +82,7 @@
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <small class="text-muted d-block">Planos de Ação</small>
+                            <small class="text-muted d-block">Iniciativas</small>
                             <span class="fw-bold fs-5">0</span>
                         </div>
                         <i class="bi bi-kanban text-muted fs-4"></i>

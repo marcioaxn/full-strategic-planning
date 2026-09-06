@@ -411,19 +411,34 @@
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th style="width: 80px;" class="text-center">Ordem</th>
+                                    <th style="width: 90px;" class="text-center"
+                                        title="No BSC as perspectivas se empilham de baixo para cima: o nível 1 é a base do mapa, e o maior nível é o topo. Esta tabela segue a ordem do mapa.">
+                                        Nível <i class="bi bi-info-circle small text-muted"></i>
+                                    </th>
                                     <th>Perspectiva</th>
                                     <th style="width: 150px;" class="text-center">Objetivos</th>
                                     <th style="width: 120px;" class="text-center">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                {{--
+                                    Ordem DECRESCENTE: a primeira linha da tabela é a primeira do
+                                    mapa. Antes a tabela vinha crescente — o cliente lia
+                                    "Aprendizado (1)" na primeira linha e concluía que estava no
+                                    topo, quando está na base. Três representações da mesma ordem,
+                                    duas delas discordando.
+                                --}}
                                 @foreach($perspectivas as $perspectiva)
                                     <tr>
                                         <td class="text-center">
                                             <span class="badge bg-secondary rounded-pill">
                                                 {{ $perspectiva->num_nivel_hierarquico_apresentacao }}
                                             </span>
+                                            @if($loop->first)
+                                                <div class="x-small text-muted mt-1"><i class="bi bi-arrow-up"></i> topo</div>
+                                            @elseif($loop->last)
+                                                <div class="x-small text-muted mt-1"><i class="bi bi-arrow-down"></i> base</div>
+                                            @endif
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
@@ -535,28 +550,78 @@
                                             <div class="card-body p-4 text-center">
                                                 <h6 class="fw-bold text-dark border-bottom pb-2 mb-4">Hierarquia no Mapa</h6>
                                                 
-                                                <div class="mb-4">
-                                                    <label class="form-label small text-muted fw-bold text-uppercase">Ordem de Apresentação <span class="text-danger">*</span></label>
+                                                <div class="mb-3">
+                                                    <label class="form-label small text-muted fw-bold text-uppercase">Nível no Mapa <span class="text-danger">*</span></label>
                                                     <div class="input-group input-group-lg shadow-sm">
                                                         <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-sort-numeric-down"></i></span>
-                                                        <input type="number" wire:model="num_nivel_hierarquico_apresentacao" class="form-control bg-white border-0 fw-bold text-center @error('num_nivel_hierarquico_apresentacao') is-invalid @enderror" min="1">
+                                                        <input type="number" wire:model.live="num_nivel_hierarquico_apresentacao" class="form-control bg-white border-0 fw-bold text-center @error('num_nivel_hierarquico_apresentacao') is-invalid @enderror" min="1">
                                                     </div>
-                                                    <small class="text-muted x-small mt-2 d-block">1 = Nível mais baixo (base do mapa)</small>
                                                     @error('num_nivel_hierarquico_apresentacao') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
                                                 </div>
 
-                                                {{-- Preview Visual --}}
+                                                {{-- Como o mapa é lido: a explicação onde o cliente decide o número --}}
+                                                <div class="alert alert-light border small text-start py-2 px-3 mb-3">
+                                                    <i class="bi bi-info-circle text-primary me-1"></i>
+                                                    <strong>Como o mapa é lido.</strong>
+                                                    As perspectivas se empilham <strong>de baixo para cima</strong>.
+                                                    O <strong>nível 1</strong> fica na <strong>base</strong> — é onde a
+                                                    estratégia começa. O nível mais alto fica no <strong>topo</strong> —
+                                                    é o resultado que a organização entrega. Cada nível sustenta o de cima.
+                                                </div>
+
+                                                {{--
+                                                    Prévia REAL da pilha.
+
+                                                    Este bloco era um desenho fixo: mostrava sempre "Topo do Mapa" ⟶
+                                                    a perspectiva ⟶ "Base do Mapa", digitasse o cliente 1, 3 ou 9.
+                                                    Prometia "Visualização no Mapa" e entregava enfeite. Agora desenha
+                                                    a pilha do ciclo, na ordem do mapa (maior nível em cima), com a
+                                                    perspectiva em edição na posição que o número dita.
+                                                --}}
+                                                @php
+                                                    $nivelAtual = (int) ($num_nivel_hierarquico_apresentacao ?: 0);
+                                                    $pilha = collect($perspectivas)
+                                                        ->reject(fn ($p) => $perspectivaId && $p->cod_perspectiva === $perspectivaId)
+                                                        ->map(fn ($p) => [
+                                                            'nivel'  => (int) $p->num_nivel_hierarquico_apresentacao,
+                                                            'nome'   => $p->dsc_perspectiva,
+                                                            'atual'  => false,
+                                                        ])
+                                                        ->push([
+                                                            'nivel' => $nivelAtual,
+                                                            'nome'  => $dsc_perspectiva ?: 'Sua Perspectiva',
+                                                            'atual' => true,
+                                                        ])
+                                                        ->sortByDesc('nivel')
+                                                        ->values();
+
+                                                    $colisao = $pilha->where('nivel', $nivelAtual)->count() > 1;
+                                                @endphp
+
                                                 <div class="p-3 bg-white rounded-3 border shadow-sm mt-auto">
-                                                    <p class="small text-muted mb-2">Visualização no Mapa:</p>
-                                                    <div class="d-flex flex-column gap-1 align-items-center">
-                                                        <div class="w-100 py-2 rounded bg-primary text-white small fw-bold shadow-sm" style="opacity: 0.3;">Topo do Mapa</div>
-                                                        <i class="bi bi-arrow-down text-muted"></i>
-                                                        <div class="w-100 py-2 rounded gradient-theme text-white small fw-bold shadow">
-                                                            {{ $dsc_perspectiva ?: 'Sua Perspectiva' }}
-                                                        </div>
-                                                        <i class="bi bi-arrow-down text-muted"></i>
-                                                        <div class="w-100 py-2 rounded bg-secondary text-white small fw-bold shadow-sm" style="opacity: 0.3;">Base do Mapa</div>
+                                                    <p class="small text-muted mb-1 text-start">Visualização no Mapa</p>
+                                                    <p class="x-small text-muted mb-2 text-start"><i class="bi bi-arrow-up"></i> topo — o resultado final</p>
+
+                                                    <div class="d-flex flex-column gap-1">
+                                                        @foreach($pilha as $item)
+                                                            <div class="w-100 py-2 px-2 rounded small fw-bold d-flex align-items-center gap-2 {{ $item['atual'] ? 'gradient-theme text-white shadow' : 'bg-light text-muted border' }}">
+                                                                <span class="badge {{ $item['atual'] ? 'bg-white text-dark' : 'bg-secondary' }} rounded-pill">{{ $item['nivel'] ?: '—' }}</span>
+                                                                <span class="text-truncate">{{ $item['nome'] }}</span>
+                                                                @if($item['atual'])
+                                                                    <i class="bi bi-arrow-left-short ms-auto"></i>
+                                                                @endif
+                                                            </div>
+                                                        @endforeach
                                                     </div>
+
+                                                    <p class="x-small text-muted mt-2 mb-0 text-start"><i class="bi bi-arrow-down"></i> base — onde a estratégia começa</p>
+
+                                                    @if($colisao)
+                                                        <div class="alert alert-warning x-small mt-2 mb-0 py-2 px-2 text-start">
+                                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                                            Já existe outra perspectiva no nível {{ $nivelAtual }}. A ordem entre elas ficará indefinida no mapa.
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
@@ -608,10 +673,10 @@
                                                                    min="0" max="100" step="5">
                                                         </div>
 
-                                                        {{-- Planos (Direita) --}}
+                                                        {{-- Iniciativas (Direita) --}}
                                                         <div class="text-center" style="width: 120px;">
                                                             <div class="fw-bold h4 mb-0 text-success" x-text="pesoPlan + '%'"></div>
-                                                            <small class="text-muted x-small text-uppercase fw-bold">Planos de Ação</small>
+                                                            <small class="text-muted x-small text-uppercase fw-bold">Iniciativas</small>
                                                         </div>
                                                     </div>
 

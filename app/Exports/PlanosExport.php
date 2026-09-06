@@ -40,7 +40,7 @@ class PlanosExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'Plano de Ação',
+            'Iniciativa',
             'Objetivo',
             'Data Início',
             'Data Fim',

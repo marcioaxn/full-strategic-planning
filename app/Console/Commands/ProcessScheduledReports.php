@@ -2,12 +2,13 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Reports\RelatorioAgendado;
 use App\Models\Reports\RelatorioGerado;
+use App\Models\SystemSetting;
 use App\Services\Reports\ReportGenerationService;
-use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProcessScheduledReports extends Command
@@ -33,12 +34,29 @@ class ProcessScheduledReports extends Command
     {
         $this->info('Iniciando processamento de relatórios agendados...');
 
+        /*
+         * 🔴 PULSO DO AGENDADOR.
+         *
+         * O agendamento de relatórios depende de uma Tarefa Agendada do sistema
+         * operacional chamando `schedule:run`. Se o cliente não configurou essa
+         * tarefa — e é o caso mais comum — nada nunca dispara, em silêncio: o
+         * usuário marca "enviar toda segunda", a tela confirma, e o e-mail não
+         * chega nunca.
+         *
+         * Marcar aqui a hora de cada execução é o que permite à tela dizer a
+         * verdade: com pulso recente, o agendamento é oferecido; sem pulso, ela
+         * avisa que a tarefa do servidor não está rodando em vez de aceitar um
+         * agendamento que morreria calado.
+         */
+        SystemSetting::setValue('agendamento_ultimo_processamento', now()->toIso8601String());
+
         $agendamentos = RelatorioAgendado::where('bln_ativo', true)
             ->where('dte_proxima_execucao', '<=', now())
             ->get();
 
         if ($agendamentos->isEmpty()) {
             $this->info('Nenhum agendamento pendente.');
+
             return;
         }
 
@@ -58,13 +76,15 @@ class ProcessScheduledReports extends Command
 
                 switch ($agendamento->dsc_tipo_relatorio) {
                     case 'integrado':
-                         $result = $reportService->generateIntegrado($organizacaoId, $ano, $periodo, $includeAi);
-                         break;
+                        $result = $reportService->generateIntegrado($organizacaoId, $ano, $periodo, $includeAi);
+                        break;
                     case 'executivo':
                         $result = $reportService->generateExecutivo($organizacaoId, $ano, $periodo, $perspectivaId);
                         break;
                     case 'identidade':
-                        if (!$organizacaoId) throw new \Exception('Organização obrigatória para este relatório.');
+                        if (! $organizacaoId) {
+                            throw new \Exception('Organização obrigatória para este relatório.');
+                        }
                         $result = $reportService->generateIdentidade($organizacaoId);
                         break;
                     case 'objetivos':
@@ -81,20 +101,21 @@ class ProcessScheduledReports extends Command
                         break;
                     default:
                         $this->error("Tipo de relatório desconhecido: {$agendamento->dsc_tipo_relatorio}");
+
                         continue 2; // Pula para o próximo agendamento
                 }
 
                 if ($result) {
                     // Salvar Arquivo
-                    $directory = 'relatorios/' . date('Y/m');
-                    if (!Storage::disk('public')->exists($directory)) {
-                        Storage::disk('public')->makeDirectory($directory);
+                    $directory = 'relatorios/'.date('Y/m');
+                    if (! Storage::disk('relatorios')->exists($directory)) {
+                        Storage::disk('relatorios')->makeDirectory($directory);
                     }
 
-                    $filename = Str::slug(pathinfo($result['filename'], PATHINFO_FILENAME)) . '_' . uniqid() . '.pdf';
-                    $path = $directory . '/' . $filename;
+                    $filename = Str::slug(pathinfo($result['filename'], PATHINFO_FILENAME)).'_'.uniqid().'.pdf';
+                    $path = $directory.'/'.$filename;
 
-                    Storage::disk('public')->put($path, $result['content']);
+                    Storage::disk('relatorios')->put($path, $result['content']);
 
                     // Registrar Histórico
                     RelatorioGerado::create([
@@ -103,7 +124,7 @@ class ProcessScheduledReports extends Command
                         'dsc_caminho_arquivo' => $path,
                         'dsc_formato' => 'pdf',
                         'txt_filtros_aplicados' => $filtros,
-                        'num_tamanho_bytes' => strlen($result['content'])
+                        'num_tamanho_bytes' => strlen($result['content']),
                     ]);
 
                     $this->info("Relatório gerado com sucesso: $path");
@@ -113,8 +134,8 @@ class ProcessScheduledReports extends Command
                 }
 
             } catch (\Exception $e) {
-                $this->error("Erro ao processar agendamento {$agendamento->cod_agendamento}: " . $e->getMessage());
-                \Log::error("Erro Report Scheduler: " . $e->getMessage());
+                $this->error("Erro ao processar agendamento {$agendamento->cod_agendamento}: ".$e->getMessage());
+                \Log::error('Erro Report Scheduler: '.$e->getMessage());
             }
         }
 

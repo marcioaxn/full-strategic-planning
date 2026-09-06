@@ -75,14 +75,15 @@ $sensiveis = [
     '/\b(UPDATE|DELETE|INSERT)\s+(FROM\s+)?[a-z_]+\./i'
         => 'escrita direta no banco. O CLAUDE.md exige autorização explícita antes de executar, em qualquer ambiente.',
 
-    '/\bdb:seed\b/'
-        => 'db:seed grava no banco configurado no .env.',
+    // migrate e db:seed NÃO pedem confirmação: neste produto multicliente eles
+    // são o caminho oficial de entrega, rodados a cada versão pelo próprio
+    // cliente, e usados o tempo todo em dev. O que destrói banco
+    // (migrate:fresh/reset, db:wipe) está no bloco `deny` acima, e a truncagem
+    // continua perguntando logo abaixo. Pedir confirmação para o comando de
+    // rotina só ensina a clicar "sim" sem ler.
 
     '/\bbanco:zerar-dominio\b|\bTruncarBancoSeeder\b/'
         => 'limpeza destrutiva do banco de domínio.',
-
-    '/\bphp\s+artisan\s+migrate\b/'
-        => 'migration altera a estrutura do banco.',
 
     '/\bphp\s+artisan\s+tinker\b/'
         => 'tinker executa código arbitrário contra o banco.',

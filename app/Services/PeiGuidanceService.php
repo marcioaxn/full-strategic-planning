@@ -2,54 +2,54 @@
 
 namespace App\Services;
 
+use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\PerformanceIndicators\Indicador;
+use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\StrategicPlanning\InauguraPei;
+use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Perspectiva;
-use App\Models\StrategicPlanning\Objetivo;
-use App\Models\PerformanceIndicators\Indicador;
-use App\Models\ActionPlan\PlanoDeAcao;
 
 class PeiGuidanceService
 {
     /**
      * Analyze the completeness of the current or specified PEI.
      *
-     * @param string|null $peiId Optional PEI ID. If null, tries to find an active one.
-     * @return array
+     * @param  string|null  $peiId  Optional PEI ID. If null, tries to find an active one.
      */
     public function analyzeCompleteness(?string $peiId = null): array
     {
         // 1. Prioritize passed ID, then Session, then First Active
         $peiId = $peiId ?? session('pei_selecionado_id');
 
-        $pei = $peiId 
-            ? PEI::with('identidadeEstrategica')->find($peiId) 
+        $pei = $peiId
+            ? PEI::with('identidadeEstrategica')->find($peiId)
             : PEI::ativos()->with('identidadeEstrategica')->first();
 
-        if (!$pei) {
+        if (! $pei) {
             // Check if there are ANY PEIs (future/past)
             $anyPei = PEI::exists();
-            
+
             return [
                 'status' => 'critical',
                 'current_phase' => 'ciclo',
                 'progress' => 0,
                 'phases' => $this->getEmptyPhasesStructure(),
-                'message' => $anyPei 
-                    ? 'Nenhum Planejamento Estratégico (PEI) vigente encontrado. Ative ou crie um novo ciclo.' 
+                'message' => $anyPei
+                    ? 'Nenhum Planejamento Estratégico (PEI) vigente encontrado. Ative ou crie um novo ciclo.'
                     : 'Bem-vindo! Vamos começar definindo o ciclo do seu Planejamento Estratégico (PEI).',
                 'action_route' => 'pei.ciclos',
-                'action_label' => 'Definir Ciclo PEI'
+                'action_label' => 'Definir Ciclo PEI',
             ];
         }
 
         // Initialize Phases Structure
         $phases = $this->getEmptyPhasesStructure();
-        
+
         // --- PHASE 1: Ciclo PEI (Always valid if we have a $pei object) ---
         $phases['ciclo']['status'] = 'completed';
-        $phases['ciclo']['label'] = 'Ciclo ' . $pei->num_ano_inicio_pei . '-' . $pei->num_ano_fim_pei;
-        
+        $phases['ciclo']['label'] = 'Ciclo '.$pei->num_ano_inicio_pei.'-'.$pei->num_ano_fim_pei;
+
         // --- PHASE 1.5: Inaugurar e Integrar (Módulo 01 GPPEI) ---
         try {
             $inaugurou = InauguraPei::where('cod_pei', $pei->cod_pei)
@@ -64,15 +64,15 @@ class PeiGuidanceService
 
         // --- PHASE 2: Identidade (Missão, Visão, Valores) ---
         $identidade = $pei->identidadeEstrategica->first();
-        $hasIdentity = $identidade && 
-                       strlen(trim($identidade->dsc_missao ?? '')) > 10 && 
-                       strlen(trim($identidade->dsc_visao ?? '')) > 10; 
-        
+        $hasIdentity = $identidade &&
+                       strlen(trim($identidade->dsc_missao ?? '')) > 10 &&
+                       strlen(trim($identidade->dsc_visao ?? '')) > 10;
+
         if ($hasIdentity) {
             $phases['identidade']['status'] = 'completed';
         } else {
-            return $this->buildResponse($phases, 'identidade', 20, $pei, 
-                'Defina a identidade da sua organização: Missão, Visão e Valores.', 
+            return $this->buildResponse($phases, 'identidade', 20, $pei,
+                'Defina a identidade da sua organização: Missão, Visão e Valores.',
                 'pei.index', 'Definir Identidade');
         }
 
@@ -82,14 +82,15 @@ class PeiGuidanceService
 
         if ($perspectivasCount == 0) {
             $phases['perspectivas']['status'] = 'active';
-            return $this->buildResponse($phases, 'perspectivas', 20, $pei, 
-                'Crie as Perspectivas do BSC (ex: Financeira, Clientes, Processos e Aprendizado).', 
+
+            return $this->buildResponse($phases, 'perspectivas', 20, $pei,
+                'Crie as Perspectivas do BSC (ex: Financeira, Clientes, Processos e Aprendizado).',
                 'pei.perspectivas', 'Criar Perspectivas');
         }
 
         // Se tem pelo menos 1, marcamos como completa mas com mensagem de orientação se < 4
         $phases['perspectivas']['status'] = 'completed';
-        $perspectivaWarning = $perspectivasCount < 4 ? " (Recomendamos 4 pilares, você tem {$perspectivasCount})" : "";
+        $perspectivaWarning = $perspectivasCount < 4 ? " (Recomendamos 4 pilares, você tem {$perspectivasCount})" : '';
 
         // --- PHASE 4: Objetivos Estratégicos ---
         $perspectivaIds = $pei->perspectivas()->pluck('cod_perspectiva');
@@ -98,8 +99,9 @@ class PeiGuidanceService
 
         if ($objetivosCount == 0) {
             $phases['objetivos']['status'] = 'active';
-            return $this->buildResponse($phases, 'objetivos', 40, $pei, 
-                "Perspectiva registrada!{$perspectivaWarning} Agora, defina os Objetivos Estratégicos.", 
+
+            return $this->buildResponse($phases, 'objetivos', 40, $pei,
+                "Perspectiva registrada!{$perspectivaWarning} Agora, defina os Objetivos Estratégicos.",
                 'objetivos.index', 'Criar Objetivos');
         }
 
@@ -109,16 +111,19 @@ class PeiGuidanceService
             ->count('cod_perspectiva');
 
         $phases['objetivos']['status'] = 'completed';
-        $objetivoWarning = $perspectivasComObjetivo < $perspectivasCount ? " (Algumas perspectivas ainda estão sem objetivos)" : "";
+        $objetivoWarning = $perspectivasComObjetivo < $perspectivasCount ? ' (Algumas perspectivas ainda estão sem objetivos)' : '';
 
         // --- PHASE 5: Grau de Satisfação (NEW) ---
-        $grausCount = \App\Models\StrategicPlanning\GrauSatisfacao::count();
+        // Contagem por CICLO: um PEI novo precisa aparecer como "faixas
+        // pendentes" mesmo que outro ciclo já tenha as suas.
+        $grausCount = GrauSatisfacao::doPei($pei->cod_pei)->count();
         $phases['graus']['count'] = $grausCount;
 
         if ($grausCount == 0) {
             $phases['graus']['status'] = 'active';
-            return $this->buildResponse($phases, 'graus', 50, $pei, 
-                "Objetivos salvos!{$objetivoWarning} Agora, defina as cores e níveis do Grau de Satisfação.", 
+
+            return $this->buildResponse($phases, 'graus', 50, $pei,
+                "Objetivos salvos!{$objetivoWarning} Agora, defina as cores e níveis do Grau de Satisfação.",
                 'graus-satisfacao.index', 'Configurar Níveis');
         }
 
@@ -131,8 +136,9 @@ class PeiGuidanceService
 
         if ($indicadoresCount == 0) {
             $phases['indicadores']['status'] = 'active';
-            return $this->buildResponse($phases, 'indicadores', 65, $pei, 
-                "Níveis de satisfação configurados! O próximo passo é criar Indicadores para medi-los.", 
+
+            return $this->buildResponse($phases, 'indicadores', 65, $pei,
+                'Níveis de satisfação configurados! O próximo passo é criar Indicadores para medi-los.',
                 'indicadores.index', 'Criar Indicadores');
         }
 
@@ -142,20 +148,21 @@ class PeiGuidanceService
             ->count('cod_objetivo');
 
         $phases['indicadores']['status'] = 'completed';
-        $indicadorWarning = $objetivosComIndicador < $objetivosCount ? " (Faltam indicadores para alguns objetivos)" : "";
+        $indicadorWarning = $objetivosComIndicador < $objetivosCount ? ' (Faltam indicadores para alguns objetivos)' : '';
 
-        // --- PHASE 7: Planos de Ação ---
+        // --- PHASE 7: Iniciativas ---
         $planosCount = PlanoDeAcao::whereIn('cod_objetivo', $objetivoIds)->count();
         $phases['planos']['count'] = $planosCount;
 
         if ($planosCount == 0) {
             $phases['planos']['status'] = 'active';
-            return $this->buildResponse($phases, 'planos', 85, $pei, 
-                "Indicadores registrados!{$indicadorWarning} Agora, crie Planos de Ação para tirar a estratégia do papel.", 
-                'planos.index', 'Criar Planos');
+
+            return $this->buildResponse($phases, 'planos', 85, $pei,
+                "Indicadores registrados!{$indicadorWarning} Agora, crie Iniciativas para tirar a estratégia do papel.",
+                'planos.index', 'Criar Iniciativas');
         }
 
-        // --- PHASE 6: Planos de Ação ---
+        // --- PHASE 6: Iniciativas ---
         // Action Plans linked to Objectives
         $planosCount = PlanoDeAcao::whereIn('cod_objetivo', $objetivoIds)->count();
         $phases['planos']['count'] = $planosCount;
@@ -163,9 +170,9 @@ class PeiGuidanceService
         if ($planosCount > 0) {
             $phases['planos']['status'] = 'completed';
         } else {
-            return $this->buildResponse($phases, 'planos', 80, $pei, 
-                'Crie Planos de Ação para tirar a estratégia do papel.', 
-                'planos.index', 'Criar Planos');
+            return $this->buildResponse($phases, 'planos', 80, $pei,
+                'Crie Iniciativas para tirar a estratégia do papel.',
+                'planos.index', 'Criar Iniciativas');
         }
 
         // --- ALL COMPLETED ---
@@ -177,7 +184,7 @@ class PeiGuidanceService
             'pei_id' => $pei->cod_pei,
             'message' => 'Parabéns! Seu Planejamento Estratégico está estruturado. Agora é hora de monitorar.',
             'action_route' => 'dashboard',
-            'action_label' => 'Ir para Dashboard'
+            'action_label' => 'Ir para Dashboard',
         ];
     }
 
@@ -185,7 +192,7 @@ class PeiGuidanceService
     {
         // Mark current phase as active/in_progress if not already
         if ($phases[$currentPhaseKey]['status'] === 'locked') {
-            $phases[$currentPhaseKey]['status'] = 'active'; 
+            $phases[$currentPhaseKey]['status'] = 'active';
         }
 
         return [
@@ -194,11 +201,11 @@ class PeiGuidanceService
             'progress' => $progress,
             'phases' => $phases,
             'pei_id' => $pei->cod_pei,
-            'pei_cycle' => $pei->num_ano_inicio_pei . '-' . $pei->num_ano_fim_pei,
+            'pei_cycle' => $pei->num_ano_inicio_pei.'-'.$pei->num_ano_fim_pei,
             'message' => $msg,
             'action_route' => $route,
             'action_label' => $label,
-            'next_step' => $this->getNextStepInfo($currentPhaseKey)
+            'next_step' => $this->getNextStepInfo($currentPhaseKey),
         ];
     }
 
@@ -209,13 +216,13 @@ class PeiGuidanceService
     public function verificarPreRequisitos(string $modulo, ?string $peiId = null, ?string $organizacaoId = null): ?array
     {
         $peiId = $peiId ?? session('pei_selecionado_id');
-        $pei   = $peiId ? PEI::find($peiId) : PEI::ativos()->first();
+        $pei = $peiId ? PEI::find($peiId) : PEI::ativos()->first();
 
         if (! $pei) {
             return [
                 'mensagem' => 'É necessário ter um Ciclo PEI ativo antes de registrar qualquer informação estratégica.',
-                'rota'     => 'pei.ciclos',
-                'rotulo'   => 'Ir para Ciclos PEI',
+                'rota' => 'pei.ciclos',
+                'rotulo' => 'Ir para Ciclos PEI',
             ];
         }
 
@@ -226,32 +233,32 @@ class PeiGuidanceService
                 ? null
                 : [
                     'mensagem' => 'Para criar Objetivos Estratégicos são necessárias ao menos 2 Perspectivas cadastradas.',
-                    'rota'     => 'pei.perspectivas',
-                    'rotulo'   => 'Ir para Perspectivas',
+                    'rota' => 'pei.perspectivas',
+                    'rotulo' => 'Ir para Perspectivas',
                 ],
 
-            'indicadores' => Objetivo::whereHas('perspectiva', fn($q) => $q->where('cod_pei', $pei->cod_pei))->exists()
+            'indicadores' => Objetivo::whereHas('perspectiva', fn ($q) => $q->where('cod_pei', $pei->cod_pei))->exists()
                 ? null
                 : [
                     'mensagem' => 'Para criar Indicadores é necessário ter ao menos 1 Objetivo Estratégico cadastrado.',
-                    'rota'     => 'objetivos',
-                    'rotulo'   => 'Ir para Objetivos',
+                    'rota' => 'objetivos',
+                    'rotulo' => 'Ir para Objetivos',
                 ],
 
-            'planos' => Objetivo::whereHas('perspectiva', fn($q) => $q->where('cod_pei', $pei->cod_pei))->exists()
+            'planos' => Objetivo::whereHas('perspectiva', fn ($q) => $q->where('cod_pei', $pei->cod_pei))->exists()
                 ? null
                 : [
-                    'mensagem' => 'Para criar Planos de Ação é necessário ter ao menos 1 Objetivo Estratégico cadastrado.',
-                    'rota'     => 'objetivos',
-                    'rotulo'   => 'Ir para Objetivos',
+                    'mensagem' => 'Para criar Iniciativas é necessário ter ao menos 1 Objetivo Estratégico cadastrado.',
+                    'rota' => 'objetivos',
+                    'rotulo' => 'Ir para Objetivos',
                 ],
 
-            'riscos' => Objetivo::whereHas('perspectiva', fn($q) => $q->where('cod_pei', $pei->cod_pei))->exists()
+            'riscos' => Objetivo::whereHas('perspectiva', fn ($q) => $q->where('cod_pei', $pei->cod_pei))->exists()
                 ? null
                 : [
                     'mensagem' => 'Para cadastrar Riscos é recomendável ter ao menos 1 Objetivo Estratégico definido.',
-                    'rota'     => 'objetivos',
-                    'rotulo'   => 'Ir para Objetivos',
+                    'rota' => 'objetivos',
+                    'rotulo' => 'Ir para Objetivos',
                 ],
 
             default => null,
@@ -262,34 +269,34 @@ class PeiGuidanceService
     {
         $order = ['ciclo', 'inaugurar', 'identidade', 'perspectivas', 'objetivos', 'graus', 'indicadores', 'planos', 'monitoramento'];
         $index = array_search($currentPhase, $order);
-        
+
         if ($index !== false && isset($order[$index + 1])) {
             $nextKey = $order[$index + 1];
             $phases = $this->getEmptyPhasesStructure();
-            
+
             // Fallback for monitoramento which isn't in empty structure
             $name = $phases[$nextKey]['name'] ?? 'Monitoramento';
-            
+
             return [
                 'key' => $nextKey,
-                'name' => $name
+                'name' => $name,
             ];
         }
-        
+
         return null;
     }
 
     private function getEmptyPhasesStructure(): array
     {
         return [
-            'ciclo'       => ['name' => 'Ciclo PEI',          'status' => 'locked', 'icon' => 'calendar-range'],
-            'inaugurar'   => ['name' => 'Inaugurar e Integrar','status' => 'locked', 'icon' => 'flag-fill'],
-            'identidade'  => ['name' => 'Identidade',          'status' => 'locked', 'icon' => 'fingerprint'],
+            'ciclo' => ['name' => 'Ciclo PEI',          'status' => 'locked', 'icon' => 'calendar-range'],
+            'inaugurar' => ['name' => 'Inaugurar e Integrar', 'status' => 'locked', 'icon' => 'flag-fill'],
+            'identidade' => ['name' => 'Identidade',          'status' => 'locked', 'icon' => 'fingerprint'],
             'perspectivas' => ['name' => 'Perspectivas', 'status' => 'locked', 'icon' => 'layers'],
             'objetivos' => ['name' => 'Objetivos', 'status' => 'locked', 'icon' => 'bullseye'],
             'graus' => ['name' => 'Grau de Satisfação', 'status' => 'locked', 'icon' => 'palette'],
             'indicadores' => ['name' => 'Indicadores', 'status' => 'locked', 'icon' => 'graph-up-arrow'],
-            'planos' => ['name' => 'Planos de Ação', 'status' => 'locked', 'icon' => 'kanban'],
+            'planos' => ['name' => 'Iniciativas', 'status' => 'locked', 'icon' => 'kanban'],
         ];
     }
 }

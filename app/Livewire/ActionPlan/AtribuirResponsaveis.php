@@ -5,14 +5,13 @@ namespace App\Livewire\ActionPlan;
 use App\Models\ActionPlan\PlanoComunicacao;
 use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\ActionPlan\Raci;
-use App\Models\User;
 use App\Models\PerfilAcesso;
-use App\Models\Organization;
+use App\Models\User;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 #[Layout('layouts.app')]
 class AtribuirResponsaveis extends Component
@@ -20,32 +19,39 @@ class AtribuirResponsaveis extends Component
     use AuthorizesRequests;
 
     public $plano;
+
     public $responsaveis = [];
+
     public $usuariosDisponiveis = [];
 
     public $novo_usuario_id;
+
     public $novo_perfil_id;
 
     public $perfisGestao = [];
 
     // Plano de Comunicação
     public bool $showModalComun = false;
+
     public ?string $comunEditId = null;
+
     public array $formComun = [
-        'nom_publico_alvo'  => '',
-        'dsc_mensagem_chave'=> '',
-        'dsc_canal'         => 'E-mail',
-        'dsc_frequencia'    => 'Mensal',
-        'nom_responsavel'   => '',
+        'nom_publico_alvo' => '',
+        'dsc_mensagem_chave' => '',
+        'dsc_canal' => 'E-mail',
+        'dsc_frequencia' => 'Mensal',
+        'nom_responsavel' => '',
     ];
 
     // Matriz RACI
     public bool $showModalRaci = false;
+
     public ?string $raciEditId = null;
+
     public array $formRaci = [
-        'user_id'     => '',
+        'user_id' => '',
         'cod_entrega' => '',
-        'dsc_papel'   => 'R',
+        'dsc_papel' => 'R',
     ];
 
     protected $listeners = ['refresh' => '$refresh'];
@@ -75,7 +81,7 @@ class AtribuirResponsaveis extends Component
             ->get();
 
         // 2. Carregar Usuários da mesma Organização (para o select)
-        $this->usuariosDisponiveis = User::whereHas('organizacoes', function($q) {
+        $this->usuariosDisponiveis = User::whereHas('organizacoes', function ($q) {
             $q->where('tab_organizacoes.cod_organizacao', $this->plano->cod_organizacao);
         })->orderBy('name')->get();
     }
@@ -86,7 +92,7 @@ class AtribuirResponsaveis extends Component
 
         $this->validate([
             'novo_usuario_id' => 'required|exists:users,id',
-            'novo_perfil_id' => 'required|in:' . PerfilAcesso::GESTOR_RESPONSAVEL . ',' . PerfilAcesso::GESTOR_SUBSTITUTO,
+            'novo_perfil_id' => 'required|in:'.PerfilAcesso::GESTOR_RESPONSAVEL.','.PerfilAcesso::GESTOR_SUBSTITUTO,
         ]);
 
         // Verificar duplicata
@@ -98,6 +104,7 @@ class AtribuirResponsaveis extends Component
 
         if ($existe) {
             session()->flash('error', 'Este usuário já possui este perfil atribuído a este plano.');
+
             return;
         }
 
@@ -144,11 +151,11 @@ class AtribuirResponsaveis extends Component
         $c = PlanoComunicacao::findOrFail($id);
         $this->comunEditId = $id;
         $this->formComun = [
-            'nom_publico_alvo'   => $c->nom_publico_alvo,
+            'nom_publico_alvo' => $c->nom_publico_alvo,
             'dsc_mensagem_chave' => $c->dsc_mensagem_chave,
-            'dsc_canal'          => $c->dsc_canal,
-            'dsc_frequencia'     => $c->dsc_frequencia,
-            'nom_responsavel'    => $c->nom_responsavel ?? '',
+            'dsc_canal' => $c->dsc_canal,
+            'dsc_frequencia' => $c->dsc_frequencia,
+            'nom_responsavel' => $c->nom_responsavel ?? '',
         ];
         $this->showModalComun = true;
     }
@@ -156,12 +163,12 @@ class AtribuirResponsaveis extends Component
     public function salvarComunicacao(): void
     {
         $this->validate([
-            'formComun.nom_publico_alvo'   => 'required|string|max:150',
+            'formComun.nom_publico_alvo' => 'required|string|max:150',
             'formComun.dsc_mensagem_chave' => 'required|string|max:500',
-            'formComun.dsc_canal'          => 'required|string',
-            'formComun.dsc_frequencia'     => 'required|string',
+            'formComun.dsc_canal' => 'required|string',
+            'formComun.dsc_frequencia' => 'required|string',
         ], [
-            'formComun.nom_publico_alvo.required'   => 'Informe o público-alvo.',
+            'formComun.nom_publico_alvo.required' => 'Informe o público-alvo.',
             'formComun.dsc_mensagem_chave.required' => 'Informe a mensagem-chave.',
         ]);
 
@@ -172,7 +179,7 @@ class AtribuirResponsaveis extends Component
             : PlanoComunicacao::create($data);
 
         $this->showModalComun = false;
-        $this->comunEditId    = null;
+        $this->comunEditId = null;
         $this->dispatch('notify', message: 'Item de comunicação salvo.', style: 'success');
     }
 
@@ -196,9 +203,9 @@ class AtribuirResponsaveis extends Component
         $r = Raci::findOrFail($id);
         $this->raciEditId = $id;
         $this->formRaci = [
-            'user_id'     => $r->user_id,
+            'user_id' => $r->user_id,
             'cod_entrega' => $r->cod_entrega ?? '',
-            'dsc_papel'   => $r->dsc_papel,
+            'dsc_papel' => $r->dsc_papel,
         ];
         $this->showModalRaci = true;
     }
@@ -208,7 +215,7 @@ class AtribuirResponsaveis extends Component
         $this->authorize('update', $this->plano);
 
         $this->validate([
-            'formRaci.user_id'   => 'required|exists:users,id',
+            'formRaci.user_id' => 'required|exists:users,id',
             'formRaci.dsc_papel' => 'required|in:R,A,C,I',
         ], [
             'formRaci.user_id.required' => 'Selecione o usuário.',
@@ -216,9 +223,9 @@ class AtribuirResponsaveis extends Component
 
         $data = [
             'cod_plano_de_acao' => $this->plano->cod_plano_de_acao,
-            'cod_entrega'       => $this->formRaci['cod_entrega'] ?: null,
-            'user_id'           => $this->formRaci['user_id'],
-            'dsc_papel'         => $this->formRaci['dsc_papel'],
+            'cod_entrega' => $this->formRaci['cod_entrega'] ?: null,
+            'user_id' => $this->formRaci['user_id'],
+            'dsc_papel' => $this->formRaci['dsc_papel'],
         ];
 
         $this->raciEditId
@@ -226,7 +233,7 @@ class AtribuirResponsaveis extends Component
             : Raci::create($data);
 
         $this->showModalRaci = false;
-        $this->raciEditId    = null;
+        $this->raciEditId = null;
         $this->dispatch('notify', message: 'Papel RACI salvo.', style: 'success');
     }
 
@@ -258,11 +265,11 @@ class AtribuirResponsaveis extends Component
 
         return view('livewire.plano-acao.atribuir-responsaveis', [
             'comunicacoes' => $comunicacoes,
-            'canais'       => PlanoComunicacao::CANAIS,
-            'frequencias'  => PlanoComunicacao::FREQUENCIAS,
-            'racis'        => $racis,
-            'papeisRaci'   => Raci::PAPEIS,
-            'entregasPlano'=> $entregas,
+            'canais' => PlanoComunicacao::CANAIS,
+            'frequencias' => PlanoComunicacao::FREQUENCIAS,
+            'racis' => $racis,
+            'papeisRaci' => Raci::PAPEIS,
+            'entregasPlano' => $entregas,
         ]);
     }
 }

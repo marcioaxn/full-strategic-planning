@@ -3,19 +3,25 @@
 namespace App\Livewire\PerformanceIndicators;
 
 use App\Models\PerformanceIndicators\Indicador;
+use App\Models\StrategicPlanning\PEI;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('layouts.app')]
+// Sem #[Layout] fixo: o layout é escolhido no render(), porque esta tela
+// também é servida ao visitante pelo Mapa Estratégico público.
 class DetalharIndicador extends Component
 {
     public Indicador $indicador;
+
     public int $anoFiltro;
+
     public array $chartData = [];
+
     public array $anosDisponiveis = [];
 
     protected $listeners = [
-        'anoSelecionado' => 'atualizarAno'
+        'anoSelecionado' => 'atualizarAno',
     ];
 
     public function atualizarAno($ano)
@@ -33,12 +39,12 @@ class DetalharIndicador extends Component
             'evolucoes',
             'metasPorAno',
             'linhaBase',
-            'organizacoes'
+            'organizacoes',
         ])->findOrFail($id);
 
         // Usa o ano selecionado no navbar (Ano de referência) ou ano atual como fallback
         $this->anoFiltro = (int) session('ano_selecionado', now()->year);
-        
+
         $this->carregarAnosDisponiveis();
         $this->prepareChartData();
     }
@@ -46,9 +52,9 @@ class DetalharIndicador extends Component
     protected function carregarAnosDisponiveis()
     {
         // Busca anos dos PEIs para consistência com o seletor global
-        $this->anosDisponiveis = \App\Models\StrategicPlanning\PEI::orderBy('num_ano_inicio_pei', 'desc')
+        $this->anosDisponiveis = PEI::orderBy('num_ano_inicio_pei', 'desc')
             ->get()
-            ->flatMap(fn($pei) => range($pei->num_ano_fim_pei, $pei->num_ano_inicio_pei))
+            ->flatMap(fn ($pei) => range($pei->num_ano_fim_pei, $pei->num_ano_inicio_pei))
             ->unique()
             ->sortDesc()
             ->values()
@@ -74,7 +80,7 @@ class DetalharIndicador extends Component
         $realizado = [];
 
         $evolucoes = $this->indicador->evolucoes
-            ->where('num_ano', (int)$this->anoFiltro)
+            ->where('num_ano', (int) $this->anoFiltro)
             ->keyBy('num_mes');
 
         for ($i = 1; $i <= 12; $i++) {
@@ -84,20 +90,23 @@ class DetalharIndicador extends Component
 
             // Se não houver evolução lançada mas houver meta anual, poderíamos sugerir o previsto proporcional?
             // Por enquanto mantemos fiel ao que está no banco, enviando null para o Chart.js
-            $previsto[] = $vlrPrevisto !== null ? (float)$vlrPrevisto : null;
-            $realizado[] = $vlrRealizado !== null ? (float)$vlrRealizado : null;
+            $previsto[] = $vlrPrevisto !== null ? (float) $vlrPrevisto : null;
+            $realizado[] = $vlrRealizado !== null ? (float) $vlrRealizado : null;
         }
 
         $this->chartData = [
             'labels' => $meses,
             'previsto' => $previsto,
             'realizado' => $realizado,
-            'ano' => (int)$this->anoFiltro
+            'ano' => (int) $this->anoFiltro,
         ];
     }
 
     public function render()
     {
-        return view('livewire.indicador.detalhar-indicador');
+        // Layout dinâmico: o visitante chega aqui pelo Mapa Estratégico público
+        // e não tem menu autenticado. Mesmo critério do MapaEstrategico.
+        return view('livewire.indicador.detalhar-indicador')
+            ->layout(Auth::check() ? 'layouts.app' : 'layouts.public');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models\PerformanceIndicators;
 
 use App\Models\StrategicPlanning\Arquivo;
+use App\Support\CalculoPolaridade;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,7 +18,7 @@ class EvolucaoIndicador extends Model
     /**
      * Tabela do banco de dados
      */
-    protected $table = 'tab_evolucao_indicador';
+    protected $table = 'performance_indicators.tab_evolucao_indicador';
 
     /**
      * Chave primária
@@ -82,18 +83,15 @@ class EvolucaoIndicador extends Model
      */
     public function calcularAtingimento(): float
     {
-        if (!$this->vlr_previsto || $this->vlr_previsto == 0) {
-            return 0;
-        }
-
-        $polaridade = $this->indicador->dsc_polaridade ?? 'Positiva';
-
-        return match ($polaridade) {
-            'Negativa' => $this->vlr_realizado > 0 ? ($this->vlr_previsto / $this->vlr_realizado) * 100 : 100,
-            'Não Aplicável' => 0,
-            'Positiva', 'Estabilidade' => ($this->vlr_realizado / $this->vlr_previsto) * 100,
-            default => ($this->vlr_realizado / $this->vlr_previsto) * 100,
-        };
+        // Era uma CÓPIA da conta que vive em Indicador — com os mesmos três
+        // erros. Duas cópias da mesma regra divergem sozinhas: a tela lia de
+        // uma classe e o relatório da outra. Agora as duas chamam o mesmo
+        // lugar: App\Support\CalculoPolaridade.
+        return CalculoPolaridade::atingimento(
+            $this->vlr_realizado,
+            $this->vlr_previsto,
+            $this->indicador?->dsc_polaridade
+        );
     }
 
     /**

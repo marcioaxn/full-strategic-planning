@@ -104,7 +104,7 @@
                     </div>
                     <p class="text-muted small mb-0">
                         <i class="bi bi-lightbulb text-warning me-2"></i>
-                        <strong>Por que são importantes?</strong> Temas norteadores garantem que perspectivas, objetivos, indicadores e planos de ação falem "a mesma língua" — o diagnóstico do ciclo. São a bússola que orienta <em>todas</em> as outras peças do mapa estratégico.
+                        <strong>Por que são importantes?</strong> Temas norteadores garantem que perspectivas, objetivos, indicadores e iniciativas falem "a mesma língua" — o diagnóstico do ciclo. São a bússola que orienta <em>todas</em> as outras peças do mapa estratégico.
                     </p>
                 </div>
 

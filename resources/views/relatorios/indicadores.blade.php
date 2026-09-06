@@ -3,16 +3,9 @@
 <head>
     <meta charset="utf-8">
     <title>Indicadores de Desempenho (KPIs)</title>
-    @include('relatorios.partials.estilos')
+    @include('relatorios.partials.estilos', ['orientacao' => 'landscape'])
 </head>
 <body>
-    @include('relatorios.partials.cabecalho', [
-        'rptTitulo'    => 'Indicadores de Desempenho',
-        'rptEyebrow'   => 'KPIs — Módulo 03 — Monitorar e Avaliar',
-        'rptSubtitulo' => $organizacao ? $organizacao->nom_organizacao : 'Todas as Unidades',
-        'rptIcon'      => '&#9650;',
-    ])
-    @include('relatorios.partials.rodape')
 
     <main>
         @if(isset($filtros))
@@ -28,13 +21,32 @@
             $atings       = $mensuraveis->map(fn($i) => $i->calcularAtingimento())->filter(fn($v) => $v !== null);
             $mediaAting   = $atings->count() > 0 ? $atings->avg() : 0;
 
-            $verde    = $mensuraveis->filter(fn($i) => $i->calcularAtingimento() >= 80)->count();
-            $amarelo  = $mensuraveis->filter(fn($i) => $i->calcularAtingimento() >= 50 && $i->calcularAtingimento() < 80)->count();
-            $vermelho = $mensuraveis->filter(fn($i) => $i->calcularAtingimento() < 50)->count();
+            /*
+             * 🔴 OS CORTES SÃO DA ORGANIZAÇÃO, NÃO DO RELATÓRIO.
+             *
+             * Aqui estava escrito: bom = 80%, atenção = 50%, crítico abaixo
+             * disso. Números que ninguém mediu, e que divergem da régua que a
+             * própria organização configurou em Graus de Satisfação — a mesma
+             * que acende o farol do Mapa Estratégico. O MESMO indicador saía
+             * "dentro da meta" no relatório e crítico no mapa.
+             *
+             * A melhor faixa é a de maior valor mínimo. "Dentro da meta" passa
+             * a significar "na melhor faixa que a organização definiu", e o
+             * cartão diz qual é e de quanto a quanto vai.
+             */
+            $regua        = ($grausSatisfacao ?? collect())->sortBy('vlr_minimo')->values();
+            $temRegua     = $regua->isNotEmpty();
+            $melhorFaixa  = $temRegua ? $regua->last() : null;
+
+            $naMelhor = $temRegua
+                ? $mensuraveis->filter(fn($i) => $i->calcularAtingimento() >= (float) $melhorFaixa->vlr_minimo)->count()
+                : 0;
+
+            $foraDaMelhor = $temRegua ? ($mensuraveis->count() - $naMelhor) : 0;
 
             // Agrupar por perspectiva → objective
             $porPerspectiva = $indicadores->groupBy(function($i) {
-                return $i->objetivo?->perspectiva?->dsc_perspectiva ?? 'Indicadores de Planos / Sem Perspectiva';
+                return $i->objetivo?->perspectiva?->dsc_perspectiva ?? 'Indicadores de Iniciativas / Sem Perspectiva';
             })->sortKeys();
         @endphp
 
@@ -51,26 +63,49 @@
                     <p class="kpi-value">{{ number_format($mediaAting, 0, ',', '.') }}<span style="font-size:13px;">%</span></p>
                     <p class="kpi-sub">média do período</p>
                 </td>
+                @if($temRegua)
                 <td class="kpi-card success" style="width:25%;">
-                    <p class="kpi-label">Dentro da Meta</p>
-                    <p class="kpi-value" style="color:#2e8b57;">{{ $verde }}</p>
-                    <p class="kpi-sub">&ge; 80% de atingimento</p>
+                    <p class="kpi-label">{{ $melhorFaixa->dsc_grau_satisfacao }}</p>
+                    <p class="kpi-value">{{ $naMelhor }}</p>
+                    <p class="kpi-sub">a partir de {{ number_format((float) $melhorFaixa->vlr_minimo, 0, ',', '.') }}% de atingimento</p>
                 </td>
-                <td class="kpi-card danger" style="width:25%;">
-                    <p class="kpi-label">Atenção / Crítico</p>
-                    <p class="kpi-value" style="color:#dc3545;">{{ $amarelo + $vermelho }}</p>
-                    <p class="kpi-sub">{{ $amarelo }} atenção · {{ $vermelho }} crítico</p>
+                <td class="kpi-card warning" style="width:25%;">
+                    <p class="kpi-label">Abaixo dessa faixa</p>
+                    <p class="kpi-value">{{ $foraDaMelhor }}</p>
+                    <p class="kpi-sub">de {{ $mensuraveis->count() }} indicadores mensuráveis</p>
                 </td>
+                @else
+                <td class="kpi-card neutro" style="width:50%;" colspan="2">
+                    <p class="kpi-label">Faixas de satisfação</p>
+                    <p class="kpi-value" style="font-size:12px;">Não configuradas</p>
+                    <p class="kpi-sub">
+                        Sem as faixas, este relatório não classifica os indicadores —
+                        classificar por conta própria seria emitir um juízo que a organização não emitiu.
+                    </p>
+                </td>
+                @endif
             </tr>
         </table>
 
-        {{-- Legenda --}}
-        <div style="margin-bottom:14px; font-size:8px; color:#718096; background:#f7fafc; padding:6px 10px; border-radius:6px; border:1px solid #e2e8f0;">
-            <strong style="color:#1a3a5c;">Legenda de Atingimento:</strong>
-            <span style="margin-left:12px;"><span class="farol" style="background:#2e8b57;"></span> Bom (&ge;80%)</span>
-            <span style="margin-left:12px;"><span class="farol" style="background:#d97706;"></span> Atenção (50–79%)</span>
-            <span style="margin-left:12px;"><span class="farol" style="background:#dc3545;"></span> Crítico (&lt;50%)</span>
-            <span style="margin-left:12px;"><span class="farol" style="background:#a0aec0;"></span> Não aplicável</span>
+        {{-- Legenda: as faixas QUE A ORGANIZAÇÃO definiu, com nome e intervalo.
+             A legenda anterior era fixa (80/50) e desmentia a régua real. --}}
+        <div class="rpt-filtros" style="margin-bottom:14px;">
+            @if($temRegua)
+                <strong>Graus de satisfação deste ciclo:</strong>
+                @foreach($regua as $faixa)
+                    <span style="margin-left:12px;">
+                        <span class="farol" style="background:{{ $faixa->cor }};"></span>
+                        {{ $faixa->dsc_grau_satisfacao }}
+                        ({{ number_format((float) $faixa->vlr_minimo, 0, ',', '.') }}–{{ number_format((float) $faixa->vlr_maximo, 0, ',', '.') }}%)
+                    </span>
+                @endforeach
+            @else
+                <strong>Sem graus de satisfação configurados neste ciclo.</strong>
+                <span style="margin-left:8px;">
+                    Os percentuais aparecem sem cor: a organização ainda não definiu a partir de
+                    que valor um resultado é bom, regular ou crítico.
+                </span>
+            @endif
         </div>
 
         {{-- Indicadores agrupados por Perspectiva --}}
@@ -97,7 +132,9 @@
                     @php
                         $na  = ($ind->dsc_polaridade ?? 'Positiva') === 'Não Aplicável';
                         $at  = $na ? null : $ind->calcularAtingimento();
-                        $cor = $na ? '#a0aec0' : ($ind->getCorFarol() ?: '#cbd5e0');
+                        // getCorFarol() já trata as pontas e devolve o cinza neutro quando
+                        // não há régua — o '?:' anterior sobrescrevia isso com outro cinza.
+                        $cor = $na ? '#95969A' : $ind->getCorFarol((int) ($ano ?? date('Y')));
                         $ult = $ind->getUltimaEvolucao();
                         $metaTxt = $ind->dsc_meta ?: '—';
                     @endphp
@@ -107,7 +144,7 @@
                             @if($ind->cod_objetivo)
                                 {{ Str::limit($ind->objetivo?->nom_objetivo ?? '—', 40) }}
                             @elseif($ind->planoDeAcao)
-                                <span class="pill pill-neutral" style="font-size:7px;">Plano</span>
+                                <span class="pill pill-neutral" style="font-size:7px;">Iniciativa</span>
                                 {{ Str::limit($ind->planoDeAcao->dsc_plano_de_acao ?? '—', 32) }}
                             @else
                                 <span style="color:#a0aec0;">—</span>

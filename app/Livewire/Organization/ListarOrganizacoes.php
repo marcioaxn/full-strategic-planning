@@ -3,24 +3,25 @@
 namespace App\Livewire\Organization;
 
 use App\Models\Organization;
+use App\Models\SystemSetting;
+use App\Services\AI\AiServiceFactory;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 #[Layout('layouts.app')]
 class ListarOrganizacoes extends Component
 {
-    use WithPagination;
     use AuthorizesRequests;
+    use WithPagination;
 
     public string $search = '';
-    
+
     public array $form = [
         'sgl_organizacao' => '',
         'nom_organizacao' => '',
@@ -28,46 +29,58 @@ class ListarOrganizacoes extends Component
     ];
 
     public bool $showFormModal = false;
+
     public bool $showDeleteModal = false;
 
     public ?Organization $editing = null;
 
     public ?string $flashMessage = null;
+
     public string $flashStyle = 'success';
 
     public bool $aiEnabled = false;
+
     public $aiSuggestion = '';
 
     // Propriedades de feedback premium
     public bool $showSuccessModal = false;
+
     public bool $showErrorModal = false;
+
     public string $successMessage = '';
+
     public string $errorMessage = '';
+
     public string $createdOrgName = '';
 
     public function mount()
     {
-        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
+        $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
     }
 
     public function pedirAjudaIA()
     {
-        if (!$this->aiEnabled) return;
-        
+        if (! $this->aiEnabled) {
+            return;
+        }
+
         if (empty($this->form['nom_organizacao'])) {
-             session()->flash('error', 'Digite o nome da organização primeiro.');
-             return;
+            session()->flash('error', 'Digite o nome da organização primeiro.');
+
+            return;
         }
 
         try {
-            $aiService = \App\Services\AI\AiServiceFactory::make();
-            if (!$aiService) return;
+            $aiService = AiServiceFactory::make();
+            if (! $aiService) {
+                return;
+            }
 
             $this->aiSuggestion = 'Pensando...';
-            
+
             $prompt = "Sugira uma sigla curta e impactante e 3 possíveis subunidades (filiais ou departamentos) para a organização: '{$this->form['nom_organizacao']}'.
             Responda OBRIGATORIAMENTE em formato JSON puro, contendo os campos 'sigla' (string) e 'subunidades' (array de strings).";
-            
+
             $response = $aiService->suggest($prompt);
             $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
 
@@ -77,7 +90,7 @@ class ListarOrganizacoes extends Component
                 throw new \Exception('Falha ao decodificar');
             }
         } catch (\Exception $e) {
-            Log::error('Erro IA Org: ' . $e->getMessage());
+            Log::error('Erro IA Org: '.$e->getMessage());
             $this->aiSuggestion = null;
             session()->flash('error', 'Não foi possível gerar sugestões.');
         }
@@ -97,7 +110,7 @@ class ListarOrganizacoes extends Component
     ];
 
     protected $listeners = [
-        'organizacaoSelecionada' => '$refresh'
+        'organizacaoSelecionada' => '$refresh',
     ];
 
     protected function rules(): array
@@ -132,6 +145,7 @@ class ListarOrganizacoes extends Component
 
         if ($search !== '') {
             $this->applySearchFilter($query, $search);
+
             return $query->orderBy('nom_organizacao');
         }
 
@@ -187,13 +201,13 @@ class ListarOrganizacoes extends Component
     {
         $this->editing = Organization::findOrFail($id);
         $this->authorize('update', $this->editing);
-        
+
         $this->form = [
             'sgl_organizacao' => $this->editing->sgl_organizacao,
             'nom_organizacao' => $this->editing->nom_organizacao,
             'rel_cod_organizacao' => $this->editing->rel_cod_organizacao,
         ];
-        
+
         $this->showFormModal = true;
         $this->resetValidation();
     }
@@ -218,12 +232,12 @@ class ListarOrganizacoes extends Component
             } else {
                 $this->authorize('create', Organization::class);
                 $org = Organization::create($data);
-                
+
                 if (empty($data['rel_cod_organizacao'])) {
                     $org->rel_cod_organizacao = $org->cod_organizacao;
                     $org->save();
                 }
-                
+
                 $this->successMessage = __('Nova unidade cadastrada e integrada à hierarquia.');
                 $this->createdOrgName = $org->nom_organizacao;
             }
@@ -232,13 +246,25 @@ class ListarOrganizacoes extends Component
             $this->showSuccessModal = true;
             $this->resetForm();
         } catch (\Exception $e) {
+            // Sem isto, a causa real desaparece: o cliente recebe uma
+            // orientação genérica e não sobra rastro nenhum para investigar.
+            report($e);
+
             $this->errorMessage = $e->getMessage();
             $this->showErrorModal = true;
         }
     }
 
-    public function closeSuccessModal() { $this->showSuccessModal = false; $this->resetPage(); }
-    public function closeErrorModal() { $this->showErrorModal = false; }
+    public function closeSuccessModal()
+    {
+        $this->showSuccessModal = false;
+        $this->resetPage();
+    }
+
+    public function closeErrorModal()
+    {
+        $this->showErrorModal = false;
+    }
 
     public function confirmDelete(string $id): void
     {
@@ -272,15 +298,15 @@ class ListarOrganizacoes extends Component
 
         if ($search !== '') {
             $organizacoes = $this->paginatedOrganizacoes();
-            $isPaginated  = true;
+            $isPaginated = true;
         } else {
             $organizacoes = $this->buildHierarchicalList();
-            $isPaginated  = false;
+            $isPaginated = false;
         }
 
         return view('livewire.organizacao.listar-organizacoes', [
             'organizacoes' => $organizacoes,
-            'isPaginated'  => $isPaginated,
+            'isPaginated' => $isPaginated,
         ]);
     }
 
@@ -314,7 +340,7 @@ class ListarOrganizacoes extends Component
         $driver = $query->getModel()->getConnection()->getDriverName();
 
         if ($driver === 'pgsql') {
-            $like = '%' . $search . '%';
+            $like = '%'.$search.'%';
 
             $query->where(function (Builder $subQuery) use ($columns, $like) {
                 foreach ($columns as $index => $column) {
@@ -325,10 +351,10 @@ class ListarOrganizacoes extends Component
 
             return;
         }
-        
+
         $query->where(function ($q) use ($search) {
-             $q->where('nom_organizacao', 'like', "%{$search}%")
-               ->orWhere('sgl_organizacao', 'like', "%{$search}%");
+            $q->where('nom_organizacao', 'like', "%{$search}%")
+                ->orWhere('sgl_organizacao', 'like', "%{$search}%");
         });
     }
 }

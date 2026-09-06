@@ -22,7 +22,7 @@
                     <div class="me-header-icon"><i class="bi bi-person-check-fill"></i></div>
                     <div>
                         <h1 class="h3 fw-bold mb-0 text-white">Minhas Entregas</h1>
-                        <p class="mb-0" style="color:rgba(255,255,255,.78);font-size:.9rem;">Tarefas atribuídas a você, agrupadas por plano de ação.</p>
+                        <p class="mb-0" style="color:rgba(255,255,255,.78);font-size:.9rem;">Tarefas atribuídas a você, agrupadas por iniciativa.</p>
                     </div>
                 </div>
                 @if($totalAtrasadas > 0)
@@ -76,7 +76,7 @@
                     <div class="me-kpi-icon" style="background:rgba(46,139,87,.12);color:#2e8b57;"><i class="bi bi-list-task"></i></div>
                     <div>
                         <div class="me-kpi-value">{{ $totalPlanos }}</div>
-                        <div class="me-kpi-label">{{ $totalPlanos == 1 ? 'Plano' : 'Planos' }}</div>
+                        <div class="me-kpi-label">{{ $totalPlanos == 1 ? 'Iniciativa' : 'Iniciativas' }}</div>
                     </div>
                 </div>
             </div>
@@ -149,7 +149,7 @@
                 <div class="d-flex align-items-center gap-3">
                     <div class="me-plano-icon"><i class="bi bi-list-task"></i></div>
                     <div class="flex-grow-1 min-w-0">
-                        <h6 class="fw-bold mb-0 text-body text-truncate">{{ $plano?->dsc_plano_de_acao ?? 'Plano não identificado' }}</h6>
+                        <h6 class="fw-bold mb-0 text-body text-truncate">{{ $plano?->dsc_plano_de_acao ?? 'Iniciativa não identificada' }}</h6>
                         <div class="d-flex flex-wrap align-items-center gap-2 mt-1">
                             @if($plano?->objetivo?->perspectiva)
                                 <span class="badge rounded-pill bg-primary-subtle text-primary fw-medium">{{ $plano->objetivo->perspectiva->dsc_perspectiva }}</span>
@@ -237,7 +237,7 @@
         .me-kpi-value { font-size: 1.6rem; font-weight: 800; line-height: 1; color: var(--bs-emphasis-color); }
         .me-kpi-label { font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--bs-secondary-color); margin-top: .15rem; }
 
-        /* ─── Plano card ─── */
+        /* ─── Card da Iniciativa ─── */
         .me-plano-card { border-radius: .875rem; overflow: hidden; }
         .me-plano-icon {
             width: 40px; height: 40px; border-radius: .65rem; flex-shrink: 0;
