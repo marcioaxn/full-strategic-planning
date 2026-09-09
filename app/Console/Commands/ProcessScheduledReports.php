@@ -8,8 +8,6 @@ use App\Models\SystemSetting;
 use App\Services\Reports\ReportGenerationService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ProcessScheduledReports extends Command
 {
@@ -106,26 +104,17 @@ class ProcessScheduledReports extends Command
                 }
 
                 if ($result) {
-                    // Salvar Arquivo
-                    $directory = 'relatorios/'.date('Y/m');
-                    if (! Storage::disk('relatorios')->exists($directory)) {
-                        Storage::disk('relatorios')->makeDirectory($directory);
-                    }
+                    // Gravar o arquivo e registrar a geração é uma coisa só, e
+                    // vive no modelo: a tela e o agendador gravam igual, no
+                    // mesmo disco privado, com a mesma convenção de caminho.
+                    $registro = RelatorioGerado::registrar(
+                        $result,
+                        $agendamento->dsc_tipo_relatorio,
+                        $agendamento->user_id,
+                        $filtros,
+                    );
 
-                    $filename = Str::slug(pathinfo($result['filename'], PATHINFO_FILENAME)).'_'.uniqid().'.pdf';
-                    $path = $directory.'/'.$filename;
-
-                    Storage::disk('relatorios')->put($path, $result['content']);
-
-                    // Registrar Histórico
-                    RelatorioGerado::create([
-                        'user_id' => $agendamento->user_id,
-                        'dsc_tipo_relatorio' => $agendamento->dsc_tipo_relatorio,
-                        'dsc_caminho_arquivo' => $path,
-                        'dsc_formato' => 'pdf',
-                        'txt_filtros_aplicados' => $filtros,
-                        'num_tamanho_bytes' => strlen($result['content']),
-                    ]);
+                    $path = $registro->dsc_caminho_arquivo;
 
                     $this->info("Relatório gerado com sucesso: $path");
 

@@ -17,12 +17,14 @@
         <i class="bi bi-info-circle text-primary fs-5"></i>
         <div>
             <strong>O que é esta tela.</strong>
-            Registro dos relatórios que <strong>você</strong> gerou: data, tipo, formato e os
-            filtros usados. Serve para reencontrar um relatório que você apresentou e refazê-lo
-            com os mesmos critérios.
+            Os relatórios que <strong>você</strong> gerou: data, tipo, formato e os filtros
+            usados. Serve para reaver um relatório que você apresentou — o arquivo daquele dia,
+            com os números daquele dia.
             <div class="small text-muted mt-2">
-                O arquivo não fica guardado — o relatório é gerado na hora, sempre com os dados
-                atualizados. Aqui ficam o registro e os filtros.
+                <strong>Baixar arquivo</strong> devolve o documento exatamente como foi gerado.
+                <strong>Gerar de novo</strong> refaz o relatório com os mesmos filtros, mas com os
+                dados de hoje — o resultado pode ser diferente. Relatórios gerados antes de o
+                sistema passar a guardar os arquivos aparecem sem download.
             </div>
         </div>
     </div>
@@ -73,16 +75,17 @@
                             {{--
                                 🔴 A AÇÃO PRECISA DIZER O QUE FAZ.
 
-                                Havia um botão "Download" em TODA linha. Só que o
-                                relatório que o cliente baixa clicando na tela não
-                                guarda arquivo: ele vai direto para o navegador, e o
-                                registro nasce sem caminho. O clique devolvia "o
-                                arquivo não está mais disponível" — enquanto o texto
-                                no topo da própria tela já avisava que arquivo não
-                                fica guardado. A tela contradizia a si mesma.
+                                Havia um botão "Download" em TODA linha, e nenhuma
+                                linha tinha arquivo: a geração pela tela mandava o
+                                PDF direto para o navegador e gravava o registro sem
+                                caminho. O clique devolvia um erro.
 
-                                Agora: quem TEM arquivo (relatório agendado) baixa;
-                                quem não tem, gera de novo com os mesmos filtros.
+                                Agora a geração guarda o arquivo, então "Baixar
+                                arquivo" devolve o documento que foi apresentado.
+                                "Gerar de novo" só aparece para os registros
+                                anteriores a essa mudança, que não têm arquivo — e o
+                                rótulo diz que ali sai um documento novo, não uma
+                                cópia do antigo.
                             --}}
                             <td class="text-end pe-4">
                                 @if($rel->temArquivoGuardado())
