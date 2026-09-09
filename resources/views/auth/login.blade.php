@@ -161,16 +161,19 @@
                 </div>
 
                 {{-- Senha --}}
-                <div class="mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <label class="lp-field-label mb-0" for="password">Senha de Acesso</label>
-                        @if (Route::has('password.request'))
-                        <a href="{{ route('password.request') }}" class="lp-forgot">
-                            Esqueci minha senha
-                        </a>
-                        @endif
-                    </div>
-                    <div class="lp-field-wrap">
+                {{--
+                    A ordem do Tab é a ordem do DOM. "Esqueci minha senha" ficava
+                    dentro da linha do rótulo, ou seja, ANTES do campo — quem
+                    digitava o e-mail e apertava Tab caía no link em vez do campo
+                    de senha, e o Enter seguinte saía do login.
+
+                    O campo vem antes do link no DOM; o grid recoloca o link ao
+                    lado do rótulo, mantendo o visual. Sem tabindex positivo, que
+                    só transferiria o problema para o resto do formulário.
+                --}}
+                <div class="mb-4 lp-pass-group">
+                    <label class="lp-field-label mb-0 lp-pass-label" for="password">Senha de Acesso</label>
+                    <div class="lp-field-wrap lp-pass-field">
                         <i class="bi bi-lock lp-field-icon"></i>
                         <input type="password"
                                name="password"
@@ -183,6 +186,11 @@
                             <i class="bi bi-eye" id="passIcon"></i>
                         </button>
                     </div>
+                    @if (Route::has('password.request'))
+                    <a href="{{ route('password.request') }}" class="lp-forgot lp-pass-forgot">
+                        Esqueci minha senha
+                    </a>
+                    @endif
                 </div>
 
                 {{-- Manter conectado --}}
@@ -390,6 +398,21 @@
     transition: color .2s;
 }
 .lp-pass-toggle:hover { color: #1B408E; }
+
+/* ── Bloco da senha ───────────────────────────────────────────────────────────
+   O link "Esqueci minha senha" aparece à direita do rótulo, mas vem DEPOIS do
+   campo no HTML, para o Tab ir do e-mail direto para a senha. O grid faz a
+   ponte entre as duas ordens.                                                */
+.lp-pass-group {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    column-gap: .75rem;
+    row-gap: .5rem;
+}
+.lp-pass-label  { grid-area: 1 / 1; }
+.lp-pass-forgot { grid-area: 1 / 2; justify-self: end; }
+.lp-pass-field  { grid-area: 2 / 1 / 3 / 3; }
 
 /* ── Link "Esqueci" ───────────────────────────────────────────────────────── */
 .lp-forgot {

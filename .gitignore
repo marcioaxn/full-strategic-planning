@@ -74,6 +74,14 @@ RTK.md
 /documentacao/**/*.xls
 /documentacao/**/*.pptx
 /documentacao/**/*.pdf
+
+# Exceção: documentacao/pdf/ não é documentação de apoio, é ativo da aplicação.
+# O DocumentosController serve estes arquivos por rota (/guia-gppei e
+# /documentos/projetos). Ficando de fora do repositório, todo deploy novo
+# nascia com 404 na tela do guia. Só esta pasta é versionada; os PDFs soltos
+# no resto de documentacao/ continuam ignorados.
+!/documentacao/pdf/*.pdf
+
 /docs
 MIGRATIONS_SUMMARY.md
 README_ORIGINAL.md

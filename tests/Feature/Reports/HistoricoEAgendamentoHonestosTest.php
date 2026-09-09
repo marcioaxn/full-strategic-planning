@@ -16,6 +16,7 @@
 use App\Models\Reports\RelatorioGerado;
 use App\Models\SystemSetting;
 use App\Support\AgendadorDeRelatorios;
+use Illuminate\Support\Facades\Storage;
 
 test('registro sem arquivo oferece GERAR DE NOVO, não download', function () {
     $registro = new RelatorioGerado([
@@ -50,6 +51,70 @@ test('rota inexistente não vira link quebrado', function () {
     // removida entre versões. Melhor não oferecer botão do que oferecer 404.
     expect((new RelatorioGerado(['dsc_rota' => null]))->urlParaRegerar())->toBeNull()
         ->and((new RelatorioGerado(['dsc_rota' => 'rota.que.nao.existe']))->urlParaRegerar())->toBeNull();
+});
+
+test('rota que exige parâmetro no caminho não derruba a tela', function () {
+    // `relatorios.identidade` tem `{organizacaoId}` obrigatório na URL, mas só a
+    // query string vira filtro. Montar o link lançaria UrlGenerationException e
+    // levaria junto a listagem inteira — não apenas o botão.
+    $registro = new RelatorioGerado([
+        'dsc_rota' => 'relatorios.identidade',
+        'txt_filtros_aplicados' => ['ano' => 2026],
+    ]);
+
+    expect($registro->urlParaRegerar())->toBeNull();
+});
+
+test('gerar um relatório guarda o arquivo, não só o registro', function () {
+    // A regra do negócio: "Gerados Recentemente" existe para o cliente REAVER o
+    // relatório que apresentou. Sem o arquivo no disco não há o que reaver, e o
+    // download respondia "Caminho de arquivo inválido.".
+    Storage::fake('relatorios');
+
+    $registro = RelatorioGerado::registrar(
+        ['content' => '%PDF-1.4 conteudo', 'filename' => 'Relatório Executivo.pdf'],
+        'Relatório Executivo',
+        null,
+        ['ano' => 2026],
+        'relatorios.executivo',
+    );
+
+    expect($registro->temArquivoGuardado())->toBeTrue()
+        ->and($registro->dsc_formato)->toBe('pdf')
+        ->and($registro->num_tamanho_bytes)->toBe(strlen('%PDF-1.4 conteudo'));
+
+    Storage::disk('relatorios')->assertExists($registro->dsc_caminho_arquivo);
+
+    expect(Storage::disk('relatorios')->get($registro->dsc_caminho_arquivo))
+        ->toBe('%PDF-1.4 conteudo');
+});
+
+test('o arquivo guardado é o mesmo que o cliente baixa depois', function () {
+    // Reaver != regerar: o download tem de devolver os bytes daquele dia.
+    Storage::fake('relatorios');
+
+    $registro = RelatorioGerado::registrar(
+        ['content' => 'numeros de ontem', 'filename' => 'Indicadores.xlsx'],
+        'Indicadores',
+        null,
+    );
+
+    expect($registro->dsc_formato)->toBe('xlsx');
+
+    // Simula a mesma leitura que o download faz, pelo caminho guardado.
+    expect(Storage::disk('relatorios')->get($registro->dsc_caminho_arquivo))
+        ->toBe('numeros de ontem');
+});
+
+test('o card "Gerados Recentemente" oferece o arquivo, nunca gerar de novo', function () {
+    // O card serve para reaver o que foi gerado. Oferecer "gerar de novo" ali
+    // entregaria um documento diferente do que o cliente foi buscar.
+    $blade = file_get_contents(resource_path('views/livewire/relatorio/listar-relatorios.blade.php'));
+
+    expect($blade)->toContain('temArquivoGuardado()')
+        ->and($blade)->toContain('Baixar este relatório')
+        ->and($blade)->not->toContain('urlParaRegerar()')
+        ->and($blade)->not->toContain('Gerar de novo');
 });
 
 test('a tela do histórico não promete download para todo registro', function () {

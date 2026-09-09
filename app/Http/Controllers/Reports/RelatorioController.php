@@ -48,25 +48,30 @@ class RelatorioController extends Controller
      * tabela vazia. A tela prometia "Histórico de Relatórios Gerados" e
      * mostrava só o que um agendador parado não produziu.
      *
-     * Guarda-se o REGISTRO, não o arquivo: o PDF sai direto para o navegador.
-     * Guardar cada PDF gerado encheria o disco do cliente sem que ninguém
-     * pedisse — e um relatório de três meses atrás é menos útil do que gerar de
-     * novo com o dado de hoje.
+     * Guarda-se o ARQUIVO, não só o registro.
+     *
+     * A versão anterior guardava apenas o registro e mandava o PDF direto para
+     * o navegador, para não encher o disco. O efeito prático era que o cliente
+     * não tinha como reaver o relatório que gerou: o "Gerados Recentemente"
+     * listava o item e o download respondia "Caminho de arquivo inválido.".
+     *
+     * Reaver o documento apresentado é a razão de a lista existir. Um relatório
+     * gerado de novo traz os números de hoje — serve para outra coisa, não para
+     * conferir o que foi entregue naquele dia.
      */
     private function entregar(array $result, string $tipo, array $filtros = [], ?string $formato = null)
     {
         try {
-            RelatorioGerado::create([
-                'user_id' => Auth::id(),
-                'dsc_tipo_relatorio' => $tipo,
+            RelatorioGerado::registrar(
+                $result,
+                $tipo,
+                Auth::id(),
+                $filtros,
                 // Guarda QUAL rota gerou isto, para o histórico poder oferecer
-                // "gerar de novo" em vez de um download que não existe.
-                'dsc_rota' => request()->route()?->getName(),
-                'dsc_caminho_arquivo' => '',
-                'dsc_formato' => $formato ?? (str_ends_with(strtolower($result['filename'] ?? ''), '.pdf') ? 'pdf' : 'excel'),
-                'txt_filtros_aplicados' => $filtros,
-                'num_tamanho_bytes' => strlen($result['content'] ?? ''),
-            ]);
+                // "gerar de novo" quando o arquivo de fato não existir.
+                request()->route()?->getName(),
+                $formato,
+            );
         } catch (\Throwable $e) {
             // O histórico é registro, não o produto: uma falha aqui não pode
             // impedir o cliente de baixar o relatório que ele pediu.

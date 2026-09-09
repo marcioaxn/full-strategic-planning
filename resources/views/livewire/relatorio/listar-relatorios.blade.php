@@ -359,9 +359,27 @@
                                             {{ $rep->created_at->diffForHumans() }} &bull; {{ number_format($rep->num_tamanho_bytes / 1024, 1) }} KB
                                         </small>
                                     </div>
-                                    <button wire:click="download('{{ $rep->cod_relatorio_gerado }}')" class="btn btn-light btn-sm rounded-circle shadow-sm" style="width: 32px; height: 32px;">
-                                        <i class="bi bi-download text-dark"></i>
-                                    </button>
+                                    {{--
+                                        Esta lista serve para o cliente REAVER o relatório que
+                                        ele gerou. Aqui não se oferece "gerar de novo": um
+                                        relatório novo traz os números de hoje, e quem procura o
+                                        documento apresentado numa reunião precisa daquele
+                                        arquivo, não de um parecido.
+
+                                        Os registros gravados antes de a geração passar a salvar
+                                        o arquivo não têm o que baixar — e dizem isso, em vez de
+                                        oferecerem um botão que respondia "Caminho de arquivo
+                                        inválido.".
+                                    --}}
+                                    @if($rep->temArquivoGuardado())
+                                        <button wire:click="download('{{ $rep->cod_relatorio_gerado }}')" class="btn btn-light btn-sm rounded-circle shadow-sm" style="width: 32px; height: 32px;" title="Baixar este relatório">
+                                            <i class="bi bi-download text-dark"></i>
+                                        </button>
+                                    @else
+                                        <span class="badge bg-light text-muted border fw-normal" title="Este relatório foi gerado antes de o sistema passar a guardar o arquivo.">
+                                            Sem arquivo
+                                        </span>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
