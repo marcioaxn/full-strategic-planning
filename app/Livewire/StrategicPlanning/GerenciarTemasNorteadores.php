@@ -2,33 +2,49 @@
 
 namespace App\Livewire\StrategicPlanning;
 
+use App\Models\Organization;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\TemaNorteador;
-use App\Models\Organization;
-use Livewire\Component;
-use Livewire\WithPagination;
+use App\Models\SystemSetting;
+use App\Services\AI\AiServiceFactory;
+use App\Services\NotificationService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
-use Illuminate\Support\Facades\Session;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 class GerenciarTemasNorteadores extends Component
 {
+    use AuthorizesRequests;
     use WithPagination;
 
     public $search = '';
+
     #[Locked]
     public $peiAtivo;
+
     #[Locked]
     public $organizacaoId;
 
     // Campos do Modal
     public $showModal = false;
+
     public bool $showDeleteModal = false;
+
+    #[Locked]
     public $temaId;
+
     public $nom_tema_norteador;
+
     public $cod_organizacao;
+
     public bool $aiEnabled = false;
+
     public $aiSuggestion = '';
 
     protected $queryString = [
@@ -38,34 +54,55 @@ class GerenciarTemasNorteadores extends Component
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
-        'peiSelecionado' => 'atualizarPEI'
+        'peiSelecionado' => 'atualizarPEI',
     ];
 
     public function mount()
     {
-        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
+        $this->authorize('modulo.acessar', 'planejamento-estrategico');
+
+        $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
-        $this->organizacaoId = Session::get('organizacao_selecionada_id');
+        // Organização da sessão só vale se estiver no escopo do usuário.
+        $this->organizacaoId = Auth::user()->organizacaoSelecionadaId();
         $this->cod_organizacao = $this->organizacaoId;
+    }
+
+    /**
+     * Tema norteador é da UNIDADE: a capacidade vale na unidade do registro,
+     * não na soma dos vínculos do usuário em todas as unidades.
+     */
+    private function autorizarNaUnidade(string $ability, ?string $codOrganizacao = null): void
+    {
+        $codOrganizacao ??= $this->organizacaoId;
+        abort_unless($codOrganizacao !== null, 403);
+        $this->authorize("modulo.{$ability}", ['planejamento-estrategico', $codOrganizacao]);
     }
 
     public function pedirAjudaIA()
     {
-        if (!$this->aiEnabled) return;
+        $this->autorizarNaUnidade('criar');
 
-        $aiService = \App\Services\AI\AiServiceFactory::make();
-        if (!$aiService) return;
+        if (! $this->aiEnabled) {
+            return;
+        }
+
+        $aiService = AiServiceFactory::make();
+        if (! $aiService) {
+            return;
+        }
 
         $org = Organization::find($this->organizacaoId);
-        if (!$org) {
+        if (! $org) {
             session()->flash('error', 'Selecione uma organização antes de usar o Agente IA.');
+
             return;
         }
         $this->aiSuggestion = 'Pensando...';
 
         $prompt = "Sugerir 3 Temas Norteadores (Objetivos Estratégicos de alto nível) para a organização: '{$org->nom_organizacao}'. 
         Responda OBRIGATORIAMENTE em formato JSON puro, contendo um array de objetos com o campo 'nome'.";
-        
+
         $response = $aiService->suggest($prompt);
         $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
 
@@ -81,11 +118,13 @@ class GerenciarTemasNorteadores extends Component
     {
         $this->nom_tema_norteador = $nome;
         $this->save();
-        
+
         // Remove da lista
         if (is_array($this->aiSuggestion)) {
-            $this->aiSuggestion = array_filter($this->aiSuggestion, fn($item) => $item['nome'] !== $nome);
-            if (empty($this->aiSuggestion)) $this->aiSuggestion = '';
+            $this->aiSuggestion = array_filter($this->aiSuggestion, fn ($item) => $item['nome'] !== $nome);
+            if (empty($this->aiSuggestion)) {
+                $this->aiSuggestion = '';
+            }
         }
     }
 
@@ -103,13 +142,16 @@ class GerenciarTemasNorteadores extends Component
             $this->peiAtivo = PEI::find($peiId);
         }
 
-        if (!$this->peiAtivo) {
+        if (! $this->peiAtivo) {
             $this->peiAtivo = PEI::ativos()->first();
         }
     }
 
     public function atualizarOrganizacao($id)
     {
+        // Método público (e ouvinte de evento): o ID vem do cliente.
+        abort_unless(! $id || Auth::user()?->podeAcessarOrganizacao($id), 403);
+
         $this->organizacaoId = $id;
         $this->cod_organizacao = $id;
         $this->resetPage();
@@ -122,12 +164,14 @@ class GerenciarTemasNorteadores extends Component
 
     public function create()
     {
+        $this->autorizarNaUnidade('criar');
         $this->resetForm();
         $this->showModal = true;
     }
 
     public function edit($id)
     {
+        $this->autorizarNaUnidade('editar');
         $obj = TemaNorteador::findOrFail($id);
         abort_unless($obj->cod_organizacao === $this->organizacaoId, 403);
         abort_unless($this->peiAtivo && $obj->cod_pei === $this->peiAtivo->cod_pei, 403);
@@ -144,8 +188,21 @@ class GerenciarTemasNorteadores extends Component
             'cod_organizacao' => 'required|exists:tab_organizacoes,cod_organizacao',
         ]);
 
-        if (!$this->peiAtivo) {
+        // A unidade vem de um select no cliente: tem de estar no escopo de quem
+        // grava, e o perfil NAQUELA unidade tem de permitir a gravação.
+        abort_unless(Auth::user()->podeAcessarOrganizacao($this->cod_organizacao), 403);
+        $this->autorizarNaUnidade($this->temaId ? 'editar' : 'criar', $this->cod_organizacao);
+
+        if ($this->temaId) {
+            // Editar continua sendo sobre um tema da unidade em operação.
+            $atual = TemaNorteador::findOrFail($this->temaId);
+            abort_unless($atual->cod_organizacao === $this->organizacaoId, 403);
+            abort_unless($this->peiAtivo && $atual->cod_pei === $this->peiAtivo->cod_pei, 403);
+        }
+
+        if (! $this->peiAtivo) {
             session()->flash('error', 'Não existe um ciclo PEI ativo.');
+
             return;
         }
 
@@ -158,7 +215,7 @@ class GerenciarTemasNorteadores extends Component
             ]
         );
 
-        $alert = \App\Services\NotificationService::sendMentorAlert(
+        $alert = NotificationService::sendMentorAlert(
             $this->temaId ? 'Tema Norteador Atualizado!' : 'Tema Norteador Criado!',
             'O tema norteador foi registrado com sucesso.',
             'bi-shield-check'
@@ -171,6 +228,7 @@ class GerenciarTemasNorteadores extends Component
 
     public function confirmDelete($id)
     {
+        $this->autorizarNaUnidade('excluir');
         $tema = TemaNorteador::findOrFail($id);
         abort_unless($tema->cod_organizacao === $this->organizacaoId, 403);
         abort_unless($this->peiAtivo && $tema->cod_pei === $this->peiAtivo->cod_pei, 403);
@@ -180,6 +238,7 @@ class GerenciarTemasNorteadores extends Component
 
     public function delete()
     {
+        $this->autorizarNaUnidade('excluir');
         if ($this->temaId) {
             $tema = TemaNorteador::findOrFail($this->temaId);
             abort_unless($tema->cod_organizacao === $this->organizacaoId, 403);
@@ -187,8 +246,8 @@ class GerenciarTemasNorteadores extends Component
             $tema->delete();
             $this->temaId = null;
             $this->showDeleteModal = false;
-            
-            $alert = \App\Services\NotificationService::sendMentorAlert(
+
+            $alert = NotificationService::sendMentorAlert(
                 'Tema Norteador Removido',
                 'O item foi excluído do planejamento institucional.',
                 'bi-trash',
@@ -212,19 +271,33 @@ class GerenciarTemasNorteadores extends Component
     {
         $query = TemaNorteador::query()
             ->with(['organizacao', 'pei'])
-            ->when($this->search, function($q) {
-                $q->where('nom_tema_norteador', 'ilike', '%' . $this->search . '%');
+            ->when($this->search, function ($q) {
+                $q->where('nom_tema_norteador', 'ilike', '%'.$this->search.'%');
             })
-            ->when($this->organizacaoId, function($q) {
-                $q->where('cod_organizacao', $this->organizacaoId);
-            })
-            ->when($this->peiAtivo, function($q) {
+            ->when(
+                $this->organizacaoId,
+                fn ($q) => $q->where('cod_organizacao', $this->organizacaoId),
+                // Sem unidade, nunca "todas": o escopo do usuário (Super Admin vê tudo).
+                fn ($q) => Auth::user()->aplicarEscopoOrganizacional($q)
+            )
+            ->when($this->peiAtivo, function ($q) {
                 $q->where('cod_pei', $this->peiAtivo->cod_pei);
             });
 
         return view('livewire.p-e-i.gerenciar-temas-norteadores', [
             'temas' => $query->latest()->paginate(10),
-            'organizacoes' => Organization::all()
+            // O seletor de unidade do formulário lista só o escopo de quem grava.
+            'organizacoes' => Auth::user()->aplicarEscopoOrganizacional(Organization::query())->orderBy('nom_organizacao')->get(),
+            ...$this->permissoesNaUnidade(),
         ]);
+    }
+
+    /** @return array{podeCriar: bool, podeEditar: bool, podeExcluir: bool} */
+    private function permissoesNaUnidade(): array
+    {
+        $pode = fn (string $a) => $this->organizacaoId !== null
+            && Gate::allows("modulo.{$a}", ['planejamento-estrategico', $this->organizacaoId]);
+
+        return ['podeCriar' => $pode('criar'), 'podeEditar' => $pode('editar'), 'podeExcluir' => $pode('excluir')];
     }
 }

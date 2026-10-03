@@ -165,7 +165,7 @@
                             <span class="badge rounded-pill bg-danger-subtle text-danger"><i class="bi bi-exclamation-triangle me-1"></i>{{ $atrasadasNo }}</span>
                         @endif
                         <a href="{{ route('planos.entregas', $planoId) }}" wire:navigate class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                            Ver plano <i class="bi bi-arrow-right ms-1"></i>
+                            Ver iniciativa <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>
                 </div>

@@ -12,6 +12,7 @@ use App\Services\AI\AiServiceFactory;
 use App\Services\PeiGuidanceService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -22,6 +23,18 @@ use Livewire\Component;
 class ListarObjetivos extends Component
 {
     use AuthorizesRequests;
+
+    /**
+     * Objetivo não tem organização: vale para a INSTITUIÇÃO inteira (todas
+     * as unidades) e aparece no Mapa Estratégico de todas. Por isso, além da
+     * capacidade no módulo, gravar exige poder editar o que é institucional —
+     * Super Admin ou Administrador da unidade raiz.
+     */
+    private function autorizarInstitucional(string $ability): void
+    {
+        $this->authorize("modulo.{$ability}", 'planejamento-estrategico');
+        $this->authorize('editar-institucional');
+    }
 
     public $perspectivas;
 
@@ -42,6 +55,7 @@ class ListarObjetivos extends Component
 
     public string $createdObjetivoName = '';
 
+    #[Locked]
     public $objetivoId;
 
     public $nom_objetivo;
@@ -99,6 +113,12 @@ class ListarObjetivos extends Component
 
     public function auditSmart()
     {
+        // A auditoria SMART chama a IA (serviço pago) e só serve a quem está
+        // cadastrando: a tela também é pública para leitura.
+        if (! Auth::check() || ! Gate::allows('editar-institucional')) {
+            return;
+        }
+
         if (empty($this->nom_objetivo)) {
             $this->addError('nom_objetivo', 'Digite um título para auditar.');
 
@@ -116,6 +136,10 @@ class ListarObjetivos extends Component
 
     public function pedirAjudaIA()
     {
+        // Tela também pública: visitante não aciona a IA (serviço pago), e as
+        // sugestões só servem a quem pode cadastrar objetivos.
+        $this->autorizarInstitucional('criar');
+
         if (! $this->aiEnabled) {
             return;
         }
@@ -156,7 +180,7 @@ class ListarObjetivos extends Component
         // Escrita exige capacidade. Sem isto, o método é chamável direto
         // pelo navegador — inclusive por visitante, já que esta tela é
         // pública para leitura.
-        $this->authorize('modulo.criar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('criar');
 
         $this->nom_objetivo = $nome;
         $this->dsc_objetivo = $descricao;
@@ -191,6 +215,15 @@ class ListarObjetivos extends Component
 
         if ($this->peiAtivo) {
             $this->carregarPerspectivas();
+
+            // "Editar" no detalhe do objetivo chega com ?editar={cod}.
+            // Só abre para quem pode editar; edit() reconfere tudo.
+            $editar = request()->query('editar');
+            if (is_string($editar) && Auth::check() && Gate::allows('modulo.editar', 'planejamento-estrategico')
+                && Gate::allows('editar-institucional')
+                && Objetivo::whereKey($editar)->whereHas('perspectiva', fn ($q) => $q->where('cod_pei', $this->peiAtivo->cod_pei))->exists()) {
+                $this->edit($editar);
+            }
         }
     }
 
@@ -242,7 +275,7 @@ class ListarObjetivos extends Component
         // Escrita exige capacidade. Sem isto, o método é chamável direto
         // pelo navegador — inclusive por visitante, já que esta tela é
         // pública para leitura.
-        $this->authorize('modulo.editar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('editar');
 
         if (in_array($numOds, $this->odsSelecionados)) {
             $this->odsSelecionados = array_values(array_diff($this->odsSelecionados, [$numOds]));
@@ -270,7 +303,7 @@ class ListarObjetivos extends Component
         // Escrita exige capacidade. Sem isto, o método é chamável direto
         // pelo navegador — inclusive por visitante, já que esta tela é
         // pública para leitura.
-        $this->authorize('modulo.criar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('criar');
 
         // Resolve service if not passed (Livewire handles dependency injection in methods if requested)
         $service = $service ?? app(PeiGuidanceService::class);
@@ -294,7 +327,7 @@ class ListarObjetivos extends Component
         // Escrita exige capacidade. Sem isto, o método é chamável direto
         // pelo navegador — inclusive por visitante, já que esta tela é
         // pública para leitura.
-        $this->authorize('modulo.editar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('editar');
 
         $obj = Objetivo::with(['ods', 'perspectiva'])->findOrFail($id);
         abort_unless($this->peiAtivo && $obj->perspectiva->cod_pei === $this->peiAtivo->cod_pei, 403);
@@ -330,7 +363,10 @@ class ListarObjetivos extends Component
         // Escrita exige capacidade. Sem isto, o método é chamável direto
         // pelo navegador — inclusive por visitante, já que esta tela é
         // pública para leitura.
-        $this->authorize('modulo.editar', 'planejamento-estrategico');
+        // Criar e editar são capacidades distintas: o save() com id vazio CRIA.
+        // Antes exigia só "editar" — e o Gestor Substituto, que não cria,
+        // criava objetivo chamando save() direto pelo navegador.
+        $this->autorizarInstitucional($this->objetivoId ? 'editar' : 'criar');
 
         $service = app(PeiGuidanceService::class);
         $this->validate([
@@ -340,6 +376,21 @@ class ListarObjetivos extends Component
             'cod_perspectiva' => 'required|exists:tab_perspectiva,cod_perspectiva',
             'cod_objetivo_pai' => 'nullable|exists:tab_objetivo,cod_objetivo',
         ]);
+
+        // Perspectiva, objetivo-pai e o próprio objetivo têm de ser do ciclo em
+        // tela: os ids vêm do navegador.
+        $doCiclo = fn (?string $codPerspectiva) => $codPerspectiva
+            && Perspectiva::whereKey($codPerspectiva)->where('cod_pei', $this->peiAtivo?->cod_pei)->exists();
+
+        abort_unless($this->peiAtivo && $doCiclo($this->cod_perspectiva), 403);
+
+        if ($this->cod_objetivo_pai) {
+            abort_unless($doCiclo(Objetivo::whereKey($this->cod_objetivo_pai)->value('cod_perspectiva')), 403);
+        }
+
+        if ($this->objetivoId) {
+            abort_unless($doCiclo(Objetivo::whereKey($this->objetivoId)->value('cod_perspectiva')), 403);
+        }
 
         // Impede que um objetivo seja seu próprio pai
         if ($this->cod_objetivo_pai && $this->cod_objetivo_pai === $this->objetivoId) {
@@ -401,7 +452,7 @@ class ListarObjetivos extends Component
         // Escrita exige capacidade. Sem isto, o método é chamável direto
         // pelo navegador — inclusive por visitante, já que esta tela é
         // pública para leitura.
-        $this->authorize('modulo.excluir', 'planejamento-estrategico');
+        $this->autorizarInstitucional('excluir');
 
         $objetivo = Objetivo::with('perspectiva')->withCount(['indicadores', 'planosAcao'])->findOrFail($id);
         abort_unless($this->peiAtivo && $objetivo->perspectiva->cod_pei === $this->peiAtivo->cod_pei, 403);
@@ -420,7 +471,7 @@ class ListarObjetivos extends Component
         // Escrita exige capacidade. Sem isto, o método é chamável direto
         // pelo navegador — inclusive por visitante, já que esta tela é
         // pública para leitura.
-        $this->authorize('modulo.excluir', 'planejamento-estrategico');
+        $this->autorizarInstitucional('excluir');
 
         $obj = Objetivo::with('perspectiva')->findOrFail($this->objetivoId);
         abort_unless($this->peiAtivo && $obj->perspectiva->cod_pei === $this->peiAtivo->cod_pei, 403);
@@ -470,7 +521,21 @@ class ListarObjetivos extends Component
         return view('livewire.p-e-i.listar-objetivos', [
             'todosOds' => ODS::ordenado()->get(),
             'objetivosPossivelPai' => $objetivosPossivelPai,
+            // Objetivo é da instituição: a tela só oferece o botão que o servidor aceita.
+            ...$this->permissoes(),
         ])
             ->layout(Auth::check() ? 'layouts.app' : 'layouts.public');
+    }
+
+    /** @return array{podeCriar: bool, podeEditar: bool, podeExcluir: bool} */
+    private function permissoes(): array
+    {
+        $institucional = Auth::check() && Gate::allows('editar-institucional');
+
+        return [
+            'podeCriar' => $institucional && Gate::allows('modulo.criar', 'planejamento-estrategico'),
+            'podeEditar' => $institucional && Gate::allows('modulo.editar', 'planejamento-estrategico'),
+            'podeExcluir' => $institucional && Gate::allows('modulo.excluir', 'planejamento-estrategico'),
+        ];
     }
 }

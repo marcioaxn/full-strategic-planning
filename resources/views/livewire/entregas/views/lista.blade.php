@@ -184,11 +184,13 @@
                                                 </button>
                                             </li>
                                         @endif
+                                        @can('delete', $entrega)
                                         <li>
                                             <button class="dropdown-item text-danger" wire:click="confirmDeleteEntrega('{{ $entrega->cod_entrega }}')">
                                                 <i class="bi bi-trash me-2"></i> Excluir
                                             </button>
                                         </li>
+                                        @endcan
                                     </ul>
                                 </div>
                             </td>

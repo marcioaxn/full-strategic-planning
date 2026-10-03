@@ -9,7 +9,7 @@
         <title>{{ config('app.name', 'Laravel') }} | Portal da Transparência</title>
 
         {{-- Sem meta description, o buscador escolhe sozinho o resumo da página. --}}
-        <meta name="description" content="Portal da Transparência do Planejamento Estratégico Institucional: mapa estratégico, objetivos e desempenho publicados para acompanhamento da sociedade.">
+        <meta name="description" content="Portal da Transparência do Planejamento Estratégico Integrado: mapa estratégico, objetivos e desempenho publicados para acompanhamento da sociedade.">
         <meta property="og:title" content="{{ config('app.name', 'Sistema PEI') }} — Portal da Transparência">
         <meta property="og:description" content="Mapa estratégico, objetivos e desempenho institucional.">
         <meta property="og:type" content="website">

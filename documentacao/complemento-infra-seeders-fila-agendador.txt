@@ -1,0 +1,70 @@
+COMPLEMENTO À IMPLANTAÇÃO DA V2 — PASSOS NÃO CONTEMPLADOS NO ROTEIRO ANTERIOR
+===========================================================================
+
+Prezados,
+
+Os passos abaixo complementam o roteiro já executado. Nada do que foi feito
+precisa ser refeito. Todos os comandos devem ser executados na pasta do
+projeto e nenhum deles apaga dados.
+
+
+1. DADOS DE REFERÊNCIA (SEEDERS)
+--------------------------------
+
+Executar exatamente como está abaixo.
+NÃO executar "php artisan db:seed" sem o parâmetro --class.
+
+    php artisan db:seed --class=TipoExecucaoSeeder --force
+
+O comando cadastra os tipos de Iniciativa ("Ação" e "Projeto"),
+necessários para o preenchimento do campo obrigatório "Tipo" no cadastro de
+Iniciativas. A mensagem esperada é:
+
+    Tipos de Iniciativa: 2 inserido(s), 0 atualizado(s), 0 sem mudança.
+
+
+2. LINK DOS ARQUIVOS ENVIADOS PELOS USUÁRIOS
+--------------------------------------------
+
+    php artisan storage:link
+
+Sem este link, os anexos de entregas e de indicadores não abrem no navegador.
+
+
+3. WORKER DA FILA (ENVIO DE E-MAILS)
+------------------------------------
+
+O sistema usa fila em banco (QUEUE_CONNECTION=database). O processo abaixo
+deve ficar rodando permanentemente, gerenciado por Supervisor ou systemd:
+
+    php /caminho/do/projeto/artisan queue:work --sleep=3 --tries=3 --max-time=3600
+
+Sem ele, os e-mails (por exemplo, o de boas-vindas ao novo usuário) ficam
+parados na tabela pei.jobs e não são enviados.
+
+
+4. AGENDADOR (RELATÓRIOS AGENDADOS)
+-----------------------------------
+
+Incluir a linha abaixo no crontab do usuário do servidor web:
+
+    * * * * * cd /caminho/do/projeto && php artisan schedule:run >> /dev/null 2>&1
+
+
+5. CONFERÊNCIA
+--------------
+
+    php artisan schedule:list
+        -> deve listar "reports:process-scheduled" (hourly)
+
+    Pasta public/storage
+        -> deve existir (é o link criado no passo 2)
+
+    Tela de Iniciativas, campo "Tipo"
+        -> deve oferecer apenas "Ação" e "Projeto"
+
+    Tabela pei.jobs
+        -> não deve acumular registros após o envio de e-mails
+
+
+Obrigado.

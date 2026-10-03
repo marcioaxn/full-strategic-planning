@@ -24,21 +24,23 @@
         </div>
         <div class="card-body p-5">
             <div class="d-flex">
-                <!-- Eixo Y: Impacto -->
-                <div class="d-flex flex-column justify-content-around pe-3 text-center fw-bold text-muted small" style="width: 100px;">
-                    <div style="transform: rotate(-90deg); white-space: nowrap; margin-bottom: 20px;">IMPACTO</div>
-                    <div>Muito Alto (5)</div>
-                    <div>Alto (4)</div>
-                    <div>Médio (3)</div>
-                    <div>Baixo (2)</div>
-                    <div>Muito Baixo (1)</div>
+                <!-- Eixo Y: Impacto. O rótulo de cada nível fica DENTRO da linha da
+                     grade: numa coluna à parte, seis itens (título + 5 níveis)
+                     se distribuíam na altura de cinco linhas e cada rótulo caía
+                     ao lado da linha errada. -->
+                <div class="d-flex align-items-center pe-2 fw-bold text-muted small">
+                    <div style="writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap;">IMPACTO</div>
                 </div>
 
                 <!-- O Grid -->
                 <div class="flex-grow-1">
+                    @php $rotulosImpacto = [5 => 'Muito Alto (5)', 4 => 'Alto (4)', 3 => 'Médio (3)', 2 => 'Baixo (2)', 1 => 'Muito Baixo (1)']; @endphp
                     <div class="risk-grid">
                         @for($i=5; $i>=1; $i--)
                             <div class="risk-row d-flex">
+                                <div class="d-flex align-items-center justify-content-end pe-3 text-end fw-bold text-muted small" style="width: 100px; flex: 0 0 100px;">
+                                    {{ $rotulosImpacto[$i] }}
+                                </div>
                                 @for($j=1; $j<=5; $j++)
                                     @php
                                         $nivel = $i * $j;
@@ -69,13 +71,14 @@
                     
                     <!-- Eixo X: Probabilidade -->
                     <div class="d-flex justify-content-around pt-3 fw-bold text-muted small ms-n1">
+                        <div style="flex: 0 0 100px;"></div>
                         <div style="flex: 1; text-align: center;">Muito Baixa (1)</div>
                         <div style="flex: 1; text-align: center;">Baixa (2)</div>
                         <div style="flex: 1; text-align: center;">Média (3)</div>
                         <div style="flex: 1; text-align: center;">Alta (4)</div>
                         <div style="flex: 1; text-align: center;">Muito Alta (5)</div>
                     </div>
-                    <div class="text-center mt-3 fw-bold text-muted small text-uppercase">PROBABILIDADE</div>
+                    <div class="text-center mt-3 fw-bold text-muted small text-uppercase" style="padding-left: 100px;">PROBABILIDADE</div>
                 </div>
             </div>
         </div>

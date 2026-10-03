@@ -40,6 +40,7 @@
                         <i class="bi bi-eye me-1"></i>{{ __('Detalhar') }}
                     </a>
                 @endif
+                @if($podeEditar)
                 <x-action-button
                     variant="primary"
                     icon="pencil"
@@ -49,6 +50,7 @@
                 >
                     {{ __('Editar Missão/Visão') }}
                 </x-action-button>
+                @endif
             @endif
         </div>
     </div>
@@ -224,6 +226,7 @@
     {{-- Mentor de IA --}}
     @if($organizacaoId && $peiAtivo && $aiEnabled)
         <div class="ai-mentor-wrapper animate-fade-in">
+            @if($podeEditar)
             <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="ai-magic-button shadow-sm">
                 <span wire:loading.remove wire:target="pedirAjudaIA">
                     <i class="bi bi-robot"></i> {{ __('Sugerir Missão e Visão com IA') }}
@@ -232,6 +235,7 @@
                     <span class="spinner-border spinner-border-sm me-2"></span>{{ __('Inspirando novas ideias...') }}
                 </span>
             </button>
+            @endif
 
             @if($aiSuggestion)
                 <div class="ai-insight-card animate-fade-in">
@@ -260,9 +264,11 @@
                                         </div>
                                     </div>
                                     <div class="col-12 text-end">
+                                        @if($podeEditar)
                                         <button wire:click="aplicarIdentidade" class="btn btn-sm btn-primary rounded-pill px-4 fw-bold shadow-sm">
                                             <i class="bi bi-check-all me-1"></i> {{ __('Aplicar Missão e Visão') }}
                                         </button>
+                                        @endif
                                     </div>
                                 </div>
                             @else

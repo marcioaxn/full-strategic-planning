@@ -271,14 +271,15 @@ test('quem não tem a capacidade de exportar relatórios não gera o Relatório 
         'sgl_organizacao' => 'OSE',
     ]);
 
-    // Usuário autenticado, mas SEM perfil algum: a matriz nega por padrão.
+    // Usuário autenticado, mas SEM perfil algum: nem chega à área restrita —
+    // vai para a página de acesso pendente.
     $user = User::factory()->create();
 
     foreach (['relatorios.gestao.pdf', 'relatorios.gestao.docx'] as $rota) {
         $resposta = $this->actingAs($user)
             ->get(route($rota, ['organizacao_id' => $org->cod_organizacao, 'ano' => 2026]));
 
-        $resposta->assertRedirect(route('dashboard'));
+        $resposta->assertRedirect(route('acesso.pendente'));
 
         expect($resposta->getContent())->not->toContain('%PDF-');
     }
@@ -372,7 +373,7 @@ test('seção do modelo sem dado avisa o que falta, em PDF e em DOCX', function 
     $mensagens = [
         'Missão, visão, valores e objetivos ainda não foram cadastrados neste ciclo.',
         'Nenhum objetivo estratégico foi cadastrado neste ciclo, e por isso não há resultados a apurar.',
-        'A cadeia de valor ainda não foi cadastrada neste ciclo do Planejamento Estratégico Institucional.',
+        'A cadeia de valor ainda não foi cadastrada neste ciclo do Planejamento Estratégico Integrado.',
         'Nenhuma análise SWOT ou PESTEL foi registrada neste ciclo.',
         'Nenhum risco foi registrado para este ciclo no módulo de Gestão de Riscos.',
     ];

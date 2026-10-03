@@ -46,7 +46,7 @@
         {{-- Coluna esquerda: o texto de abertura, como no modelo --}}
         <td style="width:26%; vertical-align:top; padding-right:22px; text-align:justify;">
             <p class="rg-corpo">
-                O Planejamento Estratégico Institucional
+                O Planejamento Estratégico Integrado
                 @if($dados['capa']['ciclo'])
                     <strong>{{ $dados['capa']['ciclo'] }}</strong>
                 @endif

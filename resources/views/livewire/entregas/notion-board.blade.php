@@ -25,7 +25,7 @@
         </div>
 
         <div class="d-flex align-items-center gap-2">
-            @can('update', $plano)
+            @can('create', [\App\Models\ActionPlan\Entrega::class, $plano])
                 <button wire:click="openEditModal" class="btn btn-primary gradient-theme-btn">
                     <i class="bi bi-plus-lg me-2"></i>Nova Entrega
                 </button>
@@ -630,10 +630,10 @@
                             <i class="bi bi-check-lg"></i>
                         </div>
                     </div>
-                    <h3 class="fw-bold text-dark mb-3">Entrega Registrada!</h3>
+                    <h3 class="fw-bold text-dark mb-3">{{ $entregaFoiEditada ? 'Entrega Atualizada!' : 'Entrega Registrada!' }}</h3>
                     <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
                         A entrega <strong class="text-primary">"{{ $createdDeliverableName }}"</strong><br>
-                        foi vinculada com sucesso ao plano:<br>
+                        {{ $entregaFoiEditada ? 'foi atualizada na iniciativa:' : 'foi vinculada com sucesso à iniciativa:' }}<br>
                         <span class="fst-italic text-dark fw-bold">"{{ $plano->dsc_plano_de_acao }}"</span>
                     </p>
                     <button wire:click="closeSuccessModal" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow hover-scale">

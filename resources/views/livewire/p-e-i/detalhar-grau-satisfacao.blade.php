@@ -20,9 +20,11 @@
             <a href="{{ route('graus-satisfacao.index') }}" wire:navigate class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Voltar
             </a>
-            <button class="btn btn-primary gradient-theme">
+            @if(auth()->user()?->can('modulo.editar', 'graus-satisfacao') && auth()->user()->can('editar-institucional'))
+            <a href="{{ route('graus-satisfacao.index', ['editar' => $grau->cod_grau_satisfacao]) }}" class="btn btn-primary gradient-theme">
                 <i class="bi bi-pencil me-1"></i> Editar
-            </button>
+            </a>
+            @endif
         </div>
     </div>
 
@@ -40,7 +42,7 @@
                     </div>
                     
                     <h4 class="fw-bold mb-1">{{ $grau->dsc_grau_satisfacao }}</h4>
-                    <p class="text-muted mb-4">{{ $grau->vlr_minimo }}% a {{ $grau->vlr_maximo }}%</p>
+                    <p class="text-muted mb-4">@brazil_number($grau->vlr_minimo, 2)% a @brazil_number($grau->vlr_maximo, 2)%</p>
 
                     <div class="row g-2 justify-content-center">
                         <div class="col-auto">
@@ -69,7 +71,7 @@
                         </li>
                         <li class="list-group-item d-flex justify-content-between px-0">
                             <span class="text-muted">Intervalo</span>
-                            <span class="font-monospace">{{ number_format($grau->vlr_minimo, 1) }}% - {{ number_format($grau->vlr_maximo, 1) }}%</span>
+                            <span class="font-monospace">{{ number_format($grau->vlr_minimo, 1, ',', '.') }}% - {{ number_format($grau->vlr_maximo, 1, ',', '.') }}%</span>
                         </li>
                     </ul>
                 </div>
@@ -82,13 +84,27 @@
                 <div class="card-header bg-white py-3">
                     <h6 class="card-title mb-0 fw-bold">Indicadores nesta Faixa</h6>
                 </div>
-                <div class="card-body text-center py-5">
-                    <i class="bi bi-bar-chart-line fs-1 text-muted opacity-50 mb-3"></i>
-                    <h6 class="text-muted">Análise de Distribuição</h6>
-                    <p class="small text-muted mb-0">
-                        A listagem de indicadores que se enquadram nesta faixa de desempenho em tempo real estará disponível em breve.
-                    </p>
-                </div>
+                @if(count($indicadoresNaFaixa) > 0)
+                    <div class="list-group list-group-flush">
+                        @foreach($indicadoresNaFaixa as $ind)
+                            <a href="{{ route('indicadores.detalhes', $ind['cod']) }}" wire:navigate class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-semibold">{{ $ind['nome'] }}</div>
+                                    @if($ind['objetivo'])<small class="text-muted">{{ $ind['objetivo'] }}</small>@endif
+                                </div>
+                                <span class="badge rounded-pill" style="background: {{ $grau->cor }};">@brazil_percent($ind['atingimento'], 1)</span>
+                            </a>
+                        @endforeach
+                    </div>
+                    <div class="card-footer bg-white small text-muted">Atingimento em {{ $ano }}, com lançamentos realizados.</div>
+                @else
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-bar-chart-line fs-1 text-muted opacity-50 mb-3"></i>
+                        <p class="small text-muted mb-0">
+                            Nenhum indicador {{ $grau->pei ? 'deste ciclo' : '' }} tem atingimento nesta faixa em {{ $ano }}.
+                        </p>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

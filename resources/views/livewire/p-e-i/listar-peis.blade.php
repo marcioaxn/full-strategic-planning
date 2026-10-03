@@ -6,7 +6,7 @@
                 <div class="icon-circle-header gradient-theme-icon">
                     <i class="bi bi-calendar-range-fill"></i>
                 </div>
-                <h1 class="h3 fw-bold mb-0">{{ __('Planos Estratégicos Institucionais (PEI)') }}</h1>
+                <h1 class="h3 fw-bold mb-0">{{ __('Ciclos do Planejamento Estratégico Integrado (PEI)') }}</h1>
                 <span class="badge-modern badge-count">
                     {{ $peis->total() }}
                 </span>
@@ -94,7 +94,7 @@
                             <div>
                                 <h6 class="fw-bold mb-2 text-dark">{{ __('Definição') }}</h6>
                                 <p class="mb-0 small text-dark">
-                                    O <strong>Planejamento Estratégico Institucional (PEI)</strong> é um instrumento de gestão estratégica de médio e longo prazo que define a direção da organização. Ele estabelece onde queremos chegar (Visão), como vamos chegar (Objetivos Estratégicos) e como saberemos que chegamos (Indicadores de Desempenho).
+                                    O <strong>Planejamento Estratégico Integrado (PEI)</strong> é um instrumento de gestão estratégica de médio e longo prazo que define a direção da organização. Ele estabelece onde queremos chegar (Visão), como vamos chegar (Objetivos Estratégicos) e como saberemos que chegamos (Indicadores de Desempenho).
                                 </p>
                             </div>
                         </div>
@@ -403,7 +403,7 @@
                                     </div>
                                     <h5 class="empty-state-title">{{ __('Nenhum PEI encontrado') }}</h5>
                                     <p class="empty-state-text">
-                                        {{ __('Crie um novo Plano Estratégico Institucional para começar.') }}
+                                        {{ __('Crie um novo ciclo do PEI para começar.') }}
                                     </p>
                                     <x-action-button variant="primary" icon="plus-lg" wire:click="create" class="btn-action-primary gradient-theme-btn px-4">
                                         {{ __('Criar PEI') }}
@@ -604,7 +604,7 @@
         <x-slot name="content">
             <div class="delete-confirmation">
                 <p class="mb-2">
-                    {{ __('Tem certeza que deseja excluir este Plano Estratégico Institucional?') }}
+                    {{ __('Tem certeza que deseja excluir este ciclo do PEI?') }}
                 </p>
                 <div class="alert alert-warning bg-warning-subtle border-0">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i>

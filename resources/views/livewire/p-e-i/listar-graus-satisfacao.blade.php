@@ -17,9 +17,11 @@
         </div>
 
         <div class="d-flex align-items-center gap-2">
+            @if($podeCriar)
             <button type="button" class="btn btn-primary gradient-theme-btn px-4 shadow-sm" wire:click="openModal">
                 <i class="bi bi-plus-lg me-1"></i> {{ __('Novo Grau') }}
             </button>
+            @endif
         </div>
     </div>
 
@@ -358,6 +360,7 @@
     {{-- Mentor de IA --}}
     @if($aiEnabled)
         <div class="ai-mentor-wrapper animate-fade-in">
+            @if($podeCriar)
             <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="ai-magic-button shadow-sm">
                 <span wire:loading.remove wire:target="pedirAjudaIA">
                     <i class="bi bi-robot"></i> {{ __('Sugerir Escala de Satisfação com IA') }}
@@ -366,6 +369,7 @@
                     <span class="spinner-border spinner-border-sm me-2"></span>{{ __('Calculando faixas ideais...') }}
                 </span>
             </button>
+            @endif
 
             @if($aiSuggestion)
                 <div class="ai-insight-card animate-fade-in">
@@ -388,10 +392,12 @@
                                                 <small class="text-muted ms-2">({{ $sug['min'] }}% a {{ $sug['max'] }}%)</small>
                                             </div>
                                         </div>
-                                        <button wire:click="aplicarSugestao('{{ $sug['nome'] }}', '{{ $sug['cor'] }}', {{ $sug['min'] }}, {{ $sug['max'] }})" 
+                                        @if($podeCriar)
+                                        <button wire:click="aplicarSugestao(@js($sug['nome']), @js($sug['cor']), @js($sug['min']), @js($sug['max']))" 
                                                 class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
                                             <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}
                                         </button>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>
@@ -409,7 +415,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-6">
                         <h5 class="mb-0 fw-bold text-primary">
-                            <i class="bi bi-palette me-2"></i>Configuracao de Graus de Satisfacao
+                            <i class="bi bi-palette me-2"></i>Configuração de Graus de Satisfação
                         </h5>
                         <small class="text-muted">Defina os intervalos percentuais e cores para classificar o desempenho</small>
                     </div>
@@ -420,7 +426,7 @@
                             </span>
                             <input type="text"
                                    class="form-control border-start-0"
-                                   placeholder="Buscar por descricao ou cor..."
+                                   placeholder="Buscar por descrição ou cor..."
                                    wire:model.live.debounce.300ms="search">
                         </div>
                     </div>
@@ -448,12 +454,12 @@
                         <thead class="table-light text-nowrap">
                             <tr>
                                 <th class="px-4" style="width: 1%;">Cor</th>
-                                <th>Descricao</th>
+                                <th>Descrição</th>
                                 <th>Ciclo / Ano</th>
                                 <th class="text-center">Código da Cor</th>
                                 <th class="text-center">Min (%)</th>
                                 <th class="text-center">Max (%)</th>
-                                <th class="text-center" style="width: 1%;">Acoes</th>
+                                <th class="text-center" style="width: 1%;">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -492,12 +498,16 @@
                                             <a href="{{ route('graus-satisfacao.detalhes', $grau->cod_grau_satisfacao) }}" wire:navigate class="btn btn-outline-info" title="Detalhar">
                                                 <i class="bi bi-eye"></i>
                                             </a>
+                                            @if($podeEditar)
                                             <button class="btn btn-outline-primary" wire:click="edit('{{ $grau->cod_grau_satisfacao }}')" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
+                                            @endif
+                                            @if($podeExcluir)
                                             <button class="btn btn-outline-danger" wire:click="confirmDelete('{{ $grau->cod_grau_satisfacao }}')" title="Excluir">
                                                 <i class="bi bi-trash"></i>
                                             </button>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -506,10 +516,12 @@
                                     <td colspan="6" class="text-center py-5">
                                         <div class="text-muted">
                                             <i class="bi bi-palette fs-1 d-block mb-3 opacity-50"></i>
-                                            <p class="mb-2">Nenhum grau de satisfacao cadastrado</p>
+                                            <p class="mb-2">Nenhum grau de satisfação cadastrado</p>
+                                            @if($podeCriar)
                                             <button class="btn btn-primary btn-sm" wire:click="openModal">
                                                 <i class="bi bi-plus-circle me-1"></i> Cadastrar Primeiro Grau
                                             </button>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -585,8 +597,7 @@
                                                 <div class="col-md-7">
                                                     <label class="form-label text-muted small text-uppercase fw-bold">Ciclo PEI</label>
                                                     <select wire:model="cod_pei" class="form-select bg-white border-0 shadow-sm fw-bold">
-                                                        <option value="">Escala Global (Padrão)</option>
-                                                        @foreach($availablePeis as $p)
+                                                            @foreach($availablePeis as $p)
                                                             <option value="{{ $p->cod_pei }}">{{ $p->dsc_pei }}</option>
                                                         @endforeach
                                                     </select>
@@ -616,77 +627,24 @@
                                         <div class="card-body p-4 text-center">
                                             <h6 class="fw-bold text-dark border-bottom pb-2 mb-4">Intervalo de Atingimento</h6>
                                             
-                                            <div class="mb-4" x-data="{ 
-                                                display: '',
-                                                value: @entangle('vlr_minimo'),
-                                                mask() {
-                                                    let val = this.display.replace(/\D/g, '');
-                                                    if (val === '') {
-                                                        this.value = '';
-                                                        return;
-                                                    }
-                                                    // Limita a 5 dígitos (máximo 999,99)
-                                                    if (val.length > 5) {
-                                                        val = val.substring(0, 5);
-                                                    }
-                                                    let floatVal = (parseFloat(val) / 100);
-                                                    this.value = floatVal.toFixed(2);
-                                                    this.display = floatVal.toLocaleString('pt-BR', {
-                                                        minimumFractionDigits: 2,
-                                                        maximumFractionDigits: 2
-                                                    });
-                                                },
-                                                init() {
-                                                    if (this.value) {
-                                                        this.display = parseFloat(this.value).toLocaleString('pt-BR', {
-                                                            minimumFractionDigits: 2,
-                                                            maximumFractionDigits: 2
-                                                        });
-                                                    }
-                                                }
-                                            }">
-                                                <label class="form-label small text-muted fw-bold text-uppercase">Percentual Mínimo <span class="text-danger">*</span></label>
+                                            {{-- Mesmo campo do Lançar Evolução: digita-se e edita-se como texto comum (29,99).
+                                                 A máscara anterior aceitava no máximo 5 dígitos e jogava o cursor para o fim:
+                                                 com "100,00" preenchido, todo dígito novo era cortado e o campo parecia travado. --}}
+                                            <div class="mb-4">
+                                                <label for="grau-vlr-minimo" class="form-label small text-muted fw-bold text-uppercase">Percentual Mínimo <span class="text-danger">*</span></label>
                                                 <div class="input-group input-group-lg shadow-sm">
                                                     <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-chevron-bar-down"></i></span>
-                                                    <input type="text" x-model="display" @input="mask()" class="form-control bg-white border-0 fw-bold text-center @error('vlr_minimo') is-invalid @enderror" placeholder="0,00">
+                                                    <input id="grau-vlr-minimo" type="text" inputmode="decimal" wire:model="vlr_minimo" x-mask:dynamic="$money($input, ',', '.', 2)" class="form-control bg-white border-0 fw-bold text-center @error('vlr_minimo') is-invalid @enderror" placeholder="0,00">
                                                     <span class="input-group-text bg-white border-0 fw-bold">%</span>
                                                 </div>
                                                 @error('vlr_minimo') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
                                             </div>
 
-                                            <div class="mb-4" x-data="{ 
-                                                display: '',
-                                                value: @entangle('vlr_maximo'),
-                                                mask() {
-                                                    let val = this.display.replace(/\D/g, '');
-                                                    if (val === '') {
-                                                        this.value = '';
-                                                        return;
-                                                    }
-                                                    // Limita a 5 dígitos (máximo 999,99)
-                                                    if (val.length > 5) {
-                                                        val = val.substring(0, 5);
-                                                    }
-                                                    let floatVal = (parseFloat(val) / 100);
-                                                    this.value = floatVal.toFixed(2);
-                                                    this.display = floatVal.toLocaleString('pt-BR', {
-                                                        minimumFractionDigits: 2,
-                                                        maximumFractionDigits: 2
-                                                    });
-                                                },
-                                                init() {
-                                                    if (this.value) {
-                                                        this.display = parseFloat(this.value).toLocaleString('pt-BR', {
-                                                            minimumFractionDigits: 2,
-                                                            maximumFractionDigits: 2
-                                                        });
-                                                    }
-                                                }
-                                            }">
-                                                <label class="form-label small text-muted fw-bold text-uppercase">Percentual Máximo <span class="text-danger">*</span></label>
+                                            <div class="mb-4">
+                                                <label for="grau-vlr-maximo" class="form-label small text-muted fw-bold text-uppercase">Percentual Máximo <span class="text-danger">*</span></label>
                                                 <div class="input-group input-group-lg shadow-sm">
                                                     <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-chevron-bar-up"></i></span>
-                                                    <input type="text" x-model="display" @input="mask()" class="form-control bg-white border-0 fw-bold text-center @error('vlr_maximo') is-invalid @enderror" placeholder="100,00">
+                                                    <input id="grau-vlr-maximo" type="text" inputmode="decimal" wire:model="vlr_maximo" x-mask:dynamic="$money($input, ',', '.', 2)" class="form-control bg-white border-0 fw-bold text-center @error('vlr_maximo') is-invalid @enderror" placeholder="100,00">
                                                     <span class="input-group-text bg-white border-0 fw-bold">%</span>
                                                 </div>
                                                 @error('vlr_maximo') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror

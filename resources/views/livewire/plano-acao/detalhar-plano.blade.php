@@ -22,12 +22,17 @@
             <a href="{{ route('planos.index') }}" wire:navigate class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Voltar
             </a>
+            {{-- Visitante da Transparência não vê atalhos para telas internas. --}}
+            @if($podeVerInterno)
             <a href="{{ route('planos.entregas', $plano->cod_plano_de_acao) }}" wire:navigate class="btn btn-outline-info rounded-pill px-3">
                 <i class="bi bi-list-check me-1"></i> Entregas
             </a>
+            @endif
+            @if($podeEditar)
             <a href="{{ route('planos.responsaveis', $plano->cod_plano_de_acao) }}" wire:navigate class="btn btn-outline-warning rounded-pill px-3">
                 <i class="bi bi-people me-1"></i> Gestores
             </a>
+            @endif
         </div>
     </div>
 
@@ -143,7 +148,8 @@
 
         <!-- Coluna Direita: Responsáveis e Auditoria -->
         <div class="col-lg-4">
-            <!-- Responsáveis -->
+            <!-- Responsáveis: nomes de servidores, só para quem tem acesso à iniciativa -->
+            @if($podeVerInterno)
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white py-3 border-0">
                     <h5 class="mb-0 fw-bold"><i class="bi bi-people me-2 text-primary"></i>Equipe Responsável</h5>
@@ -153,7 +159,7 @@
                         @forelse($responsaveis as $resp)
                             <li class="d-flex align-items-center mb-3">
                                 <div class="avatar-sm-det me-3 gradient-theme text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.8rem;">
-                                    {{ substr($resp->name, 0, 1) }}
+                                    {{ mb_strtoupper(mb_substr($resp->name, 0, 1)) }}
                                 </div>
                                 <div>
                                     <span class="fw-semibold d-block small">{{ $resp->name }}</span>
@@ -166,8 +172,10 @@
                     </ul>
                 </div>
             </div>
+            @endif
 
-            <!-- Histórico de Alterações -->
+            <!-- Histórico de Alterações: é trilha de auditoria — só para quem tem o módulo Auditoria -->
+            @if($podeVerAuditoria)
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white py-3 border-0">
                     <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Histórico</h5>
@@ -203,7 +211,8 @@
                             <p class="text-muted small text-center">Sem histórico registrado.</p>
                         @endforelse
                     </div>
-                    @if($auditoria->isNotEmpty())
+                    {{-- A Auditoria é restrita ao Super Admin: para os demais o link levava a 403. --}}
+                    @if($auditoria->isNotEmpty() && auth()->user()->can('modulo.acessar', 'auditoria'))
                         <div class="text-center mt-3">
                             <a href="{{ route('audit.index', ['filtroModel' => 'PlanoDeAcao', 'filtroId' => $plano->cod_plano_de_acao]) }}" 
                                wire:navigate 
@@ -214,6 +223,7 @@
                     @endif
                 </div>
             </div>
+            @endif
         </div>
     </div>
 
@@ -254,6 +264,8 @@
         </div>
     </div>
 
+    {{-- Matriz RACI, Comunicação e Lições: gestão interna, com nomes de servidores --}}
+    @if($podeVerInterno)
     {{-- Matriz RACI --}}
     <div class="card border-0 shadow-sm mt-4">
         <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between py-3 px-4">
@@ -264,10 +276,12 @@
                     <x-projetos-link :page="89" label="Matriz RACI" />
                 </div>
             </div>
+            @if($podeEditar)
             <a href="{{ route('planos.responsaveis', $plano->cod_plano_de_acao) }}" wire:navigate
                class="btn btn-sm btn-outline-warning rounded-pill px-3">
                 <i class="bi bi-people me-1"></i>Gerenciar Responsáveis
             </a>
+            @endif
         </div>
         <div class="card-body p-4">
             @php
@@ -385,6 +399,7 @@
             </div>
         </div>
     </div>
+    @endif
     @endif
 
     <style>

@@ -11,7 +11,7 @@
 <div class="rg-externa">
     <p class="rg-externa-aviso">
         <strong>Seção a preencher pela unidade.</strong>
-        Esta informação não é produzida pelo Planejamento Estratégico Institucional.
+        Esta informação não é produzida pelo Planejamento Estratégico Integrado.
     </p>
     <p class="rg-externa-fonte">Fonte: {{ $secao['fonte'] }}</p>
 </div>

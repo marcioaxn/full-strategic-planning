@@ -214,4 +214,28 @@ return [
 
     'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Session Blocking
+    |--------------------------------------------------------------------------
+    |
+    | Uma requisição por sessão de cada vez. O Laravel regrava a sessão INTEIRA
+    | ao fim de toda requisição; sem a trava, o poll do Dashboard (30 s) ou do
+    | quadro de Entregas (5 s) em curso quando o usuário troca o Ciclo PEI no
+    | topo terminava depois e devolvia o ciclo ANTIGO — a troca "se perdia".
+    |
+    | A trava usa o cache padrão (database, que tem atomic locks). Ela dura no
+    | máximo 10 s; a espera vai até 15 s, maior que a trava, para que uma
+    | chamada lenta (IA, relatório) nunca derrube a seguinte com erro.
+    |
+    */
+
+    'block' => env('SESSION_BLOCK', true),
+
+    'block_store' => env('SESSION_BLOCK_STORE'),
+
+    'block_lock_seconds' => 10,
+
+    'block_wait_seconds' => 15,
+
 ];

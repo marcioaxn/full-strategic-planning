@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\RiskManagement\Risco;
+use App\Models\StrategicPlanning\PEI;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -22,6 +23,11 @@ class RiscosExport implements FromCollection, WithHeadings, WithMapping
 
         if ($this->organizacaoId) {
             $query->where('cod_organizacao', $this->organizacaoId);
+        }
+
+        // Só o ciclo em contexto, como a tela de riscos e o PDF.
+        if ($pei = PEI::doContexto()) {
+            $query->where('cod_pei', $pei->cod_pei);
         }
 
         return $query->orderByRaw('(num_probabilidade * num_impacto) DESC')->get();

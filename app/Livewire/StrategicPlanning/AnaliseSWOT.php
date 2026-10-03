@@ -12,6 +12,8 @@ use App\Models\StrategicPlanning\PEI;
 use App\Models\SystemSetting;
 use App\Services\AI\AiServiceFactory;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -48,6 +50,7 @@ class AnaliseSWOT extends Component
     // Modal SWOT
     public bool $showModal = false;
 
+    #[Locked]
     public $itemId;
 
     public $dsc_categoria;
@@ -67,6 +70,7 @@ class AnaliseSWOT extends Component
     // Partes Interessadas
     public bool $showModalParte = false;
 
+    #[Locked]
     public ?string $parteEditId = null;
 
     public array $formParte = [
@@ -80,6 +84,7 @@ class AnaliseSWOT extends Component
     // Cenários Prospectivos
     public bool $showModalCenario = false;
 
+    #[Locked]
     public ?string $cenarioEditId = null;
 
     public array $formCenario = [
@@ -95,6 +100,7 @@ class AnaliseSWOT extends Component
     // Matriz TOWS
     public bool $showModalTows = false;
 
+    #[Locked]
     public ?string $towsEditId = null;
 
     public array $formTows = [
@@ -117,13 +123,44 @@ class AnaliseSWOT extends Component
 
     public function mount()
     {
+        $this->authorize('modulo.acessar', 'planejamento-estrategico');
+
         $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
-        $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+        // Organização da sessão só vale se estiver no escopo do usuário.
+        $this->atualizarOrganizacao(Auth::user()->organizacaoSelecionadaId());
+    }
+
+    /**
+     * Itens da SWOT, TOWS e cenários são da UNIDADE: a capacidade vale na
+     * unidade desta tela, não na soma dos vínculos do usuário em todas.
+     */
+    private function autorizarNaUnidade(string $ability): void
+    {
+        abort_unless($this->organizacaoId !== null, 403);
+        $this->authorize("modulo.{$ability}", ['planejamento-estrategico', $this->organizacaoId]);
+    }
+
+    /**
+     * Partes interessadas não têm organização: valem para a instituição
+     * inteira. Alterar é de quem edita o que é institucional.
+     */
+    private function autorizarInstitucional(string $ability): void
+    {
+        $this->authorize("modulo.{$ability}", 'planejamento-estrategico');
+        $this->authorize('editar-institucional');
+    }
+
+    /** O registro tem de ser da unidade em operação (o id vem do navegador). */
+    private function garantirDaUnidade(?string $codOrganizacao): void
+    {
+        abort_unless($codOrganizacao !== null && $codOrganizacao === $this->organizacaoId, 403);
     }
 
     public function pedirAjudaIA()
     {
+        $this->autorizarNaUnidade('criar');
+
         if (! $this->aiEnabled) {
             return;
         }
@@ -162,10 +199,10 @@ class AnaliseSWOT extends Component
 
     public function adicionarSugerido($categoria, $item)
     {
+        $this->autorizarNaUnidade('criar');
         if (! $this->peiAtivo) {
             return;
         }
-        abort_unless($this->organizacaoId !== null, 403);
 
         AnaliseAmbiental::create([
             'cod_pei' => $this->peiAtivo->cod_pei,
@@ -213,6 +250,10 @@ class AnaliseSWOT extends Component
 
     public function atualizarOrganizacao($id)
     {
+        // Método público (e ouvinte de evento): o ID vem do cliente. Sem esta
+        // checagem, o escopo #[Locked] era trocado por qualquer organização.
+        abort_unless(! $id || Auth::user()?->podeAcessarOrganizacao($id), 403);
+
         $this->organizacaoId = $id;
         $this->organizacaoNome = $id ? Organization::find($id)?->nom_organizacao : null;
         $this->carregarDados();
@@ -238,6 +279,9 @@ class AnaliseSWOT extends Component
 
         if ($this->organizacaoId) {
             $query->where('cod_organizacao', $this->organizacaoId);
+        } else {
+            // Sem unidade, nunca "todas": o escopo do usuário (Super Admin vê tudo).
+            Auth::user()->aplicarEscopoOrganizacional($query);
         }
 
         $itens = $query->get();
@@ -254,6 +298,7 @@ class AnaliseSWOT extends Component
 
     public function novaEstrategiaTows(string $tipo = 'SO'): void
     {
+        $this->autorizarNaUnidade('criar');
         $this->towsEditId = null;
         $this->formTows = ['dsc_tipo' => $tipo, 'dsc_estrategia' => '', 'txt_fundamentacao' => '', 'cod_objetivo_vinculado' => ''];
         $this->showModalTows = true;
@@ -261,8 +306,10 @@ class AnaliseSWOT extends Component
 
     public function editarEstrategiaTows(string $id): void
     {
+        $this->autorizarNaUnidade('editar');
         $e = EstrategiaTows::findOrFail($id);
         abort_unless($this->peiAtivo && $e->cod_pei === $this->peiAtivo->cod_pei, 403);
+        $this->garantirDaUnidade($e->cod_organizacao);
         $this->towsEditId = $id;
         $this->formTows = [
             'dsc_tipo' => $e->dsc_tipo,
@@ -275,6 +322,7 @@ class AnaliseSWOT extends Component
 
     public function salvarEstrategiaTows(): void
     {
+        $this->autorizarNaUnidade($this->towsEditId ? 'editar' : 'criar');
         $this->validate([
             'formTows.dsc_tipo' => 'required|in:SO,ST,WO,WT',
             'formTows.dsc_estrategia' => 'required|string|max:1000',
@@ -289,9 +337,13 @@ class AnaliseSWOT extends Component
             'cod_objetivo_vinculado' => $this->formTows['cod_objetivo_vinculado'] ?: null,
         ];
 
-        $this->towsEditId
-            ? EstrategiaTows::findOrFail($this->towsEditId)->update($data)
-            : EstrategiaTows::create($data);
+        if ($this->towsEditId) {
+            $e = EstrategiaTows::findOrFail($this->towsEditId);
+            $this->garantirDaUnidade($e->cod_organizacao);
+            $e->update($data);
+        } else {
+            EstrategiaTows::create($data);
+        }
 
         $this->showModalTows = false;
         $this->towsEditId = null;
@@ -300,8 +352,10 @@ class AnaliseSWOT extends Component
 
     public function excluirEstrategiaTows(string $id): void
     {
+        $this->autorizarNaUnidade('excluir');
         $e = EstrategiaTows::findOrFail($id);
         abort_unless($this->peiAtivo && $e->cod_pei === $this->peiAtivo->cod_pei, 403);
+        $this->garantirDaUnidade($e->cod_organizacao);
         $e->delete();
         $this->dispatch('notify', message: 'Estratégia removida.', style: 'warning');
     }
@@ -313,6 +367,7 @@ class AnaliseSWOT extends Component
 
     public function create($categoria)
     {
+        $this->autorizarNaUnidade('criar');
         $this->resetForm();
         $this->dsc_categoria = $categoria;
         $this->showModal = true;
@@ -320,6 +375,7 @@ class AnaliseSWOT extends Component
 
     public function edit($id)
     {
+        $this->autorizarNaUnidade('editar');
         $item = AnaliseAmbiental::findOrFail($id);
         abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
         $this->itemId = $id;
@@ -335,6 +391,7 @@ class AnaliseSWOT extends Component
 
     public function save()
     {
+        $this->autorizarNaUnidade($this->itemId ? 'editar' : 'criar');
         if (! $this->peiAtivo) {
             $this->dispatch('notify', message: 'Selecione um Ciclo PEI antes de salvar.', style: 'danger');
 
@@ -382,6 +439,7 @@ class AnaliseSWOT extends Component
 
     public function novaParte(): void
     {
+        $this->autorizarInstitucional('criar');
         $this->parteEditId = null;
         $this->formParte = ['nom_parte' => '', 'dsc_tipo' => 'Externo', 'num_interesse' => 3, 'num_influencia' => 3, 'txt_estrategia_engajamento' => ''];
         $this->showModalParte = true;
@@ -389,6 +447,7 @@ class AnaliseSWOT extends Component
 
     public function editarParte(string $id): void
     {
+        $this->autorizarInstitucional('editar');
         $p = ParteInteressada::findOrFail($id);
         abort_unless($this->peiAtivo && $p->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->parteEditId = $id;
@@ -404,6 +463,7 @@ class AnaliseSWOT extends Component
 
     public function salvarParte(): void
     {
+        $this->autorizarInstitucional($this->parteEditId ? 'editar' : 'criar');
         $this->validate([
             'formParte.nom_parte' => 'required|string|max:150',
             'formParte.num_interesse' => 'required|integer|min:1|max:5',
@@ -412,9 +472,13 @@ class AnaliseSWOT extends Component
 
         $data = array_merge($this->formParte, ['cod_pei' => $this->peiAtivo->cod_pei]);
 
-        $this->parteEditId
-            ? ParteInteressada::findOrFail($this->parteEditId)->update($data)
-            : ParteInteressada::create($data);
+        if ($this->parteEditId) {
+            $parte = ParteInteressada::findOrFail($this->parteEditId);
+            abort_unless($parte->cod_pei === $this->peiAtivo->cod_pei, 403);
+            $parte->update($data);
+        } else {
+            ParteInteressada::create($data);
+        }
 
         $this->showModalParte = false;
         $this->parteEditId = null;
@@ -423,6 +487,7 @@ class AnaliseSWOT extends Component
 
     public function excluirParte(string $id): void
     {
+        $this->autorizarInstitucional('excluir');
         $parte = ParteInteressada::findOrFail($id);
         abort_unless($this->peiAtivo && $parte->cod_pei === $this->peiAtivo->cod_pei, 403);
         $parte->delete();
@@ -433,6 +498,7 @@ class AnaliseSWOT extends Component
 
     public function novoCenario(): void
     {
+        $this->autorizarNaUnidade('criar');
         $this->cenarioEditId = null;
         $this->formCenario = ['nom_cenario' => '', 'dsc_tipo' => 'Tendencial', 'dsc_descricao' => '', 'txt_implicacoes' => '', 'txt_resposta_estrategica' => '', 'num_probabilidade' => 3, 'num_impacto' => 3];
         $this->showModalCenario = true;
@@ -440,8 +506,10 @@ class AnaliseSWOT extends Component
 
     public function editarCenario(string $id): void
     {
+        $this->autorizarNaUnidade('editar');
         $c = CenarioProspectivo::findOrFail($id);
         abort_unless($this->peiAtivo && $c->cod_pei === $this->peiAtivo->cod_pei, 403);
+        $this->garantirDaUnidade($c->cod_organizacao);
         $this->cenarioEditId = $id;
         $this->formCenario = [
             'nom_cenario' => $c->nom_cenario,
@@ -457,6 +525,7 @@ class AnaliseSWOT extends Component
 
     public function salvarCenario(): void
     {
+        $this->autorizarNaUnidade($this->cenarioEditId ? 'editar' : 'criar');
         $this->validate([
             'formCenario.nom_cenario' => 'required|string|max:150',
             'formCenario.dsc_tipo' => 'required|in:Otimista,Tendencial,Pessimista',
@@ -469,9 +538,13 @@ class AnaliseSWOT extends Component
             'cod_organizacao' => $this->organizacaoId,
         ]);
 
-        $this->cenarioEditId
-            ? CenarioProspectivo::findOrFail($this->cenarioEditId)->update($data)
-            : CenarioProspectivo::create($data);
+        if ($this->cenarioEditId) {
+            $c = CenarioProspectivo::findOrFail($this->cenarioEditId);
+            $this->garantirDaUnidade($c->cod_organizacao);
+            $c->update($data);
+        } else {
+            CenarioProspectivo::create($data);
+        }
 
         $this->showModalCenario = false;
         $this->cenarioEditId = null;
@@ -480,14 +553,17 @@ class AnaliseSWOT extends Component
 
     public function excluirCenario(string $id): void
     {
+        $this->autorizarNaUnidade('excluir');
         $cenario = CenarioProspectivo::findOrFail($id);
         abort_unless($this->peiAtivo && $cenario->cod_pei === $this->peiAtivo->cod_pei, 403);
+        $this->garantirDaUnidade($cenario->cod_organizacao);
         $cenario->delete();
         $this->dispatch('notify', message: 'Cenário removido.', style: 'warning');
     }
 
     public function delete($id)
     {
+        $this->autorizarNaUnidade('excluir');
         $item = AnaliseAmbiental::findOrFail($id);
         abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
         $item->delete();
@@ -513,13 +589,24 @@ class AnaliseSWOT extends Component
             ? ParteInteressada::where('cod_pei', $this->peiAtivo->cod_pei)->orderBy('num_influencia', 'desc')->orderBy('num_interesse', 'desc')->get()
             : collect();
 
+        // Cenários e TOWS são da unidade: listavam os de TODAS as unidades.
         $cenarios = $this->peiAtivo
-            ? CenarioProspectivo::where('cod_pei', $this->peiAtivo->cod_pei)->orderBy('num_ordem')->orderBy('dsc_tipo')->get()
+            ? CenarioProspectivo::where('cod_pei', $this->peiAtivo->cod_pei)
+                ->when(
+                    $this->organizacaoId,
+                    fn ($q) => $q->where('cod_organizacao', $this->organizacaoId),
+                    fn ($q) => Auth::user()->aplicarEscopoOrganizacional($q)
+                )
+                ->orderBy('num_ordem')->orderBy('dsc_tipo')->get()
             : collect();
 
         $tows = $this->peiAtivo
             ? EstrategiaTows::where('cod_pei', $this->peiAtivo->cod_pei)
-                ->when($this->organizacaoId, fn ($q) => $q->where('cod_organizacao', $this->organizacaoId))
+                ->when(
+                    $this->organizacaoId,
+                    fn ($q) => $q->where('cod_organizacao', $this->organizacaoId),
+                    fn ($q) => Auth::user()->aplicarEscopoOrganizacional($q)
+                )
                 ->with('objetivo')
                 ->orderBy('dsc_tipo')
                 ->get()
@@ -534,6 +621,26 @@ class AnaliseSWOT extends Component
             'tiposCenario' => CenarioProspectivo::TIPOS,
             'tows' => $tows,
             'tiposTows' => EstrategiaTows::TIPOS,
+            // A tela só oferece o botão que o servidor aceita.
+            ...$this->permissoes(),
         ]);
+    }
+
+    /** @return array<string, bool> */
+    private function permissoes(): array
+    {
+        $naUnidade = fn (string $a) => $this->organizacaoId !== null
+            && Gate::allows("modulo.{$a}", ['planejamento-estrategico', $this->organizacaoId]);
+        $institucional = fn (string $a) => Gate::allows("modulo.{$a}", 'planejamento-estrategico')
+            && Gate::allows('editar-institucional');
+
+        return [
+            'podeCriar' => $naUnidade('criar'),
+            'podeEditar' => $naUnidade('editar'),
+            'podeExcluir' => $naUnidade('excluir'),
+            'podeCriarParte' => $institucional('criar'),
+            'podeEditarParte' => $institucional('editar'),
+            'podeExcluirParte' => $institucional('excluir'),
+        ];
     }
 }

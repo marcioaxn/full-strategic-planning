@@ -63,7 +63,23 @@ test('super admin pode ver e editar entrega de qualquer organização', function
         ->and($user->can('update', $entrega))->toBeTrue();
 });
 
-test('gestor responsável vinculado à organização pode editar a entrega', function () {
+test('gestor responsável DA INICIATIVA pode editar a entrega dela', function () {
+    $org = Organization::create(['nom_organizacao' => 'Org A', 'sgl_organizacao' => 'OA', 'cod_organizacao_pai' => null]);
+    $entrega = montarPlanoDeAcaoComEntrega($org);
+
+    $user = User::factory()->create(['ativo' => true]);
+    $user->organizacoes()->attach($org->cod_organizacao);
+    $user->perfisAcesso()->attach(PerfilAcesso::GESTOR_RESPONSAVEL, [
+        'cod_organizacao' => $org->cod_organizacao,
+        'cod_plano_de_acao' => $entrega->cod_plano_de_acao,
+    ]);
+
+    expect($user->can('update', $entrega))->toBeTrue();
+});
+
+test('gestor responsável só da unidade, sem vínculo com a iniciativa, NÃO edita a entrega', function () {
+    // A regra que a tela "Papéis e responsabilidades" declara: Gestor
+    // Responsável é vínculo com uma iniciativa específica, não crachá geral.
     $org = Organization::create(['nom_organizacao' => 'Org A', 'sgl_organizacao' => 'OA', 'cod_organizacao_pai' => null]);
     $entrega = montarPlanoDeAcaoComEntrega($org);
 
@@ -71,7 +87,8 @@ test('gestor responsável vinculado à organização pode editar a entrega', fun
     $user->organizacoes()->attach($org->cod_organizacao);
     $user->perfisAcesso()->attach(PerfilAcesso::GESTOR_RESPONSAVEL, ['cod_organizacao' => $org->cod_organizacao]);
 
-    expect($user->can('update', $entrega))->toBeTrue();
+    expect($user->can('view', $entrega))->toBeTrue()
+        ->and($user->can('update', $entrega))->toBeFalse();
 });
 
 test('usuário sem vínculo com a organização não pode ver a entrega', function () {

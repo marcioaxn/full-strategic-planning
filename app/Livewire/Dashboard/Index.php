@@ -17,14 +17,19 @@ use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Perspectiva;
 use App\Services\AI\AiServiceFactory;
 use App\Services\IndicadorCalculoService;
+use App\Support\CalculoPolaridade;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class Index extends Component
 {
+    // Locked: o painel recalcula a cada poll com este id; vindo do navegador,
+    // bastaria trocá-lo para ler o painel de qualquer unidade.
+    #[Locked]
     public $organizacaoId;
 
     public $organizacaoNome;
@@ -52,14 +57,19 @@ class Index extends Component
     public function mount()
     {
         $this->anoSelecionado = Session::get('ano_selecionado', date('Y'));
-        $this->organizacaoId = Session::get('organizacao_selecionada_id');
+
+        // A organização vem SEMPRE validada contra o escopo do usuário.
+        //
+        // 🔴 Com a sessão vazia (primeira tela após o login), o painel gravava a
+        // unidade RAIZ na sessão sem checar se o usuário tinha acesso a ela: um
+        // Gestor de uma unidade folha via o consolidado da instituição inteira,
+        // e as telas seguintes (RAE, Lições, Entregas) liam essa raiz.
+        // Quem não é Super Admin cai na primeira unidade do próprio escopo.
+        $this->organizacaoId = Auth::user()->organizacaoSelecionadaId();
 
         // O Dashboard monta antes do SeletorOrganizacao (slot renderiza antes do layout).
-        // Se a sessão está vazia, auto-seleciona a primeira org disponível para o usuário,
-        // garantindo chartData correto desde o primeiro render sem depender de AJAX.
-        if (! $this->organizacaoId) {
-            // Seleciona a organização raiz (auto-referenciada) para alinhar com o
-            // SeletorOrganizacao, que exibe a raiz como primeiro item da árvore.
+        // Super Admin sem seleção: começa pela raiz, alinhado ao seletor.
+        if (! $this->organizacaoId && Auth::user()->isSuperAdmin()) {
             $org = Organization::raiz()->orderBy('nom_organizacao')->first();
             if ($org) {
                 $this->organizacaoId = $org->cod_organizacao;
@@ -67,6 +77,12 @@ class Index extends Component
                 Session::put('organizacao_selecionada_nom', $org->nom_organizacao);
                 Session::put('organizacao_selecionada_sgl', $org->sgl_organizacao);
             }
+        }
+
+        if ($this->organizacaoId && ! Session::has('organizacao_selecionada_nom')) {
+            $org = Organization::find($this->organizacaoId);
+            Session::put('organizacao_selecionada_nom', $org?->nom_organizacao);
+            Session::put('organizacao_selecionada_sgl', $org?->sgl_organizacao);
         }
 
         $this->carregarPEI();
@@ -82,6 +98,13 @@ class Index extends Component
 
     public function atualizarOrganizacao($id)
     {
+        // Método público (e ouvinte de evento): o ID vem do cliente. Logado, só
+        // dentro do próprio escopo; o visitante da área pública só consulta.
+        // Organização vazia ("todas as unidades") é só do Super Admin: para os
+        // demais, vazio passava sem filtro e o painel mostrava a instituição inteira.
+        $user = Auth::user();
+        abort_unless($id ? $user->podeAcessarOrganizacao($id) : $user->isSuperAdmin(), 403);
+
         $this->organizacaoId = $id;
         $this->carregarNomeOrganizacao();
         $this->atualizarDadosGraficos();
@@ -405,9 +428,14 @@ class Index extends Component
         }
 
         // Buscar evoluções do ano selecionado vinculadas ao PEI
-        $evolucoes = EvolucaoIndicador::where('num_ano', $this->anoSelecionado)
+        // Só conta o que foi de fato lançado (realizado preenchido). Indicador
+        // informativo (polaridade "Não Aplicável") não entra em média.
+        $evolucoes = EvolucaoIndicador::with('indicador:cod_indicador,dsc_polaridade')
+            ->where('num_ano', $this->anoSelecionado)
+            ->whereNotNull('vlr_realizado')
             ->whereHas('indicador.objetivo.perspectiva', fn ($q) => $q->where('cod_pei', $this->peiAtivo->cod_pei))
-            ->get();
+            ->get()
+            ->reject(fn ($ev) => CalculoPolaridade::ehInformativo($ev->indicador?->dsc_polaridade));
 
         $dadosPorMes = [];
         for ($i = 1; $i <= 12; $i++) {
@@ -418,26 +446,20 @@ class Index extends Component
 
             $evolucoesMes = $evolucoes->where('num_mes', $i);
 
-            if ($evolucoesMes->count() > 0) {
-                // Média simples das porcentagens de atingimento (realizado vs 100% ou meta)
-                // Considerando polaridade simplificada (assumindo realizado é bom)
-                $somaAtingimento = 0;
-                $count = 0;
+            // Mês sem lançamento é lacuna (null), não 0%: zero desenharia uma
+            // queda de desempenho que não aconteceu.
+            if ($evolucoesMes->isEmpty()) {
+                $dadosPorMes[] = null;
 
-                foreach ($evolucoesMes as $ev) {
-                    $meta = $ev->vlr_previsto != 0 ? $ev->vlr_previsto : 1;
-                    $real = $ev->vlr_realizado;
-
-                    // Limitar a 100% para não distorcer o gráfico com outliers
-                    $perc = ($real / $meta) * 100;
-                    $somaAtingimento += min($perc, 100);
-                    $count++;
-                }
-
-                $dadosPorMes[] = round($somaAtingimento / $count, 1);
-            } else {
-                $dadosPorMes[] = 0;
+                continue;
             }
+
+            // Atingimento segundo a polaridade de cada indicador, limitado a
+            // 100% para um desvio isolado não distorcer a média.
+            $dadosPorMes[] = round(
+                $evolucoesMes->avg(fn ($ev) => min($ev->calcularAtingimento(), 100)),
+                1
+            );
         }
 
         $meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -456,7 +478,15 @@ class Index extends Component
 
         $service = app(IndicadorCalculoService::class);
 
-        return $service->calcularIQG($this->peiAtivo->cod_pei, (int) $this->anoSelecionado);
+        $iqg = $service->calcularIQG($this->peiAtivo->cod_pei, (int) $this->anoSelecionado);
+
+        // Cada perspectiva com a cor da SUA faixa: a tela pintava todas com a
+        // cor do índice geral, e uma perspectiva a 10% aparecia como "atenção".
+        $iqg['perspectivas'] = collect($iqg['perspectivas'] ?? [])
+            ->map(fn ($p) => $p + ['cor' => $this->getCorAtingimento($p['atingimento'] ?? 0)])
+            ->all();
+
+        return $iqg;
     }
 
     private function getCorAtingimento($percentual)
@@ -478,14 +508,15 @@ class Index extends Component
     private function getOdsCobertura(): array
     {
         $codPei = $this->peiAtivo?->cod_pei;
-        $total = 18;
+        // O total é o do cadastro de ODS, nunca um número escrito no código.
+        $total = 0;
 
         if (! $codPei) {
             return ['cobertos' => [], 'total' => $total];
         }
 
         try {
-            $total = ODS::count() ?: 18;
+            $total = ODS::count();
             $cobertos = ODS::whereHas('objetivos', function ($q) use ($codPei) {
                 $q->whereHas('perspectiva', fn ($qp) => $qp->where('cod_pei', $codPei));
             })->pluck('num_ods')->map(fn ($n) => (int) $n)->toArray();

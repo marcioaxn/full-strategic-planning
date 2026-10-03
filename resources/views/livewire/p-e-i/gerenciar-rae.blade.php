@@ -10,9 +10,11 @@
         :gppei="138">
         @if($peiAtivo && $organizacaoId)
         <x-slot name="actions">
+            @if($podeCriar)
             <button wire:click="novaRae" class="btn btn-light rounded-pill px-4 fw-bold">
                 <i class="bi bi-plus-lg me-2"></i>Nova RAE
             </button>
+            @endif
         </x-slot>
         @endif
     </x-module-header>
@@ -37,9 +39,11 @@
                 <i class="bi bi-arrow-repeat fs-1 text-muted opacity-25 d-block mb-3"></i>
                 <h5 class="fw-bold">Nenhuma RAE registrada</h5>
                 <p class="text-muted small mb-3">Registre a primeira revisão e avaliação da estratégia para documentar o ciclo de gestão.</p>
+                @if($podeCriar)
                 <button wire:click="novaRae" class="btn btn-primary gradient-theme-btn px-4">
                     <i class="bi bi-plus-lg me-2"></i>Registrar Primeira RAE
                 </button>
+                @endif
             </div>
         </div>
     @else
@@ -71,7 +75,7 @@
                                             <div class="progress-bar {{ $rae->num_progresso_geral >= 70 ? 'bg-success' : ($rae->num_progresso_geral >= 40 ? 'bg-warning' : 'bg-danger') }}"
                                                  style="width:{{ $rae->num_progresso_geral }}%"></div>
                                         </div>
-                                        <span class="small fw-bold">{{ number_format($rae->num_progresso_geral, 1) }}%</span>
+                                        <span class="small fw-bold">{{ number_format($rae->num_progresso_geral, 1, ',', '.') }}%</span>
                                     </div>
                                 @endif
                             </div>
@@ -82,17 +86,23 @@
                                         <i class="bi bi-clock me-1"></i>{{ $pendEnc }}
                                     </span>
                                 @endif
+                                @if($podeExportar)
                                 <button wire:click="gerarPdf('{{ $rae->cod_rae }}')"
                                         class="btn btn-sm btn-outline-danger rounded-pill px-3"
                                         data-bs-toggle="tooltip" title="Baixar PDF desta RAE">
                                     <i class="bi bi-file-earmark-pdf me-1"></i>PDF
                                 </button>
+                                @endif
+                                @if($podeEditar)
                                 <button wire:click="editarRae('{{ $rae->cod_rae }}')" class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                     <i class="bi bi-pencil me-1"></i>Editar
                                 </button>
+                                @endif
+                                @if($podeExcluir)
                                 <button wire:click="confirmarExclusao('{{ $rae->cod_rae }}')" class="btn btn-sm btn-outline-danger rounded-pill px-2">
                                     <i class="bi bi-trash"></i>
                                 </button>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -164,10 +174,12 @@
                                         <span class="badge bg-warning text-dark ms-1 rounded-pill">{{ $pendEnc }} pendente{{ $pendEnc > 1 ? 's' : '' }}</span>
                                     @endif
                                 </button>
+                                @if($podeCriar)
                                 <button wire:click="novoEncaminhamento('{{ $rae->cod_rae }}')"
                                         class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                     <i class="bi bi-plus-lg me-1"></i>Adicionar
                                 </button>
+                                @endif
                             </div>
 
                             @if($encAberto)
@@ -215,21 +227,25 @@
                                                     </td>
                                                     <td>
                                                         <select class="form-select form-select-sm border-0 bg-{{ $statusClass }}-subtle text-{{ $statusClass }} fw-bold rounded-pill"
-                                                                wire:change="atualizarStatusEnc('{{ $enc->cod_encaminhamento }}', $event.target.value)">
+                                                                wire:change="atualizarStatusEnc('{{ $enc->cod_encaminhamento }}', $event.target.value)" @disabled(! $podeEditar)>
                                                             @foreach($statusEnc as $s)
                                                                 <option value="{{ $s }}" {{ $enc->dsc_status === $s ? 'selected' : '' }}>{{ $s }}</option>
                                                             @endforeach
                                                         </select>
                                                     </td>
                                                     <td class="text-end">
+                                                        @if($podeEditar)
                                                         <button wire:click="editarEncaminhamento('{{ $enc->cod_encaminhamento }}')"
                                                                 class="btn btn-sm btn-link p-0 text-primary me-2" title="Editar">
                                                             <i class="bi bi-pencil"></i>
                                                         </button>
+                                                        @endif
+                                                        @if($podeExcluir)
                                                         <button wire:click="confirmarExclusaoEnc('{{ $enc->cod_encaminhamento }}')"
                                                                 class="btn btn-sm btn-link p-0 text-danger" title="Excluir">
                                                             <i class="bi bi-trash"></i>
                                                         </button>
+                                                        @endif
                                                     </td>
                                                 </tr>
                                                 @endforeach
@@ -252,10 +268,12 @@
                                         <span class="badge bg-warning-subtle text-warning ms-1 rounded-pill">{{ $rae->causasRaiz->count() }}</span>
                                     @endif
                                 </button>
+                                @if($podeCriar)
                                 <button wire:click="novaCausa('{{ $rae->cod_rae }}')"
                                         class="btn btn-sm btn-outline-warning rounded-pill px-3">
                                     <i class="bi bi-plus-lg me-1"></i>5 Porquês
                                 </button>
+                                @endif
                             </div>
                             @if($causaAberto)
                             <div class="mt-2">
@@ -272,8 +290,12 @@
                                             @endif
                                         </div>
                                         <div class="d-flex gap-1 ms-2">
+                                            @if($podeEditar)
                                             <button wire:click="editarCausa('{{ $causa->cod_causa }}')" class="btn btn-xs btn-light border"><i class="bi bi-pencil"></i></button>
+                                            @endif
+                                            @if($podeExcluir)
                                             <button wire:click="excluirCausa('{{ $causa->cod_causa }}')" class="btn btn-xs btn-light border text-danger"><i class="bi bi-trash"></i></button>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>

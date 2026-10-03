@@ -56,11 +56,26 @@ class ListarPeis extends Component
 
     public function mount()
     {
-        if (! auth()->user()->isSuperAdmin()) {
-            abort(403, 'Apenas Super Administradores podem gerenciar PEIs.');
-        }
+        $this->garantirSuperAdmin();
         $this->num_ano_inicio_pei = now()->year;
         $this->num_ano_fim_pei = now()->year + 4;
+
+        // "Editar PEI" no detalhe do ciclo chega aqui com ?editar={cod_pei}
+        // e já abre o modal de edição daquele ciclo.
+        $editar = request()->query('editar');
+        if (is_string($editar) && PEI::whereKey($editar)->exists()) {
+            $this->edit($editar);
+        }
+    }
+
+    /**
+     * Cada método público é um endpoint: a checagem do mount() não basta.
+     */
+    private function garantirSuperAdmin(): void
+    {
+        if (! auth()->user()?->isSuperAdmin()) {
+            abort(403, 'Apenas Super Administradores podem gerenciar PEIs.');
+        }
     }
 
     public function closeSuccessModal()
@@ -96,6 +111,8 @@ class ListarPeis extends Component
 
     public function edit($id)
     {
+        $this->garantirSuperAdmin();
+
         $pei = PEI::findOrFail($id);
         $this->peiId = $id;
         $this->dsc_pei = $pei->dsc_pei;
@@ -106,6 +123,8 @@ class ListarPeis extends Component
 
     public function save()
     {
+        $this->garantirSuperAdmin();
+
         $this->validate([
             'dsc_pei' => 'required|string|max:255',
             'num_ano_inicio_pei' => 'required|integer|min:2000|max:2100',
@@ -146,6 +165,8 @@ class ListarPeis extends Component
 
     public function confirmDelete($id)
     {
+        $this->garantirSuperAdmin();
+
         $this->peiId = $id;
         $pei = PEI::withCount('perspectivas')->findOrFail($id);
 
@@ -170,6 +191,8 @@ class ListarPeis extends Component
 
     public function delete()
     {
+        $this->garantirSuperAdmin();
+
         PEI::findOrFail($this->peiId)->delete();
         $this->showDeleteModal = false;
         $this->peiId = null;

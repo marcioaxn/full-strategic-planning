@@ -10,12 +10,16 @@
         :gppei="24">
         @if($peiAtivo)
         <x-slot name="actions">
+            @if($podeExportar)
             <button wire:click="gerarPdf" class="btn btn-light rounded-pill px-3" data-bs-toggle="tooltip" title="Exportar Cadeia de Valor em PDF">
                 <i class="bi bi-file-earmark-pdf me-1"></i>PDF
             </button>
+            @endif
+            @if($podeCriar)
             <button wire:click="novaAtividade" class="btn btn-light rounded-pill px-4 fw-bold">
                 <i class="bi bi-plus-lg me-2"></i>Nova Atividade
             </button>
+            @endif
         </x-slot>
         @endif
     </x-module-header>

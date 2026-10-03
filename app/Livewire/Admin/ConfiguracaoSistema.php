@@ -47,6 +47,9 @@ class ConfiguracaoSistema extends Component
 
     public function testConnection()
     {
+        // Usa a credencial gravada para chamar o provedor: mesma exigência do mount.
+        $this->authorize('modulo.acessar', 'admin.configuracoes');
+
         $this->connectionStatus = 'testing';
         $this->connectionMessage = 'Testando comunicação com o Agente de IA...';
 
@@ -98,6 +101,10 @@ class ConfiguracaoSistema extends Component
 
     public function save()
     {
+        // Método público = endpoint: a autorização do mount não protege as chamadas
+        // seguintes. Sem isto, qualquer usuário logado trocaria provedor e chave da IA.
+        $this->authorize('modulo.acessar', 'admin.configuracoes');
+
         SystemSetting::setValue('ai_provider', $this->aiProvider);
         SystemSetting::setValue('ai_model', $this->aiModel);
 

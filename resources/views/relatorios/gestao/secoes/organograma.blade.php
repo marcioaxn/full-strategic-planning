@@ -8,9 +8,9 @@
         @endif
         @if($unidades->isNotEmpty())
             reúne as unidades relacionadas a seguir, todas integradas ao mesmo ciclo
-            de Planejamento Estratégico Institucional.
+            de Planejamento Estratégico Integrado.
         @else
-            responde pelo ciclo de Planejamento Estratégico Institucional relatado neste documento.
+            responde pelo ciclo de Planejamento Estratégico Integrado relatado neste documento.
         @endif
     </p>
 @endif

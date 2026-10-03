@@ -10,6 +10,8 @@ use App\Services\AI\AiServiceFactory;
 use App\Services\NotificationService;
 use App\Services\PeiGuidanceService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -50,16 +52,29 @@ class MissaoVisao extends Component
 
     public function mount()
     {
-        // Visualização é livre para qualquer usuário autenticado (navegar e
-        // "mergulhar" na informação não é restrito por perfil/organização).
-        // Só a edição (habilitarEdicao/salvar) exige capacidade RBAC + escopo.
+        // Ler exige ter o módulo (todo perfil com vínculo tem). Editar exige a
+        // capacidade NA UNIDADE da identidade (ver autorizarEdicao).
+        $this->authorize('modulo.acessar', 'planejamento-estrategico');
+
         $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
-        $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+        $this->atualizarOrganizacao(Auth::user()->organizacaoSelecionadaId());
+    }
+
+    /**
+     * Missão e visão são da UNIDADE: a capacidade vale na unidade desta tela.
+     * Antes, o Gate somava os perfis de todas as unidades do usuário.
+     */
+    private function autorizarEdicao(): void
+    {
+        abort_unless($this->organizacaoId !== null, 403);
+        $this->authorize('modulo.editar', ['planejamento-estrategico', $this->organizacaoId]);
     }
 
     public function pedirAjudaIA()
     {
+        $this->autorizarEdicao();
+
         if (! $this->aiEnabled) {
             return;
         }
@@ -131,6 +146,9 @@ class MissaoVisao extends Component
 
     public function atualizarOrganizacao($id)
     {
+        // Método público (e ouvinte de evento): o ID vem do cliente.
+        abort_unless(! $id || Auth::user()?->podeAcessarOrganizacao($id), 403);
+
         $this->organizacaoId = $id;
 
         if ($id) {
@@ -182,7 +200,7 @@ class MissaoVisao extends Component
 
     public function habilitarEdicao()
     {
-        $this->authorize('modulo.editar', 'planejamento-estrategico');
+        $this->autorizarEdicao();
 
         if (! auth()->user()->podeAcessarOrganizacao($this->organizacaoId)) {
             abort(403, 'Você não tem permissão para editar a identidade estratégica desta organização.');
@@ -205,7 +223,7 @@ class MissaoVisao extends Component
 
     public function salvar()
     {
-        $this->authorize('modulo.editar', 'planejamento-estrategico');
+        $this->autorizarEdicao();
 
         if (! auth()->user()->podeAcessarOrganizacao($this->organizacaoId)) {
             abort(403, 'Você não tem permissão para salvar a identidade estratégica desta organização.');
@@ -254,6 +272,10 @@ class MissaoVisao extends Component
 
     public function render()
     {
-        return view('livewire.p-e-i.missao-visao');
+        // A tela só oferece o botão que o servidor aceita.
+        return view('livewire.p-e-i.missao-visao', [
+            'podeEditar' => $this->organizacaoId !== null
+                && Gate::allows('modulo.editar', ['planejamento-estrategico', $this->organizacaoId]),
+        ]);
     }
 }

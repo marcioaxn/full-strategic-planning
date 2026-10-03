@@ -2,85 +2,56 @@
 
 namespace App\Policies;
 
-use App\Models\PerfilAcesso;
 use App\Models\RiskManagement\Risco;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 
+/**
+ * Risco: capacidade na organização do risco. Além do Administrador, edita o
+ * responsável pelo monitoramento — desde que o perfil dele, NAQUELA unidade,
+ * permita editar riscos (Consulta, por exemplo, não permite).
+ */
 class RiscoPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
         return Gate::forUser($user)->allows('modulo.acessar', 'riscos');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Risco $risco): bool
     {
-        if (! Gate::forUser($user)->allows('modulo.acessar', 'riscos')) {
-            return false;
-        }
-
-        return $user->isSuperAdmin() || $user->podeAcessarOrganizacao($risco->cod_organizacao);
+        return $user->isSuperAdmin()
+            || ($user->podeAcessarOrganizacao($risco->cod_organizacao)
+                && Gate::forUser($user)->allows('modulo.acessar', ['riscos', $risco->cod_organizacao]));
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(User $user, ?string $codOrganizacao = null): bool
     {
-        return Gate::forUser($user)->allows('modulo.criar', 'riscos');
+        return Gate::forUser($user)->allows('modulo.criar', ['riscos', $codOrganizacao]);
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Risco $risco): bool
     {
-        if (! Gate::forUser($user)->allows('modulo.editar', 'riscos')) {
-            return false;
-        }
-
         if ($user->isSuperAdmin()) {
             return true;
         }
 
-        // Admin Unidade daquela organização específica
-        $isAdminUnidade = $user->perfisAcesso()
-            ->wherePivot('cod_organizacao', $risco->cod_organizacao)
-            ->where('tab_perfil_acesso.cod_perfil', PerfilAcesso::ADMIN_UNIDADE)
-            ->exists();
+        $org = $risco->cod_organizacao;
 
-        if ($isAdminUnidade) {
-            return true;
+        if (! Gate::forUser($user)->allows('modulo.editar', ['riscos', $org])) {
+            return false;
         }
 
-        // ABAC — o próprio responsável pelo monitoramento do risco
-        return $risco->cod_responsavel_monitoramento === $user->id;
+        return $user->ehAdministradorEm($org) || $risco->cod_responsavel_monitoramento === $user->id;
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Risco $risco): bool
     {
-        if (! Gate::forUser($user)->allows('modulo.excluir', 'riscos')) {
-            return false;
-        }
-
         if ($user->isSuperAdmin()) {
             return true;
         }
 
-        // Apenas Admin Unidade
-        return $user->perfisAcesso()
-            ->wherePivot('cod_organizacao', $risco->cod_organizacao)
-            ->where('tab_perfil_acesso.cod_perfil', PerfilAcesso::ADMIN_UNIDADE)
-            ->exists();
+        return Gate::forUser($user)->allows('modulo.excluir', ['riscos', $risco->cod_organizacao])
+            && $user->ehAdministradorEm($risco->cod_organizacao);
     }
 }

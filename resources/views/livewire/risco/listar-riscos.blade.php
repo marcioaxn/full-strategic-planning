@@ -27,9 +27,11 @@
                 <a href="{{ route('riscos.matriz') }}" wire:navigate class="btn btn-outline-primary shadow-sm rounded-pill px-3">
                     <i class="bi bi-grid-3x3-gap me-1"></i> Ver Matriz
                 </a>
+                @can('create', [\App\Models\RiskManagement\Risco::class, $organizacaoId])
                 <button wire:click="create" class="btn btn-primary gradient-theme-btn shadow-sm rounded-pill px-4">
                     <i class="bi bi-plus-lg me-2"></i>Identificar Risco
                 </button>
+                @endcan
             @endif
         </div>
     </div>
@@ -416,7 +418,7 @@
     @endif
 
     {{-- Mentor de IA --}}
-    @if($organizacaoId && $aiEnabled)
+    @if($organizacaoId && $aiEnabled && auth()->user()->can('create', [\App\Models\RiskManagement\Risco::class, $organizacaoId]))
         <div class="ai-mentor-wrapper animate-fade-in">
             <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="ai-magic-button shadow-sm">
                 <span wire:loading.remove wire:target="pedirAjudaIA">
@@ -452,7 +454,7 @@
                                                 <small class="text-dark">{{ $sug['mitigacao'] }}</small>
                                             </div>
                                         </div>
-                                        <button wire:click="aplicarSugestao('{{ $sug['titulo'] }}', '{{ $sug['categoria'] }}', '{{ $sug['descricao'] }}')" 
+                                        <button wire:click="aplicarSugestao(@js($sug['titulo']), @js($sug['categoria']), @js($sug['descricao']))" 
                                                 class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
                                             <i class="bi bi-plus-lg me-1"></i> {{ __('Identificar') }}
                                         </button>
@@ -581,8 +583,12 @@
                                                                                     <li><h6 class="dropdown-header small text-uppercase">Gestão</h6></li>
                                                                                     <li><a class="dropdown-item" href="{{ route('riscos.mitigacao', $risco->cod_risco) }}" wire:navigate><i class="bi bi-shield-check me-2 text-success"></i> Planos de Mitigação</a></li>
                                                                                     <li><a class="dropdown-item" href="{{ route('riscos.ocorrencias', $risco->cod_risco) }}" wire:navigate><i class="bi bi-exclamation-octagon me-2 text-danger"></i> Registrar Ocorrência</a></li>                                            <li><hr class="dropdown-divider"></li>
+                                            @can('update', $risco)
                                             <li><button class="dropdown-item" wire:click="edit('{{ $risco->cod_risco }}')"><i class="bi bi-pencil me-2"></i> Editar</button></li>
+                                            @endcan
+                                            @can('delete', $risco)
                                             <li><button class="dropdown-item text-danger" wire:click="confirmDelete('{{ $risco->cod_risco }}')"><i class="bi bi-trash me-2"></i> Excluir</button></li>
+                                            @endcan
                                         </ul>
                                     </div>
                                 </td>

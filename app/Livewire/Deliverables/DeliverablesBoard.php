@@ -7,13 +7,17 @@ use App\Models\ActionPlan\EntregaAnexo;
 use App\Models\ActionPlan\EntregaComentario;
 use App\Models\ActionPlan\EntregaLabel;
 use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\Organization;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -78,6 +82,8 @@ class DeliverablesBoard extends Component
 
     public bool $showDetails = false;
 
+    // IDs de entrega abaixo só o servidor define, sempre conferidos contra o plano da tela.
+    #[Locked]
     public ?string $entregaDetalheId = null;
 
     // ========================================
@@ -96,6 +102,7 @@ class DeliverablesBoard extends Component
 
     public bool $showEditModal = false;
 
+    #[Locked]
     public ?string $editEntregaId = null;
 
     public string $editTitulo = '';
@@ -118,6 +125,7 @@ class DeliverablesBoard extends Component
 
     public bool $showLabelsModal = false;
 
+    #[Locked]
     public ?string $labelsEntregaId = null;
 
     public string $novaLabelNome = '';
@@ -126,6 +134,7 @@ class DeliverablesBoard extends Component
 
     public bool $showDeleteModal = false;
 
+    #[Locked]
     public ?string $entregaParaExcluirId = null;
 
     public bool $isPermanentDelete = false;
@@ -134,6 +143,8 @@ class DeliverablesBoard extends Component
     public bool $showSuccessModal = false;
 
     public string $createdDeliverableName = '';
+
+    public bool $entregaFoiEditada = false;
 
     /** @var string|null ID do comentário que está sendo respondido */
     public ?string $respondendoComentarioId = null;
@@ -174,7 +185,8 @@ class DeliverablesBoard extends Component
         $idParaCarregar = $planoId;
 
         if (! $idParaCarregar) {
-            $orgId = session('organizacao_selecionada_id');
+            // Organização validada contra o escopo — nunca a sessão crua.
+            $orgId = Auth::user()?->organizacaoSelecionadaId();
             if ($orgId) {
                 $idParaCarregar = PlanoDeAcao::where('cod_organizacao', $orgId)->orderBy('created_at', 'desc')->first()?->cod_plano_de_acao;
             }
@@ -194,8 +206,13 @@ class DeliverablesBoard extends Component
             }
         } else {
             // Se nenhum plano for encontrado, tentamos pegar qualquer um que o usuário tenha acesso para não mostrar tela vazia
-            $primeiroDisponivel = PlanoDeAcao::first();
-            if ($primeiroDisponivel) {
+            // Só cai num plano qualquer se o usuário puder vê-lo; senão, quadro vazio.
+            $usuario = Auth::user();
+            $primeiroDisponivel = PlanoDeAcao::query()
+                ->when($usuario && ! $usuario->isSuperAdmin(), fn ($q) => $q->whereIn('cod_organizacao', $usuario->organizacaoIdsPermitidas()))
+                ->orderBy('created_at', 'desc')
+                ->first();
+            if ($primeiroDisponivel && Gate::allows('view', $primeiroDisponivel)) {
                 $this->plano = $primeiroDisponivel;
                 $this->calcularProgresso();
             } else {
@@ -217,7 +234,14 @@ class DeliverablesBoard extends Component
     public function carregarListasEstrategicas()
     {
         $peiId = session('pei_selecionado_id');
-        $orgId = session('organizacao_selecionada_id');
+        $usuario = Auth::user();
+        $orgId = $usuario?->organizacaoSelecionadaId();
+
+        // A unidade selecionada e as subordinadas, dentro do que o usuário alcança.
+        $orgIds = $orgId ? Organization::descendentesEProprio($orgId) : [];
+        if ($usuario && ! $usuario->isSuperAdmin()) {
+            $orgIds = array_values(array_intersect($orgIds, $usuario->organizacaoIdsPermitidas()->all()));
+        }
 
         // 1. Carrega Perspectivas do PEI
         $this->perspectivasDisponiveis = Perspectiva::where('cod_pei', $peiId)
@@ -233,7 +257,7 @@ class DeliverablesBoard extends Component
 
         // 3. Carrega Planos (Filtrados por Objetivo se houver, ou apenas pela Org)
         $this->planosDisponiveis = PlanoDeAcao::query()
-            ->where('cod_organizacao', $orgId)
+            ->whereIn('cod_organizacao', $orgIds)
             ->when($this->objetivoId, fn ($q) => $q->where('cod_objetivo', $this->objetivoId))
             ->orderBy('dsc_plano_de_acao')
             ->get();
@@ -262,6 +286,8 @@ class DeliverablesBoard extends Component
     public function mudarPlano($id)
     {
         if ($id) {
+            $this->authorize('view', PlanoDeAcao::findOrFail($id));
+
             return redirect()->route('planos.entregas', $id);
         }
     }
@@ -277,7 +303,7 @@ class DeliverablesBoard extends Component
             'entregasPorStatus' => $this->getEntregasPorStatus(),
             'labels' => $this->getLabels(),
             'usuarios' => $this->getUsuarios(),
-            'entregaDetalhe' => $this->entregaDetalheId ? Entrega::with(['responsavel', 'responsaveis', 'labels', 'comentarios.usuario', 'anexos', 'historico.usuario', 'subEntregas'])->find($this->entregaDetalheId) : null,
+            'entregaDetalhe' => $this->entregaDetalheId ? $this->entregasDoPlano()->withTrashed()->with(['responsavel', 'responsaveis', 'labels', 'comentarios.usuario', 'anexos', 'historico.usuario', 'subEntregas'])->find($this->entregaDetalheId) : null,
         ]);
     }
 
@@ -321,6 +347,15 @@ class DeliverablesBoard extends Component
         return $query->ordenado()->get();
     }
 
+    /**
+     * Entregas do plano da tela. Todo id de entrega que chega do navegador passa por aqui:
+     * sem o recorte, quem edita um plano alteraria ou apagaria entrega de qualquer outro.
+     */
+    protected function entregasDoPlano()
+    {
+        return Entrega::where('cod_plano_de_acao', $this->plano->cod_plano_de_acao);
+    }
+
     protected function getEntregasPorStatus(): array
     {
         $entregas = $this->getEntregas();
@@ -342,7 +377,41 @@ class DeliverablesBoard extends Component
 
     protected function getUsuarios()
     {
-        return User::orderBy('name')->get(['id', 'name', 'email']);
+        return $this->consultaUsuariosDaIniciativa()->orderBy('name')->get(['users.id', 'users.name', 'users.email']);
+    }
+
+    /**
+     * Quem pode ser responsável por entrega: as pessoas das unidades da
+     * iniciativa. Antes a lista trazia TODOS os usuários do sistema (nome e
+     * e-mail) para quem abrisse o quadro, e aceitava qualquer id.
+     */
+    protected function consultaUsuariosDaIniciativa()
+    {
+        $orgs = $this->plano->organizacoes()->pluck('tab_organizacoes.cod_organizacao')
+            ->push($this->plano->cod_organizacao)->filter()->unique()->all();
+
+        return User::query()->where(function ($q) use ($orgs) {
+            $q->whereHas('organizacoes', fn ($o) => $o->whereIn('tab_organizacoes.cod_organizacao', $orgs))
+                ->orWhereHas('perfisAcesso', fn ($p) => $p->whereIn('rel_users_tab_organizacoes_tab_perfil_acesso.cod_organizacao', $orgs));
+        });
+    }
+
+    /** @param  array<int, mixed>  $ids */
+    private function garantirResponsaveisDaIniciativa(array $ids): void
+    {
+        $ids = array_values(array_unique(array_filter($ids)));
+
+        abort_unless(
+            $ids === [] || $this->consultaUsuariosDaIniciativa()->whereIn('users.id', $ids)->count() === count($ids),
+            422,
+            'Responsável fora das unidades da iniciativa.'
+        );
+    }
+
+    /** Excluir (lixeira ou definitivo) e restaurar: capacidade própria — o Gestor Substituto não exclui. */
+    private function autorizarExclusao(string $entregaId): void
+    {
+        $this->authorize('delete', $this->entregasDoPlano()->withTrashed()->findOrFail($entregaId));
     }
 
     protected function calcularProgresso(): void
@@ -539,8 +608,8 @@ class DeliverablesBoard extends Component
      */
     public function atualizarPrazoEntrega(string $entregaId, string $novoPrazo): void
     {
-        $entrega = Entrega::findOrFail($entregaId);
         $this->authorize('update', $this->plano);
+        $entrega = $this->entregasDoPlano()->findOrFail($entregaId);
 
         $entrega->update([
             'dte_prazo' => $novoPrazo,
@@ -558,7 +627,7 @@ class DeliverablesBoard extends Component
 
     public function openQuickAdd(string $status = 'Não Iniciado'): void
     {
-        $this->authorize('update', $this->plano);
+        $this->authorize('create', [Entrega::class, $this->plano]);
         $this->quickAddStatus = $status;
         $this->quickAddTitulo = '';
         $this->showQuickAdd = true;
@@ -572,7 +641,7 @@ class DeliverablesBoard extends Component
 
     public function criarRapido(): void
     {
-        $this->authorize('update', $this->plano);
+        $this->authorize('create', [Entrega::class, $this->plano]);
 
         $this->validate([
             'quickAddTitulo' => 'required|string|min:3|max:500',
@@ -609,10 +678,12 @@ class DeliverablesBoard extends Component
 
     public function openEditModal(?string $entregaId = null): void
     {
-        $this->authorize('update', $this->plano);
+        $entregaId
+            ? $this->authorize('update', $this->entregasDoPlano()->findOrFail($entregaId))
+            : $this->authorize('create', [Entrega::class, $this->plano]);
 
         if ($entregaId) {
-            $entrega = Entrega::with('responsaveis')->findOrFail($entregaId);
+            $entrega = $this->entregasDoPlano()->with('responsaveis')->findOrFail($entregaId);
             $this->editEntregaId = $entregaId;
             $this->editTitulo = $entrega->dsc_entrega;
             $this->editStatus = $entrega->bln_status;
@@ -649,7 +720,9 @@ class DeliverablesBoard extends Component
 
     public function salvarEntrega(): void
     {
-        $this->authorize('update', $this->plano);
+        $this->editEntregaId
+            ? $this->authorize('update', $this->entregasDoPlano()->findOrFail($this->editEntregaId))
+            : $this->authorize('create', [Entrega::class, $this->plano]);
 
         $this->validate([
             'editTitulo' => 'required|string|min:3|max:500',
@@ -661,10 +734,12 @@ class DeliverablesBoard extends Component
             'editTipo' => 'required|in:'.implode(',', array_keys(Entrega::TIPO_OPTIONS)),
         ]);
 
+        $this->garantirResponsaveisDaIniciativa((array) $this->editResponsaveis);
+
         $w5h2Filtrado = array_filter($this->edit5w2h);
         $propsExistentes = [];
         if ($this->editEntregaId) {
-            $propsExistentes = Entrega::findOrFail($this->editEntregaId)->json_propriedades ?? [];
+            $propsExistentes = $this->entregasDoPlano()->findOrFail($this->editEntregaId)->json_propriedades ?? [];
         }
         $novasProps = array_merge($propsExistentes, $w5h2Filtrado ? ['5w2h' => $this->edit5w2h] : []);
 
@@ -679,7 +754,7 @@ class DeliverablesBoard extends Component
         ];
 
         if ($this->editEntregaId) {
-            $entrega = Entrega::findOrFail($this->editEntregaId);
+            $entrega = $this->entregasDoPlano()->findOrFail($this->editEntregaId);
             $entrega->update($dados);
             $entrega->responsaveis()->sync($this->editResponsaveis);
             $message = 'Entrega atualizada com sucesso!';
@@ -699,6 +774,8 @@ class DeliverablesBoard extends Component
         }
 
         $this->createdDeliverableName = $this->editTitulo;
+        // O modal dizia "Entrega Registrada!" também na edição.
+        $this->entregaFoiEditada = $message === 'Entrega atualizada com sucesso!';
         $this->closeEditModal();
         $this->calcularProgresso();
         $this->dispatch('re-init-sortable');
@@ -713,7 +790,10 @@ class DeliverablesBoard extends Component
 
     public function openDetails(string $entregaId): void
     {
-        $this->entregaDetalheId = $entregaId;
+        $this->authorize('view', $this->plano);
+
+        // withTrashed: na Lixeira o card também abre o detalhe (antes dava 404).
+        $this->entregaDetalheId = $this->entregasDoPlano()->withTrashed()->findOrFail($entregaId)->cod_entrega;
         $this->showDetails = true;
     }
 
@@ -735,7 +815,7 @@ class DeliverablesBoard extends Component
             return;
         }
 
-        Entrega::where('cod_entrega', $entregaId)->update([
+        $this->entregasDoPlano()->where('cod_entrega', $entregaId)->update([
             'dsc_entrega' => $titulo,
         ]);
     }
@@ -748,7 +828,7 @@ class DeliverablesBoard extends Component
             return;
         }
 
-        Entrega::where('cod_entrega', $entregaId)->update([
+        $this->entregasDoPlano()->where('cod_entrega', $entregaId)->update([
             'bln_status' => $status,
         ]);
 
@@ -763,7 +843,7 @@ class DeliverablesBoard extends Component
             return;
         }
 
-        Entrega::where('cod_entrega', $entregaId)->update([
+        $this->entregasDoPlano()->where('cod_entrega', $entregaId)->update([
             'cod_prioridade' => $prioridade,
         ]);
     }
@@ -772,7 +852,8 @@ class DeliverablesBoard extends Component
     {
         $this->authorize('update', $this->plano);
 
-        $entrega = Entrega::findOrFail($entregaId);
+        $this->garantirResponsaveisDaIniciativa($userIds);
+        $entrega = $this->entregasDoPlano()->findOrFail($entregaId);
         $entrega->responsaveis()->sync($userIds);
 
         // Atualiza a coluna legada com o primeiro da lista (para compatibilidade de relatórios antigos)
@@ -783,7 +864,7 @@ class DeliverablesBoard extends Component
     {
         $this->authorize('update', $this->plano);
 
-        Entrega::where('cod_entrega', $entregaId)->update([
+        $this->entregasDoPlano()->where('cod_entrega', $entregaId)->update([
             'dte_prazo' => $prazo ?: null,
         ]);
     }
@@ -798,7 +879,7 @@ class DeliverablesBoard extends Component
         $this->authorize('update', $this->plano);
 
         foreach ($ordem as $index => $entregaId) {
-            Entrega::where('cod_entrega', $entregaId)->update([
+            $this->entregasDoPlano()->where('cod_entrega', $entregaId)->update([
                 'num_ordem' => $index + 1,
             ]);
         }
@@ -813,7 +894,7 @@ class DeliverablesBoard extends Component
             return;
         }
 
-        Entrega::where('cod_entrega', $entregaId)->update([
+        $this->entregasDoPlano()->where('cod_entrega', $entregaId)->update([
             'bln_status' => $novoStatus,
             'num_ordem' => $novaPosicao,
         ]);
@@ -830,7 +911,7 @@ class DeliverablesBoard extends Component
     {
         $this->authorize('update', $this->plano);
 
-        Entrega::where('cod_entrega', $entregaId)->update([
+        $this->entregasDoPlano()->where('cod_entrega', $entregaId)->update([
             'bln_arquivado' => true,
         ]);
 
@@ -844,7 +925,7 @@ class DeliverablesBoard extends Component
     {
         $this->authorize('update', $this->plano);
 
-        Entrega::where('cod_entrega', $entregaId)->update([
+        $this->entregasDoPlano()->where('cod_entrega', $entregaId)->update([
             'bln_arquivado' => false,
         ]);
 
@@ -856,23 +937,32 @@ class DeliverablesBoard extends Component
 
     public function confirmDeleteEntrega(string $entregaId, bool $isPermanent = false): void
     {
-        $this->authorize('update', $this->plano);
-        $this->entregaParaExcluirId = $entregaId;
+        $this->autorizarExclusao($entregaId);
+        $this->entregaParaExcluirId = $this->entregasDoPlano()->withTrashed()->findOrFail($entregaId)->cod_entrega;
         $this->isPermanentDelete = $isPermanent;
         $this->showDeleteModal = true;
     }
 
     public function excluir(): void
     {
-        $this->authorize('update', $this->plano);
+
+        // Sem entrega escolhida não há o que excluir. Antes seguia adiante e
+        // quebrava com "Undefined variable $title" (erro 500 na tela).
+        if (! $this->entregaParaExcluirId) {
+            $this->showDeleteModal = false;
+
+            return;
+        }
+
+        $this->autorizarExclusao($this->entregaParaExcluirId);
 
         if ($this->entregaParaExcluirId) {
             if ($this->isPermanentDelete) {
-                Entrega::withTrashed()->where('cod_entrega', $this->entregaParaExcluirId)->forceDelete();
+                $this->entregasDoPlano()->withTrashed()->where('cod_entrega', $this->entregaParaExcluirId)->forceDelete();
                 $title = 'Exclusão Permanente';
                 $message = 'A entrega foi removida definitivamente.';
             } else {
-                Entrega::where('cod_entrega', $this->entregaParaExcluirId)->delete();
+                $this->entregasDoPlano()->where('cod_entrega', $this->entregaParaExcluirId)->delete();
                 $title = 'Entrega Removida';
                 $message = 'A entrega foi movida para a lixeira.';
             }
@@ -893,9 +983,9 @@ class DeliverablesBoard extends Component
 
     public function restaurar(string $entregaId): void
     {
-        $this->authorize('update', $this->plano);
+        $this->autorizarExclusao($entregaId);
 
-        Entrega::withTrashed()->where('cod_entrega', $entregaId)->restore();
+        $this->entregasDoPlano()->withTrashed()->where('cod_entrega', $entregaId)->restore();
 
         $this->calcularProgresso();
 
@@ -907,9 +997,9 @@ class DeliverablesBoard extends Component
 
     public function excluirPermanente(string $entregaId): void
     {
-        $this->authorize('update', $this->plano);
+        $this->autorizarExclusao($entregaId);
 
-        Entrega::withTrashed()->where('cod_entrega', $entregaId)->forceDelete();
+        $this->entregasDoPlano()->withTrashed()->where('cod_entrega', $entregaId)->forceDelete();
 
         $this->dispatch('notify', [
             'type' => 'danger',
@@ -923,7 +1013,9 @@ class DeliverablesBoard extends Component
 
     public function openLabelsModal(string $entregaId): void
     {
-        $this->labelsEntregaId = $entregaId;
+        $this->authorize('update', $this->plano);
+
+        $this->labelsEntregaId = $this->entregasDoPlano()->findOrFail($entregaId)->cod_entrega;
         $this->showLabelsModal = true;
     }
 
@@ -937,8 +1029,11 @@ class DeliverablesBoard extends Component
     {
         $this->authorize('update', $this->plano);
 
-        $entrega = Entrega::findOrFail($entregaId);
-        $entrega->labels()->toggle($labelId);
+        $entrega = $this->entregasDoPlano()->findOrFail($entregaId);
+
+        // A label também vem do navegador: só as deste plano.
+        $label = EntregaLabel::where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)->findOrFail($labelId);
+        $entrega->labels()->toggle($label->getKey());
     }
 
     public function criarLabel(): void
@@ -992,7 +1087,13 @@ class DeliverablesBoard extends Component
             return;
         }
 
-        $entrega = Entrega::findOrFail($entregaId);
+        $entrega = $this->entregasDoPlano()->findOrFail($entregaId);
+
+        // Resposta só a comentário da mesma entrega.
+        if ($comentarioPaiId && ! $entrega->comentarios()->where('cod_comentario', $comentarioPaiId)->exists()) {
+            $comentarioPaiId = null;
+        }
+
         $entrega->comentarios()->create([
             'cod_usuario' => Auth::id(),
             'dsc_comentario' => $conteudo,
@@ -1021,10 +1122,12 @@ class DeliverablesBoard extends Component
         $this->authorize('update', $this->plano);
 
         $this->validate([
-            'anexosUpload.*' => 'required|file|max:10240', // Max 10MB por arquivo
+            // Só formatos de documento e imagem: o arquivo é servido pelo disco
+            // público, e um .html/.svg enviado ali rodaria script na origem do sistema.
+            'anexosUpload.*' => 'required|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,odt,ods,odp,png,jpg,jpeg,gif,txt,csv,zip', // Max 10MB por arquivo
         ]);
 
-        if (! $this->entregaDetalheId) {
+        if (! $this->entregaDetalheId || ! $this->entregasDoPlano()->where('cod_entrega', $this->entregaDetalheId)->exists()) {
             return;
         }
 
@@ -1054,7 +1157,9 @@ class DeliverablesBoard extends Component
     {
         $this->authorize('update', $this->plano);
 
-        $anexo = EntregaAnexo::findOrFail($anexoId);
+        // Anexo só de entrega deste plano (inclusive entrega na lixeira).
+        $anexo = EntregaAnexo::whereIn('cod_entrega', $this->entregasDoPlano()->withTrashed()->select('cod_entrega'))
+            ->findOrFail($anexoId);
 
         // Remove arquivo físico se desejar (opcional dependendo da política de backup)
         // Storage::disk('public')->delete($anexo->dsc_caminho);

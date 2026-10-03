@@ -37,7 +37,7 @@ function superAdmin(): ?User
 // ---------------------------------------------------------------------------
 
 it('cadastra exatamente os quatro perfis de acesso do sistema', function () {
-    expect(DB::table('organization.tab_perfil_acesso')->count())->toBe(4);
+    expect(DB::table('organization.tab_perfil_acesso')->count())->toBe(5);
 });
 
 it('usa para cada perfil o identificador esperado pelo código de autorização', function () {
@@ -289,7 +289,7 @@ it('pode ser executada mais de uma vez sem duplicar registros nem falhar', funct
 
     expect(User::where('email', SuperAdministradorSeeder::EMAIL)->count())->toBe(1)
         ->and(Organization::where('cod_organizacao', OrganizacaoRaizSeeder::COD_ORGANIZACAO)->count())->toBe(1)
-        ->and(DB::table('organization.tab_perfil_acesso')->count())->toBe(4)
+        ->and(DB::table('organization.tab_perfil_acesso')->count())->toBe(5)
         ->and(DB::table('organization.rel_users_tab_organizacoes')->where('user_id', $userId)->count())->toBe(1)
         ->and(DB::table('organization.rel_users_tab_organizacoes_tab_perfil_acesso')->where('user_id', $userId)->count())->toBe(1);
 

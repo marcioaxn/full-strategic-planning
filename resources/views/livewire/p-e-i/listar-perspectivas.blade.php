@@ -22,9 +22,11 @@
         </div>
         <div class="d-flex align-items-center gap-2">
             @if($peiAtivo)
+                @if($podeCriar)
                 <button type="button" class="btn btn-primary gradient-theme-btn px-4 shadow-sm" wire:click="create">
                     <i class="bi bi-plus-lg me-1"></i> {{ __('Nova Perspectiva') }}
                 </button>
+                @endif
             @endif
         </div>
     </div>
@@ -336,6 +338,7 @@
     {{-- Mentor de IA --}}
     @if($peiAtivo && $aiEnabled)
         <div class="ai-mentor-wrapper animate-fade-in">
+            @if($podeCriar)
             <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="ai-magic-button shadow-sm">
                 <span wire:loading.remove wire:target="pedirAjudaIA">
                     <i class="bi bi-robot"></i> {{ __('Sugerir Perspectivas Estratégicas com IA') }}
@@ -344,6 +347,7 @@
                     <span class="spinner-border spinner-border-sm me-2"></span>{{ __('Analisando Missão e Visão...') }}
                 </span>
             </button>
+            @endif
 
             @if($aiSuggestion)
                 <div class="ai-insight-card animate-fade-in">
@@ -368,11 +372,13 @@
                                                 <p class="small text-muted mb-0 mt-1 lh-sm">{{ $sugestao['descricao'] ?? '' }}</p>
                                             </div>
                                         </div>
-                                        <button wire:click="aplicarSugestao('{{ $sugestao['nome'] }}', {{ $sugestao['ordem'] }})" 
+                                        @if($podeCriar)
+                                        <button wire:click="aplicarSugestao(@js($sugestao['nome']), @js($sugestao['ordem']))" 
                                                 wire:loading.attr="disabled"
                                                 class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
                                             <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}
                                         </button>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>
@@ -462,12 +468,16 @@
                                                 <a href="{{ route('pei.perspectivas.detalhes', $perspectiva->cod_perspectiva) }}" wire:navigate class="btn btn-outline-info" title="Detalhar">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
+                                                @if($podeEditar)
                                                 <button type="button" class="btn btn-outline-primary" wire:click="edit('{{ $perspectiva->cod_perspectiva }}')" title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
+                                                @endif
+                                                @if($podeExcluir)
                                                 <button type="button" class="btn btn-outline-danger" wire:click="confirmDelete('{{ $perspectiva->cod_perspectiva }}')" title="Excluir">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -480,9 +490,11 @@
                         <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
                         <h5 class="text-muted">Nenhuma perspectiva cadastrada</h5>
                         <p class="text-muted mb-3">Comece adicionando as perspectivas do seu Balanced Scorecard</p>
+                        @if($podeCriar)
                         <button type="button" class="btn btn-primary gradient-theme-btn px-4 shadow-sm" wire:click="create">
                             <i class="bi bi-plus-lg me-1"></i> Adicionar Perspectiva
                         </button>
+                        @endif
                     </div>
                 @endif
             </div>

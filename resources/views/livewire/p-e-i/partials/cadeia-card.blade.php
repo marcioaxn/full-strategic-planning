@@ -3,12 +3,16 @@
         <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
             <p class="fw-semibold mb-0 small text-dark" style="line-height:1.4;">{{ $ativ->dsc_atividade }}</p>
             <div class="d-flex gap-1 flex-shrink-0">
+                @if($podeEditar ?? false)
                 <button wire:click="editarAtividade('{{ $ativ->cod_atividade_cadeia_valor }}')" class="btn btn-xs btn-outline-primary py-0 px-1">
                     <i class="bi bi-pencil" style="font-size:.7rem;"></i>
                 </button>
+                @endif
+                @if($podeExcluir ?? false)
                 <button wire:click="confirmarExcluirAtividade('{{ $ativ->cod_atividade_cadeia_valor }}')" class="btn btn-xs btn-outline-danger py-0 px-1">
                     <i class="bi bi-trash" style="font-size:.7rem;"></i>
                 </button>
+                @endif
             </div>
         </div>
 
@@ -24,19 +28,25 @@
                 <div class="d-flex align-items-center gap-1 mb-1">
                     <i class="bi bi-arrow-right-short text-muted" style="font-size:.75rem;"></i>
                     <span class="x-small text-dark" style="font-size:.72rem;">{{ Str::limit($proc->dsc_transformacao, 50) }}</span>
+                    @if($podeEditar ?? false)
                     <button wire:click="editarProcesso('{{ $proc->cod_processo_atividade_cadeia_valor }}')" class="btn btn-xs btn-link p-0 ms-auto text-muted">
                         <i class="bi bi-pencil" style="font-size:.6rem;"></i>
                     </button>
+                    @endif
+                    @if($podeExcluir ?? false)
                     <button wire:click="confirmarExcluirProcesso('{{ $proc->cod_processo_atividade_cadeia_valor }}')" class="btn btn-xs btn-link p-0 text-danger">
                         <i class="bi bi-x" style="font-size:.7rem;"></i>
                     </button>
+                    @endif
                 </div>
             @endforeach
         @endif
 
+        @if($podeCriar ?? false)
         <button wire:click="novoProcesso('{{ $ativ->cod_atividade_cadeia_valor }}')"
                 class="btn btn-xs btn-outline-secondary w-100 mt-2 py-1" style="font-size:.7rem;">
             <i class="bi bi-plus me-1"></i>Processo
         </button>
+        @endif
     </div>
 </div>

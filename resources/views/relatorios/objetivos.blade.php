@@ -67,11 +67,21 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($p->objetivos->sortBy('num_nivel_hierarquico_apresentacao') as $obj)
+                    {{-- Nº é a posição na perspectiva. Exibia a ordem de apresentação
+                         gravada, que vale 1 para quase todos — a coluna repetia "1". --}}
+                    @foreach($p->objetivos->sortBy('num_nivel_hierarquico_apresentacao')->values() as $i => $obj)
                     <tr>
-                        <td class="text-center" style="font-weight:bold; color:#1B408E;">{{ $obj->num_nivel_hierarquico_apresentacao }}</td>
+                        <td class="text-center" style="font-weight:bold; color:#1B408E;">{{ $i + 1 }}</td>
                         <td class="row-titulo">{{ $obj->nom_objetivo }}</td>
-                        <td class="row-desc">{{ $obj->dsc_objetivo ?: '—' }}</td>
+                        <td class="row-desc">
+                            {{ $obj->dsc_objetivo ?: '—' }}
+                            @if($obj->ods->isNotEmpty())
+                                <div style="margin-top:3px; font-size:7.5px; color:#2e7d4f;">
+                                    <strong>Agenda 2030:</strong>
+                                    {{ $obj->ods->map(fn ($o) => 'ODS '.$o->num_ods.' ('.$o->nom_ods_abreviado.')')->join(', ') }}
+                                </div>
+                            @endif
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>

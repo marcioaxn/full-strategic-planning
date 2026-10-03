@@ -32,6 +32,7 @@
         </div>
         <div class="d-flex gap-2">
             @if($organizacaoId && $peiAtivo && $aiEnabled)
+                @if($podeCriar)
                 <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="btn btn-outline-primary shadow-sm rounded-pill">
                     <span wire:loading.remove wire:target="pedirAjudaIA">
                         <i class="bi bi-robot"></i> Sugerir com IA
@@ -40,6 +41,7 @@
                         <span class="spinner-border spinner-border-sm me-1"></span>
                     </span>
                 </button>
+                @endif
             @endif
             @if($organizacaoId && $peiAtivo)
                 <button onclick="window.print()" class="btn btn-outline-secondary">
@@ -372,10 +374,12 @@
                                         <div class="small fw-bold text-muted text-uppercase mb-2" style="font-size: 0.65rem;">{{ $label }}</div>
                                         <div class="list-group list-group-flush border rounded">
                                             @foreach($aiSuggestion[$key] as $item)
+                                                @if($podeCriar)
                                                 <button type="button" wire:click="adicionarSugerido('{{ $label }}', '{{ $item }}')" class="list-group-item list-group-item-action py-2 px-2 x-small d-flex justify-content-between align-items-center">
                                                     <span class="text-truncate me-1">{{ $item }}</span>
                                                     <i class="bi bi-plus-circle text-primary"></i>
                                                 </button>
+                                                @endif
                                             @endforeach
                                         </div>
                                     </div>
@@ -401,9 +405,11 @@
                             <i class="bi bi-bank me-2"></i>
                             <strong>POLÍTICO</strong>
                         </span>
+                        @if($podeCriar)
                         <button type="button" class="btn btn-sm btn-light" wire:click="create('Político')">
                             <i class="bi bi-plus-lg"></i>
                         </button>
+                        @endif
                     </div>
                     <div class="card-body p-2">
                         <p class="text-muted small mb-2">Políticas governamentais, regulamentações, estabilidade política</p>
@@ -425,12 +431,16 @@
                                             </div>
                                         </div>
                                         <div class="btn-group btn-group-sm">
+                                            @if($podeEditar)
                                             <button type="button" class="btn btn-outline-primary btn-sm" wire:click="edit('{{ $item['cod_analise'] }}')" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
+                                            @endif
+                                            @if($podeExcluir)
                                             <button type="button" class="btn btn-outline-danger btn-sm" wire:click="delete('{{ $item['cod_analise'] }}')" wire:confirm="Tem certeza que deseja excluir este item?" title="Excluir">
                                                 <i class="bi bi-trash"></i>
                                             </button>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -453,9 +463,11 @@
                             <i class="bi bi-currency-dollar me-2"></i>
                             <strong>ECONÔMICO</strong>
                         </span>
+                        @if($podeCriar)
                         <button type="button" class="btn btn-sm btn-light" wire:click="create('Econômico')">
                             <i class="bi bi-plus-lg"></i>
                         </button>
+                        @endif
                     </div>
                     <div class="card-body p-2">
                         <p class="text-muted small mb-2">Crescimento econômico, taxas de juros, inflação, câmbio</p>
@@ -477,12 +489,16 @@
                                             </div>
                                         </div>
                                         <div class="btn-group btn-group-sm">
+                                            @if($podeEditar)
                                             <button type="button" class="btn btn-outline-primary btn-sm" wire:click="edit('{{ $item['cod_analise'] }}')" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
+                                            @endif
+                                            @if($podeExcluir)
                                             <button type="button" class="btn btn-outline-danger btn-sm" wire:click="delete('{{ $item['cod_analise'] }}')" wire:confirm="Tem certeza que deseja excluir este item?" title="Excluir">
                                                 <i class="bi bi-trash"></i>
                                             </button>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -505,9 +521,11 @@
                             <i class="bi bi-people me-2"></i>
                             <strong>SOCIAL</strong>
                         </span>
+                        @if($podeCriar)
                         <button type="button" class="btn btn-sm btn-light" wire:click="create('Social')">
                             <i class="bi bi-plus-lg"></i>
                         </button>
+                        @endif
                     </div>
                     <div class="card-body p-2">
                         <p class="text-muted small mb-2">Demografia, cultura, educação, saúde, tendências sociais</p>
@@ -529,12 +547,16 @@
                                             </div>
                                         </div>
                                         <div class="btn-group btn-group-sm">
+                                            @if($podeEditar)
                                             <button type="button" class="btn btn-outline-primary btn-sm" wire:click="edit('{{ $item['cod_analise'] }}')" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
+                                            @endif
+                                            @if($podeExcluir)
                                             <button type="button" class="btn btn-outline-danger btn-sm" wire:click="delete('{{ $item['cod_analise'] }}')" wire:confirm="Tem certeza que deseja excluir este item?" title="Excluir">
                                                 <i class="bi bi-trash"></i>
                                             </button>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -557,9 +579,11 @@
                             <i class="bi bi-cpu me-2"></i>
                             <strong>TECNOLÓGICO</strong>
                         </span>
+                        @if($podeCriar)
                         <button type="button" class="btn btn-sm btn-dark" wire:click="create('Tecnológico')">
                             <i class="bi bi-plus-lg"></i>
                         </button>
+                        @endif
                     </div>
                     <div class="card-body p-2">
                         <p class="text-muted small mb-2">Inovação, automação, P&D, infraestrutura tecnológica</p>
@@ -581,12 +605,16 @@
                                             </div>
                                         </div>
                                         <div class="btn-group btn-group-sm">
+                                            @if($podeEditar)
                                             <button type="button" class="btn btn-outline-primary btn-sm" wire:click="edit('{{ $item['cod_analise'] }}')" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
+                                            @endif
+                                            @if($podeExcluir)
                                             <button type="button" class="btn btn-outline-danger btn-sm" wire:click="delete('{{ $item['cod_analise'] }}')" wire:confirm="Tem certeza que deseja excluir este item?" title="Excluir">
                                                 <i class="bi bi-trash"></i>
                                             </button>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -609,9 +637,11 @@
                             <i class="bi bi-tree me-2"></i>
                             <strong>AMBIENTAL</strong>
                         </span>
+                        @if($podeCriar)
                         <button type="button" class="btn btn-sm btn-dark" wire:click="create('Ambiental')">
                             <i class="bi bi-plus-lg"></i>
                         </button>
+                        @endif
                     </div>
                     <div class="card-body p-2">
                         <p class="text-muted small mb-2">Sustentabilidade, clima, recursos naturais, legislação ambiental</p>
@@ -633,12 +663,16 @@
                                             </div>
                                         </div>
                                         <div class="btn-group btn-group-sm">
+                                            @if($podeEditar)
                                             <button type="button" class="btn btn-outline-primary btn-sm" wire:click="edit('{{ $item['cod_analise'] }}')" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
+                                            @endif
+                                            @if($podeExcluir)
                                             <button type="button" class="btn btn-outline-danger btn-sm" wire:click="delete('{{ $item['cod_analise'] }}')" wire:confirm="Tem certeza que deseja excluir este item?" title="Excluir">
                                                 <i class="bi bi-trash"></i>
                                             </button>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -661,9 +695,11 @@
                             <i class="bi bi-journal-bookmark me-2"></i>
                             <strong>LEGAL</strong>
                         </span>
+                        @if($podeCriar)
                         <button type="button" class="btn btn-sm btn-light" wire:click="create('Legal')">
                             <i class="bi bi-plus-lg"></i>
                         </button>
+                        @endif
                     </div>
                     <div class="card-body p-2">
                         <p class="text-muted small mb-2">Leis trabalhistas, tributárias, regulamentações setoriais</p>
@@ -685,12 +721,16 @@
                                             </div>
                                         </div>
                                         <div class="btn-group btn-group-sm">
+                                            @if($podeEditar)
                                             <button type="button" class="btn btn-outline-primary btn-sm" wire:click="edit('{{ $item['cod_analise'] }}')" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
+                                            @endif
+                                            @if($podeExcluir)
                                             <button type="button" class="btn btn-outline-danger btn-sm" wire:click="delete('{{ $item['cod_analise'] }}')" wire:confirm="Tem certeza que deseja excluir este item?" title="Excluir">
                                                 <i class="bi bi-trash"></i>
                                             </button>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>

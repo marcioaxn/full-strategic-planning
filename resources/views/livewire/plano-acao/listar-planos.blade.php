@@ -21,7 +21,7 @@
 
         <div class="d-flex align-items-center gap-2">
             @if($organizacaoId)
-                @auth
+                @can('create', [\App\Models\ActionPlan\PlanoDeAcao::class, $organizacaoId])
                 <button wire:click.prevent="create" wire:loading.attr="disabled" class="btn btn-primary gradient-theme-btn shadow-sm">
                     <span wire:loading.remove wire:target="create">
                         <i class="bi bi-plus-lg me-2"></i>Nova Iniciativa
@@ -30,7 +30,7 @@
                         <span class="spinner-border spinner-border-sm me-2" role="status"></span>Carregando...
                     </span>
                 </button>
-                @endauth
+                @endcan
             @endif
         </div>
     </div>
@@ -343,8 +343,8 @@
         <div class="alert alert-warning shadow-sm border-0 d-flex align-items-center p-4" role="alert">
             <i class="bi bi-building-exclamation fs-2 me-4"></i>
             <div>
-                <h5 class="alert-heading fw-bold mb-1">Selecione uma Organizacao</h5>
-                <p class="mb-0">Selecione uma organizacao no menu superior para gerenciar as iniciativas.</p>
+                <h5 class="alert-heading fw-bold mb-1">Selecione uma Organização</h5>
+                <p class="mb-0">Selecione uma organização no menu superior para gerenciar as iniciativas.</p>
             </div>
         </div>
     @else
@@ -420,7 +420,7 @@
                                                     <div class="rounded-circle bg-secondary me-2" style="width:12px;height:12px;"></div>
                                                     <div>
                                                         <div class="fw-bold">{{ $planosNaoIniciados }}</div>
-                                                        <small class="text-muted">Nao Iniciados</small>
+                                                        <small class="text-muted">Não Iniciados</small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -652,25 +652,27 @@
                                                     <i class="bi bi-list-check me-2 text-info"></i> Entregas
                                                 </a>
                                             </li>
+                                            @can('update', $plano)
                                             <li>
                                                 <a class="dropdown-item" href="{{ route('planos.responsaveis', $plano->cod_plano_de_acao) }}" wire:navigate>
                                                     <i class="bi bi-people me-2 text-warning"></i> Responsáveis
                                                 </a>
                                             </li>
+                                            @endcan
                                             <li>
-                                                @auth
+                                                @can('update', $plano)
                                                 <button class="dropdown-item" wire:click="edit('{{ $plano->cod_plano_de_acao }}')">
                                                     <i class="bi bi-pencil me-2 text-secondary"></i> Editar
                                                 </button>
-                                                @endauth
+                                                @endcan
                                             </li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li>
-                                                @auth
+                                                @can('delete', $plano)
                                                 <button class="dropdown-item text-danger" wire:click="confirmDelete('{{ $plano->cod_plano_de_acao }}')">
                                                     <i class="bi bi-trash me-2"></i> Excluir
                                                 </button>
-                                                @endauth
+                                                @endcan
                                             </li>
                                         </ul>
                                         </div>{{-- /dropdown --}}
@@ -683,8 +685,8 @@
                                     <div class="mb-3">
                                         <i class="bi bi-clipboard-x fs-1 text-muted opacity-25"></i>
                                     </div>
-                                    <h5 class="text-muted">Nenhum plano encontrado.</h5>
-                                    <p class="text-muted small">Tente ajustar os filtros ou crie um novo plano.</p>
+                                    <h5 class="text-muted">Nenhuma iniciativa encontrada.</h5>
+                                    <p class="text-muted small">Tente ajustar os filtros ou crie uma nova iniciativa.</p>
                                 </td>
                             </tr>
                         @endforelse

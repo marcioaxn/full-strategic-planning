@@ -19,9 +19,11 @@
             <a href="{{ route('usuarios.index') }}" wire:navigate class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Voltar
             </a>
-            <button class="btn btn-primary gradient-theme">
+            @can('update', $user)
+            <a href="{{ route('usuarios.index', ['editar' => $user->id]) }}" class="btn btn-primary gradient-theme">
                 <i class="bi bi-pencil me-1"></i> Editar
-            </button>
+            </a>
+            @endcan
         </div>
     </div>
 
@@ -32,7 +34,7 @@
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body text-center pt-5">
                     <div class="avatar-circle bg-primary text-white mx-auto mb-3" style="width: 100px; height: 100px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:40px;">
-                        {{ substr($user->name, 0, 2) }}
+                        {{ collect(preg_split('/\s+/', trim($user->name)))->filter()->take(2)->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->join('') }}
                     </div>
                     <h5 class="fw-bold mb-1">{{ $user->name }}</h5>
                     <p class="text-muted mb-3">{{ $user->email }}</p>
@@ -52,8 +54,8 @@
                         <small class="text-muted d-block mb-1">Data de Cadastro</small>
                         <p class="fw-medium mb-3">{{ $user->created_at->format('d/m/Y') }}</p>
                         
-                        <small class="text-muted d-block mb-1">Último Acesso</small>
-                        <p class="fw-medium mb-0">--</p> <!-- Implementar log de login -->
+                        <small class="text-muted d-block mb-1">Última atividade</small>
+                        <p class="fw-medium mb-0">{{ $ultimaAtividade ?? 'Sem sessão registrada' }}</p>
                     </div>
                 </div>
             </div>
@@ -163,11 +165,33 @@
 
                         <!-- Histórico (Audit) -->
                         <div class="tab-pane fade" id="audit" role="tabpanel">
-                            <div class="text-center py-5">
-                                <i class="bi bi-clock-history fs-1 text-muted opacity-50 mb-3"></i>
-                                <h6 class="text-muted">Logs de Atividade</h6>
-                                <p class="small text-muted mb-0">O histórico detalhado de ações deste usuário estará disponível em breve.</p>
-                            </div>
+                            @if(! $podeVerHistorico)
+                                <div class="text-center py-5">
+                                    <i class="bi bi-shield-lock fs-1 text-muted opacity-50 mb-3"></i>
+                                    <p class="small text-muted mb-0">O histórico de ações é restrito a quem tem acesso à Auditoria.</p>
+                                </div>
+                            @elseif(count($historico) === 0)
+                                <div class="text-center py-5">
+                                    <i class="bi bi-clock-history fs-1 text-muted opacity-50 mb-3"></i>
+                                    <p class="small text-muted mb-0">Nenhuma ação registrada por este usuário.</p>
+                                </div>
+                            @else
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead class="bg-light"><tr><th class="ps-3">Quando</th><th>Ação</th><th>Registro</th><th class="text-end pe-3"></th></tr></thead>
+                                        <tbody>
+                                            @foreach($historico as $h)
+                                                <tr>
+                                                    <td class="ps-3 small text-muted">{{ $h['quando'] }}</td>
+                                                    <td><span class="badge bg-light text-dark border">{{ $h['acao'] }}</span></td>
+                                                    <td class="small">{{ $h['registro'] }}</td>
+                                                    <td class="text-end pe-3"><a href="{{ route('audit.detalhes', $h['id']) }}" wire:navigate class="small">Detalhar</a></td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

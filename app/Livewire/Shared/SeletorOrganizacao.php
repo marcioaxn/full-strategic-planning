@@ -16,8 +16,18 @@ class SeletorOrganizacao extends Component
     {
         $this->carregarOrganizacoes();
 
-        // Inicializar com a sessão ou com a primeira da lista
-        $this->selecionadaId = Session::get('organizacao_selecionada_id');
+        // Inicializar com a sessão (validada contra o escopo) ou com a primeira da lista
+        $this->selecionadaId = auth()->check()
+            ? auth()->user()->organizacaoSelecionadaId()
+            : Session::get('organizacao_selecionada_id');
+
+        // Nome e sigla exibidos no topo acompanham a organização validada (se a
+        // sessão trazia uma unidade fora do escopo, a tela não pode exibi-la).
+        if ($this->selecionadaId && auth()->check()) {
+            $org = Organization::find($this->selecionadaId);
+            Session::put('organizacao_selecionada_nom', $org?->nom_organizacao);
+            Session::put('organizacao_selecionada_sgl', $org?->sgl_organizacao);
+        }
 
         if (! $this->selecionadaId && $this->organizacoes->isNotEmpty()) {
             $first = $this->organizacoes->first();
@@ -34,14 +44,12 @@ class SeletorOrganizacao extends Component
             // Admin vê toda a árvore hierárquica
             $this->organizacoes = collect(Organization::getTreeForSelector());
         } elseif ($user) {
-            // Usuário comum vê apenas suas organizações vinculadas (mas ainda em formato compatível)
-            $this->organizacoes = $user->organizacoes()
-                ->orderBy('sgl_organizacao')
-                ->get()
-                ->map(fn ($org) => [
-                    'id' => $org->cod_organizacao,
-                    'label' => $org->sgl_organizacao.' - '.$org->nom_organizacao,
-                ]);
+            // Usuário comum vê as unidades do seu escopo — as vinculadas e, onde é
+            // Administrador ou Consulta, também as subordinadas — na ordem da árvore.
+            $permitidas = $user->organizacaoIdsPermitidas()->all();
+            $this->organizacoes = collect(Organization::getTreeForSelector())
+                ->filter(fn ($o) => in_array($o['id'], $permitidas, true))
+                ->values();
         } else {
             // Acesso público: árvore completa
             $this->organizacoes = collect(Organization::getTreeForSelector());

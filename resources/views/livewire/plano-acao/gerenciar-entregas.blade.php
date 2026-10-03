@@ -15,7 +15,7 @@
                     {{ $plano->dsc_plano_de_acao }}
                 </p>
             </div>
-            @can('update', $plano)
+            @can('create', [\App\Models\ActionPlan\Entrega::class, $plano])
                 <button wire:click="create" class="btn btn-primary gradient-theme-btn">
                     <i class="bi bi-plus-lg me-2"></i>Nova Entrega
                 </button>
@@ -41,7 +41,7 @@
                         <h6 class="fw-bold mb-0">
                             <i class="bi bi-check-circle me-1 text-muted"></i>Progresso Simples
                         </h6>
-                        <span class="fw-bold text-primary fs-5">{{ number_format($progresso, 1) }}%</span>
+                        <span class="fw-bold text-primary fs-5">{{ number_format($progresso, 1, ',', '.') }}%</span>
                     </div>
                     <div class="progress rounded-pill" style="height: 10px;">
                         <div class="progress-bar bg-primary" 
@@ -62,7 +62,7 @@
                         <h6 class="fw-bold mb-0">
                             <i class="bi bi-speedometer me-1 text-success"></i>Progresso Ponderado
                         </h6>
-                        <span class="fw-bold text-success fs-5">{{ number_format($progressoPonderado, 1) }}%</span>
+                        <span class="fw-bold text-success fs-5">{{ number_format($progressoPonderado, 1, ',', '.') }}%</span>
                     </div>
                     <div class="progress rounded-pill" style="height: 10px;">
                         <div class="progress-bar gradient-theme progress-bar-striped progress-bar-animated" 
@@ -90,7 +90,7 @@
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi {{ $validacaoPesos['valid'] ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-warning' }} fs-5"></i>
                             <div>
-                                <span class="fw-bold">Soma dos Pesos: {{ number_format($validacaoPesos['total'], 1) }}%</span>
+                                <span class="fw-bold">Soma dos Pesos: {{ number_format($validacaoPesos['total'], 1, ',', '.') }}%</span>
                                 <br>
                                 <small class="{{ $validacaoPesos['valid'] ? 'text-success' : 'text-warning' }}">
                                     {{ $validacaoPesos['message'] }}
@@ -146,7 +146,7 @@
                             <td class="text-center">
                                 @if($entrega->num_peso > 0)
                                     <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3">
-                                        <i class="bi bi-speedometer me-1"></i>{{ number_format($entrega->num_peso, 1) }}%
+                                        <i class="bi bi-speedometer me-1"></i>{{ number_format($entrega->num_peso, 1, ',', '.') }}%
                                     </span>
                                 @else
                                     <span class="badge bg-light text-muted border rounded-pill px-3">
@@ -169,10 +169,12 @@
                                 </span>
                             </td>
                             <td class="text-end pe-4">
-                                @can('update', $plano)
+                                @can('update', $entrega)
                                     <button wire:click="edit('{{ $entrega->cod_entrega }}')" class="btn btn-sm btn-outline-secondary border-0">
                                         <i class="bi bi-pencil"></i>
                                     </button>
+                                @endcan
+                                @can('delete', $entrega)
                                     <button wire:click="delete('{{ $entrega->cod_entrega }}')" 
                                             class="btn btn-sm btn-outline-danger border-0"
                                             onclick="return confirm('Excluir entrega?')">

@@ -29,8 +29,6 @@ const applyTheme = (theme) => {
 };
 
 const initTooltips = (scope = document) => {
-    console.debug('[app.js] initTooltips()', scope);
-
     scope.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((element) => {
         const existing = Tooltip.getInstance(element);
         if (existing) {
@@ -42,14 +40,10 @@ const initTooltips = (scope = document) => {
             trigger,
             delay: { show: 150, hide: 100 },
         });
-
-        console.debug('[app.js] tooltip initialised', element);
     });
 };
 
 const initToasts = (scope = document) => {
-    console.debug('[app.js] initToasts()', scope);
-
     scope.querySelectorAll('.toast').forEach((element) => {
         const existing = Toast.getInstance(element);
         if (existing) {

@@ -4,9 +4,10 @@ namespace App\Livewire\RiskManagement;
 
 use App\Models\RiskManagement\Risco;
 use App\Models\RiskManagement\RiscoOcorrencia;
-use Livewire\Attributes\Layout;
-use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
+use Livewire\Component;
 
 #[Layout('layouts.app')]
 class RegistrarOcorrencias extends Component
@@ -14,9 +15,13 @@ class RegistrarOcorrencias extends Component
     use AuthorizesRequests;
 
     public $risco;
+
     public $ocorrencias = [];
 
     public bool $showModal = false;
+
+    // Só o servidor define (edit); o navegador não pode apontar para registro de outro risco.
+    #[Locked]
     public $ocorrenciaId;
 
     // Form Ocorrência
@@ -52,8 +57,8 @@ class RegistrarOcorrencias extends Component
 
     public function edit($id)
     {
-        $o = RiscoOcorrencia::findOrFail($id);
         $this->authorize('update', $this->risco);
+        $o = $this->ocorrenciaDoRisco($id);
 
         $this->ocorrenciaId = $id;
         $this->form = [
@@ -80,6 +85,12 @@ class RegistrarOcorrencias extends Component
         $data = $this->form;
         $data['cod_risco'] = $this->risco->cod_risco;
 
+        // Edição: o registro tem de ser deste risco — senão o updateOrCreate abaixo
+        // o transferiria para cá, trocando o cod_risco.
+        if ($this->ocorrenciaId) {
+            $this->ocorrenciaDoRisco($this->ocorrenciaId);
+        }
+
         RiscoOcorrencia::updateOrCreate(
             ['cod_ocorrencia' => $this->ocorrenciaId],
             $data
@@ -93,8 +104,16 @@ class RegistrarOcorrencias extends Component
     public function delete($id)
     {
         $this->authorize('update', $this->risco);
-        RiscoOcorrencia::findOrFail($id)->delete();
+        $this->ocorrenciaDoRisco($id)->delete();
         $this->carregarDados();
+    }
+
+    /**
+     * Registro pelo id vindo do navegador, restrito ao risco da tela.
+     */
+    private function ocorrenciaDoRisco($id): RiscoOcorrencia
+    {
+        return RiscoOcorrencia::where('cod_risco', $this->risco->cod_risco)->findOrFail($id);
     }
 
     public function resetForm()

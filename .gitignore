@@ -44,26 +44,63 @@ service-account*.json
 *.sqlite-journal
 /database/database.sqlite
 
-# --- Harness do assistente ---------------------------------------------------
-# Ferramental de quem desenvolve, NÃO produto. Decisão do gestor: nada daqui
-# vai para o repositório remoto, que é público. Permissões, hooks e notas de
-# trabalho ficam na máquina de quem edita.
-/.claude/
+# --- Harness do assistente de IA ---------------------------------------------
+# Ferramental de quem desenvolve, NÃO produto. Decisão do gestor: o harness
+# fica na máquina de quem edita e NÃO vai para o repositório remoto, que é
+# público. Ele carrega premissas de trabalho, o perfil de quem lê as entregas,
+# o mapa da arquitetura, permissões e hooks. O que é regra do CÓDIGO vive em
+# CONTRIBUTING.md, que é versionado.
+#
+# O que do harness CONTINUA versionado, de propósito:
+#   - laravel/boost em require-dev do composer.json/lock (dependência; o
+#     servidor instala com --no-dev e não o recebe);
+#   - documentacao/harness/ — apesar do nome, é documentação do PRODUTO
+#     (manual operacional, documentação técnica, dicionário) linkada no README.
 
-# CLAUDE.md e contexto de trabalho, nao produto: carrega premissas herdadas de
-# outros projetos, o perfil de quem le as entregas e o mapa da arquitetura.
-# Este repositorio e publico. O que e regra do CODIGO vive em CONTRIBUTING.md.
+# Claude Code: configuração, hooks, skills, agentes, ralph e instruções
+/.claude/
 /CLAUDE.md
-/.rtk/
-/.agent
+/CLAUDE.local.md
+**/CLAUDE.local.md
+
+# Laravel Boost: MCP, escolha de agentes e diretrizes geradas
+/.mcp.json
+/boost.json
+/.ai/
 /ai
 
-# Ferramentas de apoio ao desenvolvimento (auditoria de UI e afins).
-ferramentas/
-/gemini
+# Outros agentes e IDEs com IA (instruções, regras e skills locais)
 AGENTS.md
+agents.md
 GEMINI.md
+/.agent
+/.agents/
+/.gemini/
+/gemini
+/.codex/
+/.pi/
+/opencode.json
+/.opencode/
+/.cursor/
+/.cursorrules
+/.windsurf/
+/.windsurfrules
+/.junie/
+/.kiro/
+/.clinerules
+/.roo/
+/.continue/
+/.aider*
+/.github/copilot-instructions.md
+/.github/instructions/
+/.github/prompts/
+
+# RTK (Rust Token Killer)
+/.rtk/
 RTK.md
+
+# Ferramentas de apoio ao desenvolvimento (auditoria de UI e afins)
+ferramentas/
 
 # --- Documentação ------------------------------------------------------------
 # Os .md de documentacao/ SÃO versionados: acompanham o deploy.

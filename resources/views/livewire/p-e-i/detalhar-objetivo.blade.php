@@ -19,9 +19,13 @@
             <a href="{{ route('objetivos.index') }}" wire:navigate class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Voltar
             </a>
-            <button class="btn btn-primary gradient-theme">
-                <i class="bi bi-pencil me-1"></i> Editar
-            </button>
+            @auth
+                @if(auth()->user()->can('modulo.editar', 'planejamento-estrategico') && auth()->user()->can('editar-institucional'))
+                    <a href="{{ route('objetivos.index', ['editar' => $objetivo->cod_objetivo]) }}" class="btn btn-primary gradient-theme">
+                        <i class="bi bi-pencil me-1"></i> Editar
+                    </a>
+                @endif
+            @endauth
         </div>
     </div>
 
@@ -37,12 +41,20 @@
                         </div>
                         <div>
                             <h6 class="card-subtitle text-muted mb-1">Atingimento</h6>
-                            <h4 class="card-title mb-0">{{ number_format($estatisticas['atingimento'], 1) }}%</h4>
+                            @if($estatisticas['tem_indicador'])
+                                <h4 class="card-title mb-0">@brazil_percent($estatisticas['atingimento'], 1)</h4>
+                            @else
+                                <h4 class="card-title mb-0 text-muted fs-6">Sem indicador</h4>
+                            @endif
                         </div>
                     </div>
-                    <div class="progress" style="height: 6px;">
-                        <div class="progress-bar" role="progressbar" style="width: {{ min(100, $estatisticas['atingimento']) }}%; background-color: {{ $estatisticas['cor_farol'] ?? '#0d6efd' }};"></div>
-                    </div>
+                    @if($estatisticas['tem_indicador'])
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar" role="progressbar" style="width: {{ min(100, $estatisticas['atingimento']) }}%; background-color: {{ $estatisticas['cor_farol'] ?? '#0d6efd' }};"></div>
+                        </div>
+                    @else
+                        <small class="text-muted">Vincule um indicador para medir o objetivo.</small>
+                    @endif
                 </div>
             </div>
         </div>
@@ -264,6 +276,8 @@
                     <h5 class="card-title mb-0 fw-bold">Colaboração e Comentários</h5>
                 </div>
                 <div class="card-body">
+                    {{-- Comentar é escrita: o perfil Consulta só lê os comentários. --}}
+                    @if($podeComentar)
                     <div class="mb-4">
                         <textarea wire:model="novoComentario" class="form-control" rows="3" placeholder="Escreva um comentário ou sugestão sobre este objetivo..."></textarea>
                         <div class="d-flex justify-content-end mt-2">
@@ -272,12 +286,13 @@
                             </button>
                         </div>
                     </div>
+                    @endif
 
                     <div class="comments-list">
                         @forelse($objetivo->comentarios()->latest()->get() as $comment)
                             <div class="d-flex mb-3 gap-3 border-bottom pb-3">
                                 <div class="avatar-circle bg-secondary bg-opacity-10 text-secondary" style="width: 36px; height: 36px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:14px;">
-                                    {{ substr($comment->user->name, 0, 2) }}
+                                    {{ collect(preg_split('/\s+/', trim((string) $comment->user->name)))->filter()->take(2)->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->join('') }}
                                 </div>
                                 <div class="flex-grow-1">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
@@ -322,6 +337,22 @@
                     <div class="mb-3">
                         <small class="text-muted d-block mb-1">Nível Hierárquico</small>
                         <span class="fw-bold">{{ $objetivo->num_nivel_hierarquico_apresentacao }}</span>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block mb-2">Contribuição para a Agenda 2030 (ODS)</small>
+                        @forelse($objetivo->ods as $ods)
+                            <div class="d-flex align-items-start gap-2 mb-2">
+                                <x-ods-badge :ods="$ods" size="sm" />
+                                <div class="small">
+                                    <div class="fw-semibold" style="color: {{ $ods->cod_cor }};">ODS {{ $ods->num_ods }} · {{ $ods->nom_ods }}</div>
+                                    @if($ods->pivot->txt_contribuicao)
+                                        <div class="text-muted fst-italic">{{ $ods->pivot->txt_contribuicao }}</div>
+                                    @endif
+                                </div>
+                            </div>
+                        @empty
+                            <span class="small text-muted">Nenhum ODS vinculado (opcional).</span>
+                        @endforelse
                     </div>
                 </div>
             </div>

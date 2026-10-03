@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Auto-redirect para login em 2 segundos (fallback se JS não funcionar) -->
     <meta http-equiv="refresh" content="2;url={{ route('login') }}">
-    <title>Sessao Expirada - {{ config('app.name', 'SEAE') }}</title>
+    <title>Sessão Expirada - {{ config('app.name', 'Sistema PEI') }}</title>
     <style>
         * {
             margin: 0;
@@ -116,8 +116,8 @@
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
             </svg>
         </div>
-        <h1>Sessao Expirada</h1>
-        <p>Por questoes de seguranca, sua sessao foi encerrada devido a inatividade. Voce sera redirecionado automaticamente.</p>
+        <h1>Sessão Expirada</h1>
+        <p>Por questões de segurança, sua sessão foi encerrada devido à inatividade. Você será redirecionado automaticamente.</p>
 
         <div class="loader">
             <div class="spinner"></div>
@@ -126,7 +126,7 @@
 
         <a href="{{ route('login') }}" class="btn">Ir para Login</a>
 
-        <p class="countdown">Redirecionamento automatico em <span id="timer">2</span> segundos</p>
+        <p class="countdown">Redirecionamento automático em <span id="timer">2</span> segundos</p>
     </div>
 
     <script>

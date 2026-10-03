@@ -19,9 +19,11 @@
             <a href="{{ route('organizacoes.index') }}" wire:navigate class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Voltar
             </a>
-            <button class="btn btn-primary gradient-theme">
+            @can('update', $organizacao)
+            <a href="{{ route('organizacoes.index', ['editar' => $organizacao->cod_organizacao]) }}" class="btn btn-primary gradient-theme">
                 <i class="bi bi-pencil me-1"></i> Editar
-            </button>
+            </a>
+            @endcan
         </div>
     </div>
 
@@ -165,18 +167,22 @@
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white border-bottom-0 pb-0">
+                    {{-- Nome e e-mail das pessoas: só para quem administra usuários desta unidade. --}}
                     <ul class="nav nav-tabs card-header-tabs" id="orgTabs" role="tablist">
+                        @if($podeVerUsuarios)
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">Usuários</button>
                         </li>
+                        @endif
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="planos-tab" data-bs-toggle="tab" data-bs-target="#planos" type="button" role="tab">Iniciativas</button>
+                            <button class="nav-link {{ $podeVerUsuarios ? '' : 'active' }}" id="planos-tab" data-bs-toggle="tab" data-bs-target="#planos" type="button" role="tab">Iniciativas</button>
                         </li>
                     </ul>
                 </div>
                 <div class="card-body">
                     <div class="tab-content" id="orgTabsContent">
                         <!-- Usuários Tab -->
+                        @if($podeVerUsuarios)
                         <div class="tab-pane fade show active" id="users" role="tabpanel">
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
@@ -193,7 +199,7 @@
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <div class="avatar-circle bg-primary text-white me-2" style="width: 32px; height: 32px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:12px;">
-                                                            {{ substr($user->name, 0, 2) }}
+                                                            {{ collect(preg_split('/\s+/', trim((string) $user->name)))->filter()->take(2)->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->join('') }}
                                                         </div>
                                                         <span class="fw-medium">{{ $user->name }}</span>
                                                     </div>
@@ -214,9 +220,10 @@
                                 </table>
                             </div>
                         </div>
+                        @endif
 
                         <!-- Aba de Iniciativas -->
-                        <div class="tab-pane fade" id="planos" role="tabpanel">
+                        <div class="tab-pane fade {{ $podeVerUsuarios ? '' : 'show active' }}" id="planos" role="tabpanel">
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="table-light">

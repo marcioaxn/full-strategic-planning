@@ -79,6 +79,22 @@ class ListarUsuarios extends Component
         'page' => ['except' => 1],
     ];
 
+    /**
+     * "Editar" no detalhe do usuário chega com ?editar={id} e já abre o modal.
+     * O botão de lá não fazia nada.
+     */
+    public function mount(): void
+    {
+        // O diretório de pessoas (nome, e-mail, vínculos) é dado de gestão de
+        // acesso: antes, qualquer conta logada — até a do autocadastro — o lia.
+        $this->authorize('viewAny', User::class);
+
+        $editar = request()->query('editar');
+        if (is_string($editar) && ($alvo = User::find($editar)) && auth()->user()->can('update', $alvo)) {
+            $this->edit($editar);
+        }
+    }
+
     protected $listeners = [
         'organizacaoSelecionada' => '$refresh',
     ];
@@ -118,20 +134,20 @@ class ListarUsuarios extends Component
     protected function messages(): array
     {
         return [
-            'form.name.required' => 'Informe o nome completo do usuario.',
-            'form.name.max' => 'O nome deve ter no maximo 255 caracteres.',
-            'form.email.required' => 'Informe o e-mail institucional do usuario.',
-            'form.email.email' => 'Informe um e-mail valido para o usuario.',
-            'form.email.unique' => 'Ja existe um usuario cadastrado com este e-mail.',
-            'form.password.required' => 'Defina a senha inicial do usuario.',
-            'form.password_confirmation.same' => 'A confirmacao da senha nao confere.',
-            'form.password.min' => 'A senha deve ter no minimo 8 caracteres.',
-            'form.password.regex' => 'A senha deve conter letra maiuscula, letra minuscula, numero e caractere especial.',
-            'form.password_confirmation.required' => 'Confirme a senha inicial do usuario.',
-            'form.trocarsenha.in' => 'Selecione uma opcao valida para a troca de senha.',
-            'modoSenhaInicial.in' => 'Selecione uma forma valida de definicao da senha inicial.',
-            'vinculoTemporario.org_id.required' => 'Selecione a organizacao do vinculo.',
-            'vinculoTemporario.perfil_id.required' => 'Selecione o perfil de acesso do vinculo.',
+            'form.name.required' => 'Informe o nome completo do usuário.',
+            'form.name.max' => 'O nome deve ter no máximo 255 caracteres.',
+            'form.email.required' => 'Informe o e-mail institucional do usuário.',
+            'form.email.email' => 'Informe um e-mail válido para o usuário.',
+            'form.email.unique' => 'Já existe um usuário cadastrado com este e-mail.',
+            'form.password.required' => 'Defina a senha inicial do usuário.',
+            'form.password_confirmation.same' => 'A confirmação da senha não confere.',
+            'form.password.min' => 'A senha deve ter no mínimo 8 caracteres.',
+            'form.password.regex' => 'A senha deve conter letra maiúscula, letra minúscula, número e caractere especial.',
+            'form.password_confirmation.required' => 'Confirme a senha inicial do usuário.',
+            'form.trocarsenha.in' => 'Selecione uma opção válida para a troca de senha.',
+            'modoSenhaInicial.in' => 'Selecione uma forma válida de definição da senha inicial.',
+            'vinculoTemporario.org_id.required' => 'Selecione a organização do vínculo.',
+            'vinculoTemporario.perfil_id.required' => 'Selecione o perfil de acesso do vínculo.',
             'form.vinculos.required' => 'O usuário precisa de pelo menos um vínculo: selecione uma organização e um perfil de acesso e clique em "Adicionar vínculo".',
             'form.vinculos.min' => 'O usuário precisa de pelo menos um vínculo: selecione uma organização e um perfil de acesso e clique em "Adicionar vínculo".',
             'form.vinculos.*.org_id.required' => 'Há um vínculo sem organização. Remova-o ou selecione a organização.',
@@ -191,9 +207,11 @@ class ListarUsuarios extends Component
     // Propriedades Computadas para Selects
     public function getOrganizacoesOptionsProperty()
     {
-        return Organization::orderBy('sgl_organizacao')->get()->map(function ($o) {
-            return ['id' => $o->cod_organizacao, 'label' => $o->sgl_organizacao.' - '.$o->nom_organizacao];
-        });
+        // Só as unidades do escopo de quem consulta (Super Admin: todas).
+        return Organization::whereIn('cod_organizacao', auth()->user()->organizacaoIdsPermitidas())
+            ->orderBy('sgl_organizacao')->get()->map(function ($o) {
+                return ['id' => $o->cod_organizacao, 'label' => $o->sgl_organizacao.' - '.$o->nom_organizacao];
+            });
     }
 
     public function getPerfisOptionsProperty()
@@ -207,6 +225,17 @@ class ListarUsuarios extends Component
     {
         $query = User::query()->with(['organizacoes', 'perfisAcesso']);
         $search = trim($this->search);
+
+        // Escopo: quem não é Super Admin vê só quem tem vínculo nas unidades
+        // que ele administra (a sua e as subordinadas).
+        $eu = auth()->user();
+        if (! $eu->isSuperAdmin()) {
+            $permitidas = $eu->organizacaoIdsPermitidas()->all();
+            $query->where(function ($q) use ($permitidas) {
+                $q->whereHas('organizacoes', fn ($o) => $o->whereIn('tab_organizacoes.cod_organizacao', $permitidas))
+                    ->orWhereHas('perfisAcesso', fn ($p) => $p->whereIn('rel_users_tab_organizacoes_tab_perfil_acesso.cod_organizacao', $permitidas));
+            });
+        }
 
         // Filtro de organização EXPLÍCITO (controlado na própria tela).
         // Por padrão ('') lista todos os usuários — assim um usuário recém-criado
@@ -258,6 +287,12 @@ class ListarUsuarios extends Component
         // Precisamos iterar sobre a pivot table.
         // Como o relacionamento é BelongsToMany, podemos acessar via pivot
         foreach ($this->editing->perfisAcesso as $perfil) {
+            // Vínculo de gestor de INICIATIVA não é editado aqui (é feito na tela
+            // Gestores e Responsáveis da iniciativa) e é preservado ao salvar.
+            if ($perfil->pivot->cod_plano_de_acao) {
+                continue;
+            }
+
             $vinculos[] = [
                 'org_id' => $perfil->pivot->cod_organizacao,
                 'perfil_id' => $perfil->cod_perfil,
@@ -418,9 +453,14 @@ class ListarUsuarios extends Component
                     }
                 }
 
-                // Atualizar Vínculos (Detach All + Attach All)
+                // Substitui só os vínculos de UNIDADE.
+                //
+                // 🔴 Apagava todos, inclusive os de gestor de iniciativa
+                // (cod_plano_de_acao): editar o nome de um Gestor o deixava sem as
+                // iniciativas pelas quais responde e ele parava de lançar evolução.
                 DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')
                     ->where('user_id', $user->id)
+                    ->whereNull('cod_plano_de_acao')
                     ->delete();
 
                 foreach ($this->form['vinculos'] as $vinculo) {
@@ -435,7 +475,15 @@ class ListarUsuarios extends Component
                 }
 
                 // Manter sincronizada a tabela simples para compatibilidade
-                $user->organizacoes()->sync(collect($this->form['vinculos'])->pluck('org_id')->unique());
+                // (inclui as unidades dos vínculos mantidos, os de gestor de iniciativa).
+                $orgsDeIniciativa = DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')
+                    ->where('user_id', $user->id)
+                    ->whereNotNull('cod_plano_de_acao')
+                    ->whereNull('deleted_at')
+                    ->pluck('cod_organizacao');
+                $user->organizacoes()->sync(
+                    collect($this->form['vinculos'])->pluck('org_id')->merge($orgsDeIniciativa)->filter()->unique()->values()->all()
+                );
 
                 // Sincroniza o flag "adm" conforme o perfil: só é Super Admin quem
                 // tiver o perfil PerfilAcesso::SUPER_ADMIN entre os vínculos.
@@ -454,9 +502,9 @@ class ListarUsuarios extends Component
             report($exception);
 
             $this->notify(
-                'O cadastro nao foi concluido. Revise os campos destacados e tente novamente.',
+                'O cadastro não foi concluído. Revise os campos destacados e tente novamente.',
                 'danger',
-                'Cadastro nao concluido'
+                'Cadastro não concluído'
             );
 
             throw $exception;
@@ -464,9 +512,9 @@ class ListarUsuarios extends Component
             report($exception);
 
             $this->notify(
-                'Nao foi possivel concluir o cadastro. Nenhuma confirmacao de sucesso foi emitida. Verifique a configuracao de e-mail, os dados informados e tente novamente.',
+                'Não foi possível concluir o cadastro. Nenhuma confirmação de sucesso foi emitida. Verifique a configuração de e-mail, os dados informados e tente novamente.',
                 'danger',
-                'Falha na transacao'
+                'Falha na transação'
             );
         }
     }
@@ -503,6 +551,10 @@ class ListarUsuarios extends Component
 
     public function render()
     {
+        // Toda requisição do componente passa por aqui: a checagem vale também
+        // para filtros e paginação chamados direto pelo navegador.
+        $this->authorize('viewAny', User::class);
+
         return view('livewire.usuario.listar-usuarios', [
             'usuarios' => $this->paginatedUsuarios(),
         ]);
@@ -531,7 +583,7 @@ class ListarUsuarios extends Component
         $this->flashStyle = $style;
         $this->transactionMessage = $message;
         $this->transactionStyle = $style;
-        $this->transactionTitle = $title ?? ($style === 'success' ? 'Transacao concluida' : 'Aviso da transacao');
+        $this->transactionTitle = $title ?? ($style === 'success' ? 'Transação concluída' : 'Aviso da transação');
         $this->showTransactionModal = true;
     }
 

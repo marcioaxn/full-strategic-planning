@@ -35,7 +35,7 @@
     <div class="row g-3 mb-4">
         @foreach($perfis as $perfil)
         @php
-            $meta = $this->perfisDescricao[$perfil->dsc_perfil] ?? ['icon' => 'person-badge', 'color' => 'secondary', 'desc' => $perfil->dsc_permissao ?? 'Perfil personalizado.', 'flag' => '—'];
+            $meta = ['icon' => 'person-badge', 'color' => 'secondary', 'desc' => $perfil->dsc_permissao ?? 'Perfil personalizado.'];
         @endphp
         <div class="col-md-6 col-xl-3">
             <div class="card border-0 shadow-sm h-100">
@@ -46,7 +46,6 @@
                         </div>
                         <div>
                             <h6 class="fw-bold mb-0">{{ $perfil->dsc_perfil }}</h6>
-                            <code class="x-small text-muted" style="font-size:.65rem;">{{ $meta['flag'] }}</code>
                         </div>
                     </div>
                     <p class="text-muted small mb-2" style="line-height:1.5;">{{ $meta['desc'] }}</p>
@@ -158,11 +157,14 @@
                                 @endif
                             </td>
                             <td class="text-end pe-4">
-                                <a href="{{ route('impersonate.start', $u->id) }}"
-                                   class="btn btn-sm btn-outline-warning rounded-pill px-3"
-                                   onclick="return confirm('Assumir a identidade de {{ $u->name }}?');">
-                                    <i class="bi bi-person-bounding-box me-1"></i>Assumir
-                                </a>
+                                {{-- POST com CSRF (em GET, um link de outra página bastava). --}}
+                                <form method="POST" action="{{ route('impersonate.start', $u->id) }}" class="d-inline"
+                                      onsubmit="return confirm({{ \Illuminate\Support\Js::from('Assumir a identidade de '.$u->name.'?') }});">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill px-3">
+                                        <i class="bi bi-person-bounding-box me-1"></i>Assumir
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         @empty

@@ -11,10 +11,12 @@
  */
 
 use App\Livewire\StrategicPlanning\CadeiaDeValor;
+use App\Livewire\StrategicPlanning\GerenciarRae;
 use App\Models\Organization;
 use App\Models\PerfilAcesso;
 use App\Models\StrategicPlanning\AtividadeCadeiaValor;
 use App\Models\StrategicPlanning\PEI;
+use App\Models\StrategicPlanning\Rae;
 use App\Models\User;
 use Illuminate\Support\Facades\Session;
 use Livewire\Livewire;
@@ -63,6 +65,36 @@ test('o PDF da Cadeia de Valor é gerado e é um PDF de verdade', function () {
 
     if ($conteudo === null) {
         // streamDownload: captura pelo buffer da resposta.
+        ob_start();
+        $resposta->response->sendContent();
+        $conteudo = ob_get_clean();
+    } else {
+        $conteudo = base64_decode($conteudo);
+    }
+
+    expect($conteudo)->toStartWith('%PDF')
+        ->and(strlen($conteudo))->toBeGreaterThan(1000);
+});
+
+test('o PDF da RAE é gerado, é um PDF de verdade e traz o conteúdo da revisão', function () {
+    [$user, $pei, $org] = cenarioRelatorio();
+
+    $rae = Rae::create([
+        'cod_pei' => $pei->cod_pei,
+        'cod_organizacao' => $org->cod_organizacao,
+        'dte_referencia' => now()->format('Y-m-d'),
+        'dte_reuniao' => now()->format('Y-m-d'),
+        'dsc_tipo_reuniao' => 'RAE',
+        'num_progresso_geral' => 42.5,
+        'txt_destaques_positivos' => 'Metas de saneamento superadas.',
+    ]);
+
+    $resposta = Livewire::actingAs($user)
+        ->test(GerenciarRae::class)
+        ->call('gerarPdf', $rae->cod_rae);
+
+    $conteudo = $resposta->effects['download']['content'] ?? null;
+    if ($conteudo === null) {
         ob_start();
         $resposta->response->sendContent();
         $conteudo = ob_get_clean();

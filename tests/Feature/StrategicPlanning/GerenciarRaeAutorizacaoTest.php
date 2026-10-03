@@ -22,8 +22,12 @@ test('usuário sem nenhum vínculo com a organização não consegue criar RAE n
     $pei = montarPeiAtivoParaRae();
     $org = Organization::create(['nom_organizacao' => 'Org Alvo', 'sgl_organizacao' => 'OA', 'cod_organizacao_pai' => null]);
 
-    // Usuário autenticado, mas sem NENHUM perfil/vínculo em nenhuma organização.
+    // Usuário com perfil só em OUTRA unidade (conta sem perfil nenhum nem abre
+    // a tela). Ele tenta selecionar a unidade alvo pela sessão.
+    $outra = Organization::create(['nom_organizacao' => 'Org do Usuário', 'sgl_organizacao' => 'OU', 'cod_organizacao_pai' => null]);
     $user = User::factory()->create(['ativo' => true]);
+    $user->perfisAcesso()->attach(PerfilAcesso::CONSULTA, ['cod_organizacao' => $outra->cod_organizacao]);
+    $user->organizacoes()->syncWithoutDetaching([$outra->cod_organizacao]);
 
     session(['pei_selecionado_id' => $pei->cod_pei, 'organizacao_selecionada_id' => $org->cod_organizacao]);
 

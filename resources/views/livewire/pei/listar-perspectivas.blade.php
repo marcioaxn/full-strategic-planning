@@ -27,7 +27,7 @@
             <i class="bi bi-exclamation-octagon-fill fs-2 me-4"></i>
             <div>
                 <h5 class="alert-heading fw-bold mb-1">Nenhum PEI Ativo Encontrado</h5>
-                <p class="mb-0">É necessário cadastrar um PEI (Plano Estratégico Institucional) com período vigente para gerenciar perspectivas.</p>
+                <p class="mb-0">É necessário cadastrar um ciclo do PEI (Planejamento Estratégico Integrado) com período vigente para gerenciar perspectivas.</p>
             </div>
         </div>
     @else

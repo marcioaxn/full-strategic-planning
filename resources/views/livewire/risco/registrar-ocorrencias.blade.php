@@ -18,9 +18,11 @@
             <a href="{{ route('riscos.index') }}" wire:navigate class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Voltar
             </a>
+            @can('update', $risco)
             <button wire:click="create" class="btn btn-danger gradient-theme">
                 <i class="bi bi-exclamation-octagon me-2"></i>Registrar Nova
             </button>
+            @endcan
         </div>
     </div>
 
@@ -45,10 +47,13 @@
                                 <span class="badge rounded-pill px-3 py-2" style="background-color: {{ $oc->getImpactoRealCor() }}22; color: {{ $oc->getImpactoRealCor() }}; border: 1px solid {{ $oc->getImpactoRealCor() }}44;">
                                     Impacto: {{ $oc->getImpactoRealLabel() }}
                                 </span>
+                                @can('update', $risco)
                                 <div class="mt-2">
                                     <button wire:click="edit('{{ $oc->cod_ocorrencia }}')" class="btn btn-sm btn-link text-muted"><i class="bi bi-pencil"></i></button>
-                                    <button wire:click="delete('{{ $oc->cod_ocorrencia }}')" class="btn btn-sm btn-link text-danger" onclick="confirm('Excluir registro?')"><i class="bi bi-trash"></i></button>
+                                    {{-- "return": sem ele o Cancelar da confirmação não impedia a exclusão. --}}
+                                    <button wire:click="delete('{{ $oc->cod_ocorrencia }}')" class="btn btn-sm btn-link text-danger" onclick="return confirm('Excluir registro?')"><i class="bi bi-trash"></i></button>
                                 </div>
+                                @endcan
                             </div>
                         </div>
 

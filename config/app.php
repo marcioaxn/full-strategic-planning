@@ -13,7 +13,10 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    // "Laravel" é o valor do .env de esqueleto do framework, não um nome de
+    // produto: tratado como ausente, para o topo, o login e o portal nunca
+    // exibirem "Laravel" a um cliente.
+    'name' => in_array(env('APP_NAME'), [null, '', 'Laravel'], true) ? 'Sistema PEI' : env('APP_NAME'),
 
     /*
     |--------------------------------------------------------------------------
@@ -65,7 +68,11 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // Brasília: o PostgreSQL do produto roda em America/Sao_Paulo e preenche
+    // defaults e now() nesse fuso. Com a aplicação em UTC, o mesmo instante
+    // saía com 3 horas de diferença conforme quem gravou, e a tela exibia
+    // horários 3 horas adiantados.
+    'timezone' => env('APP_TIMEZONE', 'America/Sao_Paulo'),
 
     /*
     |--------------------------------------------------------------------------
@@ -78,11 +85,14 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    // O produto só tem traduções em lang/pt_BR. Ler o idioma do .env deixava
+    // um "APP_LOCALE=en" herdado do esqueleto do framework jogar mensagens
+    // em inglês (ou chaves cruas como "validation.required") na tela.
+    'locale' => 'pt_BR',
 
-    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+    'fallback_locale' => 'pt_BR',
 
-    'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
+    'faker_locale' => env('APP_FAKER_LOCALE', 'pt_BR'),
 
     /*
     |--------------------------------------------------------------------------

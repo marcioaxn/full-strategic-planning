@@ -32,6 +32,7 @@
         </div>
         <div class="d-flex gap-2">
             @if($organizacaoId && $peiAtivo && $aiEnabled)
+                @if($podeCriar)
                 <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="btn btn-outline-primary shadow-sm rounded-pill">
                     <span wire:loading.remove wire:target="pedirAjudaIA">
                         <i class="bi bi-robot"></i> Sugerir com IA
@@ -40,6 +41,7 @@
                         <span class="spinner-border spinner-border-sm me-1"></span>
                     </span>
                 </button>
+                @endif
             @endif
             @if($organizacaoId && $peiAtivo)
                 <button onclick="window.print()" class="btn btn-outline-secondary">
@@ -445,10 +447,12 @@
                                         <div class="small fw-bold text-muted text-uppercase mb-2">{{ $label }}s</div>
                                         <div class="list-group list-group-flush border rounded">
                                             @foreach($aiSuggestion[$key] as $item)
+                                                @if($podeCriar)
                                                 <button type="button" wire:click="adicionarSugerido('{{ $label }}', '{{ $item }}')" class="list-group-item list-group-item-action py-2 px-2 small d-flex justify-content-between align-items-center">
                                                     <span class="text-truncate me-2">{{ $item }}</span>
                                                     <i class="bi bi-plus-circle text-primary"></i>
                                                 </button>
+                                                @endif
                                             @endforeach
                                         </div>
                                     </div>
@@ -574,9 +578,11 @@
                                 <i class="bi bi-plus-circle me-2"></i>
                                 <strong>FORÇAS</strong> (Strengths)
                             </span>
+                            @if($podeCriar)
                             <button type="button" class="btn btn-sm btn-light" wire:click="create('Força')">
                                 <i class="bi bi-plus-lg"></i> Adicionar
                             </button>
+                            @endif
                         </div>
                         <div class="card-body p-2">
                             <p class="text-muted small mb-2">Pontos fortes internos que favorecem a organização</p>
@@ -598,12 +604,16 @@
                                                 </div>
                                             </div>
                                             <div class="btn-group btn-group-sm">
+                                                @if($podeEditar)
                                                 <button type="button" class="btn btn-outline-primary btn-sm" wire:click="edit('{{ $item['cod_analise'] }}')" title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
+                                                @endif
+                                                @if($podeExcluir)
                                                 <button type="button" class="btn btn-outline-danger btn-sm" wire:click="delete('{{ $item['cod_analise'] }}')" wire:confirm="Tem certeza que deseja excluir este item?" title="Excluir">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -626,9 +636,11 @@
                                 <i class="bi bi-dash-circle me-2"></i>
                                 <strong>FRAQUEZAS</strong> (Weaknesses)
                             </span>
+                            @if($podeCriar)
                             <button type="button" class="btn btn-sm btn-light" wire:click="create('Fraqueza')">
                                 <i class="bi bi-plus-lg"></i> Adicionar
                             </button>
+                            @endif
                         </div>
                         <div class="card-body p-2">
                             <p class="text-muted small mb-2">Pontos fracos internos que prejudicam a organização</p>
@@ -650,12 +662,16 @@
                                                 </div>
                                             </div>
                                             <div class="btn-group btn-group-sm">
+                                                @if($podeEditar)
                                                 <button type="button" class="btn btn-outline-primary btn-sm" wire:click="edit('{{ $item['cod_analise'] }}')" title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
+                                                @endif
+                                                @if($podeExcluir)
                                                 <button type="button" class="btn btn-outline-danger btn-sm" wire:click="delete('{{ $item['cod_analise'] }}')" wire:confirm="Tem certeza que deseja excluir este item?" title="Excluir">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -688,9 +704,11 @@
                                 <i class="bi bi-arrow-up-circle me-2"></i>
                                 <strong>OPORTUNIDADES</strong> (Opportunities)
                             </span>
+                            @if($podeCriar)
                             <button type="button" class="btn btn-sm btn-light" wire:click="create('Oportunidade')">
                                 <i class="bi bi-plus-lg"></i> Adicionar
                             </button>
+                            @endif
                         </div>
                         <div class="card-body p-2">
                             <p class="text-muted small mb-2">Fatores externos favoráveis à organização</p>
@@ -712,12 +730,16 @@
                                                 </div>
                                             </div>
                                             <div class="btn-group btn-group-sm">
+                                                @if($podeEditar)
                                                 <button type="button" class="btn btn-outline-primary btn-sm" wire:click="edit('{{ $item['cod_analise'] }}')" title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
+                                                @endif
+                                                @if($podeExcluir)
                                                 <button type="button" class="btn btn-outline-danger btn-sm" wire:click="delete('{{ $item['cod_analise'] }}')" wire:confirm="Tem certeza que deseja excluir este item?" title="Excluir">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -740,9 +762,11 @@
                                 <i class="bi bi-exclamation-triangle me-2"></i>
                                 <strong>AMEAÇAS</strong> (Threats)
                             </span>
+                            @if($podeCriar)
                             <button type="button" class="btn btn-sm btn-dark" wire:click="create('Ameaça')">
                                 <i class="bi bi-plus-lg"></i> Adicionar
                             </button>
+                            @endif
                         </div>
                         <div class="card-body p-2">
                             <p class="text-muted small mb-2">Fatores externos desfavoráveis à organização</p>
@@ -764,12 +788,16 @@
                                                 </div>
                                             </div>
                                             <div class="btn-group btn-group-sm">
+                                                @if($podeEditar)
                                                 <button type="button" class="btn btn-outline-primary btn-sm" wire:click="edit('{{ $item['cod_analise'] }}')" title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
+                                                @endif
+                                                @if($podeExcluir)
                                                 <button type="button" class="btn btn-outline-danger btn-sm" wire:click="delete('{{ $item['cod_analise'] }}')" wire:confirm="Tem certeza que deseja excluir este item?" title="Excluir">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -866,9 +894,11 @@
                         <h6 class="fw-bold mb-0"><i class="bi bi-people me-2 text-info"></i>Partes Interessadas (Stakeholders)</h6>
                         <div class="mt-1"><x-gppei-link :page="89" label="Análise de Partes Interessadas" /></div>
                     </div>
+                    @if($podeCriarParte)
                     <button wire:click="novaParte" class="btn btn-sm btn-outline-info rounded-pill px-3">
                         <i class="bi bi-plus-lg me-1"></i>Adicionar
                     </button>
+                    @endif
                 </div>
                 <div class="card-body p-3">
                     @if($partes->isEmpty())
@@ -916,8 +946,12 @@
                                             <span class="badge {{ $qClass }}" style="font-size:.65rem;">{{ $quadrante }}</span>
                                         </td>
                                         <td class="text-end">
+                                            @if($podeEditarParte)
                                             <button wire:click="editarParte('{{ $parte->cod_parte }}')" class="btn btn-xs btn-outline-primary me-1"><i class="bi bi-pencil"></i></button>
+                                            @endif
+                                            @if($podeExcluirParte)
                                             <button wire:click="excluirParte('{{ $parte->cod_parte }}')" class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                            @endif
                                         </td>
                                     </tr>
                                     @endforeach
@@ -935,9 +969,11 @@
                         <h6 class="fw-bold mb-0"><i class="bi bi-binoculars me-2 text-secondary"></i>Cenários Prospectivos</h6>
                         <div class="mt-1"><x-gppei-link :page="26" label="Análise de Cenários" /></div>
                     </div>
+                    @if($podeCriar)
                     <button wire:click="novoCenario" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
                         <i class="bi bi-plus-lg me-1"></i>Adicionar
                     </button>
+                    @endif
                 </div>
                 <div class="card-body p-3">
                     @if($cenarios->isEmpty())
@@ -956,8 +992,12 @@
                                             <i class="bi bi-{{ $cm['icon'] }} me-1"></i>{{ $cen->dsc_tipo }}
                                         </span>
                                         <div class="d-flex gap-1">
+                                            @if($podeEditar)
                                             <button wire:click="editarCenario('{{ $cen->cod_cenario }}')" class="btn btn-xs btn-link p-0 text-muted"><i class="bi bi-pencil" style="font-size:.7rem;"></i></button>
+                                            @endif
+                                            @if($podeExcluir)
                                             <button wire:click="excluirCenario('{{ $cen->cod_cenario }}')" class="btn btn-xs btn-link p-0 text-danger"><i class="bi bi-x" style="font-size:.8rem;"></i></button>
+                                            @endif
                                         </div>
                                     </div>
                                     <div class="card-body p-3">
@@ -1097,9 +1137,11 @@
                         <h6 class="fw-bold mb-0"><i class="bi bi-table me-2 text-purple" style="color:#6f42c1"></i>Matriz TOWS — Estratégias Derivadas</h6>
                         <small class="text-muted">Weihrich (1982) — cruzamento SWOT para derivar estratégias concretas</small>
                     </div>
+                    @if($podeCriar)
                     <button wire:click="novaEstrategiaTows" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
                         <i class="bi bi-plus-lg me-1"></i>Nova Estratégia
                     </button>
+                    @endif
                 </div>
                 <div class="card-body p-3">
                     <div class="row g-3">
@@ -1108,10 +1150,12 @@
                             <div class="border rounded-3 p-3 h-100" style="border-color: var(--bs-{{ $meta['cor'] }}) !important;">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="badge bg-{{ $meta['cor'] }} fs-6 px-3">{{ $tipo }}</span>
+                                    @if($podeCriar)
                                     <button wire:click="novaEstrategiaTows('{{ $tipo }}')"
                                             class="btn btn-sm btn-outline-{{ $meta['cor'] }} rounded-pill px-2">
                                         <i class="bi bi-plus"></i>
                                     </button>
+                                    @endif
                                 </div>
                                 <p class="small text-muted mb-2 fst-italic">{{ $meta['desc'] }}</p>
                                 @forelse($tows->get($tipo, collect()) as $est)
@@ -1125,8 +1169,12 @@
                                         @endif
                                     </div>
                                     <div class="d-flex gap-1 ms-2">
+                                        @if($podeEditar)
                                         <button wire:click="editarEstrategiaTows('{{ $est->cod_estrategia }}')" class="btn btn-xs btn-light border"><i class="bi bi-pencil"></i></button>
+                                        @endif
+                                        @if($podeExcluir)
                                         <button wire:click="excluirEstrategiaTows('{{ $est->cod_estrategia }}')" class="btn btn-xs btn-light border text-danger"><i class="bi bi-trash"></i></button>
+                                        @endif
                                     </div>
                                 </div>
                                 @empty

@@ -21,8 +21,40 @@
         </div>
     @else
 
+        {{-- ═══════════ Como ler esta tela ═══════════ --}}
+        <div class="card card-modern border-0 shadow-sm mb-4" x-data="{ aberto: false }">
+            <div class="card-body p-3 px-4">
+                <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold d-flex align-items-center gap-2" @click="aberto = !aberto">
+                    <i class="bi bi-question-circle text-primary"></i> Para que serve esta tela e como lê-la
+                    <i class="bi" :class="aberto ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                </button>
+                <div x-show="aberto" x-cloak class="small text-muted mt-3">
+                    <p class="mb-2">
+                        Esta tela mostra <strong>como a estratégia do ciclo PEI selecionado contribui para a Agenda 2030</strong> —
+                        os Objetivos de Desenvolvimento Sustentável (ODS) da ONU, mais o ODS 18 adotado pelo Brasil.
+                        Ela não cria nada: <strong>só lê</strong> dois vínculos feitos em outras telas.
+                    </p>
+                    <ol class="mb-2 ps-3">
+                        <li class="mb-1"><strong>Aderência declarada</strong> (estrela <i class="bi bi-star-fill text-warning"></i>):
+                            na etapa <em>Inaugurar e Integrar → Agenda 2030</em>, a organização diz a quais ODS o ciclo se propõe a contribuir. É a intenção.</li>
+                        <li class="mb-1"><strong>Cobertura efetiva</strong> (número verde no canto): ao cadastrar ou editar um
+                            <em>Objetivo Estratégico</em>, marca-se até 3 ODS para os quais ele contribui. É a estratégia de fato ligada ao ODS.</li>
+                    </ol>
+                    <p class="mb-2">
+                        <strong>Leitura:</strong> ODS colorido = há objetivo contribuindo; ODS apagado = nenhum objetivo. Clicar num ODS
+                        mostra quais objetivos contribuem e o atingimento de cada um no ano de referência — é assim que se responde
+                        “o que estamos entregando para este ODS e como está indo”.
+                    </p>
+                    <p class="mb-0">
+                        <strong>Coerência:</strong> ODS declarado (estrela) sem nenhum objetivo vinculado é uma promessa sem estratégia que a sustente —
+                        a tela avisa abaixo. O vínculo a ODS é <strong>opcional</strong>: nenhum ciclo é obrigado a cobrir todos.
+                    </p>
+                </div>
+            </div>
+        </div>
+
         {{-- ═══════════ KPIs de cobertura ═══════════ --}}
-        @php $totalOds = $todosOds->count() ?: 18; $pctCobertura = round(($qtdCobertos / $totalOds) * 100); @endphp
+        @php $totalOds = $todosOds->count(); $pctCobertura = $totalOds > 0 ? round(($qtdCobertos / $totalOds) * 100) : 0; @endphp
         <div class="row g-3 mb-4">
             <div class="col-md-4">
                 <div class="card card-modern border-0 shadow-sm h-100">
@@ -51,6 +83,7 @@
                         <div>
                             <div class="text-muted text-uppercase fw-bold" style="font-size:.68rem;letter-spacing:.05em;">Objetivos Vinculados</div>
                             <div class="fw-bold text-dark" style="font-size:1.5rem;line-height:1.1;">{{ $totalObjetivosVinculados }}</div>
+                            <div class="text-muted" style="font-size:.72rem;">{{ $totalVinculos }} {{ $totalVinculos === 1 ? 'vínculo' : 'vínculos' }} objetivo × ODS</div>
                         </div>
                     </div>
                 </div>
@@ -70,10 +103,23 @@
             </div>
         </div>
 
-        {{-- ═══════════ Grid dos 17 ODS ═══════════ --}}
+        {{-- ═══════════ Coerência: declarado sem objetivo ═══════════ --}}
+        @if($declaradosSemObjetivo->isNotEmpty())
+            <div class="alert alert-warning border-0 d-flex align-items-start gap-3 mb-4">
+                <i class="bi bi-exclamation-triangle-fill fs-5 flex-shrink-0"></i>
+                <div class="small">
+                    <strong>{{ $declaradosSemObjetivo->count() }} {{ $declaradosSemObjetivo->count() === 1 ? 'ODS declarado' : 'ODS declarados' }} na aderência do ciclo sem nenhum objetivo estratégico vinculado:</strong>
+                    {{ $declaradosSemObjetivo->map(fn ($o) => 'ODS '.$o->num_ods.' ('.$o->nom_ods_abreviado.')')->join(', ', ' e ') }}.
+                    Vincule um objetivo a esse ODS em <a href="{{ route('objetivos.index') }}" wire:navigate>Objetivos Estratégicos</a>
+                    ou revise a aderência em <a href="{{ route('pei.inaugurar') }}" wire:navigate>Inaugurar e Integrar</a>.
+                </div>
+            </div>
+        @endif
+
+        {{-- ═══════════ Grid dos ODS ═══════════ --}}
         <div class="card card-modern border-0 shadow-sm mb-4">
             <div class="card-header bg-transparent border-bottom py-3 px-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                <h5 class="fw-bold mb-0"><i class="bi bi-grid-3x3-gap text-success me-2"></i>Os 17 Objetivos de Desenvolvimento Sustentável</h5>
+                <h5 class="fw-bold mb-0"><i class="bi bi-grid-3x3-gap text-success me-2"></i>Os {{ $totalOds }} Objetivos de Desenvolvimento Sustentável</h5>
                 <span class="text-muted small">Clique em um ODS para ver os objetivos estratégicos vinculados</span>
             </div>
             <div class="card-body p-4">
@@ -95,6 +141,12 @@
                                         {{ $ods->objetivos->count() }}
                                     </span>
                                 @endif
+                                @if(isset($odsDeclarados[(int) $ods->num_ods]))
+                                    <span class="position-absolute top-0 start-0 translate-middle text-warning" style="z-index:2;font-size:.95rem;text-shadow:0 0 2px #fff,0 0 2px #fff;"
+                                          title="Aderência declarada no ciclo (intensidade {{ $odsDeclarados[(int) $ods->num_ods] }})">
+                                        <i class="bi bi-star-fill"></i>
+                                    </span>
+                                @endif
                             </div>
                             <div class="mt-1 fw-semibold text-truncate" style="font-size:.62rem;color:{{ $ods->cod_cor }};max-width:96px;">
                                 {{ $ods->nom_ods_abreviado }}
@@ -106,6 +158,7 @@
                 <div class="d-flex align-items-center gap-3 mt-4 pt-3 border-top flex-wrap">
                     <span class="small text-muted"><span class="badge rounded-pill bg-success">&nbsp;</span> Coberto (com objetivos vinculados)</span>
                     <span class="small text-muted"><span class="badge rounded-pill bg-secondary opacity-50">&nbsp;</span> Não coberto</span>
+                    <span class="small text-muted"><i class="bi bi-star-fill text-warning"></i> Aderência declarada no ciclo</span>
                     <span class="small text-muted ms-auto"><i class="bi bi-info-circle me-1"></i>O número no canto indica quantos objetivos contribuem para o ODS</span>
                 </div>
             </div>
@@ -129,6 +182,14 @@
                             @if($detalhe['ods']->dsc_ods)
                                 <p class="text-muted mb-0 mt-1 small">{{ $detalhe['ods']->dsc_ods }}</p>
                             @endif
+                            @if($detalhe['declarado'])
+                                <p class="small mb-0 mt-2">
+                                    <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill"><i class="bi bi-star-fill me-1"></i>Aderência declarada · intensidade {{ $detalhe['declarado'] }}</span>
+                                    @if($detalhe['contribuicao_declarada'])
+                                        <span class="text-muted fst-italic ms-1">{{ $detalhe['contribuicao_declarada'] }}</span>
+                                    @endif
+                                </p>
+                            @endif
                         </div>
                     </div>
 
@@ -139,7 +200,8 @@
                         <div class="d-flex flex-column gap-2">
                             @foreach($detalhe['objetivos'] as $obj)
                                 @php
-                                    $cor = $obj['atingimento'] >= 80 ? '#2e8b57' : ($obj['atingimento'] >= 50 ? '#d97706' : '#dc3545');
+                                    $cor = $obj['atingimento'] === null ? '#6c757d'
+                                        : ($obj['atingimento'] >= 80 ? '#2e8b57' : ($obj['atingimento'] >= 50 ? '#d97706' : '#dc3545'));
                                 @endphp
                                 <div class="d-flex align-items-center gap-3 p-3 rounded-3 border bg-light bg-opacity-50">
                                     <div class="flex-grow-1">
@@ -157,11 +219,16 @@
                                         @endif
                                     </div>
                                     <div class="text-center flex-shrink-0" style="width:90px;">
-                                        <div class="fw-bold" style="font-size:1.2rem;color:{{ $cor }};">@brazil_percent($obj['atingimento'], 1)</div>
-                                        <div class="progress" style="height:6px;">
-                                            <div class="progress-bar" style="width:{{ min($obj['atingimento'], 100) }}%;background:{{ $cor }};"></div>
-                                        </div>
-                                        <div class="text-muted" style="font-size:.62rem;">atingimento {{ $ano }}</div>
+                                        @if($obj['atingimento'] === null)
+                                            <div class="fw-semibold text-muted small" title="O objetivo não tem indicador direto nem de iniciativa: não há o que medir.">Sem indicador</div>
+                                            <div class="text-muted" style="font-size:.62rem;">sem medição em {{ $ano }}</div>
+                                        @else
+                                            <div class="fw-bold" style="font-size:1.2rem;color:{{ $cor }};">@brazil_percent($obj['atingimento'], 1)</div>
+                                            <div class="progress" style="height:6px;">
+                                                <div class="progress-bar" style="width:{{ min($obj['atingimento'], 100) }}%;background:{{ $cor }};"></div>
+                                            </div>
+                                            <div class="text-muted" style="font-size:.62rem;">atingimento {{ $ano }}</div>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach

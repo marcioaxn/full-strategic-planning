@@ -53,9 +53,12 @@
                             você está visualizando o sistema como <strong>{{ Auth::user()->name }}</strong> ({{ Auth::user()->email }})
                         </span>
                     </div>
-                    <a href="{{ route('impersonate.stop') }}" class="btn btn-sm btn-light fw-bold rounded-pill px-3">
-                        <i class="bi bi-box-arrow-left me-1"></i>Encerrar Impersonação
-                    </a>
+                    <form method="POST" action="{{ route('impersonate.stop') }}" class="m-0">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-light fw-bold rounded-pill px-3">
+                            <i class="bi bi-box-arrow-left me-1"></i>Encerrar Impersonação
+                        </button>
+                    </form>
                 </div>
             </div>
         @endif
@@ -83,16 +86,19 @@
                         [
                             'label' => 'Ciclos PEI',
                             'route' => 'pei.ciclos',
+                            'can'   => 'isSuperAdmin',
                             'icon'  => 'calendar-range',
                         ],
                         [
                             'label' => 'Inaugurar e Integrar',
                             'route' => 'pei.inaugurar',
+                            'gate'  => ['modulo.acessar', 'planejamento-estrategico'],
                             'icon'  => 'flag-fill',
                         ],
                         [
                             'label' => 'Cadeia de Valor',
                             'route' => 'pei.cadeia-valor',
+                            'gate'  => ['modulo.acessar', 'planejamento-estrategico'],
                             'icon'  => 'diagram-2',
                         ],
                     ],
@@ -107,66 +113,79 @@
                         [
                             'label' => 'Identidade Estratégica',
                             'route' => 'pei.index',
+                            'gate'  => ['modulo.acessar', 'planejamento-estrategico'],
                             'icon'  => 'gem',
                         ],
                         [
                             'label' => 'Valores Institucionais',
                             'route' => 'pei.valores',
+                            'gate'  => ['modulo.acessar', 'planejamento-estrategico'],
                             'icon'  => 'heart',
                         ],
                         [
                             'label' => 'Análise PESTEL',
                             'route' => 'pei.pestel',
+                            'gate'  => ['modulo.acessar', 'planejamento-estrategico'],
                             'icon'  => 'globe2',
                         ],
                         [
                             'label' => 'Análise SWOT',
                             'route' => 'pei.swot',
+                            'gate'  => ['modulo.acessar', 'planejamento-estrategico'],
                             'icon'  => 'grid-3x3-gap',
                         ],
                         [
                             'label' => 'Temas Norteadores',
                             'route' => 'temas-norteadores.index',
+                            'gate'  => ['modulo.acessar', 'planejamento-estrategico'],
                             'icon'  => 'shield-check',
                         ],
                         [
                             'label' => 'Perspectivas BSC',
                             'route' => 'pei.perspectivas',
+                            'gate'  => ['modulo.acessar', 'planejamento-estrategico'],
                             'icon'  => 'layers',
                         ],
                         [
                             'label' => 'Objetivos Estratégicos',
                             'route' => 'objetivos.index',
+                            'gate'  => ['modulo.acessar', 'planejamento-estrategico'],
                             'icon'  => 'bullseye',
                         ],
                         [
                             'label' => 'Agenda 2030 (ODS)',
                             'route' => 'agenda2030.index',
+                            'gate'  => ['modulo.acessar', 'planejamento-estrategico'],
                             'icon'  => 'globe-americas',
                         ],
                         [
                             'label' => 'Graus de Satisfação',
                             'route' => 'graus-satisfacao.index',
+                            'gate'  => ['modulo.acessar', 'graus-satisfacao'],
                             'icon'  => 'palette',
                         ],
                         [
                             'label' => 'Indicadores',
                             'route' => 'indicadores.index',
+                            'gate'  => ['modulo.acessar', 'indicadores'],
                             'icon'  => 'graph-up',
                         ],
                         [
                             'label' => 'Iniciativas',
                             'route' => 'planos.index',
+                            'gate'  => ['modulo.acessar', 'planos-de-acao'],
                             'icon'  => 'list-task',
                         ],
                         [
                             'label' => 'Gerenciar Entregas',
                             'route' => 'entregas.index',
+                            'gate'  => ['modulo.acessar', 'entregas'],
                             'icon'  => 'kanban',
                         ],
                         [
                             'label' => 'Mapa Estratégico',
                             'route' => 'pei.mapa',
+                            'gate'  => ['modulo.acessar', 'planejamento-estrategico'],
                             'icon'  => 'map',
                         ],
                     ],
@@ -181,26 +200,31 @@
                         [
                             'label' => 'Gestão de Riscos',
                             'route' => 'riscos.index',
+                            'gate'  => ['modulo.acessar', 'riscos'],
                             'icon'  => 'shield-exclamation',
                         ],
                         [
                             'label' => 'RAE — Revisão da Estratégia',
                             'route' => 'monitoramento.rae',
+                            'gate'  => ['modulo.acessar', 'planejamento-estrategico'],
                             'icon'  => 'arrow-repeat',
                         ],
                         [
                             'label' => 'Relatórios',
                             'route' => 'relatorios.index',
+                            'gate'  => ['modulo.acessar', 'relatorios'],
                             'icon'  => 'file-earmark-bar-graph',
                         ],
                         [
                             'label' => 'Histórico de Relatórios',
                             'route' => 'relatorios.historico',
+                            'gate'  => ['modulo.acessar', 'relatorios'],
                             'icon'  => 'clock-history',
                         ],
                         [
                             'label' => 'Lições Aprendidas',
                             'route' => 'licoes.index',
+                            'gate'  => ['modulo.acessar', 'planos-de-acao'],
                             'icon'  => 'lightbulb',
                         ],
                     ],
@@ -218,6 +242,7 @@
                         [
                             'label' => 'Minhas Entregas',
                             'route' => 'entregas.minhas',
+                            'gate'  => ['modulo.acessar', 'entregas'],
                             'icon'  => 'person-check',
                         ],
                     ],
@@ -246,23 +271,24 @@
                 ],
 
                 // ── Separador (visível só para super admin) ───────────────────────────
-                ['separator' => true, 'label' => 'Sistema', 'can' => 'isSuperAdmin'],
+                ['separator' => true, 'label' => 'Sistema'],
 
                 // ── Administração ─────────────────────────────────────────────────────
                 [
                     'label'    => 'Administração',
                     'icon'     => 'gear-wide-connected',
                     'id'       => 'nav-admin',
-                    'can'      => 'isSuperAdmin',
                     'children' => [
                         [
                             'label' => 'Organizações',
                             'route' => 'organizacoes.index',
+                            'gate'  => ['modulo.acessar', 'organizacoes'],
                             'icon'  => 'building',
                         ],
                         [
                             'label' => 'Usuários',
                             'route' => 'usuarios.index',
+                            'gate'  => ['modulo.acessar', 'usuarios'],
                             'icon'  => 'people',
                         ],
                         [
@@ -273,11 +299,13 @@
                         [
                             'label' => 'Perfis de Acesso',
                             'route' => 'admin.perfis',
+                            'can'   => 'isSuperAdmin',
                             'icon'  => 'person-badge',
                         ],
                         [
                             'label' => 'Configurações',
                             'route' => 'admin.configuracoes',
+                            'can'   => 'isSuperAdmin',
                             'icon'  => 'sliders',
                         ],
                         [
@@ -296,6 +324,13 @@
                 return array_filter(array_map(function($item) use ($filterNavigation) {
                     // Verifica permissão do item pai
                     if (isset($item['can']) && !auth()->user()->{$item['can']}()) {
+                        return null;
+                    }
+
+                    // 'gate': a mesma capacidade que a tela exige ao abrir. Sem isto o
+                    // menu oferecia telas que respondiam 403 (ex.: Ciclos PEI) e
+                    // escondia as que o perfil pode abrir (Organizações do Admin).
+                    if (isset($item['gate']) && ! \Illuminate\Support\Facades\Gate::allows($item['gate'][0], $item['gate'][1])) {
                         return null;
                     }
                     
@@ -540,7 +575,7 @@
                  */
                 function handle419Response(response) {
                     if (response && response.status === 419) {
-                        console.warn('[SEAE] Sessão expirada (419). Redirecionando para login...');
+                        console.warn('[PEI] Sessão expirada (419). Redirecionando para login...');
                         redirectToLogin();
                         return true;
                     }
@@ -583,7 +618,7 @@
                 XMLHttpRequest.prototype.send = function(...args) {
                     this.addEventListener('load', function() {
                         if (this.status === 419) {
-                            console.warn('[SEAE] XHR 419 detectado. Redirecionando...');
+                            console.warn('[PEI] XHR 419 detectado. Redirecionando...');
                             redirectToLogin();
                         }
                     });
@@ -600,7 +635,7 @@
                             fail(({ status, preventDefault }) => {
                                 if (status === 419) {
                                     preventDefault();
-                                    console.warn('[SEAE] Livewire 419 interceptado. Redirecionando...');
+                                    console.warn('[PEI] Livewire 419 interceptado. Redirecionando...');
                                     redirectToLogin();
                                 }
                             });
@@ -638,7 +673,7 @@
                         window.axios.defaults.headers.common['X-CSRF-TOKEN'] = newToken;
                     }
 
-                    console.log('[SEAE] Token CSRF atualizado');
+                    console.log('[PEI] Token CSRF atualizado');
                 }
 
                 /**
@@ -672,7 +707,7 @@
                         }
                     })
                     .catch(error => {
-                        console.warn('[SEAE] Erro ao renovar CSRF:', error.message);
+                        console.warn('[PEI] Erro ao renovar CSRF:', error.message);
                     });
                 }
 
@@ -695,7 +730,7 @@
                     setTimeout(refreshCsrfToken, 2000);
                 });
 
-                console.log('[SEAE] Sistema de proteção contra erro 419 ativo');
+                console.log('[PEI] Sistema de proteção contra erro 419 ativo');
             })();
         </script>
         @stack('scripts')

@@ -80,13 +80,8 @@
         ];
         $cores = $coresPerspectiva[$perspectiva?->num_nivel_hierarquico_apresentacao ?? 1] ?? $coresPerspectiva[1];
 
-        // Cor do farol baseado no percentual
-        $corFarol = match(true) {
-            $mediaAtingimento >= 100 => 'primary',
-            $mediaAtingimento >= 70 => 'success',
-            $mediaAtingimento >= 50 => 'warning',
-            default => 'danger'
-        };
+        // Cor do farol: a régua do ciclo (Graus de Satisfação), via getResumoDesempenho().
+        // Os cortes 100/70/50 estavam fixos aqui e divergiam do Mapa Estratégico.
 
         // Legenda do farol. O partial NÃO consulta o banco: recebe as faixas
         // já carregadas pelo componente (ListarIndicadores e ListarPlanos
@@ -111,7 +106,7 @@
                         <i class="bi bi-layers me-2"></i>{{ $perspectiva?->dsc_perspectiva ?? 'Perspectiva' }}
                     </h6>
                 </div>
-                <a href="{{ route('pei.mapa') }}" class="btn btn-sm btn-light" wire:navigate title="Voltar ao Mapa Estrategico">
+                <a href="{{ route('pei.mapa') }}" class="btn btn-sm btn-light" wire:navigate title="Voltar ao Mapa Estratégico">
                     <i class="bi bi-map me-1"></i> Mapa
                 </a>
             </div>
@@ -157,10 +152,10 @@
                          data-bs-toggle="tooltip"
                          data-bs-placement="top"
                          data-bs-html="true"
-                         title="<strong>Media Ponderada</strong><br>Soma(Atingimento x Peso) / Soma(Pesos)<br><small class='text-muted'>Clique em 'Ver calculo' para detalhes</small>">
+                         title="<strong>Média Ponderada</strong><br>Soma(Atingimento x Peso) / Soma(Pesos)<br><small class='text-muted'>Clique em 'Ver cálculo' para detalhes</small>">
                         <div class="card-body py-2 px-3 text-center">
                             <div class="d-flex align-items-center justify-content-center gap-1">
-                                <div class="fs-4 fw-bold text-{{ $corFarol }}">@brazil_percent($mediaAtingimento, 1)</div>
+                                <div class="fs-4 fw-bold" style="color: {{ $corFarolHex ?? '#6c757d' }};">@brazil_percent($mediaAtingimento, 1)</div>
                                 <i class="bi bi-info-circle text-muted small" style="cursor: help;"></i>
                             </div>
                             <small class="text-muted">
@@ -211,7 +206,7 @@
             <!-- Botao para expandir detalhes do calculo -->
             <div class="mt-3 text-center">
                 <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#detalhesCalculo{{ $objetivo->cod_objetivo }}" aria-expanded="false">
-                    <i class="bi bi-calculator me-1"></i>Ver como e calculado
+                    <i class="bi bi-calculator me-1"></i>Ver como é calculado
                     <i class="bi bi-chevron-down ms-1"></i>
                 </button>
             </div>
@@ -255,17 +250,17 @@
                                         <small class="text-muted">
                                             <i class="bi bi-info-circle me-1"></i>
                                             Para indicadores <strong>acumulados</strong>, soma-se todos os valores do periodo.
-                                            Para <strong>nao acumulados</strong>, usa-se o ultimo valor disponivel.
+                                            Para <strong>não acumulados</strong>, usa-se o último valor disponível.
                                         </small>
                                     </div>
                                     <div class="col-md-6">
                                         <p class="mb-2"><strong>Formula do Atingimento Consolidado:</strong></p>
                                         <code class="d-block bg-dark text-light p-2 rounded mb-2">
-                                            Media = Soma(Ating. x Peso) / Soma(Pesos)
+                                            Média = Soma(Ating. × Peso) / Soma(Pesos)
                                         </code>
                                         <small class="text-muted">
                                             <i class="bi bi-info-circle me-1"></i>
-                                            A media ponderada considera o peso de cada indicador, permitindo priorizar indicadores mais importantes.
+                                            A média ponderada considera o peso de cada indicador, permitindo priorizar indicadores mais importantes.
                                         </small>
                                     </div>
                                 </div>
@@ -340,7 +335,7 @@
                                                 <td colspan="4" class="text-end">Total:</td>
                                                 <td class="text-center">{{ $somaPesos }}</td>
                                                 <td colspan="2" class="text-end">
-                                                    <span class="text-{{ $corFarol }}">@brazil_percent($mediaAtingimento, 1)</span>
+                                                    <span style="color: {{ $corFarolHex ?? '#6c757d' }};">@brazil_percent($mediaAtingimento, 1)</span>
                                                     <small class="text-muted fw-normal d-block">
                                                         ({{ array_sum(array_column($detalhesIndicadores, 'contribuicao')) }} / {{ $somaPesos }})
                                                     </small>

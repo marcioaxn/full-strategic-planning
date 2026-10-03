@@ -12,7 +12,7 @@
                 <i class="bi bi-clock-history me-2 text-primary"></i>Detalhes da Auditoria
             </h2>
             <p class="text-muted mb-0">
-                Evento: <span class="badge bg-{{ $log->event === 'created' ? 'success' : ($log->event === 'updated' ? 'warning' : 'danger') }}">{{ ucfirst($log->event) }}</span> 
+                Evento: <span class="badge bg-{{ $log->event === 'created' ? 'success' : ($log->event === 'updated' ? 'warning' : 'danger') }}">{{ ['created' => 'Criação', 'updated' => 'Alteração', 'deleted' => 'Exclusão', 'restored' => 'Restauração'][$log->event] ?? ucfirst($log->event) }}</span> 
                 em {{ $log->created_at->format('d/m/Y H:i:s') }}
             </p>
         </div>
@@ -34,7 +34,7 @@
                     @if($log->user)
                         <div class="d-flex align-items-center mb-3">
                             <div class="avatar-circle bg-primary text-white me-3" style="width: 40px; height: 40px; display:flex; align-items:center; justify-content:center; border-radius:50%;">
-                                {{ substr($log->user->name, 0, 2) }}
+                                {{ collect(preg_split('/\s+/', trim($log->user->name)))->filter()->take(2)->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->join('') }}
                             </div>
                             <div>
                                 <h6 class="mb-0 fw-bold">{{ $log->user->name }}</h6>
@@ -70,7 +70,7 @@
                     <ul class="list-group list-group-flush small">
                         <li class="list-group-item px-0 d-flex justify-content-between">
                             <span class="text-muted">Objeto:</span>
-                            <span class="font-monospace text-primary">{{ class_basename($log->auditable_type) }}</span>
+                            <span class="text-primary fw-semibold">{{ \App\Support\RotuloAuditoria::registro($log->auditable_type) }}</span>
                         </li>
                         <li class="list-group-item px-0 d-flex justify-content-between">
                             <span class="text-muted">ID do Objeto:</span>

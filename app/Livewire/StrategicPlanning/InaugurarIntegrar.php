@@ -7,13 +7,28 @@ use App\Models\StrategicPlanning\CalendarioEventoPei;
 use App\Models\StrategicPlanning\InauguraPei;
 use App\Models\StrategicPlanning\IntegracaoInstrumento;
 use App\Models\StrategicPlanning\PEI;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class InaugurarIntegrar extends Component
 {
+    /**
+     * Este registro não tem organização: vale para a INSTITUIÇÃO inteira
+     * (todas as unidades). Por isso, além da capacidade no módulo, gravar
+     * exige poder editar o que é institucional — Super Admin ou Administrador
+     * da unidade raiz. Antes, o Administrador de qualquer unidade folha (ou
+     * um Gestor) alterava o que vale para todas.
+     */
+    private function autorizarInstitucional(string $ability): void
+    {
+        $this->authorize("modulo.{$ability}", 'planejamento-estrategico');
+        $this->authorize('editar-institucional');
+    }
+
     // ── Estado da aba ativa ──────────────────────────────────────────────────
     public string $abaAtiva = 'planejamento';
 
@@ -38,6 +53,7 @@ class InaugurarIntegrar extends Component
     // ── Aba 2: Integração com Instrumentos ──────────────────────────────────
     public bool $showFormIntegracao = false;
 
+    #[Locked]
     public $integracaoEditId = null;
 
     public array $formIntegracao = [
@@ -59,6 +75,7 @@ class InaugurarIntegrar extends Component
     // ── Aba 4: Calendário de Eventos ────────────────────────────────────────
     public bool $showFormEvento = false;
 
+    #[Locked]
     public $eventoEditId = null;
 
     public array $formEvento = [
@@ -77,8 +94,10 @@ class InaugurarIntegrar extends Component
 
     public bool $showDeleteModal = false;
 
+    #[Locked]
     public string $deleteTarget = '';
 
+    #[Locked]
     public string $deleteId = '';
 
     protected $listeners = [
@@ -87,6 +106,8 @@ class InaugurarIntegrar extends Component
 
     public function mount(): void
     {
+        $this->authorize('modulo.acessar', 'planejamento-estrategico');
+
         $this->peiAtivo = PEI::find(Session::get('pei_selecionado_id')) ?? PEI::ativos()->first();
         $this->carregarInaugurar();
         $this->carregarAgenda();
@@ -109,9 +130,26 @@ class InaugurarIntegrar extends Component
             : null;
     }
 
+    /**
+     * O id vem do navegador: o registro tem de ser do ciclo em tela. Antes,
+     * editava-se ou excluía-se a integração ou o evento de qualquer ciclo.
+     *
+     * @template T of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  class-string<T>  $classe
+     * @return T
+     */
+    private function doCiclo(string $classe, string $id)
+    {
+        $registro = $classe::findOrFail($id);
+        abort_unless($this->peiAtivo && $registro->cod_pei === $this->peiAtivo->cod_pei, 403);
+
+        return $registro;
+    }
+
     public function editarInaugurar(): void
     {
-        $this->authorize('modulo.editar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('editar');
 
         if ($this->inaugurar) {
             $this->formInaugurar = [
@@ -129,7 +167,7 @@ class InaugurarIntegrar extends Component
 
     public function salvarInaugurar(): void
     {
-        $this->authorize($this->inaugurar ? 'modulo.editar' : 'modulo.criar', 'planejamento-estrategico');
+        $this->autorizarInstitucional($this->inaugurar ? 'editar' : 'criar');
 
         $this->validate([
             'formInaugurar.txt_equipe' => 'required|string|max:1000',
@@ -163,7 +201,7 @@ class InaugurarIntegrar extends Component
 
     public function novaIntegracao(): void
     {
-        $this->authorize('modulo.criar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('criar');
 
         $this->integracaoEditId = null;
         $this->formIntegracao = ['dsc_instrumento' => '', 'dsc_tipo_instrumento' => 'PPA',
@@ -173,16 +211,16 @@ class InaugurarIntegrar extends Component
 
     public function editarIntegracao(string $id): void
     {
-        $this->authorize('modulo.editar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('editar');
 
-        $rec = IntegracaoInstrumento::findOrFail($id);
+        $rec = $this->doCiclo(IntegracaoInstrumento::class, $id);
         $this->integracaoEditId = $id;
         $this->formIntegracao = [
             'dsc_instrumento' => $rec->dsc_instrumento,
             'dsc_tipo_instrumento' => $rec->dsc_tipo_instrumento,
             'txt_pontos_atencao' => $rec->txt_pontos_atencao ?? '',
             'txt_tarefas' => $rec->txt_tarefas ?? '',
-            'dsc_intensidade' => $rec->dsc_intensidade,
+            'dsc_intensidade' => IntegracaoInstrumento::normalizarIntensidade($rec->dsc_intensidade),
             'num_ordem' => $rec->num_ordem,
         ];
         $this->showFormIntegracao = true;
@@ -190,7 +228,7 @@ class InaugurarIntegrar extends Component
 
     public function salvarIntegracao(): void
     {
-        $this->authorize($this->integracaoEditId ? 'modulo.editar' : 'modulo.criar', 'planejamento-estrategico');
+        $this->autorizarInstitucional($this->integracaoEditId ? 'editar' : 'criar');
 
         $this->validate([
             'formIntegracao.dsc_instrumento' => 'required|string|max:100',
@@ -203,7 +241,7 @@ class InaugurarIntegrar extends Component
         $data = array_merge($this->formIntegracao, ['cod_pei' => $this->peiAtivo->cod_pei]);
 
         if ($this->integracaoEditId) {
-            IntegracaoInstrumento::findOrFail($this->integracaoEditId)->update($data);
+            $this->doCiclo(IntegracaoInstrumento::class, $this->integracaoEditId)->update($data);
         } else {
             IntegracaoInstrumento::create($data);
         }
@@ -216,6 +254,8 @@ class InaugurarIntegrar extends Component
 
     public function confirmarExclusaoIntegracao(string $id): void
     {
+        $this->autorizarInstitucional('excluir');
+        $this->doCiclo(IntegracaoInstrumento::class, $id);
         $this->deleteTarget = 'integracao';
         $this->deleteId = $id;
         $this->showDeleteModal = true;
@@ -235,7 +275,9 @@ class InaugurarIntegrar extends Component
             $vinculos = $this->peiAtivo->ods()->get();
             $this->odsAderidos = $vinculos->pluck('num_ods')->map(fn ($n) => (int) $n)->toArray();
             $this->odsContribuicoes = $vinculos->pluck('pivot.txt_contribuicao', 'num_ods')->toArray();
-            $this->odsIntensidades = $vinculos->pluck('pivot.dsc_intensidade', 'num_ods')->toArray();
+            $this->odsIntensidades = $vinculos
+                ->mapWithKeys(fn ($o) => [(int) $o->num_ods => IntegracaoInstrumento::normalizarIntensidade($o->pivot->dsc_intensidade)])
+                ->toArray();
         } catch (\Throwable $e) {
             // Sem isto, a causa real desaparece: o cliente recebe uma
             // orientação genérica e não sobra rastro nenhum para investigar.
@@ -247,7 +289,7 @@ class InaugurarIntegrar extends Component
 
     public function toggleOdsAderencia(int $num): void
     {
-        $this->authorize('modulo.editar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('editar');
 
         if (in_array($num, $this->odsAderidos)) {
             $this->odsAderidos = array_values(array_diff($this->odsAderidos, [$num]));
@@ -262,7 +304,7 @@ class InaugurarIntegrar extends Component
 
     public function salvarAgenda(): void
     {
-        $this->authorize('modulo.editar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('editar');
 
         if (! $this->peiAtivo) {
             return;
@@ -286,7 +328,7 @@ class InaugurarIntegrar extends Component
 
     public function novoEvento(): void
     {
-        $this->authorize('modulo.criar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('criar');
 
         $this->eventoEditId = null;
         $this->formEvento = ['dsc_titulo' => '', 'dsc_objetivo' => '', 'dte_evento' => '',
@@ -296,9 +338,9 @@ class InaugurarIntegrar extends Component
 
     public function editarEvento(string $id): void
     {
-        $this->authorize('modulo.editar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('editar');
 
-        $ev = CalendarioEventoPei::findOrFail($id);
+        $ev = $this->doCiclo(CalendarioEventoPei::class, $id);
         $this->eventoEditId = $id;
         $this->formEvento = [
             'dsc_titulo' => $ev->dsc_titulo,
@@ -313,7 +355,7 @@ class InaugurarIntegrar extends Component
 
     public function salvarEvento(): void
     {
-        $this->authorize($this->eventoEditId ? 'modulo.editar' : 'modulo.criar', 'planejamento-estrategico');
+        $this->autorizarInstitucional($this->eventoEditId ? 'editar' : 'criar');
 
         $this->validate([
             'formEvento.dsc_titulo' => 'required|string|max:200',
@@ -327,7 +369,7 @@ class InaugurarIntegrar extends Component
         $data = array_merge($this->formEvento, ['cod_pei' => $this->peiAtivo->cod_pei]);
 
         if ($this->eventoEditId) {
-            CalendarioEventoPei::findOrFail($this->eventoEditId)->update($data);
+            $this->doCiclo(CalendarioEventoPei::class, $this->eventoEditId)->update($data);
         } else {
             CalendarioEventoPei::create($data);
         }
@@ -340,6 +382,8 @@ class InaugurarIntegrar extends Component
 
     public function confirmarExclusaoEvento(string $id): void
     {
+        $this->autorizarInstitucional('excluir');
+        $this->doCiclo(CalendarioEventoPei::class, $id);
         $this->deleteTarget = 'evento';
         $this->deleteId = $id;
         $this->showDeleteModal = true;
@@ -349,11 +393,11 @@ class InaugurarIntegrar extends Component
 
     public function executarExclusao(): void
     {
-        $this->authorize('modulo.excluir', 'planejamento-estrategico');
+        $this->autorizarInstitucional('excluir');
 
         match ($this->deleteTarget) {
-            'integracao' => IntegracaoInstrumento::findOrFail($this->deleteId)->delete(),
-            'evento' => CalendarioEventoPei::findOrFail($this->deleteId)->delete(),
+            'integracao' => $this->doCiclo(IntegracaoInstrumento::class, $this->deleteId)->delete(),
+            'evento' => $this->doCiclo(CalendarioEventoPei::class, $this->deleteId)->delete(),
             default => null,
         };
 
@@ -389,6 +433,10 @@ class InaugurarIntegrar extends Component
             'intensidades' => IntegracaoInstrumento::INTENSIDADES,
             'tiposEvento' => CalendarioEventoPei::TIPOS_EVENTO,
             'todosOds' => ODS::ordenado()->get(),
+            // Abertura do ciclo é da instituição: a tela só oferece o botão que o servidor aceita.
+            'podeCriar' => Gate::allows('editar-institucional') && Gate::allows('modulo.criar', 'planejamento-estrategico'),
+            'podeEditar' => Gate::allows('editar-institucional') && Gate::allows('modulo.editar', 'planejamento-estrategico'),
+            'podeExcluir' => Gate::allows('editar-institucional') && Gate::allows('modulo.excluir', 'planejamento-estrategico'),
         ]);
     }
 }

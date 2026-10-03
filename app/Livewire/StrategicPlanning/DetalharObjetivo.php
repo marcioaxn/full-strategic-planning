@@ -2,11 +2,13 @@
 
 namespace App\Livewire\StrategicPlanning;
 
+use App\Models\PerformanceIndicators\Indicador;
 use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\ObjetivoComentario;
 use App\Services\IndicadorCalculoService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
 class DetalharObjetivo extends Component
@@ -19,10 +21,18 @@ class DetalharObjetivo extends Component
 
     public function mount($id)
     {
+        // Tela pública (Transparência): o visitante entra; quem está logado
+        // precisa do módulo.
+        if (auth()->check()) {
+            $this->authorize('modulo.acessar', 'planejamento-estrategico');
+        }
+
         $this->carregarObjetivo($id);
     }
 
-    public function carregarObjetivo($id)
+    // Não é público: chamado do navegador, trocava o objetivo da tela por
+    // qualquer outro ID antes de postarComentario().
+    protected function carregarObjetivo($id)
     {
         $this->objetivo = Objetivo::with([
             'perspectiva.pei',
@@ -30,6 +40,7 @@ class DetalharObjetivo extends Component
             'planosAcao.entregas',
             'futuroAlmejado',
             'comentarios.user',
+            'ods',
         ])->findOrFail($id);
 
         $service = app(IndicadorCalculoService::class);
@@ -37,7 +48,13 @@ class DetalharObjetivo extends Component
 
         $atingimento = $service->calcularAtingimentoObjetivo($this->objetivo, $ano);
 
+        // Sem indicador direto nem de iniciativa não há medição: a tela dizia
+        // "0,0%", um desempenho péssimo que ninguém mediu.
+        $temIndicador = $this->objetivo->indicadores->isNotEmpty()
+            || Indicador::whereHas('planoDeAcao', fn ($q) => $q->where('cod_objetivo', $this->objetivo->cod_objetivo))->exists();
+
         $this->estatisticas = [
+            'tem_indicador' => $temIndicador,
             'atingimento' => $atingimento,
             'cor_farol' => $this->corDoFarol($atingimento),
             'qtd_indicadores' => $this->objetivo->indicadores->count(),
@@ -78,7 +95,7 @@ class DetalharObjetivo extends Component
      */
     public function postarComentario()
     {
-        abort_unless(Auth::check(), 403);
+        abort_unless($this->podeComentar(), 403);
 
         $this->validate(['novoComentario' => 'required|string|min:3']);
 
@@ -106,11 +123,22 @@ class DetalharObjetivo extends Component
         }
     }
 
+    /**
+     * Comentar é contribuir com o planejamento — escrita. Quem tem só leitura
+     * (perfil Consulta) acompanha, mas não comenta; o visitante nunca.
+     */
+    private function podeComentar(): bool
+    {
+        return Auth::check()
+            && Gate::allows('modulo.acessar', 'planejamento-estrategico')
+            && (Gate::allows('modulo.editar', 'planejamento-estrategico') || Gate::allows('modulo.editar', 'planos-de-acao'));
+    }
+
     public function render()
     {
         // Visitante da área pública recebe o layout público; quem está
         // autenticado continua vendo a aplicação com o menu de sempre.
-        return view('livewire.p-e-i.detalhar-objetivo')
+        return view('livewire.p-e-i.detalhar-objetivo', ['podeComentar' => $this->podeComentar()])
             ->layout(Auth::check() ? 'layouts.app' : 'layouts.public');
     }
 }

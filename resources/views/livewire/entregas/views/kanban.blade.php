@@ -115,7 +115,7 @@
                     {{ $status }}
                     <span class="notion-kanban-count">({{ $entregasDoStatus->count() }})</span>
                 </div>
-                @can('update', $plano)
+                @can('create', [\App\Models\ActionPlan\Entrega::class, $plano])
                     <button 
                         wire:click="openQuickAdd('{{ $status }}')" 
                         class="btn btn-sm btn-link text-muted p-0"
@@ -140,7 +140,7 @@
             </div>
 
             {{-- Botão Adicionar (footer) --}}
-            @can('update', $plano)
+            @can('create', [\App\Models\ActionPlan\Entrega::class, $plano])
                 <div class="notion-add-card" wire:click="openQuickAdd('{{ $status }}')">
                     <i class="bi bi-plus"></i>
                     <span>Adicionar</span>

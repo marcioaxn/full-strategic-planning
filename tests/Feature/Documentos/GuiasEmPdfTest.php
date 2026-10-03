@@ -15,7 +15,19 @@
  * vez de o cliente descobrir pelo 404.
  */
 
+use App\Models\Organization;
+use App\Models\PerfilAcesso;
 use App\Models\User;
+
+/** Usuário com perfil: conta sem perfil não entra na área restrita. */
+function usuarioComPerfilParaGuias(): User
+{
+    $org = Organization::create(['nom_organizacao' => 'Órgão', 'sgl_organizacao' => 'ORG', 'cod_organizacao_pai' => null]);
+    $user = User::factory()->create();
+    $user->perfisAcesso()->attach(PerfilAcesso::CONSULTA, ['cod_organizacao' => $org->cod_organizacao]);
+
+    return $user;
+}
 
 test('os PDFs que a aplicação serve estão no repositório', function () {
     // Os mesmos caminhos que o DocumentosController lê.
@@ -24,7 +36,7 @@ test('os PDFs que a aplicação serve estão no repositório', function () {
 });
 
 test('a rota do guia GPPEI entrega o PDF, não um 404', function () {
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(usuarioComPerfilParaGuias());
 
     $this->get(route('documentos.gppei'))
         ->assertOk()
@@ -32,7 +44,7 @@ test('a rota do guia GPPEI entrega o PDF, não um 404', function () {
 });
 
 test('a rota do guia de projetos entrega o PDF, não um 404', function () {
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(usuarioComPerfilParaGuias());
 
     $this->get(route('documentos.projetos.pdf'))
         ->assertOk()

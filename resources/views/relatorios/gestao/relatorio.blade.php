@@ -77,7 +77,7 @@
             da fonte que as preenche. Complete-as antes de publicar.
         @else
             Este documento apresenta as seções para as quais há informação registrada
-            no Planejamento Estratégico Institucional.
+            no Planejamento Estratégico Integrado.
         @endif
     </p>
 </div>

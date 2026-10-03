@@ -12,12 +12,38 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use OwenIt\Auditing\Contracts\Auditable;
 
 class PlanoDeAcao extends Model implements Auditable
 {
     use HasFactory, HasUuids, SoftDeletes;
     use \OwenIt\Auditing\Auditable;
+
+    /**
+     * Excluir a iniciativa leva junto o que só existe por causa dela.
+     *
+     * 🔴 A exclusão marcava apenas a iniciativa. As entregas e os indicadores
+     * dela continuavam "vivos" (órfãos), e o vínculo de Gestor com ela também:
+     * a pessoa seguia com o perfil de Gestor naquela unidade sem iniciativa
+     * nenhuma. Tudo segue a mesma exclusão lógica (recuperável e auditada).
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (PlanoDeAcao $plano) {
+            if ($plano->isForceDeleting()) {
+                return;
+            }
+
+            $plano->entregas()->get()->each->delete();
+            $plano->indicadores()->get()->each->delete();
+
+            DB::table('organization.rel_users_tab_organizacoes_tab_perfil_acesso')
+                ->where('cod_plano_de_acao', $plano->cod_plano_de_acao)
+                ->whereNull('deleted_at')
+                ->update(['deleted_at' => now(), 'updated_at' => now()]);
+        });
+    }
 
     /**
      * Tabela do banco de dados

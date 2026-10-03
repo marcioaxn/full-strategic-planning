@@ -11,6 +11,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
@@ -33,6 +34,8 @@ class AtribuirResponsaveis extends Component
     // Plano de Comunicação
     public bool $showModalComun = false;
 
+    // Só o servidor define (editarComunicacao); o navegador não pode apontar para item de outro plano.
+    #[Locked]
     public ?string $comunEditId = null;
 
     public array $formComun = [
@@ -46,6 +49,8 @@ class AtribuirResponsaveis extends Component
     // Matriz RACI
     public bool $showModalRaci = false;
 
+    // Só o servidor define (editarRaci); o navegador não pode apontar para papel de outro plano.
+    #[Locked]
     public ?string $raciEditId = null;
 
     public array $formRaci = [
@@ -77,23 +82,40 @@ class AtribuirResponsaveis extends Component
             ->join('users', 'users.id', '=', 'pivot.user_id')
             ->join('tab_perfil_acesso as perfil', 'perfil.cod_perfil', '=', 'pivot.cod_perfil')
             ->where('pivot.cod_plano_de_acao', $this->plano->cod_plano_de_acao)
+            ->whereNull('pivot.deleted_at')
             ->select('users.name', 'users.email', 'perfil.dsc_perfil', 'pivot.id', 'pivot.user_id', 'pivot.cod_perfil')
             ->get();
 
-        // 2. Carregar Usuários da mesma Organização (para o select)
-        $this->usuariosDisponiveis = User::whereHas('organizacoes', function ($q) {
+        // 2. Usuários que podem receber o papel: os da unidade da iniciativa,
+        // menos quem está designando (ninguém se designa a si mesmo).
+        $this->usuariosDisponiveis = $this->consultaUsuariosDisponiveis()->orderBy('name')->get();
+    }
+
+    private function consultaUsuariosDisponiveis()
+    {
+        return User::whereHas('organizacoes', function ($q) {
             $q->where('tab_organizacoes.cod_organizacao', $this->plano->cod_organizacao);
-        })->orderBy('name')->get();
+        })->where('users.id', '!=', auth()->id());
     }
 
     public function adicionar()
     {
-        $this->authorize('update', $this->plano);
+        // 🔴 Antes bastava poder EDITAR a iniciativa: o Gestor Substituto se
+        // promovia a Responsável, ou dava o papel a qualquer conta do sistema.
+        // Designar gestor é ato de quem administra a unidade da iniciativa.
+        $this->authorize('designarGestores', $this->plano);
 
         $this->validate([
             'novo_usuario_id' => 'required|exists:users,id',
             'novo_perfil_id' => 'required|in:'.PerfilAcesso::GESTOR_RESPONSAVEL.','.PerfilAcesso::GESTOR_SUBSTITUTO,
         ]);
+
+        // O id vem do navegador: só vale quem está na lista oferecida pela tela.
+        if (! $this->consultaUsuariosDisponiveis()->where('users.id', $this->novo_usuario_id)->exists()) {
+            $this->addError('novo_usuario_id', 'Escolha um usuário da unidade da iniciativa (e não você mesmo).');
+
+            return;
+        }
 
         // Verificar duplicata
         $existe = DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')
@@ -127,10 +149,16 @@ class AtribuirResponsaveis extends Component
 
     public function remover($pivotId)
     {
-        $this->authorize('update', $this->plano);
+        $this->authorize('designarGestores', $this->plano);
 
+        // O id vem do navegador: só sai o vínculo de gestor DESTE plano, nesta organização.
+        // Sem o recorte, qualquer linha da pivot de perfis (inclusive Admin de outra
+        // organização) poderia ser apagada por quem edita um único plano.
         DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')
             ->where('id', $pivotId)
+            ->where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)
+            ->where('cod_organizacao', $this->plano->cod_organizacao)
+            ->whereIn('cod_perfil', [PerfilAcesso::GESTOR_RESPONSAVEL, PerfilAcesso::GESTOR_SUBSTITUTO])
             ->delete();
 
         $this->carregarDados();
@@ -148,7 +176,9 @@ class AtribuirResponsaveis extends Component
 
     public function editarComunicacao(string $id): void
     {
-        $c = PlanoComunicacao::findOrFail($id);
+        $this->authorize('update', $this->plano);
+
+        $c = $this->comunicacaoDoPlano($id);
         $this->comunEditId = $id;
         $this->formComun = [
             'nom_publico_alvo' => $c->nom_publico_alvo,
@@ -162,6 +192,8 @@ class AtribuirResponsaveis extends Component
 
     public function salvarComunicacao(): void
     {
+        $this->authorize('update', $this->plano);
+
         $this->validate([
             'formComun.nom_publico_alvo' => 'required|string|max:150',
             'formComun.dsc_mensagem_chave' => 'required|string|max:500',
@@ -175,7 +207,7 @@ class AtribuirResponsaveis extends Component
         $data = array_merge($this->formComun, ['cod_plano_de_acao' => $this->plano->cod_plano_de_acao]);
 
         $this->comunEditId
-            ? PlanoComunicacao::findOrFail($this->comunEditId)->update($data)
+            ? $this->comunicacaoDoPlano($this->comunEditId)->update($data)
             : PlanoComunicacao::create($data);
 
         $this->showModalComun = false;
@@ -185,7 +217,9 @@ class AtribuirResponsaveis extends Component
 
     public function excluirComunicacao(string $id): void
     {
-        PlanoComunicacao::findOrFail($id)->delete();
+        $this->authorize('update', $this->plano);
+
+        $this->comunicacaoDoPlano($id)->delete();
         $this->dispatch('notify', message: 'Item removido.', style: 'warning');
     }
 
@@ -200,7 +234,9 @@ class AtribuirResponsaveis extends Component
 
     public function editarRaci(string $id): void
     {
-        $r = Raci::findOrFail($id);
+        $this->authorize('update', $this->plano);
+
+        $r = $this->raciDoPlano($id);
         $this->raciEditId = $id;
         $this->formRaci = [
             'user_id' => $r->user_id,
@@ -221,6 +257,12 @@ class AtribuirResponsaveis extends Component
             'formRaci.user_id.required' => 'Selecione o usuário.',
         ]);
 
+        // A entrega escolhida também vem do navegador: tem de ser deste plano.
+        if ($this->formRaci['cod_entrega']
+            && ! $this->plano->entregas()->where('cod_entrega', $this->formRaci['cod_entrega'])->exists()) {
+            abort(403);
+        }
+
         $data = [
             'cod_plano_de_acao' => $this->plano->cod_plano_de_acao,
             'cod_entrega' => $this->formRaci['cod_entrega'] ?: null,
@@ -229,7 +271,7 @@ class AtribuirResponsaveis extends Component
         ];
 
         $this->raciEditId
-            ? Raci::findOrFail($this->raciEditId)->update($data)
+            ? $this->raciDoPlano($this->raciEditId)->update($data)
             : Raci::create($data);
 
         $this->showModalRaci = false;
@@ -239,8 +281,26 @@ class AtribuirResponsaveis extends Component
 
     public function excluirRaci(string $id): void
     {
-        Raci::findOrFail($id)->delete();
+        $this->authorize('update', $this->plano);
+
+        $this->raciDoPlano($id)->delete();
         $this->dispatch('notify', message: 'Papel RACI removido.', style: 'warning');
+    }
+
+    /**
+     * Item de comunicação pelo id vindo do navegador, restrito ao plano da tela.
+     */
+    private function comunicacaoDoPlano(string $id): PlanoComunicacao
+    {
+        return PlanoComunicacao::where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)->findOrFail($id);
+    }
+
+    /**
+     * Papel RACI pelo id vindo do navegador, restrito ao plano da tela.
+     */
+    private function raciDoPlano(string $id): Raci
+    {
+        return Raci::where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)->findOrFail($id);
     }
 
     public function render()

@@ -111,13 +111,61 @@ class Organization extends Model
      */
     public function getDescendantsAndSelfIds(): array
     {
-        $ids = [$this->cod_organizacao];
+        return self::descendentesEProprio($this->cod_organizacao);
+    }
 
-        foreach ($this->filhas()->where('cod_organizacao', '!=', $this->cod_organizacao)->get() as $filha) {
-            $ids = array_merge($ids, $filha->getDescendantsAndSelfIds());
+    /**
+     * Mapa filho → pai de todas as organizações, numa consulta só.
+     *
+     * A árvore é pequena (dezenas de unidades) e é percorrida em memória com
+     * guarda contra ciclo: uma árvore corrompida (A filha de B e B filha de A)
+     * levava a recursão de consultas a estourar e derrubava o Dashboard.
+     *
+     * @return array<string, string|null>
+     */
+    private static function mapaDePais(): array
+    {
+        return self::query()->pluck('rel_cod_organizacao', 'cod_organizacao')->all();
+    }
+
+    /** @return array<int, string> */
+    public static function descendentesEProprio(string $codOrganizacao): array
+    {
+        $filhosDe = [];
+        foreach (self::mapaDePais() as $filho => $pai) {
+            if ($pai !== null && $pai !== $filho) {
+                $filhosDe[$pai][] = $filho;
+            }
         }
 
-        return array_unique($ids);
+        $ids = [];
+        $fila = [$codOrganizacao];
+        while ($fila) {
+            $atual = array_shift($fila);
+            if (isset($ids[$atual])) {
+                continue;
+            }
+            $ids[$atual] = true;
+            array_push($fila, ...($filhosDe[$atual] ?? []));
+        }
+
+        return array_keys($ids);
+    }
+
+    /** @return array<int, string> a própria organização e todas as superiores, até a raiz */
+    public static function ascendentesEProprio(string $codOrganizacao): array
+    {
+        $pais = self::mapaDePais();
+        $ids = [];
+        $atual = $codOrganizacao;
+
+        while ($atual !== null && ! isset($ids[$atual])) {
+            $ids[$atual] = true;
+            $pai = $pais[$atual] ?? null;
+            $atual = $pai !== $atual ? $pai : null;
+        }
+
+        return array_keys($ids);
     }
 
     /**
@@ -159,7 +207,7 @@ class Organization extends Model
      */
     public function isRaiz(): bool
     {
-        return $this->cod_organizacao === $this->rel_cod_organizacao;
+        return $this->rel_cod_organizacao === null || $this->cod_organizacao === $this->rel_cod_organizacao;
     }
 
     /**
@@ -187,7 +235,11 @@ class Organization extends Model
      */
     public function scopeRaiz($query)
     {
-        return $query->whereColumn('cod_organizacao', 'rel_cod_organizacao');
+        // Raiz é a auto-referenciada (o padrão da base) ou a sem superior —
+        // o mesmo critério de isRaiz().
+        return $query->where(fn ($q) => $q
+            ->whereColumn('cod_organizacao', 'rel_cod_organizacao')
+            ->orWhereNull('rel_cod_organizacao'));
     }
 
     /**

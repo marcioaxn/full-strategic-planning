@@ -82,10 +82,12 @@
                     <p class="text-muted small mb-0">Defina a equipe, diretrizes da Alta Direção e metodologia do processo de planejamento.</p>
                     <div class="mt-1"><x-gppei-link :page="10" label="Passo 01 — Definir a Demanda" /></div>
                 </div>
+                @if($podeEditar)
                 <button wire:click="editarInaugurar" class="btn btn-primary gradient-theme-btn px-4">
                     <i class="bi bi-{{ $inaugurar ? 'pencil' : 'plus-lg' }} me-2"></i>
                     {{ $inaugurar ? 'Editar' : 'Preencher' }}
                 </button>
+                @endif
             </div>
 
             @if($inaugurar)
@@ -165,9 +167,11 @@
                     <p class="text-muted small mb-0">Mapeie pontos de atenção e tarefas de alinhamento com PPA, LOA e Planos Setoriais. A Agenda 2030/ODS possui aba própria.</p>
                     <div class="mt-1"><x-gppei-link :page="14" label="Passo 02 — Integração com Instrumentos" /></div>
                 </div>
+                @if($podeCriar)
                 <button wire:click="novaIntegracao" class="btn btn-primary gradient-theme-btn px-4">
                     <i class="bi bi-plus-lg me-2"></i>Adicionar
                 </button>
+                @endif
             </div>
 
             @if($integracoes->isEmpty())
@@ -195,22 +199,27 @@
                                 <td><span class="badge bg-primary-subtle text-primary">{{ $integ->dsc_tipo_instrumento }}</span></td>
                                 <td>
                                     @php
-                                        $intClass = match($integ->dsc_intensidade) {
+                                        $intChave = \App\Models\StrategicPlanning\IntegracaoInstrumento::normalizarIntensidade($integ->dsc_intensidade);
+                                        $intClass = match($intChave) {
                                             'Alta'  => 'bg-danger-subtle text-danger',
                                             'Media' => 'bg-warning-subtle text-warning',
                                             default => 'bg-success-subtle text-success',
                                         };
                                     @endphp
-                                    <span class="badge {{ $intClass }}">{{ $integ->dsc_intensidade }}</span>
+                                    <span class="badge {{ $intClass }}">{{ \App\Models\StrategicPlanning\IntegracaoInstrumento::ROTULOS_INTENSIDADE[$intChave] }}</span>
                                 </td>
                                 <td class="small text-muted">{{ Str::limit($integ->txt_pontos_atencao ?? '—', 60) }}</td>
                                 <td class="text-end">
+                                    @if($podeEditar)
                                     <button wire:click="editarIntegracao('{{ $integ->cod_integracao }}')" class="btn btn-sm btn-outline-primary me-1">
                                         <i class="bi bi-pencil"></i>
                                     </button>
+                                    @endif
+                                    @if($podeExcluir)
                                     <button wire:click="confirmarExclusaoIntegracao('{{ $integ->cod_integracao }}')" class="btn btn-sm btn-outline-danger">
                                         <i class="bi bi-trash"></i>
                                     </button>
+                                    @endif
                                 </td>
                             </tr>
                             @endforeach
@@ -230,19 +239,21 @@
                     <p class="text-muted small mb-0">Declare a quais Objetivos de Desenvolvimento Sustentável o PEI da instituição adere (Passo 1 — mapeamento estratégico). É opcional.</p>
                     <div class="mt-1"><x-gppei-link :page="14" label="Integração com Instrumentos de Governo" /></div>
                 </div>
+                @if($podeEditar)
                 <button wire:click="salvarAgenda" class="btn btn-success px-4">
                     <i class="bi bi-check-lg me-2"></i>Salvar Aderência
                 </button>
+                @endif
             </div>
 
             {{-- Resumo --}}
             <div class="d-flex align-items-center gap-3 mb-3 p-3 rounded-3 bg-light">
-                @php $totalOds = $todosOds->count() ?: 18; @endphp
+                @php $totalOds = $todosOds->count(); @endphp
                 <div class="position-relative flex-shrink-0" style="width:48px;height:48px;">
                     <svg viewBox="0 0 36 36" style="width:48px;height:48px;transform:rotate(-90deg);">
                         <circle cx="18" cy="18" r="16" fill="none" stroke="#e9ecef" stroke-width="3"></circle>
                         <circle cx="18" cy="18" r="16" fill="none" stroke="#2e8b57" stroke-width="3"
-                                stroke-dasharray="{{ round((count($odsAderidos)/$totalOds)*100) }} 100" stroke-linecap="round"></circle>
+                                stroke-dasharray="{{ ($totalOds > 0 ? round((count($odsAderidos) / $totalOds) * 100) : 0) }} 100" stroke-linecap="round"></circle>
                     </svg>
                     <span class="position-absolute top-50 start-50 translate-middle fw-bold" style="font-size:.62rem;">{{ count($odsAderidos) }}/{{ $totalOds }}</span>
                 </div>
@@ -258,6 +269,7 @@
                     @php $ativo = in_array($ods->num_ods, $odsAderidos); @endphp
                     <button type="button"
                             wire:click="toggleOdsAderencia({{ $ods->num_ods }})"
+                                    @disabled(! $podeEditar)
                             class="border-0 bg-transparent p-0 text-center position-relative"
                             style="width:84px;opacity:{{ $ativo ? '1' : '.4' }};transition:all .18s ease;{{ $ativo ? 'transform:translateY(-3px);' : '' }}"
                             title="ODS {{ $ods->num_ods }} — {{ $ods->nom_ods }}">
@@ -304,9 +316,11 @@
                     @endforeach
                 </div>
                 <div class="text-end mt-3">
+                    @if($podeEditar)
                     <button wire:click="salvarAgenda" class="btn btn-success px-4">
                         <i class="bi bi-check-lg me-2"></i>Salvar Aderência
                     </button>
+                    @endif
                 </div>
             @else
                 <div class="text-center py-4 text-muted">
@@ -327,9 +341,11 @@
                     <p class="text-muted small mb-0">Planeje reuniões, workshops e oficinas do ciclo de planejamento estratégico.</p>
                     <div class="mt-1"><x-gppei-link :page="140" label="Organizar Calendário de Eventos" /></div>
                 </div>
+                @if($podeCriar)
                 <button wire:click="novoEvento" class="btn btn-primary gradient-theme-btn px-4">
                     <i class="bi bi-plus-lg me-2"></i>Novo Evento
                 </button>
+                @endif
             </div>
 
             @if($eventos->isEmpty())
@@ -341,8 +357,13 @@
             @else
                 <div class="row g-3">
                     @foreach($eventos as $ev)
+                    @php
+                        // Data passada e não marcado como realizado: o evento não
+                        // aconteceu ou ninguém registrou. Antes a tela não dizia nada.
+                        $evAtrasado = ! $ev->bln_realizado && $ev->dte_evento && $ev->dte_evento->lt(today());
+                    @endphp
                     <div class="col-md-6 col-lg-4">
-                        <div class="card border-0 shadow-sm h-100 {{ $ev->bln_realizado ? 'opacity-75' : '' }}">
+                        <div class="card shadow-sm h-100 {{ $ev->bln_realizado ? 'border-0 opacity-75' : ($evAtrasado ? 'border border-danger' : 'border-0') }}">
                             <div class="card-body p-3">
                                 <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
                                     <div>
@@ -353,10 +374,15 @@
                                     </div>
                                     @if($ev->bln_realizado)
                                         <span class="badge bg-success-subtle text-success flex-shrink-0"><i class="bi bi-check2"></i> Realizado</span>
+                                    @elseif($evAtrasado)
+                                        <span class="badge bg-danger-subtle text-danger flex-shrink-0" title="A data já passou e o evento não foi marcado como realizado"><i class="bi bi-exclamation-triangle"></i> Atrasado</span>
                                     @endif
                                 </div>
-                                <p class="text-primary fw-bold small mb-1">
+                                <p class="fw-bold small mb-1 {{ $evAtrasado ? 'text-danger' : 'text-primary' }}">
                                     <i class="bi bi-calendar-event me-1"></i>{{ $ev->dte_evento->format('d/m/Y') }}
+                                    @if($evAtrasado)
+                                        <span class="fw-normal">· {{ $ev->dte_evento->diffForHumans() }}</span>
+                                    @endif
                                 </p>
                                 @if($ev->dsc_objetivo)
                                     <p class="text-muted small mb-1">{{ Str::limit($ev->dsc_objetivo, 80) }}</p>
@@ -366,12 +392,16 @@
                                 @endif
                             </div>
                             <div class="card-footer bg-transparent border-top py-2 d-flex justify-content-end gap-1">
+                                @if($podeEditar)
                                 <button wire:click="editarEvento('{{ $ev->cod_evento }}')" class="btn btn-xs btn-outline-primary py-1 px-2 small">
                                     <i class="bi bi-pencil me-1"></i>Editar
                                 </button>
+                                @endif
+                                @if($podeExcluir)
                                 <button wire:click="confirmarExclusaoEvento('{{ $ev->cod_evento }}')" class="btn btn-xs btn-outline-danger py-1 px-2 small">
                                     <i class="bi bi-trash"></i>
                                 </button>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -470,7 +500,7 @@
                                 <label class="form-label fw-bold small text-uppercase text-muted">Intensidade</label>
                                 <select wire:model="formIntegracao.dsc_intensidade" class="form-select">
                                     @foreach($intensidades as $i)
-                                        <option value="{{ $i }}">{{ $i }}</option>
+                                        <option value="{{ $i }}">{{ \App\Models\StrategicPlanning\IntegracaoInstrumento::ROTULOS_INTENSIDADE[$i] }}</option>
                                     @endforeach
                                 </select>
                             </div>

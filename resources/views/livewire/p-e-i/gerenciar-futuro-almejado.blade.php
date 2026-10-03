@@ -22,9 +22,11 @@
             <a href="{{ route('objetivos.detalhes', $objetivo->cod_objetivo) }}" wire:navigate class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Voltar ao Objetivo
             </a>
+            @if($podeCriar)
             <button wire:click="create" class="btn btn-primary gradient-theme">
                 <i class="bi bi-plus-lg me-1"></i> Adicionar Item
             </button>
+            @endif
         </div>
     </div>
 
@@ -91,13 +93,17 @@
                                     @endif
                                 </td>
                                 <td class="text-end pe-4">
+                                    @if($podeEditar)
                                     <button wire:click="edit('{{ $futuro->cod_futuro_almejado }}')" class="btn btn-sm btn-outline-secondary border-0" title="Editar">
                                         <i class="bi bi-pencil"></i>
                                     </button>
+                                    @endif
+                                    @if($podeExcluir)
                                     <button wire:click="delete('{{ $futuro->cod_futuro_almejado }}')" class="btn btn-sm btn-outline-danger border-0" title="Excluir"
                                             onclick="return confirm('Confirma a exclusão deste item?')">
                                         <i class="bi bi-trash"></i>
                                     </button>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

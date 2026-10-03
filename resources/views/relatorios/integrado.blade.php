@@ -62,7 +62,7 @@
         <div class="capa-org">{{ $organizacao->nom_organizacao }}</div>
         <div class="capa-titulo">Relatório Estratégico Integrado</div>
         <div class="capa-linha"></div>
-        <div class="capa-sub">Documento consolidado de Planejamento Estratégico Institucional</div>
+        <div class="capa-sub">Documento consolidado de Planejamento Estratégico Integrado</div>
 
         <div class="capa-modulos">
             <span class="capa-mod" style="background:#1a3a5c;">01 · Inaugurar e Integrar</span>
@@ -410,7 +410,7 @@
                     <td style="border:none;">
                         <strong style="color:#1a3a5c; font-size:10px;">{{ $plano->dsc_plano_de_acao }}</strong>
                         @if($plano->objetivo)<div style="font-size:8px; color:#a0aec0;">Objetivo: {{ Str::limit($plano->objetivo->nom_objetivo, 70) }}</div>@endif
-                        <div style="font-size:8px; color:#718096;">{{ $plano->dte_inicio?->format('d/m/Y') }} a {{ $plano->dte_fim?->format('d/m/Y') }} · <strong style="color:{{ $cor }};">{{ number_format($prog, 1) }}% concluído</strong> · {{ count($entregas) }} {{ count($entregas) == 1 ? 'entrega' : 'entregas' }}</div>
+                        <div style="font-size:8px; color:#718096;">{{ $plano->dte_inicio?->format('d/m/Y') }} a {{ $plano->dte_fim?->format('d/m/Y') }} · <strong style="color:{{ $cor }};">{{ number_format($prog, 1, ',', '.') }}% concluído</strong> · {{ count($entregas) }} {{ count($entregas) == 1 ? 'entrega' : 'entregas' }}</div>
                     </td>
                     <td style="border:none; text-align:right;"><span class="pill" style="background:{{ $cor }}; color:#fff;">{{ $st }}</span></td>
                 </tr></table>
@@ -532,7 +532,7 @@
     <div style="border:1px solid #e2e8f0; border-radius:8px; margin-bottom:12px; padding:10px 14px; page-break-inside:avoid;">
         <table style="width:100%; border:none;"><tr style="border:none;">
             <td style="border:none;"><strong style="color:#6a4c9c; font-size:10px;">{{ $rae->dsc_tipo_reuniao }} · Ref. {{ $rae->dte_referencia->format('m/Y') }}</strong></td>
-            <td style="border:none; text-align:right;">@if($rae->num_progresso_geral !== null)<span class="pill pill-info">Progresso: {{ number_format($rae->num_progresso_geral, 1) }}%</span>@endif</td>
+            <td style="border:none; text-align:right;">@if($rae->num_progresso_geral !== null)<span class="pill pill-info">Progresso: {{ number_format($rae->num_progresso_geral, 1, ',', '.') }}%</span>@endif</td>
         </tr></table>
         @if($rae->txt_destaques_positivos)<div style="font-size:8.5px; margin-top:5px;"><strong style="color:#2e8b57;">Destaques:</strong> {{ Str::limit($rae->txt_destaques_positivos, 150) }}</div>@endif
         @if($rae->txt_problemas_identificados)<div style="font-size:8.5px; margin-top:3px;"><strong style="color:#dc3545;">Problemas:</strong> {{ Str::limit($rae->txt_problemas_identificados, 150) }}</div>@endif
@@ -571,11 +571,13 @@
 
     @php
         $totalCobertos = count($odsPorObjetivo ?? []);
+        // O total vem do cadastro de ODS, nunca escrito no relatório.
+        $totalOdsCadastrados = \App\Models\Agenda2030\ODS::count();
     @endphp
 
     <p style="font-size:9px; color:#4a5568; margin-bottom:10px;">
         Alinhamento da estratégia institucional aos Objetivos de Desenvolvimento Sustentável da ONU.
-        <strong>{{ $totalCobertos }} de 18 ODS</strong> contam com objetivos estratégicos vinculados neste ciclo.
+        <strong>{{ $totalCobertos }} de {{ $totalOdsCadastrados }} ODS</strong> contam com objetivos estratégicos vinculados neste ciclo.
     </p>
 
     {{-- Aderência institucional declarada (PEI ↔ ODS) --}}
