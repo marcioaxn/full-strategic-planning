@@ -34,6 +34,7 @@ class PapeisResponsabilidades extends Component
         'usuarios' => 'Usuários',
         'relatorios' => 'Relatórios',
         'graus-satisfacao' => 'Graus de Satisfação (a régua do farol)',
+        'documentos' => 'Documentos (acervo em PDF)',
         'auditoria' => 'Auditoria',
         'admin.perfis' => 'Administração de Perfis',
         'admin.configuracoes' => 'Configurações do Sistema',

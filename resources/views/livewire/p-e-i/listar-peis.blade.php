@@ -390,6 +390,7 @@
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     <x-action-button variant="outline-primary" icon="pencil" tooltip="{{ __('Editar') }}" wire:click="edit('{{ $pei->cod_pei }}')" class="btn-action-icon" />
+                                    <x-action-button variant="outline-success" icon="files" tooltip="{{ __('Salvar como') }}" wire:click="abrirSalvarComo('{{ $pei->cod_pei }}')" class="btn-action-icon" />
                                     <x-action-button variant="outline-danger" icon="trash" tooltip="{{ __('Excluir') }}" wire:click="confirmDelete('{{ $pei->cod_pei }}')" class="btn-action-icon" />
                                 </div>
                             </td>
@@ -525,6 +526,69 @@
                             <button type="button" class="btn btn-light px-4 rounded-pill fw-bold text-muted" wire:click="$set('showModal', false)">Cancelar</button>
                             <button type="submit" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow-sm hover-scale">
                                 <i class="bi bi-check-lg me-2"></i>Salvar Ciclo PEI
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Salvar como --}}
+    @if($showSalvarComoModal)
+        <div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.5); z-index: 1055;">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                    <div class="modal-header gradient-theme-header text-white border-0 py-3 px-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="icon-circle-mini bg-white bg-opacity-25 text-white">
+                                <i class="bi bi-files"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0">Salvar como novo PEI</h5>
+                                <p class="mb-0 small text-white-50">Cópia de: {{ $copiaOrigemNome }}</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" wire:click="$set('showSalvarComoModal', false)"></button>
+                    </div>
+
+                    <form wire:submit.prevent="salvarComo">
+                        <div class="modal-body p-4 bg-white">
+                            <div class="mb-4">
+                                <label for="copia_dsc_pei" class="form-label text-muted small text-uppercase fw-bold">Descrição do novo PEI <span class="text-danger">*</span></label>
+                                <input type="text" id="copia_dsc_pei"
+                                       class="form-control form-control-lg @error('copia_dsc_pei') is-invalid @enderror"
+                                       wire:model="copia_dsc_pei"
+                                       placeholder="Ex: {{ $copiaOrigemNome }} — revisão">
+                                @error('copia_dsc_pei') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <div class="form-text">Precisa ser diferente da descrição de qualquer PEI já cadastrado.</div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-sm-6">
+                                    <label for="copia_inicio" class="form-label text-muted small text-uppercase fw-bold">Ano de início <span class="text-danger">*</span></label>
+                                    <input type="number" id="copia_inicio" min="2000" max="2100" wire:model="copia_num_ano_inicio_pei" class="form-control @error('copia_num_ano_inicio_pei') is-invalid @enderror">
+                                    @error('copia_num_ano_inicio_pei') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="copia_fim" class="form-label text-muted small text-uppercase fw-bold">Ano de término <span class="text-danger">*</span></label>
+                                    <input type="number" id="copia_fim" min="2000" max="2100" wire:model="copia_num_ano_fim_pei" class="form-control @error('copia_num_ano_fim_pei') is-invalid @enderror">
+                                    @error('copia_num_ano_fim_pei') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info border-0 rounded-4 small mb-0">
+                                <p class="fw-bold mb-1"><i class="bi bi-info-circle-fill me-1"></i>O que vai para a cópia</p>
+                                <p class="mb-1">Identidade (missão, visão, valores, temas), análises, perspectivas, objetivos, cadeia de valor, iniciativas com os gestores designados, entregas, indicadores com metas e lançamentos, riscos, graus de satisfação, ODS e reuniões RAE.</p>
+                                <p class="mb-0">Não vão: comentários, histórico de alterações, auditoria e os documentos do acervo (continuam ligados ao PEI de origem). Metas e lançamentos mantêm os anos originais. O PEI de origem não é alterado.</p>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer border-0 p-4 bg-white">
+                            <button type="button" class="btn btn-light px-4 rounded-pill fw-bold text-muted" wire:click="$set('showSalvarComoModal', false)">Cancelar</button>
+                            <button type="submit" class="btn btn-primary gradient-theme-btn px-5 rounded-pill shadow-sm" wire:loading.attr="disabled" wire:target="salvarComo">
+                                <span wire:loading.remove wire:target="salvarComo"><i class="bi bi-files me-2"></i>Criar cópia</span>
+                                <span wire:loading wire:target="salvarComo"><span class="spinner-border spinner-border-sm me-2"></span>Copiando…</span>
                             </button>
                         </div>
                     </form>

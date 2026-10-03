@@ -107,6 +107,19 @@ final class CapacidadeResolver
             PerfilAcesso::CONSULTA => ['acessar'],
         ],
 
+        /*
+         * Documentos (acervo em PDF): todos os perfis leem os do seu escopo;
+         * envia, altera e exclui o Administrador da Unidade, na unidade dele e
+         * nas subordinadas. Documento sem unidade é institucional e exige,
+         * além disto, User::podeEditarInstitucional() (DocumentoPolicy).
+         */
+        'documentos' => [
+            PerfilAcesso::ADMIN_UNIDADE => ['acessar', 'criar', 'editar', 'excluir'],
+            PerfilAcesso::GESTOR_RESPONSAVEL => ['acessar'],
+            PerfilAcesso::GESTOR_SUBSTITUTO => ['acessar'],
+            PerfilAcesso::CONSULTA => ['acessar'],
+        ],
+
         // Restritos a Super Admin: nenhum outro perfil recebe capacidade.
         'auditoria' => [],
         'admin.perfis' => [],

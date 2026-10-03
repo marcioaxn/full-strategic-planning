@@ -7,6 +7,7 @@ use App\Models\PerformanceIndicators\Indicador;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Perspectiva;
+use App\Services\StrategicPlanning\CopiarPeiService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -47,6 +48,19 @@ class ListarPeis extends Component
     public $num_ano_inicio_pei;
 
     public $num_ano_fim_pei;
+
+    // "Salvar como"
+    public bool $showSalvarComoModal = false;
+
+    public ?string $copiaOrigemId = null;
+
+    public string $copiaOrigemNome = '';
+
+    public $copia_dsc_pei = '';
+
+    public $copia_num_ano_inicio_pei;
+
+    public $copia_num_ano_fim_pei;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -161,6 +175,67 @@ class ListarPeis extends Component
             $this->errorMessage = 'Ocorreu um erro técnico ao processar o registro do PEI. Por favor, tente novamente.';
             $this->showErrorModal = true;
         }
+    }
+
+    public function abrirSalvarComo($id)
+    {
+        $this->garantirSuperAdmin();
+
+        $pei = PEI::findOrFail($id);
+        $this->resetValidation();
+        $this->copiaOrigemId = $pei->cod_pei;
+        $this->copiaOrigemNome = $pei->dsc_pei;
+        $this->copia_dsc_pei = '';
+        $this->copia_num_ano_inicio_pei = $pei->num_ano_inicio_pei;
+        $this->copia_num_ano_fim_pei = $pei->num_ano_fim_pei;
+        $this->showSalvarComoModal = true;
+    }
+
+    /**
+     * Cria um PEI novo com tudo o que está preso ao de origem. O período pode
+     * ser o mesmo; a descrição, não — é ela que distingue os dois ciclos nas
+     * listas e nos relatórios.
+     */
+    public function salvarComo(CopiarPeiService $copiador)
+    {
+        $this->garantirSuperAdmin();
+
+        $this->copia_dsc_pei = trim((string) $this->copia_dsc_pei);
+        $this->validate([
+            'copia_dsc_pei' => [
+                'required', 'string', 'max:255',
+                function (string $atributo, $valor, \Closure $falhar) {
+                    $existe = PEI::whereRaw('lower(trim(dsc_pei)) = ?', [mb_strtolower($valor, 'UTF-8')])->exists();
+                    if ($existe) {
+                        $falhar('Já existe um PEI com esta descrição. Use uma descrição diferente.');
+                    }
+                },
+            ],
+            'copia_num_ano_inicio_pei' => 'required|integer|min:2000|max:2100',
+            'copia_num_ano_fim_pei' => 'required|integer|min:2000|max:2100|gte:copia_num_ano_inicio_pei',
+        ], [
+            'copia_dsc_pei.required' => 'Informe a descrição do novo PEI.',
+            'copia_num_ano_fim_pei.gte' => 'O ano de término deve ser maior ou igual ao ano de início.',
+        ]);
+
+        $origem = PEI::findOrFail($this->copiaOrigemId);
+
+        try {
+            $copiador->copiar($origem, $this->copia_dsc_pei, (int) $this->copia_num_ano_inicio_pei, (int) $this->copia_num_ano_fim_pei);
+        } catch (\Throwable $e) {
+            report($e);
+            $this->errorMessage = 'Não foi possível copiar o PEI. Nada foi gravado: o ciclo de origem continua como estava. Tente novamente; se persistir, acione o suporte.';
+            $this->showErrorModal = true;
+
+            return;
+        }
+
+        $this->createdPeiName = $this->copia_dsc_pei;
+        $this->successMessage = "Cópia de \"{$origem->dsc_pei}\" criada com identidade, perspectivas, objetivos, iniciativas, entregas, indicadores, riscos e demais registros do ciclo. Selecione o novo PEI no topo da tela para trabalhar nele.";
+        $this->showSalvarComoModal = false;
+        $this->copiaOrigemId = null;
+        $this->copia_dsc_pei = '';
+        $this->showSuccessModal = true;
     }
 
     public function confirmDelete($id)

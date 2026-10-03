@@ -530,6 +530,14 @@ class ListarPlanos extends Component
             });
         }
 
+        // Só o ciclo selecionado no topo, como em Indicadores. Sem isto, com dois
+        // PEIs na mesma unidade (ex.: um "Salvar como"), as iniciativas dos dois
+        // apareciam misturadas.
+        if ($this->peiAtivo && ! $this->filtroObjetivo) {
+            $codPei = $this->peiAtivo->cod_pei;
+            $query->whereHas('objetivo.perspectiva', fn ($p) => $p->where('cod_pei', $codPei));
+        }
+
         if ($this->search) {
             $query->where('dsc_plano_de_acao', 'ilike', '%'.$this->search.'%');
         }

@@ -4,12 +4,14 @@ namespace App\Providers;
 
 use App\Models\ActionPlan\Entrega;
 use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\Documento;
 use App\Models\Organization;
 use App\Models\PerformanceIndicators\Indicador;
 use App\Models\Reports\RelatorioGerado;
 use App\Models\RiskManagement\Risco;
 use App\Models\User;
 use App\Observers\EntregaObserver;
+use App\Policies\DocumentoPolicy;
 use App\Policies\EntregaPolicy;
 use App\Policies\IndicadorPolicy;
 use App\Policies\OrganizationPolicy;
@@ -154,6 +156,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Risco::class, RiscoPolicy::class);
         Gate::policy(Entrega::class, EntregaPolicy::class);
         Gate::policy(RelatorioGerado::class, RelatorioGeradoPolicy::class);
+        Gate::policy(Documento::class, DocumentoPolicy::class);
 
         $this->registrarGatesDeAutorizacao();
 

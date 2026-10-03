@@ -251,6 +251,15 @@
                 // ── Separador ─────────────────────────────────────────────────────────
                 ['separator' => true, 'label' => 'Recursos'],
 
+                // ── Documentos (acervo em PDF) ────────────────────────────────────────
+                [
+                    'label'  => 'Documentos',
+                    'route'  => 'acervo.index',
+                    'icon'   => 'folder2-open',
+                    'gate'   => ['modulo.acessar', 'documentos'],
+                    'single' => true,
+                ],
+
                 // ── Referências Metodológicas ─────────────────────────────────────────
                 [
                     'label'    => 'Referências',

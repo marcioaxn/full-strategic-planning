@@ -47,6 +47,7 @@ class GestaoPerfis extends Component
             'Entregas' => 'entregas',
             'Riscos' => 'riscos',
             'Graus de Satisfação' => 'graus-satisfacao',
+            'Documentos' => 'documentos',
             'Relatórios' => 'relatorios',
             'Organizações' => 'organizacoes',
             'Usuários' => 'usuarios',
