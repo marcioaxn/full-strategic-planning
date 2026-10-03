@@ -23,6 +23,26 @@
         </a>
     </div>
 
+    <x-secao-educativa
+        titulo="Quem cuida desta iniciativa?"
+        subtitulo="Aqui se combina quem faz, quem decide, quem opina e quem precisa ser avisado."
+        icone="people"
+        por-que="Quando cada um sabe o seu papel, ninguém fica esperando que “outro faça”. A comunicação planejada mantém todos engajados e dá transparência."
+        :passos="[
+            'Designe o Gestor Responsável e o Gestor Substituto (o Administrador da unidade faz isso).',
+            'Na Matriz RACI, marque para cada pessoa e atividade: R (executa), A (aprova), C (é consultado) ou I (é informado).',
+            'No Plano de Comunicação, registre o público, a mensagem, o canal, a frequência e o responsável.',
+            'Atualize sempre que a equipe mudar.',
+        ]"
+        exemplo="Na iniciativa “Novo portal de bolsas” do Conselho Federal de Apoio à Ciência (fictício), a coordenadora de TI é a Gestora Responsável e o chefe de sistemas é o Substituto. Para “Contratar fornecedor”: Compras é R, o Diretor de Gestão é A, a Consultoria Jurídica é C e as áreas usuárias são I."
+        dica="valide e divulgue a matriz para que todos concordem com os papéis. Sem interação com os participantes, dificilmente haverá engajamento."
+        referencia="GPPEI p. 18, 48–49 e 120–123 · Guia PMBOK (PMI, 2017)">
+        Num trabalho em grupo, sem divisão de tarefas, todos acham que outro vai fazer. Esta tela registra o
+        <strong>Gestor Responsável</strong> e o <strong>Substituto</strong> (que assume na ausência do titular).
+        A <strong>Matriz RACI</strong> mostra quem <strong>R</strong>ealiza, quem <strong>A</strong>prova, quem é <strong>C</strong>onsultado e quem é <strong>I</strong>nformado.
+        O <strong>Plano de Comunicação</strong> define o que avisar, a quem, por qual canal e quando.
+    </x-secao-educativa>
+
     @if (session()->has('status'))
         <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i> {{ session('status') }}

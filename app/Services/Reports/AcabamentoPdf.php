@@ -48,11 +48,14 @@ class AcabamentoPdf
 
     private const VERDE = [0.24, 0.61, 0.20];
 
+    /** Verde do TEXTO do cabeçalho e rodapé: o #3D9B33 da régua dava 3,5:1 em 8pt; este dá 5,4:1. */
+    private const VERDE_TEXTO = [0.184, 0.478, 0.157];
+
     private const BRANCO = [1.0, 1.0, 1.0];
 
     private const AZUL = [0.208, 0.314, 0.627];
 
-    private const CINZA = [0.478, 0.482, 0.502];
+    private const CINZA = [0.373, 0.376, 0.4];
 
     private const FUNDO_CAPA = [0.106, 0.227, 0.184];
 
@@ -184,14 +187,14 @@ class AcabamentoPdf
             $canvas->text(
                 $esquerda, $linha,
                 $this->cortar($metricas, $contexto['esquerda'], $fonte, $tamanho, $terco),
-                $fonte, $tamanho, self::VERDE
+                $fonte, $tamanho, self::VERDE_TEXTO
             );
         }
 
         if (! empty($contexto['centro'])) {
             $centro = $this->cortar($metricas, $contexto['centro'], $fonte, $tamanho, $util * 0.34);
             $larguraCentro = $metricas->getTextWidth($centro, $fonte, $tamanho);
-            $canvas->text($esquerda + $util * 0.5 - $larguraCentro / 2, $linha, $centro, $fonte, $tamanho, self::VERDE);
+            $canvas->text($esquerda + $util * 0.5 - $larguraCentro / 2, $linha, $centro, $fonte, $tamanho, self::VERDE_TEXTO);
         }
 
         // À direita: a seção corrente, quando o documento tem seções; senão,
@@ -201,7 +204,7 @@ class AcabamentoPdf
         if ($direitaTexto) {
             $direitaTexto = $this->cortar($metricas, $direitaTexto, $fonte, $tamanho, $terco);
             $largura = $metricas->getTextWidth($direitaTexto, $fonte, $tamanho);
-            $canvas->text($direita - $largura, $linha, $direitaTexto, $fonte, $tamanho, self::VERDE);
+            $canvas->text($direita - $largura, $linha, $direitaTexto, $fonte, $tamanho, self::VERDE_TEXTO);
         }
 
         $canvas->line($esquerda, self::REGUA, $direita, self::REGUA, self::VERDE, 1.1);
@@ -224,7 +227,7 @@ class AcabamentoPdf
         $canvas->line($esquerda, $y, $meio - $larguraRotulo / 2 - 12, $y, self::VERDE, 1.1);
         $canvas->line($meio + $larguraRotulo / 2 + 12, $y, $direita, $y, self::VERDE, 1.1);
 
-        $canvas->text($meio - $larguraRotulo / 2, $y - 5, $rotulo, $fonte, 9, self::VERDE);
+        $canvas->text($meio - $larguraRotulo / 2, $y - 5, $rotulo, $fonte, 9, self::VERDE_TEXTO);
 
         if (! empty($contexto['site'])) {
             $site = $this->cortar($metricas, $contexto['site'], $fonte, 7.5, $util * 0.4);

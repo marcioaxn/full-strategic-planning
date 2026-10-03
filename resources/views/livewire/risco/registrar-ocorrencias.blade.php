@@ -26,6 +26,26 @@
         </div>
     </div>
 
+    <x-secao-educativa
+        titulo="O que é uma ocorrência de risco?"
+        subtitulo="O registro do dia em que o risco deixou de ser “talvez” e aconteceu."
+        icone="exclamation-octagon"
+        por-que="Registrar o que aconteceu permite aprender com os riscos enfrentados. Sem registro, a mesma falha se repete."
+        :passos="[
+            'Clique em Registrar Nova.',
+            'Informe a data e descreva o que aconteceu.',
+            'Informe o impacto real (inclusive o financeiro, se houver) e as ações tomadas na hora.',
+            'Anote a lição aprendida.',
+            'Revise a probabilidade e o impacto do risco com base no que ocorreu.',
+        ]"
+        exemplo="O risco “Indisponibilidade do data center” acontece no Serviço Federal de Registro Marítimo (fictício): 9 horas fora do ar e 1.200 pedidos atrasados. A lição registrada é “contratar um site de contingência”, e a probabilidade do risco sobe de baixa para média."
+        dica="registre para aprender, não para procurar culpados. Erros e insucessos também são fonte de conhecimento."
+        referencia="GPPEI p. 53 e 94 · ISO 31000:2018, seções 6.6 e 6.7">
+        É como o diário de bordo de um navio: quando a tempestade chega, anota-se o que aconteceu, o estrago e o que foi feito.
+        Aqui ficam a data, a descrição do evento, o <strong>impacto real</strong> e as <strong>lições aprendidas</strong>.
+        Assim, a próxima avaliação do risco usa fatos, e não só palpites.
+    </x-secao-educativa>
+
     @if (session()->has('status'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i> {{ session('status') }}

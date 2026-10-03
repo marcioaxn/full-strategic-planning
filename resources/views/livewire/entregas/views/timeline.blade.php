@@ -188,7 +188,7 @@
                                 <div class="g-bar{{ $entrega->isConcluida()?' g-bar-done':'' }}{{ $isAtrasada?' g-bar-late':'' }}"
                                      style="left:{{ $barLeft }}px;width:{{ $barWidth }}px;background-color:{{ $cor }};"
                                      wire:click="openDetails('{{ $entrega->cod_entrega }}')"
-                                     @mouseenter="show($event,'{{ addslashes(Str::limit($entrega->dsc_entrega,60)) }}','{{ $entrega->bln_status }}','{{ $prazoFmt }}','{{ $durFmt }}',{{ $progPct }})"
+                                     @mouseenter="show($event,@js(Str::limit($entrega->dsc_entrega,60)),@js($entrega->bln_status),@js($prazoFmt),@js($durFmt),{{ $progPct }})"
                                      @mouseleave="hide()">
 
                                     @if($progPct > 0 && $progPct < 100)

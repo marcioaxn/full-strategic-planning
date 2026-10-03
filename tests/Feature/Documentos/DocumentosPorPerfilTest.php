@@ -130,7 +130,9 @@ test('Gestores e Consulta não enviam; leem só os documentos do seu escopo e os
         ->assertSee('Da unidade A')
         ->assertSee('Institucional')
         ->assertDontSee('Da unidade B')
-        ->assertDontSee('Enviar documento')
+        // O botão de envio (wire:click="create"), não o texto: a parte
+        // educativa da tela explica "Clique em Enviar documento".
+        ->assertDontSeeHtml('wire:click="create"')
         ->set('arquivo', pdfDeTeste())
         ->set('nom_documento', 'Tentativa')
         ->set('dsc_tipo', 'Decreto')

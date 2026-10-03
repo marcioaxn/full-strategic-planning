@@ -37,7 +37,7 @@
             </td>
             <td class="kpi-card" style="width:34%; border-top-color:#0891b2;">
                 <p class="kpi-label">Canais Distintos</p>
-                <p class="kpi-value" style="color:#0891b2;">{{ $canais }}</p>
+                <p class="kpi-value" style="color:#0e6e85;">{{ $canais }}</p>
                 <p class="kpi-sub">meios de comunicação utilizados</p>
             </td>
         </tr>

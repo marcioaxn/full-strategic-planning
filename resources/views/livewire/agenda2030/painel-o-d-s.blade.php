@@ -132,7 +132,7 @@
                         <button type="button"
                                 wire:click="selecionarOds({{ $ods->num_ods }})"
                                 class="ods-grid-tile border-0 bg-transparent p-0 text-center position-relative"
-                                style="width:96px;opacity:{{ $coberto ? '1' : '.4' }};transition:all .18s ease;{{ $sel ? 'transform:translateY(-4px);' : '' }}"
+                                style="width:96px;opacity:{{ $coberto ? '1' : '.7' }};transition:all .18s ease;{{ $sel ? 'transform:translateY(-4px);' : '' }}"
                                 title="ODS {{ $ods->num_ods }} — {{ $ods->nom_ods }}">
                             <div class="position-relative d-inline-block" style="{{ $sel ? 'box-shadow:0 0 0 3px #2e8b57;border-radius:10px;' : '' }}">
                                 <x-ods-badge :ods="$ods" size="lg" />
@@ -148,7 +148,7 @@
                                     </span>
                                 @endif
                             </div>
-                            <div class="mt-1 fw-semibold text-truncate" style="font-size:.62rem;color:{{ $ods->cod_cor }};max-width:96px;">
+                            <div class="mt-1 fw-semibold text-truncate text-body-emphasis" style="font-size:.7rem;max-width:96px;" title="{{ $ods->nom_ods_abreviado }}">
                                 {{ $ods->nom_ods_abreviado }}
                             </div>
                         </button>
@@ -172,7 +172,7 @@
                         <x-ods-badge :ods="$detalhe['ods']" size="lg" />
                         <div class="flex-grow-1">
                             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                <h4 class="fw-bold mb-0" style="color:{{ $detalhe['ods']->cod_cor }};">
+                                <h4 class="fw-bold mb-0 text-body-emphasis" style="border-left:5px solid {{ $detalhe['ods']->cod_cor }};padding-left:.6rem;">
                                     ODS {{ $detalhe['ods']->num_ods }} · {{ $detalhe['ods']->nom_ods }}
                                 </h4>
                                 <button wire:click="selecionarOds({{ $detalhe['ods']->num_ods }})" class="btn btn-sm btn-light rounded-pill">
@@ -223,7 +223,7 @@
                                             <div class="fw-semibold text-muted small" title="O objetivo não tem indicador direto nem de iniciativa: não há o que medir.">Sem indicador</div>
                                             <div class="text-muted" style="font-size:.62rem;">sem medição em {{ $ano }}</div>
                                         @else
-                                            <div class="fw-bold" style="font-size:1.2rem;color:{{ $cor }};">@brazil_percent($obj['atingimento'], 1)</div>
+                                            <div class="fw-bold cor-texto-legivel" style="font-size:1.2rem;--cor-texto:{{ $cor }};">@brazil_percent($obj['atingimento'], 1)</div>
                                             <div class="progress" style="height:6px;">
                                                 <div class="progress-bar" style="width:{{ min($obj['atingimento'], 100) }}%;background:{{ $cor }};"></div>
                                             </div>

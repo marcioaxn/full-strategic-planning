@@ -195,7 +195,7 @@
                                             <span class="badge bg-light text-muted border">Informativo</span>
                                         @else
                                             <div class="d-flex align-items-center justify-content-end gap-2">
-                                                <span class="fw-bold" style="color: {{ $corFarol ?? '#6c757d' }};">@brazil_percent($atingimento, 1)</span>
+                                                <span class="fw-bold cor-texto-legivel" style="--cor-texto: {{ $corFarol ?? '#6c757d' }};">@brazil_percent($atingimento, 1)</span>
                                                 <div class="rounded-circle" style="width: 10px; height: 10px; background-color: {{ $corFarol ?? '#dee2e6' }};"></div>
                                             </div>
                                         @endif
@@ -344,7 +344,7 @@
                             <div class="d-flex align-items-start gap-2 mb-2">
                                 <x-ods-badge :ods="$ods" size="sm" />
                                 <div class="small">
-                                    <div class="fw-semibold" style="color: {{ $ods->cod_cor }};">ODS {{ $ods->num_ods }} · {{ $ods->nom_ods }}</div>
+                                    <div class="fw-semibold cor-texto-legivel" style="--cor-texto: {{ $ods->cod_cor }};">ODS {{ $ods->num_ods }} · {{ $ods->nom_ods }}</div>
                                     @if($ods->pivot->txt_contribuicao)
                                         <div class="text-muted fst-italic">{{ $ods->pivot->txt_contribuicao }}</div>
                                     @endif

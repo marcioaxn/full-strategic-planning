@@ -158,6 +158,26 @@
         </button>
     </div>
 
+    <x-secao-educativa
+        titulo="O que é este Painel?"
+        subtitulo="Uma tela que mostra, de uma vez só, se o plano está dando certo."
+        icone="speedometer2"
+        por-que="Monitorar serve para celebrar as conquistas, mas sobretudo para corrigir o rumo a tempo. Sem um painel, o problema só aparece quando já é tarde."
+        :passos="[
+            'Confira no topo o ciclo e o ano que você quer ver.',
+            'Olhe primeiro o Índice de Qualidade de Gestão (IQG) para ter a visão geral.',
+            'Compare as perspectivas para achar a que está mais atrasada.',
+            'Veja no gráfico mensal se a tendência é de melhora ou de piora.',
+            'Use os atalhos dos três módulos do GPPEI para ir direto à tela que precisa de atenção.',
+        ]"
+        exemplo="No Instituto Nacional de Fomento à Pesquisa (fictício), o IQG está em 62%. A perspectiva Sociedade está em 80%, mas Processos Internos está em 35% porque os editais atrasaram. A direção leva o ponto para a próxima RAE."
+        dica="número no painel não é conclusão: os dados precisam ser interpretados e analisados. E aqui menos é mais: poucos indicadores bem escolhidos."
+        referencia="GPPEI p. 32, 41–43 e 52–53 · Kaplan e Norton (1996)">
+        É como o boletim da escola, mas do órgão inteiro: junta as notas dos objetivos e mostra como cada área está indo.
+        O <strong>Índice de Qualidade de Gestão (IQG)</strong> é a nota-resumo: a média, com pesos, do atingimento das perspectivas
+        que já têm resultado lançado no ano. Os gráficos mostram o atingimento por perspectiva e a evolução mês a mês.
+    </x-secao-educativa>
+
     {{-- Portal de Módulos GPPEI --}}
     <div class="row g-3 mb-4 animate-entry">
         {{-- Módulo 01 --}}

@@ -37,7 +37,7 @@
                 </div>
                 <div class="card-body text-center py-5">
                     <div class="d-inline-flex align-items-center justify-content-center rounded-circle shadow-lg mb-4" 
-                         style="width: 120px; height: 120px; background-color: {{ $grau->cor }}; color: white; border: 4px solid rgba(255,255,255,0.5);">
+                         style="width: 120px; height: 120px; background-color: {{ $grau->cor }}; color: {{ \App\Support\CorLegivel::textoSobre($grau->cor) }}; border: 4px solid rgba(255,255,255,0.5);">
                         <i class="bi bi-speedometer2 fs-1"></i>
                     </div>
                     

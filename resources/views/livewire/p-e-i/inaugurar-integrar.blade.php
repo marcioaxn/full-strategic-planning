@@ -17,6 +17,26 @@
         @endif
     </x-module-header>
 
+    <x-secao-educativa
+        titulo="O que é Inaugurar e Integrar?"
+        subtitulo="É “planejar o planejamento”: combinar quem, como e quando antes de começar."
+        icone="flag"
+        por-que="Sem o envolvimento da direção, o plano vira uma peça burocrática de pouca relevância. Sem integração, o órgão pode planejar algo que contradiz o PPA ou que não tem orçamento."
+        :passos="[
+            'Na aba Planejamento, registre a equipe, as diretrizes da alta direção, a metodologia e o período do processo.',
+            'Na aba Integração, indique os instrumentos que o plano precisa respeitar (PPA, LOA, Estratégia de Longo Prazo, planos setoriais) e os pontos de atenção de cada um.',
+            'Na aba Agenda 2030, declare com quais ODS o órgão contribui.',
+            'Na aba Calendário, marque os eventos do processo (oficinas, aprovações, reuniões de RAE).',
+        ]"
+        exemplo="A Agência Federal de Recursos Costeiros (fictícia) abre o ciclo 2027–2030 com uma equipe de cinco servidores. A diretoria pede um processo participativo, concluído em seis meses. Na integração, os objetivos da agência são ligados a dois programas do PPA e ao ODS 14 (Vida na Água)."
+        dica="evite que a adesão da direção seja só formal. Ao integrar, não copie mecanicamente os elementos do outro instrumento."
+        referencia="GPPEI p. 10–21 e 140–146">
+        Antes de uma viagem, a família decide para onde vai, quem dirige e quanto pode gastar. Aqui o órgão faz o mesmo:
+        define <strong>por que</strong> vai fazer o plano, monta a <strong>equipe</strong>, combina as <strong>regras</strong> e o
+        <strong>calendário</strong> com a alta direção. Também confere os outros planos do governo que precisam “conversar” com o seu:
+        <strong>PPA</strong>, <strong>Orçamento (LOA)</strong>, Estratégia de Longo Prazo, <strong>Agenda 2030</strong> e planos setoriais.
+    </x-secao-educativa>
+
     @if(!$peiAtivo)
         <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center gap-3">
             <i class="bi bi-exclamation-triangle-fill fs-3"></i>

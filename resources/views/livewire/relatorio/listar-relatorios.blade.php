@@ -23,6 +23,26 @@
         </div>
     </div>
 
+    <x-secao-educativa
+        titulo="O que são os Relatórios?"
+        subtitulo="Documentos prontos que contam como está a execução do plano para quem precisa saber."
+        icone="file-earmark-bar-graph"
+        por-que="O plano também existe para prestar contas: à direção, aos órgãos de controle e à sociedade. Cada público precisa de um formato."
+        :passos="[
+            'Confira no topo da tela a unidade, o ciclo e o ano: o relatório sai desse recorte.',
+            'Para a prestação de contas anual, gere o Relatório de Gestão (PDF ou Word).',
+            'No catálogo, escolha o relatório do tema (objetivos, indicadores, iniciativas, riscos) e o formato (PDF ou Excel).',
+            'Confira os números antes de enviar a alguém.',
+            'Os arquivos gerados ficam guardados no Histórico de Relatórios.',
+        ]"
+        exemplo="No fim do ano, a Superintendência Federal de Portos Fluviais (fictícia) gera o Relatório de Gestão em PDF para a prestação de contas e o Relatório Executivo, curto, para a reunião do Comitê de Governança."
+        dica="adapte o relatório ao público: resumo executivo para a alta direção, relatório detalhado para os gestores."
+        referencia="GPPEI p. 43, 46, 49–50 e 53–55">
+        É como transformar o diário do ano num resumo para mostrar a quem acompanha. O sistema gera o
+        <strong>Relatório de Gestão</strong>, relatórios <strong>executivos</strong> (curtos, para a direção) e relatórios por tema,
+        com indicadores, metas, iniciativas e riscos. Os mesmos dados servem a públicos diferentes.
+    </x-secao-educativa>
+
     <!-- AI Insights Area -->
     @if($aiInsight)
         <div class="row mb-4 animate-fade-in">
@@ -219,7 +239,9 @@
                             'desc' => 'Visualização gráfica das perspectivas e objetivos.',
                             'icon' => 'bi-diagram-3', // Ícone de diagrama/mapa
                             'color' => 'primary',
-                            'route_pdf' => route('relatorios.identidade', ['organizacaoId' => $organizacaoId]) . "?ano={$anoSelecionado}", // Precisa do ano agora
+                            // Sem unidade selecionada o link nem aparece (ver o if abaixo); montar
+                            // a rota sem ela quebrava a tela inteira com 500.
+                            'route_pdf' => $organizacaoId ? route('relatorios.identidade', ['organizacaoId' => $organizacaoId]) . "?ano={$anoSelecionado}" : '#',
                             'type' => 'identidade' // Mantemos o ID interno por compatibilidade de rota, mas o conceito muda
                         ],
                         [
@@ -406,7 +428,7 @@
     <style>
         .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .hover-lift:hover { transform: translateY(-3px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.08)!important; }
-        .btn-magic { background: linear-gradient(45deg, #6366f1, #8b5cf6); border: none; color: white; }
+        .btn-magic { background: linear-gradient(45deg, #4f46e5, #7c3aed); border: none; color: white; }
         .btn-magic:hover { background: linear-gradient(45deg, #565add, #7c4dff); color: white; }
         .tracking-tight { letter-spacing: -0.5px; }
         .filter-group select { box-shadow: none; }

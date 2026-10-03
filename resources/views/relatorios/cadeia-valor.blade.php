@@ -13,7 +13,7 @@
         .header { border-bottom: 3px solid #2e6da4; padding-bottom: 10px; margin-bottom: 16px; }
         .header-title { font-size: 18px; font-weight: bold; color: #1a3a5c; text-transform: uppercase; margin: 0 0 3px 0; }
         .header-sub { font-size: 10px; color: #555; margin: 0; }
-        .header-meta { font-size: 8px; color: #888; text-align: right; }
+        .header-meta { font-size: 8px; color: #6b6b6b; text-align: right; }
 
         .block { margin-bottom: 16px; page-break-inside: avoid; }
         .block-title { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #fff; padding: 6px 12px; border-radius: 3px; margin-bottom: 10px; }
@@ -32,10 +32,10 @@
         .card-title { font-weight: bold; font-size: 9.5px; color: #1a3a5c; margin-bottom: 4px; }
         .card-persp { font-size: 7.5px; color: #2e6da4; background: #e8f0fa; display: inline-block; padding: 1px 6px; border-radius: 3px; margin-bottom: 4px; }
         .proc { font-size: 7.5px; color: #555; margin: 2px 0; padding-left: 8px; border-left: 2px solid #e2e8f0; }
-        .proc-label { font-weight: bold; color: #888; text-transform: uppercase; font-size: 6.5px; }
+        .proc-label { font-weight: bold; color: #6b6b6b; text-transform: uppercase; font-size: 6.5px; }
 
-        .empty { color: #aaa; font-style: italic; font-size: 8px; padding: 8px; }
-        .footer { border-top: 1px solid #dee2e6; padding-top: 6px; margin-top: 16px; font-size: 7px; color: #aaa; text-align: center; }
+        .empty { color: #6b6b6b; font-style: italic; font-size: 8px; padding: 8px; }
+        .footer { border-top: 1px solid #dee2e6; padding-top: 6px; margin-top: 16px; font-size: 7px; color: #6b6b6b; text-align: center; }
     </style>
 </head>
 <body>

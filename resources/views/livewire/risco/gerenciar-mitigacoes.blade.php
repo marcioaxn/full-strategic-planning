@@ -26,6 +26,26 @@
         </div>
     </div>
 
+    <x-secao-educativa
+        titulo="O que são os planos de mitigação?"
+        subtitulo="O plano do que fazer com um risco antes que ele aconteça."
+        icone="shield-plus"
+        por-que="Identificar o risco não basta: os de prioridade alta precisam de ações concretas, com responsável e prazo."
+        :passos="[
+            'Confira no resumo do topo o nível do risco que está sendo tratado.',
+            'Clique em Novo Plano e escolha o tipo de resposta: mitigar, evitar, transferir ou aceitar.',
+            'Descreva a ação concreta, o responsável, o prazo e, se houver, o custo estimado.',
+            'Acompanhe a situação do plano até concluir.',
+            'Depois da ação, reavalie a probabilidade e o impacto do risco.',
+        ]"
+        exemplo="Para o risco “Vazamento de dados pessoais no novo sistema”, a Agência Federal de Benefícios Educacionais (fictícia) escolhe mitigar: teste de invasão antes da implantação, pela equipe de segurança, até junho."
+        dica="riscos de probabilidade e impacto altos são prioridade para resposta; os baixos podem apenas ser monitorados."
+        referencia="GPPEI p. 93–96 · ISO 31000:2018, seção 6.5">
+        Se pode chover no passeio, você pode levar guarda-chuva (<strong>mitigar</strong>), trocar o passeio por um cinema
+        (<strong>evitar</strong>), contratar quem resolva por você, como um seguro (<strong>transferir</strong>), ou ir assim mesmo,
+        sabendo do risco (<strong>aceitar</strong>). O plano de mitigação registra a resposta escolhida, quem cuida dela e até quando.
+    </x-secao-educativa>
+
     @if (session()->has('status'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i> {{ session('status') }}

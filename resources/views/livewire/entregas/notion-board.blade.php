@@ -701,12 +701,23 @@
 
     {{-- Estilos inline temporários (serão movidos para SCSS) --}}
     <style>
+        /* Cores do quadro em variáveis, com versão para o tema escuro. O cinza
+           secundário #9b9a97 dava 2,8:1 sobre branco; #6b6a67 dá 5,3:1. */
         .notion-board {
             --notion-bg: #ffffff;
             --notion-text: #37352f;
-            --notion-text-muted: #9b9a97;
+            --notion-text-muted: #6b6a67;
             --notion-border: #e4e4e4;
             --notion-hover: #f7f7f5;
+            --notion-column: #f7f7f5;
+        }
+        [data-bs-theme="dark"] .notion-board {
+            --notion-bg: #1e2227;
+            --notion-text: #e9ecef;
+            --notion-text-muted: #adb5bd;
+            --notion-border: rgba(255, 255, 255, 0.12);
+            --notion-hover: #2a2f35;
+            --notion-column: #16191d;
         }
         /* ... restante do estilo ... */
         .notion-icon {
@@ -764,7 +775,7 @@
         .notion-view-switcher {
             display: flex;
             gap: 0.25rem;
-            background: #f1f1f0;
+            background: var(--notion-column);
             padding: 4px;
             border-radius: 8px;
         }
@@ -789,7 +800,7 @@
         }
 
         .notion-view-btn.active {
-            background: white;
+            background: var(--notion-bg);
             color: var(--notion-text);
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
@@ -806,7 +817,7 @@
             min-width: 280px;
             max-width: 280px;
             flex-shrink: 0;
-            background: #f7f7f5;
+            background: var(--notion-column);
             border-radius: 8px;
             padding: 8px;
         }
@@ -841,7 +852,8 @@
         }
 
         .notion-card {
-            background: white;
+            background: var(--notion-bg);
+            color: var(--notion-text);
             border-radius: 6px;
             padding: 10px 12px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.08);
@@ -921,9 +933,14 @@
 
         /* Prioridade badges */
         .notion-priority-baixa { background: #e3e2e080; color: #6b6b6b; }
-        .notion-priority-media { background: #fdecc880; color: #9a6700; }
+        .notion-priority-media { background: #fdecc880; color: #7a5200; }
         .notion-priority-alta { background: #ffe2dd80; color: #c4311e; }
         .notion-priority-urgente { background: #e03e3e; color: white; }
+        /* Tema escuro: o fundo semitransparente sobre o cartão escuro ficava
+           cinza-escuro e o texto de cor fixa sumia (1,4:1). */
+        [data-bs-theme="dark"] .notion-priority-baixa { background: rgba(255, 255, 255, 0.12); color: #ced4da; }
+        [data-bs-theme="dark"] .notion-priority-media { background: rgba(253, 236, 200, 0.15); color: #ffd666; }
+        [data-bs-theme="dark"] .notion-priority-alta { background: rgba(255, 226, 221, 0.15); color: #ff9a8a; }
 
         /* Side Panel (Detalhes) */
         .notion-side-panel {
@@ -933,7 +950,7 @@
             width: 480px;
             max-width: 100%;
             height: 100vh;
-            background: white;
+            background: var(--notion-bg);
             box-shadow: -4px 0 24px rgba(0,0,0,0.15);
             z-index: 1050;
             overflow-y: auto;

@@ -16,6 +16,26 @@
         </x-slot>
     </x-module-header>
 
+    <x-secao-educativa
+        titulo="O que são Lições Aprendidas?"
+        subtitulo="Um caderno coletivo do que deu certo e do que não deu, para o próximo ciclo ser melhor."
+        icone="lightbulb"
+        por-que="Toda avaliação deve servir ao aprendizado do órgão. As lições registradas orientam o desenho do próximo ciclo e não se perdem quando alguém muda de setor."
+        :passos="[
+            'Clique em Nova Lição e escolha a iniciativa a que ela se refere.',
+            'Classifique a lição: boa prática a repetir ou problema a evitar, e a sua categoria.',
+            'Descreva o que aconteceu.',
+            'Escreva a recomendação prática para o futuro.',
+            'Antes de planejar uma iniciativa parecida, filtre e consulte as lições existentes.',
+        ]"
+        exemplo="A Coordenação de Eventos do Instituto Federal de Patrimônio Imaterial (fictício) registra: abrir as inscrições só 10 dias antes gerou baixa adesão. Recomendação: abrir com 45 dias e divulgar nas redes das universidades."
+        dica="a lição registra o fato e a melhoria, não aponta culpados. Usar o monitoramento para medir desempenho individual inibe o registro honesto."
+        referencia="GPPEI p. 47, 53, 55 e 150 · Argyris e Schön (1978)">
+        É como anotar depois da prova: “estudar na véspera não funcionou; fazer resumo funcionou”. O órgão registra
+        <strong>boas práticas</strong>, <strong>problemas</strong> e o que faria diferente, ligados a uma iniciativa.
+        Assim, o conhecimento fica com o órgão e não vai embora com as pessoas.
+    </x-secao-educativa>
+
     {{-- Filtro --}}
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-3">

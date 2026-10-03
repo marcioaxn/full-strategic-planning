@@ -117,6 +117,8 @@
             {{ $slot }}
         </main>
 
+        <x-rodape-versao />
+
         @livewireScripts
 
         <script>

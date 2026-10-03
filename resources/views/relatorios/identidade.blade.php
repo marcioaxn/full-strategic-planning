@@ -69,7 +69,7 @@
         <tr>
             @if($valores->isNotEmpty())
             <td style="background:#fff; border:1px solid #e2e8f0; border-radius:7px; padding:7px 12px; text-align:center; vertical-align:middle;">
-                <div style="color:#718096; font-weight:bold; font-size:7px; text-transform:uppercase; margin-bottom:4px; letter-spacing:.5px;">Valores Institucionais</div>
+                <div style="color:#5a6577; font-weight:bold; font-size:7px; text-transform:uppercase; margin-bottom:4px; letter-spacing:.5px;">Valores Institucionais</div>
                 @foreach($valores as $valor)
                     <span class="chip-sm">{{ $valor->nom_valor }}</span>
                 @endforeach
@@ -77,9 +77,9 @@
             @endif
             @if($temasNorteadores->isNotEmpty())
             <td style="background:#fff; border:1px solid #e2e8f0; border-radius:7px; padding:7px 12px; text-align:center; vertical-align:middle;">
-                <div style="color:#718096; font-weight:bold; font-size:7px; text-transform:uppercase; margin-bottom:4px; letter-spacing:.5px;">Temas Norteadores</div>
+                <div style="color:#5a6577; font-weight:bold; font-size:7px; text-transform:uppercase; margin-bottom:4px; letter-spacing:.5px;">Temas Norteadores</div>
                 @foreach($temasNorteadores as $t)
-                    <span class="chip-sm" style="background:#fff8e1; color:#d97706; border-color:#fde68a;">{{ $t->nom_tema_norteador }}</span>
+                    <span class="chip-sm" style="background:#fff8e1; color:#9a5408; border-color:#fde68a;">{{ $t->nom_tema_norteador }}</span>
                 @endforeach
             </td>
             @endif
@@ -135,9 +135,9 @@
                     @endphp
                     <div class="obj-card" style="border-left:3px solid {{ $cor }};">
                         <span class="obj-title">{{ $obj->nom_objetivo }}</span>
-                        <div style="font-size:7px; color:#718096;">
+                        <div style="font-size:7px; color:#5a6577;">
                             <span class="farol" style="background:{{ $cor }}; width:8px; height:8px;"></span>
-                            <strong style="color:{{ $cor }};">{{ number_format($at, 1, ',', '.') }}%</strong>
+                            <strong style="color:{{ \App\Support\CorLegivel::paraTextoSobreBranco($cor) }};">{{ number_format($at, 1, ',', '.') }}%</strong>
                         </div>
                     </div>
                 @endforeach

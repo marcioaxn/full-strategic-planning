@@ -28,6 +28,10 @@ class DetalharIdentidade extends Component
 
         $this->identidade = MissaoVisaoValores::with(['pei', 'organizacao'])->findOrFail($id);
 
+        // Identidade de um ciclo ou de uma unidade já excluídos não existe mais
+        // para o usuário: 404, e não a tela quebrada lendo um PEI nulo.
+        abort_unless($this->identidade->pei && $this->identidade->organizacao, 404);
+
         abort_unless(Auth::user()->podeAcessarOrganizacao($this->identidade->cod_organizacao), 403);
 
         $this->podeVerHistorico = Gate::allows('modulo.acessar', 'auditoria');

@@ -33,6 +33,13 @@
  * com nginx na frente, client_max_body_size >= 25m). O arquivo vai para o disco
  * privado storage/app/private/documentos — não depende de storage:link.
  *
+ * Rodapé de versão (todas as telas, com e sem login): App\Support\VersaoAplicacao
+ * lê o commit e a data do último deploy direto de .git/HEAD e .git/logs/HEAD,
+ * que o próprio `git pull` grava — nenhum comando novo no roteiro. Exige só que
+ * o .git continue no servidor e seja legível pelo usuário do servidor web.
+ * config/versao.php é novo (número 2.0.0; APP_VERSAO no .env é opcional) e é
+ * lido após o optimize:clear do passo 3.
+ *
  * TipoExecucaoSeeder e storage:link: idempotentes, repetidos porque não há como
  * confirmar daqui que o complemento de 22/09 foi executado no cliente. Worker e
  * cron são configuração permanente do servidor e não voltam ao roteiro.
@@ -49,7 +56,7 @@ return function (array $f): array {
     $b = [];
 
     $b[] = $titulo('CHAMADO DE IMPLANTAÇÃO — SISTEMA PEI');
-    $b[] = $subtitulo('Planejamento Estratégico Integrado · correções, Documentos e Salvar como · 03/10/2026 · 3 passos');
+    $b[] = $subtitulo('Planejamento Estratégico Integrado · correções, Documentos, Salvar como e rodapé de versão ·03/10/2026 · 3 passos');
 
     $b[] = $tabela([
         ['Sistema', 'Sistema PEI — Planejamento Estratégico Integrado'],
@@ -66,6 +73,9 @@ return function (array $f): array {
     $b[] = $texto('Na pasta do projeto:');
     $b[] = $comando('php artisan down');
     $b[] = $comando('git pull origin main');
+    $b[] = $texto('A partir desta versão, o rodapé de todas as telas (inclusive a de login) mostra a versão, o commit e a data e hora do último deploy. '
+        .'Esses dados são lidos da pasta .git, gravados pelo próprio "git pull": não há comando extra. '
+        .'A pasta .git deve permanecer no servidor e ser legível pelo usuário do servidor web (o mesmo que lê o restante do projeto).');
 
     // ── PASSO 2 ─────────────────────────────────────────────────────────────
     $b[] = $secao('PASSO 2 — Instalar dependências e atualizar o banco');
@@ -101,6 +111,9 @@ return function (array $f): array {
     $b[] = $texto('No sistema: Gestão de Riscos → abrir um risco → Planos de Mitigação → Novo Plano. O plano deve ser salvo sem erro.');
     $b[] = $texto('No sistema: menu Documentos → Enviar documento → escolher um PDF entre 5 MB e 20 MB, preencher nome e tipo e enviar. O documento deve aparecer na lista e abrir pelo botão "Abrir PDF em nova aba".');
     $b[] = $texto('No sistema: Administração → Usuários → Novo Usuário. O campo de perfil deve oferecer a opção "Consulta".');
+    $b[] = $comando('git log -1 --format=%h');
+    $b[] = $texto('Na tela de login, sem entrar no sistema: o rodapé deve mostrar "v2.0.0 · <commit> · último deploy <data e hora do git pull>", com o mesmo código de 7 caracteres exibido pelo comando acima. '
+        .'Se aparecer "deploy não identificado", o usuário do servidor web não está conseguindo ler a pasta .git.');
 
     $b[] = $secao('Contato do solicitante');
     $b[] = $tabela([

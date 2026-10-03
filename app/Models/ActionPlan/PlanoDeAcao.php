@@ -222,7 +222,7 @@ class PlanoDeAcao extends Model implements Auditable
     public function getSatisfacaoColor(): string
     {
         return match ($this->bln_status) {
-            'Concluído' => '#429B22', // success
+            'Concluído' => '#2E7D1A', // success (o #429B22 não chegava a 4,5:1 com texto)
             'Em Andamento' => '#F3C72B', // warning
             'Atrasado' => '#F3C72B', // warning
             default => '#475569', // secondary

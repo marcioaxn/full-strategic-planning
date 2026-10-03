@@ -66,7 +66,14 @@ trait ResolveEscopoOrganizacional
             return false;
         }
 
-        return $this->isSuperAdmin() || $this->organizacaoIdsPermitidas()->contains($codOrganizacao);
+        // Super Admin alcança todas — as que existem. Sem conferir, uma unidade
+        // excluída guardada na sessão era aceita e as telas liam uma
+        // organização nula (500 em /pei, 03/10/2026).
+        if ($this->isSuperAdmin()) {
+            return Organization::whereKey($codOrganizacao)->exists();
+        }
+
+        return $this->organizacaoIdsPermitidas()->contains($codOrganizacao);
     }
 
     /**

@@ -85,7 +85,7 @@
     @endif
 
     @if($showLabel && $numero)
-        <span class="ods-badge-label" style="font-size:{{ $size === 'lg' ? '.9rem' : '.78rem' }};font-weight:600;color:{{ $cor }};line-height:1.15;">
+        <span class="ods-badge-label cor-texto-legivel" style="font-size:{{ $size === 'lg' ? '.9rem' : '.78rem' }};font-weight:600;--cor-texto:{{ $cor }};line-height:1.15;">
             <span style="font-size:.62rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;opacity:.7;display:block;">ODS {{ $numero }}</span>
             {{ $nomeAbrev }}
         </span>

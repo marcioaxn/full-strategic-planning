@@ -430,7 +430,7 @@
                 <div class="text-center mb-4">
                     @if($stats['temMedicao'] ?? false)
                         <div class="lp-achieve-ring mx-auto mb-2" style="border-color:{{ $stats['corGlobal'] }};">
-                            <div class="lp-achieve-num" style="color:{{ $stats['corGlobal'] }};">@brazil_percent($stats['atingimentoGlobal'], 1)</div>
+                            <div class="lp-achieve-num cor-texto-legivel" style="--cor-texto:{{ $stats['corGlobal'] }};">@brazil_percent($stats['atingimentoGlobal'], 1)</div>
                             <div class="lp-achieve-sub">Atingimento<br>Global</div>
                         </div>
                         <p class="lp-hero-muted" style="font-size:.75rem;margin:0;">
@@ -475,7 +475,7 @@
                                 &nbsp;·&nbsp; @brazil_percent($persp->atingimento_medio, 1)
                             </div>
                         </div>
-                        <div style="flex-shrink:0;font-size:1.1rem;font-weight:800;color:{{ $persp->cor_atingimento }};">
+                        <div class="cor-texto-legivel" style="flex-shrink:0;font-size:1.1rem;font-weight:800;--cor-texto:{{ $persp->cor_atingimento }};">
                             @brazil_percent($persp->atingimento_medio, 1)
                         </div>
                     </div>

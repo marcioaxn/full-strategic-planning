@@ -4,7 +4,7 @@
             <span class="text-muted" style="font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">
                 Ciclo PEI
             </span>
-            <span class="fw-bold" style="font-size: 0.72rem; color: {{ $progresso >= 100 ? '#198754' : '#2e6da4' }};">
+            <span class="fw-bold {{ $progresso >= 100 ? 'text-success' : 'text-primary' }}" style="font-size: 0.72rem;">
                 {{ $progresso }}%
             </span>
         </div>

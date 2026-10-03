@@ -8,7 +8,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-1">
                     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" wire:navigate class="text-decoration-none">Dashboard</a></li>
-                    <li class="breadcrumb-item active opacity-75" aria-current="page">Mapa Estratégico</li>
+                    <li class="breadcrumb-item active" aria-current="page">Mapa Estratégico</li>
                 </ol>
             </nav>
             <h2 class="h3 fw-bold mb-0 text-body">Mapa Estratégico</h2>
@@ -20,6 +20,28 @@
                 <i class="bi bi-calendar3 me-2"></i>Ciclo: {{ $peiAtivo?->dsc_pei ?? 'N/A' }}
             </span>
         </div>
+    </div>
+
+    <div class="px-4">
+        <x-secao-educativa
+            titulo="O que é o Mapa Estratégico?"
+            subtitulo="Uma única página que mostra aonde o órgão quer chegar e o caminho até lá."
+            icone="map"
+            por-que="O mapa concentra o órgão em poucos objetivos, mostra como os meios levam aos fins e é fácil de explicar para todos os servidores."
+            :passos="[
+                'Leia de baixo para cima: as perspectivas da base (pessoas, recursos, processos) sustentam as de cima (resultados para a sociedade).',
+                'Observe a cor de cada objetivo: ela mostra o atingimento das metas no ano escolhido no topo da tela.',
+                'Clique em um objetivo para ver os indicadores e as iniciativas dele.',
+                'Para incluir ou mudar perspectivas e objetivos, use as telas Perspectivas BSC e Objetivos Estratégicos.',
+            ]"
+            exemplo="Na Autarquia Federal de Metrologia Agrícola (fictícia), a base do mapa tem “Capacitar fiscais em ferramentas digitais”. Isso sustenta, no meio, “Digitalizar as fiscalizações”, que por sua vez leva, no topo, a “Garantir balanças confiáveis nas feiras”."
+            dica="não “congele” o mapa. A cada revisão da estratégia (RAE) ele pode e deve ser atualizado."
+            referencia="GPPEI p. 29–30, 36 e 74–76 · Kaplan e Norton (2004)">
+            É como o mapa de um jogo: cada fase é um <strong>objetivo estratégico</strong>, e vencer uma fase ajuda a vencer a próxima.
+            Os objetivos ficam organizados em camadas chamadas <strong>perspectivas</strong>, e a posição de cada um mostra a
+            <strong>relação de causa e efeito</strong>: capacitar pessoas melhora os processos, e processos melhores entregam mais à sociedade.
+            A ferramenta vem do <em>Balanced Scorecard</em> (BSC).
+        </x-secao-educativa>
     </div>
     @endauth
 
@@ -183,7 +205,7 @@
                                     <button class="btn-info-calc shadow-sm border" wire:click="abrirMemoriaCalculo({{ $index }})" title="Ver Memória de Cálculo">
                                         <i class="bi bi-info-circle text-muted"></i>
                                     </button>
-                                    <div class="performance-badge-modern shadow-sm" style="background-color: {{ $corSatisfacao }};">
+                                    <div class="performance-badge-modern shadow-sm" style="background-color: {{ $corSatisfacao }}; color: {{ \App\Support\CorLegivel::textoSobre($corSatisfacao) }};">
                                         <i class="bi bi-graph-up-arrow me-1"></i> @brazil_percent($p['atingimento_medio'], 1)
                                     </div>
                                 </div>
@@ -216,7 +238,7 @@
                                                             <div class="d-flex justify-content-between mb-1 align-items-center">
                                                                 <span class="stat-label-modern">KPIs</span>
                                                                 {{-- Sem indicador não há medição: "0,0%" em vermelho afirmava desempenho péssimo. --}}
-                                                                <span class="stat-value-modern" style="color: {{ $ind['quantidade'] > 0 ? $ind['cor'] : '#6c757d' }};">
+                                                                <span class="stat-value-modern text-body-emphasis">
                                                                     @if($ind['quantidade'] > 0) @brazil_percent($ind['percentual'], 1) @else Sem indicador @endif
                                                                 </span>
                                                             </div>
@@ -235,7 +257,7 @@
                                                                     {{ $pln['quantidade'] }} {{ $pln['quantidade'] == 1 ? 'Iniciativa Ativa' : 'Iniciativas Ativas' }}
                                                                 </span>
                                                                 {{-- Percentual em Destaque (sem iniciativa não há progresso a medir) --}}
-                                                                <span class="stat-value-modern" style="color: {{ $pln['cor'] }}; font-size: 0.8rem;">
+                                                                <span class="stat-value-modern text-body-emphasis" style="font-size: 0.8rem;">
                                                                     @if($pln['quantidade'] > 0) @brazil_percent($pln['media_progresso'] ?? 0, 1) @else — @endif
                                                                 </span>
                                                             </div>

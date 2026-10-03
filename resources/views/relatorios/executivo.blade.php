@@ -75,7 +75,7 @@
             <td class="kpi-card accent" style="width:25%;">
                 <p class="kpi-label">Atingimento Médio</p>
                 <p class="kpi-value">{{ number_format($mediaAtingimento, 0, ',', '.') }}<span style="font-size:14px;">%</span></p>
-                <p class="kpi-sub" style="color:{{ $getCorSatisfacao($mediaAtingimento) }};">desempenho geral</p>
+                <p class="kpi-sub" style="color:{{ \App\Support\CorLegivel::paraTextoSobreBranco($getCorSatisfacao($mediaAtingimento)) }};">desempenho geral</p>
             </td>
             <td class="kpi-card {{ $planosAtrasados > 0 ? 'warning' : 'success' }}" style="width:25%;">
                 <p class="kpi-label">Iniciativas</p>
@@ -84,7 +84,7 @@
             </td>
             <td class="kpi-card {{ $riscosCriticos > 0 ? 'danger' : 'success' }}" style="width:25%;">
                 <p class="kpi-label">Riscos Críticos</p>
-                <p class="kpi-value" style="color:{{ $riscosCriticos > 0 ? '#dc3545' : '#2e8b57' }};">{{ $riscosCriticos }}</p>
+                <p class="kpi-value" style="color:{{ $riscosCriticos > 0 ? '#b02a37' : '#22704a' }};">{{ $riscosCriticos }}</p>
                 <p class="kpi-sub">{{ $riscosAltos }} altos · {{ $riscosDetalhado->count() }} no total</p>
             </td>
         </tr>
@@ -100,7 +100,7 @@
                 <div style="font-style:italic; font-size:9.5px; line-height:1.5; color:#2d3748;">{{ $identidade->dsc_missao ?? 'Não definida' }}</div>
             </td>
             <td style="width:50%; background:#fff; border:1px solid #e2e8f0; border-left:4px solid #e07b39; border-radius:8px; padding:12px; vertical-align:top;">
-                <div style="color:#e07b39; font-weight:bold; font-size:8px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px;">Visão</div>
+                <div style="color:#a5531c; font-weight:bold; font-size:8px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px;">Visão</div>
                 <div style="font-style:italic; font-size:9.5px; line-height:1.5; color:#2d3748;">{{ $identidade->dsc_visao ?? 'Não definida' }}</div>
             </td>
         </tr>
@@ -111,7 +111,7 @@
         <tr>
             @if($valores->isNotEmpty())
             <td style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:10px; text-align:center; vertical-align:top;">
-                <div style="color:#718096; font-weight:bold; font-size:7.5px; text-transform:uppercase; margin-bottom:6px; letter-spacing:.5px;">Valores Institucionais</div>
+                <div style="color:#5a6577; font-weight:bold; font-size:7.5px; text-transform:uppercase; margin-bottom:6px; letter-spacing:.5px;">Valores Institucionais</div>
                 @foreach($valores as $valor)
                     <span class="pill pill-info" style="margin:2px;">{{ $valor->nom_valor }}</span>
                 @endforeach
@@ -119,7 +119,7 @@
             @endif
             @if($temasNorteadores->isNotEmpty())
             <td style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:10px; text-align:center; vertical-align:top;">
-                <div style="color:#718096; font-weight:bold; font-size:7.5px; text-transform:uppercase; margin-bottom:6px; letter-spacing:.5px;">Temas Norteadores</div>
+                <div style="color:#5a6577; font-weight:bold; font-size:7.5px; text-transform:uppercase; margin-bottom:6px; letter-spacing:.5px;">Temas Norteadores</div>
                 @foreach($temasNorteadores as $t)
                     <span style="display:inline-block; background:#eef2f9; color:#1B408E; border:1px solid #c7d6ec; border-radius:999px; padding:4px 12px; margin:2px; font-size:8px; font-weight:bold;">{{ $t->nom_tema_norteador }}</span>
                 @endforeach
@@ -132,13 +132,13 @@
     {{-- ══ DESEMPENHO BSC ══ --}}
     <div class="secao-titulo">Desempenho Estratégico por Perspectiva (BSC)</div>
 
-    <div style="margin-bottom:10px; font-size:8px; color:#718096; background:#f7fafc; padding:6px 10px; border-radius:6px; border:1px solid #e2e8f0;">
+    <div style="margin-bottom:10px; font-size:8px; color:#5a6577; background:#f7fafc; padding:6px 10px; border-radius:6px; border:1px solid #e2e8f0;">
         <strong style="color:#1a3a5c;">Graus de Satisfação:</strong>
         @foreach($grausSatisfacao as $grau)
             <span style="margin-left:12px;">
                 <span class="farol" style="background:{{ $grau->cor }};"></span>
                 {{ $grau->dsc_grau_satisfcao ?? $grau->dsc_grau_satisfacao ?? '' }}
-                ({{ number_format($grau->vlr_minimo, 0) }}–{{ number_format($grau->vlr_maximo, 0) }}%)
+                ({{ number_format((float) $grau->vlr_minimo, 0, ',', '.') }}–{{ number_format((float) $grau->vlr_maximo, 0, ',', '.') }}%)
             </span>
         @endforeach
     </div>
@@ -174,7 +174,7 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="text-center" style="font-size:8px; color:#718096;">{{ $obj->indicadores->count() }}</td>
+                            <td class="text-center" style="font-size:8px; color:#5a6577;">{{ $obj->indicadores->count() }}</td>
                             <td>
                                 <table style="width:100%; border:none;"><tr style="border:none;">
                                     <td style="border:none; width:72%; vertical-align:middle; padding:0 4px 0 0;">
@@ -182,14 +182,14 @@
                                             <div class="progress-fill" style="width:{{ min(100, max(0, $at)) }}%; background:{{ $cor }};"></div>
                                         </div>
                                     </td>
-                                    <td style="border:none; width:28%; text-align:right; vertical-align:middle; font-weight:bold; font-size:9px; color:{{ $cor }}; padding:0;">
+                                    <td style="border:none; width:28%; text-align:right; vertical-align:middle; font-weight:bold; font-size:9px; color:{{ \App\Support\CorLegivel::paraTextoSobreBranco($cor) }}; padding:0;">
                                         {{ number_format($at, 1, ',', '.') }}%
                                     </td>
                                 </tr></table>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="3" class="text-center" style="color:#a0aec0; font-style:italic; padding:10px;">Sem objetivos nesta perspectiva.</td></tr>
+                        <tr><td colspan="3" class="text-center" style="color:#6b7280; font-style:italic; padding:10px;">Sem objetivos nesta perspectiva.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -199,13 +199,11 @@
     @if($aiSummary)
     <div class="ai-box">
         <strong style="color:#1B408E; font-size:9px;">&#9733; INSIGHT ESTRATÉGICO (IA)</strong>
-        <p>{!! nl2br(e($aiSummary)) !!}</p>
+        @include('relatorios.partials.texto-ia', ['texto' => $aiSummary])
     </div>
     @endif
 
-    <div class="page-break"></div>
-
-    {{-- ══ ANÁLISE SWOT ══ --}}
+    {{-- ══ ANÁLISE SWOT ══ (segue em fluxo: a quebra forçada aqui deixava uma página em branco) --}}
     @if($swot->isNotEmpty())
     <div class="secao-titulo">Análise de Ambiente — Matriz SWOT</div>
     <table style="width:100%; border-collapse:separate; border-spacing:6px;">
@@ -214,16 +212,16 @@
                 <strong style="color:#198754;">FORÇAS (Interno +)</strong>
                 <ul>
                     @forelse($swot->get('Força', []) as $i)
-                        <li>{{ $i->dsc_item }}@if(($i->num_gravidade ?? 0)) <span style="color:#a0aec0; font-size:7.5px;">(GUT {{ $i->num_gravidade * $i->num_urgencia * $i->num_tendencia }})</span>@endif</li>
-                    @empty <li style="list-style:none; color:#a0aec0;">—</li> @endforelse
+                        <li>{{ $i->dsc_item }}@if(($i->num_gravidade ?? 0)) <span style="color:#6b7280; font-size:7.5px;">(GUT {{ $i->num_gravidade * $i->num_urgencia * $i->num_tendencia }})</span>@endif</li>
+                    @empty <li style="list-style:none; color:#6b7280;">—</li> @endforelse
                 </ul>
             </td>
             <td class="swot-cell" style="background:#fbecec;">
                 <strong style="color:#dc3545;">FRAQUEZAS (Interno −)</strong>
                 <ul>
                     @forelse($swot->get('Fraqueza', []) as $i)
-                        <li>{{ $i->dsc_item }}@if(($i->num_gravidade ?? 0)) <span style="color:#a0aec0; font-size:7.5px;">(GUT {{ $i->num_gravidade * $i->num_urgencia * $i->num_tendencia }})</span>@endif</li>
-                    @empty <li style="list-style:none; color:#a0aec0;">—</li> @endforelse
+                        <li>{{ $i->dsc_item }}@if(($i->num_gravidade ?? 0)) <span style="color:#6b7280; font-size:7.5px;">(GUT {{ $i->num_gravidade * $i->num_urgencia * $i->num_tendencia }})</span>@endif</li>
+                    @empty <li style="list-style:none; color:#6b7280;">—</li> @endforelse
                 </ul>
             </td>
         </tr>
@@ -233,15 +231,15 @@
                 <ul>
                     @forelse($swot->get('Oportunidade', []) as $i)
                         <li>{{ $i->dsc_item }}</li>
-                    @empty <li style="list-style:none; color:#a0aec0;">—</li> @endforelse
+                    @empty <li style="list-style:none; color:#6b7280;">—</li> @endforelse
                 </ul>
             </td>
             <td class="swot-cell" style="background:#fff8e1;">
-                <strong style="color:#d97706;">AMEAÇAS (Externo −)</strong>
+                <strong style="color:#9a5408;">AMEAÇAS (Externo −)</strong>
                 <ul>
                     @forelse($swot->get('Ameaça', []) as $i)
                         <li>{{ $i->dsc_item }}</li>
-                    @empty <li style="list-style:none; color:#a0aec0;">—</li> @endforelse
+                    @empty <li style="list-style:none; color:#6b7280;">—</li> @endforelse
                 </ul>
             </td>
         </tr>
@@ -260,7 +258,7 @@
                 @endif
             @endforeach
         </div>
-        <div style="margin-top:5px; font-size:8px; color:#718096; clear:both;">
+        <div style="margin-top:5px; font-size:8px; color:#5a6577; clear:both;">
             @foreach(['Concluído' => $planosConcluidos, 'Em Andamento' => $planosEmAndamento, 'Atrasado' => $planosAtrasados, 'Não Iniciado' => $planosNaoIniciados] as $s => $n)
                 <span style="margin-right:14px;"><span class="farol" style="background:{{ $statusCfg[$s]['c'] ?? '#94a3b8' }};"></span> {{ $s }}: <strong>{{ $n }}</strong></span>
             @endforeach
@@ -286,7 +284,7 @@
             <tr>
                 <td>
                     <span class="row-titulo">{{ $plano->dsc_plano_de_acao }}</span>
-                    <div style="font-size:7.5px; color:#a0aec0; margin-top:2px;">
+                    <div style="font-size:7.5px; color:#6b7280; margin-top:2px;">
                         {{ $plano->dte_inicio?->format('d/m/Y') }} a {{ $plano->dte_fim?->format('d/m/Y') }}
                         &middot; {{ $plano->entregas_ano_count ?? 0 }} entrega(s) no exercício
                     </div>
@@ -297,7 +295,7 @@
                 </td>
                 <td class="text-center"><span class="pill {{ $cfg['pill'] }}">{{ $st }}</span></td>
                 <td>
-                    <div style="text-align:center; font-weight:bold; font-size:9px; margin-bottom:2px; color:{{ $cfg['c'] }};">{{ number_format($prog, 0) }}%</div>
+                    <div style="text-align:center; font-weight:bold; font-size:9px; margin-bottom:2px; color:{{ \App\Support\CorLegivel::paraTextoSobreBranco($cfg['c']) }};">{{ number_format($prog, 0, ',', '.') }}%</div>
                     <div class="progress-track">
                         <div class="progress-fill" style="width:{{ min(100, max(0, $prog)) }}%; background:{{ $cfg['c'] }};"></div>
                     </div>
@@ -316,9 +314,9 @@
     <table class="kpi-grid" style="margin-bottom:10px;">
         <tr>
             @foreach(['Crítico' => ['c' => '#dc2626', 'b' => 'danger'], 'Alto' => ['c' => '#f97316', 'b' => 'warning'], 'Médio' => ['c' => '#eab308', 'b' => 'warning'], 'Baixo' => ['c' => '#65a30d', 'b' => 'success']] as $nivel => $cfgR)
-            <td class="kpi-card {{ $cfgR['b'] }}" style="width:25%; border-top-color:{{ $cfgR['c'] }};">
+            <td class="kpi-card {{ $cfgR['b'] }}" style="width:25%; border-top-color:{{ \App\Support\CorLegivel::paraTextoSobreBranco($cfgR['c']) }};">
                 <p class="kpi-label">{{ $nivel }}</p>
-                <p class="kpi-value" style="color:{{ $cfgR['c'] }}; font-size:20px;">{{ $riscosSummary[$nivel] ?? 0 }}</p>
+                <p class="kpi-value" style="color:{{ \App\Support\CorLegivel::paraTextoSobreBranco($cfgR['c']) }}; font-size:20px;">{{ $riscosSummary[$nivel] ?? 0 }}</p>
                 <p class="kpi-sub">risco(s)</p>
             </td>
             @endforeach
@@ -347,23 +345,23 @@
                 $pillR  = $nv >= 16 ? 'pill-danger' : ($nv >= 10 ? 'pill-warning' : ($nv >= 5 ? 'pill-warning' : 'pill-success'));
             @endphp
             <tr>
-                <td class="text-center" style="font-family:monospace; font-size:8px; color:#718096;">R-{{ str_pad($risco->num_codigo_risco, 3, '0', STR_PAD_LEFT) }}</td>
+                <td class="text-center" style="font-family:monospace; font-size:8px; color:#5a6577;">R-{{ str_pad($risco->num_codigo_risco, 3, '0', STR_PAD_LEFT) }}</td>
                 <td class="row-titulo">{{ $risco->dsc_titulo }}</td>
                 <td class="row-desc">{{ $risco->dsc_categoria }}</td>
                 <td class="text-center">{{ $risco->num_probabilidade }}</td>
                 <td class="text-center">{{ $risco->num_impacto }}</td>
-                <td class="text-center" style="font-weight:bold; color:{{ $corR }};">{{ $nv }}</td>
+                <td class="text-center" style="font-weight:bold; color:{{ \App\Support\CorLegivel::paraTextoSobreBranco($corR) }};">{{ $nv }}</td>
                 <td class="text-center"><span class="pill {{ $pillR }}">{{ $lbl }}</span></td>
                 <td class="text-center">
                     @if($risco->mitigacoes->count() > 0)
                         <span class="pill pill-info">{{ $risco->mitigacoes->count() }}</span>
                     @else
-                        <span style="color:#cbd5e0; font-size:8px;">—</span>
+                        <span style="color:#6b7280; font-size:8px;">—</span>
                     @endif
                 </td>
             </tr>
             @empty
-            <tr><td colspan="8" class="text-center" style="color:#a0aec0; font-style:italic;">Nenhum risco registrado.</td></tr>
+            <tr><td colspan="8" class="text-center" style="color:#6b7280; font-style:italic;">Nenhum risco registrado.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -372,7 +370,7 @@
     @if($aiTrends)
     <div class="ai-box" style="border-left-color:#6a4c9c;">
         <strong style="color:#6a4c9c; font-size:9px;">&#9733; ANÁLISE PREDITIVA (IA)</strong>
-        <p>{!! nl2br(e($aiTrends)) !!}</p>
+        @include('relatorios.partials.texto-ia', ['texto' => $aiTrends])
     </div>
     @endif
 </body>

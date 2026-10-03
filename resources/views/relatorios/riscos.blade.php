@@ -7,7 +7,7 @@
     <style>
         .matriz { border-collapse: collapse; margin: 4px auto; }
         .matriz td { width: 44px; height: 36px; text-align: center; vertical-align: middle; border: 2px solid #fff; font-weight: bold; font-size: 10px; color: #fff; border-radius: 4px; }
-        .matriz .axis   { background: transparent; color: #718096; font-size: 7.5px; font-weight: bold; width: 20px; }
+        .matriz .axis   { background: transparent; color: #5a6577; font-size: 7.5px; font-weight: bold; width: 20px; }
         .matriz .corner { background: transparent; }
         .gz-baixo   { background: #65a30d; }
         .gz-medio   { background: #eab308; }
@@ -44,7 +44,7 @@
                 </td>
                 <td class="kpi-card warning" style="width:20%;">
                     <p class="kpi-label">Altos</p>
-                    <p class="kpi-value" style="color:#f97316;">{{ $altos }}</p>
+                    <p class="kpi-value" style="color:#b45309;">{{ $altos }}</p>
                     <p class="kpi-sub">nível 10–15</p>
                 </td>
                 <td class="kpi-card" style="width:20%;">
@@ -54,7 +54,7 @@
                 </td>
                 <td class="kpi-card success" style="width:20%;">
                     <p class="kpi-label">Com Mitigação</p>
-                    <p class="kpi-value" style="color:#2e8b57;">{{ $comMitig }}</p>
+                    <p class="kpi-value" style="color:#22704a;">{{ $comMitig }}</p>
                     <p class="kpi-sub">de {{ $riscos->count() }} riscos</p>
                 </td>
                 <td class="kpi-card accent" style="width:20%;">
@@ -93,7 +93,7 @@
                         @for($p = 1; $p <= 5; $p++)<td class="axis">{{ $p }}</td>@endfor
                     </tr>
                 </table>
-                <div style="text-align:center; font-size:7.5px; color:#a0aec0; margin-top:2px;">
+                <div style="text-align:center; font-size:7.5px; color:#6b7280; margin-top:2px;">
                     Eixo vertical: Impacto &nbsp;|&nbsp; Eixo horizontal: Probabilidade
                 </div>
             </td>
@@ -103,27 +103,27 @@
                     <tbody>
                         <tr>
                             <td><span class="farol" style="background:#dc2626;"></span> <strong>Crítico</strong></td>
-                            <td class="text-end" style="font-size:8px; color:#718096;">P×I &ge; 16</td>
+                            <td class="text-end" style="font-size:8px; color:#5a6577;">P×I &ge; 16</td>
                             <td class="text-center" style="font-weight:bold; color:#dc2626;">{{ $criticos }}</td>
                         </tr>
                         <tr>
                             <td><span class="farol" style="background:#f97316;"></span> <strong>Alto</strong></td>
-                            <td class="text-end" style="font-size:8px; color:#718096;">10 – 15</td>
-                            <td class="text-center" style="font-weight:bold; color:#f97316;">{{ $altos }}</td>
+                            <td class="text-end" style="font-size:8px; color:#5a6577;">10 – 15</td>
+                            <td class="text-center" style="font-weight:bold; color:#b45309;">{{ $altos }}</td>
                         </tr>
                         <tr>
                             <td><span class="farol" style="background:#eab308;"></span> <strong>Médio</strong></td>
-                            <td class="text-end" style="font-size:8px; color:#718096;">5 – 9</td>
-                            <td class="text-center" style="font-weight:bold; color:#eab308;">{{ $medios }}</td>
+                            <td class="text-end" style="font-size:8px; color:#5a6577;">5 – 9</td>
+                            <td class="text-center" style="font-weight:bold; color:#8a6d00;">{{ $medios }}</td>
                         </tr>
                         <tr>
                             <td><span class="farol" style="background:#65a30d;"></span> <strong>Baixo</strong></td>
-                            <td class="text-end" style="font-size:8px; color:#718096;">&lt; 5</td>
-                            <td class="text-center" style="font-weight:bold; color:#65a30d;">{{ $baixos }}</td>
+                            <td class="text-end" style="font-size:8px; color:#5a6577;">&lt; 5</td>
+                            <td class="text-center" style="font-weight:bold; color:#4d7c0f;">{{ $baixos }}</td>
                         </tr>
                     </tbody>
                 </table>
-                <p style="font-size:7.5px; color:#a0aec0; margin-top:6px;">
+                <p style="font-size:7.5px; color:#6b7280; margin-top:6px;">
                     Nível = Probabilidade × Impacto (escala 1–5 cada).
                     Riscos críticos exigem plano de mitigação imediato.
                 </p>
@@ -160,25 +160,25 @@
                     $clsR = $nv >= 16 ? 'pill-danger' : ($nv >= 10 ? 'pill-warning' : ($nv >= 5 ? 'pill-warning' : 'pill-success'));
                 @endphp
                 <tr>
-                    <td style="text-align:center; font-family:monospace; font-size:8px; color:#718096;">R-{{ str_pad($risco->num_codigo_risco, 3, '0', STR_PAD_LEFT) }}</td>
+                    <td style="text-align:center; font-family:monospace; font-size:8px; color:#5a6577;">R-{{ str_pad($risco->num_codigo_risco, 3, '0', STR_PAD_LEFT) }}</td>
                     <td class="row-titulo">{{ $risco->dsc_titulo }}</td>
                     <td class="row-desc">{{ Str::limit($risco->txt_descricao ?? '', 70) ?: '—' }}</td>
                     <td class="text-center">{{ $risco->num_probabilidade }}</td>
                     <td class="text-center">{{ $risco->num_impacto }}</td>
-                    <td class="text-center" style="font-weight:bold; color:{{ $corR }};">{{ $nv }}</td>
+                    <td class="text-center" style="font-weight:bold; color:{{ \App\Support\CorLegivel::paraTextoSobreBranco($corR) }};">{{ $nv }}</td>
                     <td class="text-center"><span class="pill {{ $clsR }}">{{ $lbl }}</span></td>
                     <td class="text-center">
                         @if($risco->mitigacoes->count() > 0)
                             <span class="pill pill-info">{{ $risco->mitigacoes->count() }}</span>
                         @else
-                            <span style="color:#cbd5e0; font-size:7.5px;">—</span>
+                            <span style="color:#6b7280; font-size:7.5px;">—</span>
                         @endif
                     </td>
                     <td class="text-center">
                         @if($risco->ocorrencias->count() > 0)
                             <span class="pill pill-warning">{{ $risco->ocorrencias->count() }}</span>
                         @else
-                            <span style="color:#cbd5e0; font-size:7.5px;">—</span>
+                            <span style="color:#6b7280; font-size:7.5px;">—</span>
                         @endif
                     </td>
                 </tr>
@@ -218,7 +218,7 @@
                             @if($stM)
                                 <span class="pill {{ $stM === 'Concluído' ? 'pill-success' : ($stM === 'Em Andamento' ? 'pill-info' : 'pill-neutral') }}" style="font-size:7.5px;">{{ $stM }}</span>
                             @else
-                                <span style="color:#cbd5e0;">—</span>
+                                <span style="color:#6b7280;">—</span>
                             @endif
                         </td>
                         <td class="text-center" style="font-size:8px;">{{ $mit->dte_prazo?->format('d/m/Y') ?? '—' }}</td>

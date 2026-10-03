@@ -591,10 +591,9 @@
                                 <td>
                                     @php
                                         $corStatus = $plano->getSatisfacaoColor();
-                                        $textClass = $plano->getSatisfacaoTextClass();
                                         $statusLabel = $plano->isAtrasado() ? 'Atrasado' : $plano->bln_status;
                                     @endphp
-                                    <span class="badge {{ $textClass }} rounded-pill border shadow-sm px-3 py-1" style="background-color: {{ $corStatus }};">
+                                    <span class="badge rounded-pill border shadow-sm px-3 py-1" style="background-color: {{ $corStatus }}; color: {{ \App\Support\CorLegivel::textoSobre($corStatus) }};">
                                         {{ $statusLabel }}
                                     </span>
                                 </td>

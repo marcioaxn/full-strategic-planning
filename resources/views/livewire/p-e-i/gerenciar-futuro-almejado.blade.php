@@ -30,6 +30,26 @@
         </div>
     </div>
 
+    <x-secao-educativa
+        titulo="O que é o Futuro Almejado?"
+        subtitulo="Dizer com clareza onde o objetivo está hoje e onde precisa estar até uma data."
+        icone="stars"
+        por-que="Sem um ponto de partida medido, não há como comparar o antes e o depois e saber se o órgão melhorou de verdade."
+        :passos="[
+            'Clique em Adicionar Item.',
+            'Descreva a situação atual, com dados sempre que possível (é a linha de base).',
+            'Descreva o futuro desejado em frases simples e concretas.',
+            'Informe o indicador de referência, o valor da meta e o horizonte (a data-alvo, em geral o fim do ciclo).',
+            'Revise o texto com a área responsável pelo objetivo.',
+        ]"
+        exemplo="O Departamento Nacional de Defesa Sanitária Vegetal (fictício) registra: hoje, 40% das análises de pragas saem em até 30 dias; até 2030, 90% sairão em até 15 dias. A meta de referência é “90% das análises concluídas em até 15 dias”."
+        dica="toda meta precisa de linha de base e deve ser SMART: específica, mensurável, alcançável, relevante e com prazo."
+        referencia="GPPEI p. 29, 32, 77–79 e 103 · Doran (1981)">
+        É como medir a sua altura hoje e marcar na parede até onde você quer chegar no fim do ano.
+        Para cada objetivo, registra-se a <strong>situação atual</strong> (o ponto de partida) e a <strong>situação desejada</strong>.
+        O <strong>horizonte</strong> é o prazo para chegar lá, e a <strong>meta de referência</strong> é o número que vai provar se chegamos.
+    </x-secao-educativa>
+
     @if (session()->has('status'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>{{ session('status') }}

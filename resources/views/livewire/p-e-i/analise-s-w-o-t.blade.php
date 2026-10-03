@@ -157,7 +157,7 @@
                                                 </div>
                                                 <div class="col-11">
                                                     <div class="row g-0">
-                                                        <div class="col-md-6 p-3 border-end border-bottom bg-success bg-opacity-5">
+                                                        <div class="col-md-6 p-3 border-end border-bottom bg-success">
                                                             <h6 class="fw-bold text-white mb-2">
                                                                 <i class="bi bi-shield-fill-check me-1  text-white"></i>{{ __('FORÇAS') }}
                                                             </h6>
@@ -169,7 +169,7 @@
                                                                 <li>Boa reputação institucional</li>
                                                             </ul>
                                                         </div>
-                                                        <div class="col-md-6 p-3 border-bottom bg-warning bg-opacity-5">
+                                                        <div class="col-md-6 p-3 border-bottom bg-warning">
                                                             <h6 class="fw-bold text-dark mb-2">
                                                                 <i class="bi bi-exclamation-triangle-fill me-1 text-dark"></i>{{ __('FRAQUEZAS') }}
                                                             </h6>
@@ -191,13 +191,13 @@
                                             <div class="row g-0">
                                                 <div class="col-1 bg-info bg-opacity-10 d-flex align-items-center justify-content-center border-end p-2">
                                                     <div class="text-center">
-                                                        <i class="bi bi-globe d-block fs-5 text-white mb-1"></i>
+                                                        <i class="bi bi-globe d-block fs-5 text-info mb-1"></i>
                                                         <small class="fw-bold text-info" style="writing-mode: vertical-rl; transform: rotate(180deg);">EXTERNO</small>
                                                     </div>
                                                 </div>
                                                 <div class="col-11">
                                                     <div class="row g-0">
-                                                        <div class="col-md-6 p-3 border-end bg-primary bg-opacity-5">
+                                                        <div class="col-md-6 p-3 border-end bg-primary">
                                                             <h6 class="fw-bold  text-white mb-2">
                                                                 <i class="bi bi-star-fill me-1 text-white"></i>{{ __('OPORTUNIDADES') }}
                                                             </h6>
@@ -209,7 +209,7 @@
                                                                 <li>Novas tecnologias disponíveis</li>
                                                             </ul>
                                                         </div>
-                                                        <div class="col-md-6 p-3 bg-danger bg-opacity-5">
+                                                        <div class="col-md-6 p-3 bg-danger">
                                                             <h6 class="fw-bold  text-white mb-2">
                                                                 <i class="bi bi-shield-x me-1 text-white"></i>{{ __('AMEAÇAS') }}
                                                             </h6>

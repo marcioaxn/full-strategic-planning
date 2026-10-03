@@ -19,6 +19,26 @@
         @endif
     </x-module-header>
 
+    <x-secao-educativa
+        titulo="O que é a RAE?"
+        subtitulo="A reunião periódica em que a direção confere se a estratégia está funcionando e decide os ajustes."
+        icone="arrow-repeat"
+        por-que="A RAE é o principal momento de revisar a estratégia: nela o órgão confirma o rumo ou corrige objetivos, metas, indicadores e a carteira de iniciativas."
+        :passos="[
+            'Clique em Nova RAE e informe a data da reunião, o período de referência e o tipo (trimestral, semestral ou anual).',
+            'Antes da reunião, reúna os resultados dos indicadores, metas e iniciativas em pauta.',
+            'Registre os destaques positivos e os problemas encontrados.',
+            'Para cada problema, investigue a causa-raiz (por exemplo, com os “5 porquês”).',
+            'Cadastre os encaminhamentos com responsável e prazo, e acompanhe-os até a próxima RAE.',
+        ]"
+        exemplo="Na RAE do 2º trimestre da Agência Nacional de Águas Subterrâneas (fictícia), o indicador “Poços outorgados” está em 45% da meta. A causa-raiz é a falta de geólogos na análise. O encaminhamento é remanejar dois analistas e abrir seleção temporária, com o Diretor de Outorgas como responsável e prazo de 60 dias."
+        dica="não tente revisar todo o Mapa Estratégico numa única reunião. Registre sempre as decisões, os prazos e os responsáveis."
+        referencia="GPPEI p. 47, 49–51, 54–55 e 138–139 · Ishikawa (1976)">
+        É como o intervalo de um jogo: o técnico olha o placar, entende o que deu errado e muda a tática.
+        Na <strong>Revisão e Avaliação da Estratégia</strong>, a equipe apresenta indicadores, metas e iniciativas, investiga a
+        <strong>causa-raiz</strong> dos desvios e registra <strong>encaminhamentos</strong> com responsável e prazo.
+    </x-secao-educativa>
+
     @if(!$peiAtivo || !$organizacaoId)
         <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center gap-3">
             <i class="bi bi-exclamation-triangle-fill fs-3"></i>

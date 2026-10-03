@@ -27,6 +27,24 @@
         </div>
     @endif
 
+    <x-secao-educativa
+        titulo="O que é o acervo de Documentos?"
+        subtitulo="A estante onde ficam guardados os PDFs oficiais do planejamento."
+        icone="folder2-open"
+        por-que="O GPPEI pede que as decisões fiquem registradas e que o plano anterior esteja documentado e acessível para o próximo ciclo."
+        :passos="[
+            'Clique em Enviar documento e escolha o arquivo PDF (até 20 MB).',
+            'Dê um nome claro e escolha o tipo (decreto, portaria, ata, relatório de gestão…).',
+            'Se quiser, informe número, ano, data, origem, link oficial, o PEI e a área a que ele se refere.',
+            'Use a busca e os filtros para encontrar e abrir ou baixar um documento.',
+        ]"
+        exemplo="A Fundação Federal de Apoio ao Artesanato (fictícia) guarda aqui a portaria que aprovou o PEI 2027–2030, as atas das quatro RAEs do ano e o Relatório de Gestão de 2027."
+        dica="use sempre o mesmo padrão de nome e de tipo, para que o documento seja encontrado depois."
+        referencia="GPPEI p. 11, 17, 55 e 61–62 · Lei de Acesso à Informação (Lei nº 12.527/2011)">
+        É como a pasta em que a família guarda certidões e contratos importantes. Aqui ficam o decreto ou a portaria que aprovou o plano,
+        as atas da direção, os relatórios de gestão e os de RAE. Quem precisar encontra a <strong>versão oficial</strong> num só lugar.
+    </x-secao-educativa>
+
     {{-- Filtros --}}
     <div class="card card-modern filters-card mb-4">
         <div class="card-body p-4">
@@ -180,7 +198,7 @@
                             <div class="icon-circle-mini bg-white bg-opacity-25 text-white"><i class="bi bi-file-earmark-pdf"></i></div>
                             <div>
                                 <h5 class="modal-title fw-bold mb-0">{{ $documentoId ? 'Editar documento' : 'Enviar documento' }}</h5>
-                                <p class="mb-0 small text-white-50">Campos com <span class="text-warning">*</span> são obrigatórios</p>
+                                <p class="mb-0 small text-white">Campos com <strong>*</strong> são obrigatórios</p>
                             </div>
                         </div>
                         <button type="button" class="btn-close btn-close-white" wire:click="fecharModal" aria-label="Fechar"></button>
