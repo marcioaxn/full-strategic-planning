@@ -38,7 +38,7 @@ class ImpersonateController extends Controller
 
         session(['impersonator_id' => $admin->id]);
 
-        Auth::guard('web')->login($alvo);
+        $this->entrarComo($alvo);
 
         return redirect()->route('dashboard')->with('status', 'Você está agora visualizando o sistema como '.$alvo->name.'.');
     }
@@ -65,8 +65,23 @@ class ImpersonateController extends Controller
 
         session()->forget('impersonator_id');
 
-        Auth::guard('web')->login($admin);
+        $this->entrarComo($admin);
 
         return redirect()->route('admin.perfis')->with('status', 'Impersonação encerrada. Você voltou à sua identidade.');
+    }
+
+    /**
+     * Troca o usuário logado sem derrubar a sessão.
+     *
+     * O guard sanctum guarda em cache o usuário anterior. Sem esquecê-lo, o
+     * AuthenticateSession (jetstream.auth_session) grava, ao fim desta
+     * requisição, o hash da senha do usuário ANTERIOR; na seguinte, o hash não
+     * bate com o do novo usuário e o middleware desloga — a tela caía no portal
+     * público. Teste: ImpersonacaoMantemSessaoTest.
+     */
+    private function entrarComo(User $user): void
+    {
+        Auth::guard('web')->login($user);
+        Auth::forgetGuards();
     }
 }

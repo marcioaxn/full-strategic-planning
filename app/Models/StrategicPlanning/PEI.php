@@ -138,8 +138,16 @@ class PEI extends Model
     {
         $anoAtual = now()->year;
 
+        // Ordem estável: com dois ciclos vigentes (ex.: um "Salvar como" no
+        // mesmo período), o padrão de quem chega sem seleção — visitante da
+        // transparência, primeiro acesso, relatório agendado — é sempre o
+        // mesmo: o mais recente por início e, no empate, o mais antigo
+        // cadastrado (o original, não a cópia).
         return $query->where('num_ano_inicio_pei', '<=', $anoAtual)
-            ->where('num_ano_fim_pei', '>=', $anoAtual);
+            ->where('num_ano_fim_pei', '>=', $anoAtual)
+            ->orderBy('num_ano_inicio_pei', 'desc')
+            ->orderBy('created_at')
+            ->orderBy('cod_pei');
     }
 
     /**

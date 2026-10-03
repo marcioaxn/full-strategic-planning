@@ -22,6 +22,7 @@ class RotuloAuditoria
         'IdentidadeEstrategica' => 'Identidade estratégica',
         'TemaNorteador' => 'Tema norteador',
         'Valor' => 'Valor',
+        'Documento' => 'Documento',
     ];
 
     /** @var array<string, string> */

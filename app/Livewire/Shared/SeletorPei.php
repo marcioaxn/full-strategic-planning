@@ -9,6 +9,7 @@ use Livewire\Component;
 class SeletorPei extends Component
 {
     public $peis;
+
     public $selecionadoId;
 
     public function mount()
@@ -16,15 +17,16 @@ class SeletorPei extends Component
         $this->carregarPEIs();
         $this->selecionadoId = Session::get('pei_selecionado_id');
 
-        if (!$this->selecionadoId && $this->peis->isNotEmpty()) {
-            $peiAtivo = $this->peis->first(fn($p) => $p->isAtivo()) ?? $this->peis->first();
+        if (! $this->selecionadoId && $this->peis->isNotEmpty()) {
+            $peiAtivo = $this->peis->first(fn ($p) => $p->isAtivo()) ?? $this->peis->first();
             $this->definirSessao($peiAtivo);
         }
     }
 
     public function carregarPEIs()
     {
-        $this->peis = PEI::orderBy('num_ano_inicio_pei', 'desc')->get();
+        // Mesmo desempate de PEI::ativos(): o original vem antes da cópia.
+        $this->peis = PEI::orderBy('num_ano_inicio_pei', 'desc')->orderBy('created_at')->orderBy('cod_pei')->get();
     }
 
     private function definirSessao(PEI $pei)
@@ -32,7 +34,7 @@ class SeletorPei extends Component
         $this->selecionadoId = $pei->cod_pei;
         Session::put('pei_selecionado_id', $pei->cod_pei);
         Session::put('pei_selecionado_dsc', $pei->dsc_pei);
-        Session::put('pei_selecionado_periodo', $pei->num_ano_inicio_pei . '-' . $pei->num_ano_fim_pei);
+        Session::put('pei_selecionado_periodo', $pei->num_ano_inicio_pei.'-'.$pei->num_ano_fim_pei);
     }
 
     public function selecionar($id)
@@ -44,7 +46,7 @@ class SeletorPei extends Component
 
             // --- INTELIGÊNCIA: Sincronizar com o Ano ---
             $anoAtualSessao = (int) Session::get('ano_selecionado', date('Y'));
-            
+
             // Se o ano atual da sessão não está no range do novo PEI
             if ($anoAtualSessao < $pei->num_ano_inicio_pei || $anoAtualSessao > $pei->num_ano_fim_pei) {
                 // Tenta colocar no ano vigente se ele estiver no PEI, senão vai para o ano de início do PEI
@@ -58,6 +60,7 @@ class SeletorPei extends Component
 
             $this->dispatch('peiSelecionado', id: $id);
             $url = request()->header('Referer') ?? route('dashboard');
+
             return $this->redirect($url, navigate: true);
         }
     }

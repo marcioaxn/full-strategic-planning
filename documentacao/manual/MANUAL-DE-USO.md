@@ -2,7 +2,8 @@
 
 > Versão de 03/10/2026. Telas capturadas no ambiente de desenvolvimento, ciclo **2023-2027**, ano de
 > referência **2026**, organização **MIDR**, com o perfil **Super Administrador**. Outros perfis veem
-> menos botões — ver [Papéis e responsabilidades](#76-papéis-e-responsabilidades).
+> menos botões — ver [Papéis e responsabilidades](#76-papéis-e-responsabilidades). As telas de
+> **Documentos** e **Salvar como** foram capturadas com dados de demonstração, marcados **[TESTE]**.
 
 ## Sumário
 
@@ -13,8 +14,9 @@
 5. [**Agenda 2030 e ODS — o que cada tela significa**](#5-agenda-2030-e-ods--o-que-cada-tela-significa)
 6. [Módulo 03 — Monitorar e Avaliar](#6-módulo-03--monitorar-e-avaliar)
 7. [Administração](#7-administração)
-8. [Portal da Transparência (sem login)](#8-portal-da-transparência-sem-login)
-9. [Como ler os números e as cores](#9-como-ler-os-números-e-as-cores)
+8. [Documentos (acervo em PDF)](#8-documentos-acervo-em-pdf)
+9. [Portal da Transparência (sem login)](#9-portal-da-transparência-sem-login)
+10. [Como ler os números e as cores](#10-como-ler-os-números-e-as-cores)
 
 ---
 
@@ -33,7 +35,7 @@ Além dos módulos há:
 
 - **Meu Espaço**: suas entregas.
 - **Administração**: organizações, usuários, perfis, IA e auditoria.
-- **Recursos**: o Guia GPPEI e a ajuda de papéis.
+- **Recursos**: o acervo de **Documentos** em PDF, o Guia GPPEI e a ajuda de papéis.
 - **Portal da Transparência**: a parte pública, sem login.
 
 No rodapé do menu, **CICLO PEI 100%** indica quanto das etapas do ciclo já foi preenchido. Os ícones
@@ -76,7 +78,7 @@ Ainda no topo:
 
 O painel inicial resume o ciclo e o ano:
 
-- **Índice de Qualidade de Gestão e atingimento por perspectiva**, com a cor do farol de cada uma (ver [seção 9](#9-como-ler-os-números-e-as-cores)). São números **do ciclo inteiro, da instituição toda**: não mudam com a unidade selecionada no topo, porque perspectivas e objetivos são da instituição.
+- **Índice de Qualidade de Gestão e atingimento por perspectiva**, com a cor do farol de cada uma (ver [seção 10](#10-como-ler-os-números-e-as-cores)). São números **do ciclo inteiro, da instituição toda**: não mudam com a unidade selecionada no topo, porque perspectivas e objetivos são da instituição.
 - **Evolução mensal**, que considera só meses com resultado lançado. Mês sem lançamento fica em branco, não em zero.
 - **Alertas** e **atalhos**.
 - **Gerar Análise (IA)**: pede ao agente de IA um comentário sobre os números. Só funciona se a IA estiver configurada ([7.4](#74-configuração-do-agente-de-ia)).
@@ -91,8 +93,28 @@ O painel inicial resume o ciclo e o ano:
 
 Lista os ciclos de planejamento (ex.: 2023-2027).
 
-- **Novo Ciclo**, **Editar** e **Excluir** aparecem só para o **Super Administrador**.
+- **Novo Ciclo**, **Editar**, **Salvar como** e **Excluir** aparecem só para o **Super Administrador**.
 - **Detalhar** abre a ficha do ciclo, com atalhos para cada etapa. O atalho já seleciona o ciclo e o ano antes de abrir a tela.
+
+**Salvar como** (ícone de duas folhas, em verde) cria um PEI novo **com tudo o que está preso ao ciclo
+escolhido**. Serve para revisar o plano, simular um cenário ou abrir o ciclo seguinte sem redigitar nada.
+
+![Salvar como novo PEI](img/52-pei-salvar-como.jpg)
+
+- **Descrição do novo PEI** é obrigatória e precisa ser diferente da de qualquer PEI cadastrado. É ela que
+  distingue os dois ciclos no seletor do topo e nos relatórios.
+- **Ano de início e de término** já vêm iguais aos do ciclo de origem. Podem ficar iguais: dois PEIs no
+  mesmo período são permitidos.
+- **Vão para a cópia:** missão, visão, valores, temas, análises (PESTEL, SWOT, cenários, partes
+  interessadas), perspectivas, objetivos (com a hierarquia e os ODS), cadeia de valor, iniciativas com a
+  unidade e os gestores designados, entregas, indicadores com metas, linha de base e lançamentos, riscos com
+  mitigações e ocorrências, graus de satisfação e reuniões RAE.
+- **Não vão:** comentários, histórico de alterações, auditoria e os documentos do acervo, que continuam
+  ligados ao PEI de origem.
+- Metas e lançamentos mantêm os anos originais. Se o período da cópia for outro, ajuste as metas no novo PEI.
+- O PEI de origem não muda. A cópia sai inteira ou não sai: se algo falhar, nada é gravado.
+
+Depois de copiar, escolha o novo PEI no seletor **Ciclo PEI** do topo para trabalhar nele.
 
 ### 3.2 Inaugurar e Integrar (abas)
 
@@ -163,7 +185,7 @@ impacto. Itens podem ser criados, editados e excluídos em cada quadrante.
 
 As camadas do Mapa Estratégico, no modelo BSC (ex.: Resultado Integrado, Políticas Públicas, Parceria e
 Fomento, Gestão). A **ordem** define a altura no mapa. Os **pesos** de indicadores e iniciativas definem
-como o atingimento da perspectiva é calculado ([seção 9](#9-como-ler-os-números-e-as-cores)).
+como o atingimento da perspectiva é calculado ([seção 10](#10-como-ler-os-números-e-as-cores)).
 
 ### 4.7 Objetivos Estratégicos
 
@@ -323,7 +345,8 @@ atingimento de cada mês.
 
 ![Lista de iniciativas](img/25-iniciativas-lista.jpg)
 
-As iniciativas transformam objetivos em entrega. Os filtros são status, tipo e ano. **Ver Entregas** abre o
+As iniciativas transformam objetivos em entrega. A lista mostra as iniciativas da unidade selecionada (e das
+subordinadas) **no ciclo selecionado no topo**. Os filtros são status, tipo e ano. **Ver Entregas** abre o
 quadro de entregas, e o menu **⋮** abre ficha, edição, gestores e exclusão.
 
 **Ficha da iniciativa** — objetivo, tipo, organização, período, orçamento e vínculos com PPA/LOA, status de
@@ -521,7 +544,56 @@ sessões em outros navegadores.
 
 ---
 
-## 8. Portal da Transparência (sem login)
+## 8. Documentos (acervo em PDF)
+
+Menu **Recursos → Documentos**. Guarda em um só lugar os PDFs do planejamento: decretos, portarias,
+relatórios de gestão, atas, notas técnicas e afins.
+
+![Documentos](img/50-documentos-lista.jpg)
+
+- **Buscar** procura no nome, no número, na origem e na descrição. **Tipo**, **PEI** e **Ano** filtram a
+  lista.
+- Em cada linha: **Abrir PDF em nova aba**, **Baixar arquivo** (com o nome original) e, se houver, o
+  **link oficial**, por exemplo a publicação no Diário Oficial. **Editar** e **Excluir** aparecem só para
+  quem pode alterar aquele documento.
+
+### 8.1 Enviar um documento
+
+**Enviar documento** abre o formulário.
+
+![Enviar documento](img/51-documentos-enviar.jpg)
+
+| Campo | Obrigatório | Para que serve |
+|---|---|---|
+| **Arquivo PDF** | Sim | Só PDF, até 20 MB. O sistema confere o conteúdo do arquivo, não só a extensão. |
+| **Nome do documento** | Sim | Como ele aparece na lista. |
+| **Tipo de documento** | Sim | Escolhido em uma lista agrupada: atos normativos (lei, decreto, portaria, portaria conjunta, instrução normativa, resolução…), planejamento e gestão, relatórios e prestação de contas, instrumentos e expedientes, referência e orientação. Há **Outro** para o que não se encaixar. |
+| **Número** | Não | O número do ato. Ex.: 123/2026. |
+| **Ano de referência** | Não | O ano a que o documento se refere. Ex.: o Relatório de Gestão 2025. |
+| **Data do documento** | Não | A data de assinatura ou de publicação. |
+| **Origem** | Não | O órgão ou a unidade que emitiu. |
+| **Link oficial** | Não | Endereço da publicação oficial, começando por https://. |
+| **PEI** | Não | O ciclo a que o documento se liga. Vem sugerido o ciclo selecionado no topo. |
+| **Área (unidade)** | Não | A unidade dona do documento. **Institucional** vale para o órgão inteiro. |
+| **Ementa / descrição** | Não | Do que trata o documento. |
+
+Na edição, o arquivo só é trocado se você escolher outro PDF. Excluir tira o documento do acervo para todos,
+e a exclusão fica registrada na auditoria.
+
+### 8.2 Quem vê e quem envia
+
+| Perfil | Vê | Envia, edita e exclui |
+|---|---|---|
+| **Super Administrador** | Todos | Todos, inclusive os institucionais |
+| **Administrador da Unidade** | Os institucionais, os da sua unidade e os das subordinadas | Os da sua unidade e das subordinadas. Institucional só o Administrador da **unidade raiz** |
+| **Gestor(a) Responsável e Substituto(a)** | Os institucionais e os da sua unidade | Nada |
+| **Consulta** | Os institucionais, os da sua unidade e os das subordinadas | Nada |
+
+O PDF de outra unidade não abre nem pelo endereço direto: o sistema recusa.
+
+---
+
+## 9. Portal da Transparência (sem login)
 
 ![Portal — início](img/46-portal-inicio.jpg)
 
@@ -550,7 +622,7 @@ O visitante navega pelo mapa, pelos objetivos, pelos indicadores e pelas iniciat
 
 ---
 
-## 9. Como ler os números e as cores
+## 10. Como ler os números e as cores
 
 **Atingimento de um indicador** = realizado ÷ meta do período, respeitando a polaridade. Quando "menor é
 melhor", a conta se inverte. Indicador **informativo** não entra em média.

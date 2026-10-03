@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ArquivoDocumentoController;
 use App\Http\Controllers\DocumentosController;
 use App\Http\Controllers\ImpersonateController;
 use App\Http\Controllers\Reports\RelatorioController;
@@ -17,6 +18,7 @@ use App\Livewire\Auth\TrocarSenha;
 use App\Livewire\Dashboard\Index;
 use App\Livewire\Deliverables\DeliverablesBoard;
 use App\Livewire\Deliverables\MinhasEntregas;
+use App\Livewire\Documentos\ListarDocumentos;
 use App\Livewire\LandingPage;
 use App\Livewire\Organization\DetalharOrganizacao;
 use App\Livewire\Organization\ListarOrganizacoes;
@@ -123,6 +125,12 @@ Route::middleware([
     Route::get('/documentos/projetos/pdf', [DocumentosController::class, 'projetosPdf'])->name('documentos.projetos.pdf');
     Route::get('/documentos/projetos', [DocumentosController::class, 'viewerProjetos'])->name('documentos.projetos');
     Route::get('/guia-gppei', [DocumentosController::class, 'viewerGppei'])->name('documentos.viewer-gppei');
+
+    // Acervo de documentos em PDF (decretos, portarias, relatórios de gestão...)
+    Route::get('/acervo-documentos', ListarDocumentos::class)->name('acervo.index');
+    Route::get('/acervo-documentos/{documento}/arquivo', ArquivoDocumentoController::class)
+        ->whereUuid('documento')
+        ->name('acervo.arquivo');
     // Ajuda — "quem pode fazer o quê", derivada da MATRIZ de capacidades.
     // Aberta a todo perfil autenticado: é a resposta a uma dúvida, não um dado.
     Route::get('/ajuda/papeis', PapeisResponsabilidades::class)->name('ajuda.papeis');
