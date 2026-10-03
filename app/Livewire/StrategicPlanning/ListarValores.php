@@ -2,14 +2,15 @@
 
 namespace App\Livewire\StrategicPlanning;
 
+use App\Models\Organization;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Valor;
-use App\Models\Organization;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Session;
 
 #[Layout('layouts.app')]
 class ListarValores extends Component
@@ -18,26 +19,33 @@ class ListarValores extends Component
 
     #[Locked]
     public $organizacaoId;
+
     public $organizacaoNome;
+
     #[Locked]
     public $peiAtivo;
 
     public $valores = [];
 
     public bool $showModal = false;
+
+    #[Locked]
     public $valorId;
+
     public $nom_valor;
+
     public $dsc_valor;
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
-        'peiSelecionado' => 'atualizarPEI'
+        'peiSelecionado' => 'atualizarPEI',
     ];
 
     public function mount()
     {
         $this->carregarPEI();
-        $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+        // Organização da sessão só vale se estiver no escopo do usuário.
+        $this->atualizarOrganizacao(Auth::user()->organizacaoSelecionadaId());
     }
 
     public function atualizarPEI($id)
@@ -54,13 +62,16 @@ class ListarValores extends Component
             $this->peiAtivo = PEI::find($peiId);
         }
 
-        if (!$this->peiAtivo) {
+        if (! $this->peiAtivo) {
             $this->peiAtivo = PEI::ativos()->first();
         }
     }
 
     public function atualizarOrganizacao($id)
     {
+        // Método público (e ouvinte de evento): o ID vem do cliente.
+        abort_unless(! $id || Auth::user()?->podeAcessarOrganizacao($id), 403);
+
         $this->organizacaoId = $id;
 
         if ($id) {
@@ -75,8 +86,9 @@ class ListarValores extends Component
 
     public function carregarValores()
     {
-        if (!$this->peiAtivo || !$this->organizacaoId) {
+        if (! $this->peiAtivo || ! $this->organizacaoId) {
             $this->valores = [];
+
             return;
         }
 
@@ -88,8 +100,9 @@ class ListarValores extends Component
 
     public function create()
     {
-        if (!$this->peiAtivo) {
+        if (! $this->peiAtivo) {
             session()->flash('error', 'Não há um Ciclo PEI selecionado.');
+
             return;
         }
         $this->resetForm();
@@ -98,6 +111,7 @@ class ListarValores extends Component
 
     public function edit($id)
     {
+        $this->authorize('modulo.editar', 'planejamento-estrategico');
         $valor = Valor::findOrFail($id);
         abort_unless($valor->cod_organizacao === $this->organizacaoId, 403);
         $this->valorId = $id;
@@ -108,8 +122,11 @@ class ListarValores extends Component
 
     public function save()
     {
-        if (!$this->peiAtivo || !$this->organizacaoId) {
+        $this->authorize($this->valorId ? 'modulo.editar' : 'modulo.criar', 'planejamento-estrategico');
+
+        if (! $this->peiAtivo || ! $this->organizacaoId) {
             session()->flash('error', 'Selecione um Ciclo PEI e uma organização antes de salvar.');
+
             return;
         }
 
@@ -135,6 +152,7 @@ class ListarValores extends Component
 
     public function delete($id)
     {
+        $this->authorize('modulo.excluir', 'planejamento-estrategico');
         $valor = Valor::findOrFail($id);
         abort_unless($valor->cod_organizacao === $this->organizacaoId, 403);
         $valor->delete();

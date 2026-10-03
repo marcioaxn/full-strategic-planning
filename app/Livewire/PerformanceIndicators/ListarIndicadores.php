@@ -11,6 +11,7 @@ use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\SystemSetting;
+use App\Services\AI\AiServiceFactory;
 use App\Services\PeiGuidanceService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
@@ -151,6 +152,10 @@ class ListarIndicadores extends Component
 
     public function atualizarOrganizacao($id)
     {
+        // Método público (e ouvinte de evento): o ID vem do cliente. Logado, só
+        // dentro do próprio escopo; o visitante da área pública só consulta.
+        abort_unless(! $id || ! Auth::check() || Auth::user()->podeAcessarOrganizacao($id), 403);
+
         $this->organizacaoId = $id;
         $this->resetPage();
     }
@@ -477,13 +482,66 @@ class ListarIndicadores extends Component
         $this->showErrorModal = false;
     }
 
+    /**
+     * Sugestão de indicadores pela IA configurada.
+     *
+     * Antes devolvia sempre as mesmas duas sugestões fixas, para qualquer
+     * organização e qualquer ciclo, sob um botão "Sugerir com IA": a tela
+     * dizia que a IA tinha pensado algo que ninguém pensou.
+     */
     public function pedirAjudaIA()
     {
-        // Simulação de IA por enquanto ou integração real se houver service
-        $this->aiSuggestion = [
-            ['nome' => 'Índice de Eficiência Operacional', 'descricao' => 'Mede a relação entre recursos utilizados e resultados alcançados.', 'unidade' => 'Percentual (%)', 'formula' => '(Resultados / Recursos) * 100'],
-            ['nome' => 'Taxa de Cumprimento de Prazos', 'descricao' => 'Percentual de entregas realizadas dentro do cronograma previsto.', 'unidade' => 'Percentual (%)', 'formula' => '(Entregas no Prazo / Total de Entregas) * 100'],
-        ];
+        // Tela também pública: visitante não aciona a IA (serviço pago).
+        abort_unless(Auth::check(), 403);
+
+        if (! $this->aiEnabled) {
+            return;
+        }
+
+        $aiService = AiServiceFactory::make();
+        if (! $aiService) {
+            session()->flash('error', 'Nenhum provedor de IA configurado. Configure em Configurações do Sistema.');
+
+            return;
+        }
+
+        $objetivos = $this->peiAtivo
+            ? Objetivo::whereHas('perspectiva', fn ($q) => $q->where('cod_pei', $this->peiAtivo->cod_pei))
+                ->orderBy('nom_objetivo')->limit(15)->pluck('nom_objetivo')->implode('; ')
+            : '';
+        $organizacao = $this->organizacaoId ? Organization::find($this->organizacaoId)?->nom_organizacao : null;
+        $unidades = implode(', ', Indicador::UNIDADES_MEDIDA);
+
+        $prompt = 'Sugira 3 indicadores de desempenho (KPIs) SMART'
+            .($organizacao ? " para a organização '{$organizacao}'" : '')
+            .($objetivos ? ", alinhados a estes objetivos estratégicos: {$objetivos}" : '')
+            .". A unidade deve ser uma destas: {$unidades}."
+            ." Responda OBRIGATORIAMENTE em JSON puro: um array de objetos com os campos 'nome', 'descricao', 'unidade' e 'formula'.";
+
+        try {
+            $decoded = json_decode(str_replace(['```json', '```'], '', $aiService->suggest($prompt)), true);
+        } catch (\Throwable $e) {
+            report($e);
+            $decoded = null;
+        }
+
+        if (! is_array($decoded)) {
+            $this->aiSuggestion = '';
+            session()->flash('error', 'Falha ao processar sugestões da IA. Tente novamente.');
+
+            return;
+        }
+
+        $this->aiSuggestion = collect($decoded)
+            ->filter(fn ($s) => is_array($s) && ! empty($s['nome']))
+            ->map(fn ($s) => [
+                'nome' => (string) $s['nome'],
+                'descricao' => (string) ($s['descricao'] ?? ''),
+                'unidade' => in_array($s['unidade'] ?? null, Indicador::UNIDADES_MEDIDA, true) ? $s['unidade'] : Indicador::UNIDADES_MEDIDA[0],
+                'formula' => (string) ($s['formula'] ?? ''),
+            ])
+            ->values()
+            ->all();
     }
 
     public function aplicarSugestao($nome, $desc, $unidade, $formula)
@@ -532,6 +590,17 @@ class ListarIndicadores extends Component
                         $subOrg->whereIn('tab_organizacoes.cod_organizacao', $orgIds);
                     });
                 });
+            });
+        }
+
+        // Só o ciclo selecionado no topo. Sem isto, com o ciclo 2040-2043
+        // selecionado a tela listava os indicadores de 2023-2027 — e "Lançar
+        // Evolução" gravava num ciclo que o usuário não estava vendo.
+        if ($this->peiAtivo && ! $this->filtroObjetivo) {
+            $codPei = $this->peiAtivo->cod_pei;
+            $query->where(function ($q) use ($codPei) {
+                $q->whereHas('objetivo.perspectiva', fn ($p) => $p->where('cod_pei', $codPei))
+                    ->orWhereHas('planoDeAcao.objetivo.perspectiva', fn ($p) => $p->where('cod_pei', $codPei));
             });
         }
 

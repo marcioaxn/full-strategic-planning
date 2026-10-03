@@ -19,7 +19,6 @@
             <a href="{{ route('pei.valores') }}" wire:navigate class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Voltar
             </a>
-            <!-- Botão de editar pode ser implementado depois ou redirecionar para modal de edição -->
         </div>
     </div>
 
@@ -46,53 +45,19 @@
                 </div>
             </div>
 
-            <!-- Como este valor é vivido (Placeholder) -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3">
-                    <h5 class="card-title mb-0 fw-bold">
-                        <i class="bi bi-heart-pulse me-2 text-danger"></i>Como vivemos este valor?
-                    </h5>
-                </div>
-                <div class="card-body text-center py-5">
-                    <div class="mb-3 opacity-50">
-                        <i class="bi bi-people fs-1 text-muted"></i>
-                    </div>
-                    <h6 class="text-muted mb-2">Evidências de Cultura</h6>
-                    <p class="small text-muted mb-0">
-                        Em breve, você poderá visualizar exemplos práticos, histórias e métricas qualitativas de como este valor é aplicado no dia a dia.
-                    </p>
-                </div>
+            {{-- O papel do valor no PEI. Os blocos "Em breve" e os contadores
+                 fixos em 0 de objetivos/iniciativas saíram: valor não tem vínculo
+                 com objetivo no modelo de dados, e a tela afirmava uma medição
+                 que não existe. --}}
+            <div class="alert alert-light border small text-muted mb-0">
+                <i class="bi bi-info-circle me-1"></i>
+                Valores são os princípios que orientam o comportamento da organização na execução da estratégia.
+                Eles compõem a Identidade Estratégica do ciclo, ao lado da Missão e da Visão, e não têm metas próprias.
             </div>
         </div>
 
         <!-- Coluna Lateral -->
         <div class="col-lg-4">
-            <!-- Estatísticas de Uso -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-light py-3">
-                    <h6 class="card-title mb-0 fw-bold">Impacto Estratégico</h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-3">
-                        <div>
-                            <small class="text-muted d-block">Objetivos Relacionados</small>
-                            <span class="fw-bold fs-5">0</span>
-                        </div>
-                        <i class="bi bi-crosshair text-muted fs-4"></i>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <small class="text-muted d-block">Iniciativas</small>
-                            <span class="fw-bold fs-5">0</span>
-                        </div>
-                        <i class="bi bi-kanban text-muted fs-4"></i>
-                    </div>
-                </div>
-                <div class="card-footer bg-light py-2 text-center">
-                    <small class="text-muted">Dados de vínculo em breve</small>
-                </div>
-            </div>
-
             <!-- Metadados -->
             <div class="card border-0 shadow-sm">
                 <div class="card-body">

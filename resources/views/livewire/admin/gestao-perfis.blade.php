@@ -35,7 +35,7 @@
     <div class="row g-3 mb-4">
         @foreach($perfis as $perfil)
         @php
-            $meta = $this->perfisDescricao[$perfil->dsc_perfil] ?? ['icon' => 'person-badge', 'color' => 'secondary', 'desc' => $perfil->dsc_permissao ?? 'Perfil personalizado.', 'flag' => '—'];
+            $meta = ['icon' => 'person-badge', 'color' => 'secondary', 'desc' => $perfil->dsc_permissao ?? 'Perfil personalizado.'];
         @endphp
         <div class="col-md-6 col-xl-3">
             <div class="card border-0 shadow-sm h-100">
@@ -46,7 +46,6 @@
                         </div>
                         <div>
                             <h6 class="fw-bold mb-0">{{ $perfil->dsc_perfil }}</h6>
-                            <code class="x-small text-muted" style="font-size:.65rem;">{{ $meta['flag'] }}</code>
                         </div>
                     </div>
                     <p class="text-muted small mb-2" style="line-height:1.5;">{{ $meta['desc'] }}</p>

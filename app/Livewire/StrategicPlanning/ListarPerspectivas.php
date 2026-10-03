@@ -8,6 +8,7 @@ use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\SystemSetting;
 use App\Services\AI\AiServiceFactory;
 use App\Services\PeiGuidanceService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -16,6 +17,8 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class ListarPerspectivas extends Component
 {
+    use AuthorizesRequests;
+
     public $perspectivas = [];
 
     #[Locked]
@@ -35,6 +38,7 @@ class ListarPerspectivas extends Component
 
     public string $createdPerspectivaName = '';
 
+    #[Locked]
     public $perspectivaId;
 
     public $dsc_perspectiva;
@@ -60,6 +64,13 @@ class ListarPerspectivas extends Component
 
         if ($this->peiAtivo) {
             $this->carregarPerspectivas();
+
+            // "Editar" no detalhe da perspectiva chega com ?editar={cod}.
+            $editar = request()->query('editar');
+            if (is_string($editar) && auth()->user()?->can('modulo.editar', 'planejamento-estrategico')
+                && Perspectiva::whereKey($editar)->where('cod_pei', $this->peiAtivo->cod_pei)->exists()) {
+                $this->edit($editar);
+            }
         }
     }
 
@@ -196,6 +207,7 @@ class ListarPerspectivas extends Component
 
     public function edit($id)
     {
+        $this->authorize('modulo.editar', 'planejamento-estrategico');
         $p = Perspectiva::findOrFail($id);
         abort_unless($this->peiAtivo && $p->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->perspectivaId = $id;
@@ -208,6 +220,8 @@ class ListarPerspectivas extends Component
 
     public function save()
     {
+        $this->authorize($this->perspectivaId ? 'modulo.editar' : 'modulo.criar', 'planejamento-estrategico');
+
         if (! $this->peiAtivo) {
             session()->flash('error', 'Selecione um Ciclo PEI antes de salvar.');
 
@@ -264,6 +278,7 @@ class ListarPerspectivas extends Component
 
     public function confirmDelete($id)
     {
+        $this->authorize('modulo.excluir', 'planejamento-estrategico');
         $p = Perspectiva::findOrFail($id);
         abort_unless($this->peiAtivo && $p->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->perspectivaId = $id;
@@ -272,6 +287,7 @@ class ListarPerspectivas extends Component
 
     public function delete()
     {
+        $this->authorize('modulo.excluir', 'planejamento-estrategico');
         $p = Perspectiva::findOrFail($this->perspectivaId);
         abort_unless($this->peiAtivo && $p->cod_pei === $this->peiAtivo->cod_pei, 403);
         $p->delete();

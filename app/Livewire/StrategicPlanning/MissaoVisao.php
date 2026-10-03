@@ -10,6 +10,7 @@ use App\Services\AI\AiServiceFactory;
 use App\Services\NotificationService;
 use App\Services\PeiGuidanceService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -55,7 +56,7 @@ class MissaoVisao extends Component
         // Só a edição (habilitarEdicao/salvar) exige capacidade RBAC + escopo.
         $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
-        $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+        $this->atualizarOrganizacao(Auth::user()->organizacaoSelecionadaId());
     }
 
     public function pedirAjudaIA()
@@ -131,6 +132,9 @@ class MissaoVisao extends Component
 
     public function atualizarOrganizacao($id)
     {
+        // Método público (e ouvinte de evento): o ID vem do cliente.
+        abort_unless(! $id || Auth::user()?->podeAcessarOrganizacao($id), 403);
+
         $this->organizacaoId = $id;
 
         if ($id) {

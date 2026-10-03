@@ -19,7 +19,7 @@
                 <i class="bi bi-diagram-3 text-white" style="font-size:1.3rem;"></i>
             </div>
             <div>
-                <div class="lp-login-bname">SEAE</div>
+                <div class="lp-login-bname">{{ config('app.name', 'Sistema PEI') }}</div>
                 <div class="lp-login-bsub">Sistema de Gestão Estratégica</div>
             </div>
         </a>
@@ -105,7 +105,7 @@
                                 border-radius:.75rem;display:flex;align-items:center;justify-content:center;">
                         <i class="bi bi-diagram-3 text-white"></i>
                     </div>
-                    <span class="fw-bold" style="font-size:1.1rem;color:#0d1b2e;letter-spacing:-.02em;">SEAE</span>
+                    <span class="fw-bold" style="font-size:1.1rem;color:#0d1b2e;letter-spacing:-.02em;">{{ config('app.name', 'Sistema PEI') }}</span>
                 </div>
                 <div style="font-size:.65rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;font-weight:600;">
                     Sistema de Gestão Estratégica

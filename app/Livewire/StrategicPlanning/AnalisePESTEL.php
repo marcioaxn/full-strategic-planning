@@ -2,13 +2,17 @@
 
 namespace App\Livewire\StrategicPlanning;
 
+use App\Models\Organization;
 use App\Models\StrategicPlanning\AnaliseAmbiental;
 use App\Models\StrategicPlanning\PEI;
+use App\Models\SystemSetting;
+use App\Services\AI\AiServiceFactory;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Session;
 
 #[Layout('layouts.app')]
 class AnalisePESTEL extends Component
@@ -17,54 +21,73 @@ class AnalisePESTEL extends Component
 
     #[Locked]
     public $peiAtivo;
+
     #[Locked]
     public $organizacaoId;
+
     public $organizacaoNome;
 
     // Dados agrupados por categoria PESTEL
     public $politicos = [];
+
     public $economicos = [];
+
     public $sociais = [];
+
     public $tecnologicos = [];
+
     public $ambientais = [];
+
     public $legais = [];
 
     // Modal
     public bool $showModal = false;
+
+    #[Locked]
     public $itemId;
+
     public $dsc_categoria;
+
     public $dsc_item = '';
+
     public $num_impacto = 3;
+
     public $txt_observacao = '';
 
     public bool $aiEnabled = false;
+
     public $aiSuggestion = '';
 
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
-        'peiSelecionado' => 'atualizarPEI'
+        'peiSelecionado' => 'atualizarPEI',
     ];
 
     public function mount()
     {
-        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
+        $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
-        $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+        // Organização da sessão só vale se estiver no escopo do usuário.
+        $this->atualizarOrganizacao(Auth::user()->organizacaoSelecionadaId());
     }
 
     public function pedirAjudaIA()
     {
-        if (!$this->aiEnabled) return;
+        if (! $this->aiEnabled) {
+            return;
+        }
 
         try {
-            $aiService = \App\Services\AI\AiServiceFactory::make();
-            if (!$aiService) return;
+            $aiService = AiServiceFactory::make();
+            if (! $aiService) {
+                return;
+            }
 
             $this->aiSuggestion = 'Pensando...';
-            
+
             $prompt = "Sugira 2 fatores para cada dimensão da análise PESTEL (Político, Econômico, Social, Tecnológico, Ambiental, Legal) para a organização: {$this->organizacaoNome}.
             Responda OBRIGATORIAMENTE em formato JSON puro com as chaves 'politico', 'economico', 'social', 'tecnologico', 'ambiental', 'legal', cada uma contendo um array de strings.";
-            
+
             $response = $aiService->suggest($prompt);
             $decoded = json_decode(str_replace(['```json', '```'], '', $response), true);
 
@@ -74,7 +97,7 @@ class AnalisePESTEL extends Component
                 throw new \Exception('Resposta em formato inválido.');
             }
         } catch (\Throwable $e) {
-            \Log::error('Erro IA PESTEL: ' . $e->getMessage());
+            \Log::error('Erro IA PESTEL: '.$e->getMessage());
             $this->aiSuggestion = null;
             session()->flash('error', 'Não foi possível gerar sugestões.');
         }
@@ -82,6 +105,7 @@ class AnalisePESTEL extends Component
 
     public function adicionarSugerido($categoria, $item)
     {
+        $this->authorize('modulo.criar', 'planejamento-estrategico');
         abort_unless($this->peiAtivo !== null && $this->organizacaoId !== null, 403);
 
         AnaliseAmbiental::create([
@@ -94,7 +118,7 @@ class AnalisePESTEL extends Component
         ]);
 
         $this->carregarDados();
-        
+
         // Remover da sugestão
         $map = [
             'Político' => 'politico',
@@ -102,12 +126,12 @@ class AnalisePESTEL extends Component
             'Social' => 'social',
             'Tecnológico' => 'tecnologico',
             'Ambiental' => 'ambiental',
-            'Legal' => 'legal'
+            'Legal' => 'legal',
         ];
         $key = $map[$categoria] ?? null;
 
         if ($key && isset($this->aiSuggestion[$key])) {
-            $this->aiSuggestion[$key] = array_filter($this->aiSuggestion[$key], fn($i) => $item !== $i);
+            $this->aiSuggestion[$key] = array_filter($this->aiSuggestion[$key], fn ($i) => $item !== $i);
         }
     }
 
@@ -125,21 +149,27 @@ class AnalisePESTEL extends Component
             $this->peiAtivo = PEI::find($peiId);
         }
 
-        if (!$this->peiAtivo) {
+        if (! $this->peiAtivo) {
             $this->peiAtivo = PEI::ativos()->first();
         }
     }
 
     public function atualizarOrganizacao($id)
     {
+        // Método público (e ouvinte de evento): o ID vem do cliente. Sem esta
+        // checagem, o escopo #[Locked] era trocado por qualquer organização.
+        abort_unless(! $id || Auth::user()?->podeAcessarOrganizacao($id), 403);
+
         $this->organizacaoId = $id;
-        $this->organizacaoNome = $id ? \App\Models\Organization::find($id)?->nom_organizacao : null;
+        $this->organizacaoNome = $id ? Organization::find($id)?->nom_organizacao : null;
         $this->carregarDados();
     }
 
     public function carregarDados()
     {
-        if (!$this->peiAtivo) return;
+        if (! $this->peiAtivo) {
+            return;
+        }
 
         $query = AnaliseAmbiental::pestel()
             ->where('cod_pei', $this->peiAtivo->cod_pei)
@@ -168,6 +198,8 @@ class AnalisePESTEL extends Component
 
     public function edit($id)
     {
+        $this->authorize('modulo.editar', 'planejamento-estrategico');
+
         $item = AnaliseAmbiental::findOrFail($id);
         abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
         $this->itemId = $id;
@@ -180,8 +212,11 @@ class AnalisePESTEL extends Component
 
     public function save()
     {
-        if (!$this->peiAtivo) {
+        $this->authorize($this->itemId ? 'modulo.editar' : 'modulo.criar', 'planejamento-estrategico');
+
+        if (! $this->peiAtivo) {
             session()->flash('error', 'Selecione um Ciclo PEI antes de salvar.');
+
             return;
         }
 
@@ -218,6 +253,8 @@ class AnalisePESTEL extends Component
 
     public function delete($id)
     {
+        $this->authorize('modulo.excluir', 'planejamento-estrategico');
+
         $item = AnaliseAmbiental::findOrFail($id);
         abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
         $item->delete();

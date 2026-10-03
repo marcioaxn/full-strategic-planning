@@ -3,12 +3,12 @@
         <!-- Navbar Pública Premium -->
         <nav class="navbar navbar-expand-lg fixed-top public-navbar shadow-sm">
             <div class="container-fluid px-4 py-2">
-                <a class="navbar-brand fw-bold d-flex align-items-center" href="/">
+                <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ route('welcome') }}">
                     <div class="icon-circle-header gradient-theme-icon rounded-circle p-2 me-2 shadow-sm">
                         <i class="bi bi-diagram-3 fs-5 text-white"></i>
                     </div>
                     <div>
-                        <div class="brand-text-primary text-body lh-1" style="font-size: 1.2rem;">SPS</div>
+                        <div class="brand-text-primary text-body lh-1" style="font-size: 1.2rem;">{{ config('app.name', 'Sistema PEI') }}</div>
                         <div class="brand-text-secondary small text-muted lh-1" style="font-size: 0.65rem; letter-spacing: 1px;">PORTAL DA TRANSPARÊNCIA</div>
                     </div>
                 </a>

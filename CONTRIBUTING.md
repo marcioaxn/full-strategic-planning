@@ -188,18 +188,20 @@ impede a suíte de apagar o banco de desenvolvimento.
 
 ## Travas automáticas
 
-Versionadas em `.claude/`, rodam a cada ferramenta usada.
+As travas **do produto** vivem na suíte de testes e rodam com `php artisan test` — em qualquer
+máquina, a partir de um checkout limpo. Exemplos:
 
-| Trava | Evento | O que cobra |
-|---|---|---|
-| `.claude/hooks/guarda-comando.php` | antes de Bash | Nega `rm -rf`, `migrate:fresh/reset`, `db:wipe`, `DROP DATABASE`, force-push em `main`. Pergunta em `TRUNCATE`, escrita direta no banco, `db:seed`, `migrate`, `tinker`, `psql`, `git push` |
-| `.claude/hooks/guarda-arquivo.php` | após Write/Edit | Sintaxe PHP, padrões proibidos, segredo literal, `{!! !!}` em Blade, `exists`/`unique` com schema |
+| Trava | O que cobra |
+|---|---|
+| `tests/Feature/RiskManagement/SalvarRiscoPelaTelaTest.php` | Salvar pelo caminho da tela; `exists`/`unique` sem schema |
+| `tests/Unit/DependenciasDeRuntimeAceitamPhp82Test.php` | Nenhum pacote de runtime do `composer.lock` exige PHP acima do piso `^8.2` — o `config.platform.php = 8.3.0` (necessário ao Pest 4) não pode puxar dependência que derrube servidor em 8.2 |
 
-**Dívida congelada** (`.claude/hooks/divida-congelada.json`): o passivo que já existia quando os
-guardas nasceram não barra edição. **A lista só encolhe.** Regravá-la para calar aviso em código
-novo é fraudar a própria trava — o gerador recusa quando a dívida cresceria.
+**Ferramental do assistente de IA não é versionado.** Hooks, permissões e instruções do
+assistente (`.claude/`, `CLAUDE.md`, `.mcp.json`, `boost.json`) ficam na máquina de quem
+desenvolve — este repositório é público (ver `.gitignore`). Por isso nenhuma regra deste
+documento depende deles: o que é obrigatório para o código está aqui e nos testes.
 
-Se um guarda apontar falso positivo: corrija o **guarda**, e diga qual e por quê. Nunca contorne
+Se uma trava apontar falso positivo: corrija a **trava**, e diga qual e por quê. Nunca contorne
 em silêncio.
 
 ---

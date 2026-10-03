@@ -89,7 +89,7 @@
                 <div class="notion-avatars-stack d-flex">
                     @foreach($entrega->responsaveis->take(3) as $resp)
                         <div class="notion-card-avatar border border-white" style="margin-left: -8px;" title="{{ $resp->name }}">
-                            {{ strtoupper(substr($resp->name, 0, 2)) }}
+                            {{ strtoupper(collect(preg_split('/\s+/', trim((string) $resp->name)))->filter()->take(2)->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->join('')) }}
                         </div>
                     @endforeach
                 </div>

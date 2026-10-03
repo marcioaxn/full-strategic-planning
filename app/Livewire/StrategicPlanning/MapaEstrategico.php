@@ -84,6 +84,10 @@ class MapaEstrategico extends Component
 
     public function atualizarOrganizacao($id)
     {
+        // Método público (e ouvinte de evento): o ID vem do cliente. Logado, só
+        // dentro do próprio escopo; o visitante da área pública só consulta.
+        abort_unless(! $id || ! Auth::check() || Auth::user()->podeAcessarOrganizacao($id), 403);
+
         $this->organizacaoId = $id;
     }
 

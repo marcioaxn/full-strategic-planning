@@ -12,6 +12,7 @@ use App\Models\StrategicPlanning\MissaoVisaoValores;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\SystemSetting;
+use App\Services\IndicadorCalculoService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Layout;
@@ -66,6 +67,7 @@ class LandingPage extends Component
                 // cinza no portal e vermelho no mapa. O mesmo número, dois
                 // juízos, na mesma plataforma.
                 $calcularCor = fn (float $pct): string => GrauSatisfacao::corDe($pct, $pei->cod_pei, $anoAtual);
+                $calculo = app(IndicadorCalculoService::class);
 
                 $org = Organization::whereColumn('cod_organizacao', 'rel_cod_organizacao')->first()
                            ?? Organization::first();
@@ -76,11 +78,11 @@ class LandingPage extends Component
                     ->with(['objetivos' => fn ($q) => $q->withCount(['indicadores', 'planosAcao'])])
                     ->orderBy('num_nivel_hierarquico_apresentacao', 'desc')
                     ->get()
-                    ->map(function ($p) use ($anoAtual, $calcularCor) {
+                    ->map(function ($p) use ($anoAtual, $calcularCor, $calculo) {
                         // Pré-calcula o atingimento de cada objetivo UMA vez e anexa ao objeto
                         // (evita N+1 na renderização do Mapa Estratégico e do Panorama).
-                        $p->objetivos->each(function ($o) use ($anoAtual, $calcularCor) {
-                            $o->lp_atingimento = round($o->calcularAtingimentoConsolidado($anoAtual), 1);
+                        $p->objetivos->each(function ($o) use ($anoAtual, $calcularCor, $calculo) {
+                            $o->lp_atingimento = round($calculo->calcularAtingimentoObjetivo($o, $anoAtual), 1);
                             $o->lp_cor = $calcularCor($o->lp_atingimento);
                         });
 
@@ -104,8 +106,11 @@ class LandingPage extends Component
 
                         $p->qtd_mensuravel = $mensuraveis->count();
                         $p->tem_medicao = $p->qtd_mensuravel > 0;
+                        // Mesmo cálculo do Dashboard, do Mapa e dos relatórios
+                        // (indicadores e iniciativas, com os pesos da perspectiva):
+                        // o portal não pode publicar um número que a área interna desmente.
                         $p->atingimento_medio = $p->tem_medicao
-                            ? round($mensuraveis->avg('lp_atingimento'), 1)
+                            ? round($calculo->calcularAtingimentoPerspectiva($p, $anoAtual), 1)
                             : 0;
                         $p->cor_atingimento = $p->tem_medicao ? $calcularCor($p->atingimento_medio) : '#6b7280';
                         $p->objetivos_abaixo = $mensuraveis->filter(fn ($o) => $o->lp_atingimento < 50)->count();

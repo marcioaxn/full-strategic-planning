@@ -12,6 +12,7 @@ use App\Services\AI\AiServiceFactory;
 use App\Services\PeiGuidanceService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -116,6 +117,9 @@ class ListarObjetivos extends Component
 
     public function pedirAjudaIA()
     {
+        // Tela também pública: visitante não aciona a IA (serviço pago).
+        abort_unless(Auth::check(), 403);
+
         if (! $this->aiEnabled) {
             return;
         }
@@ -191,6 +195,14 @@ class ListarObjetivos extends Component
 
         if ($this->peiAtivo) {
             $this->carregarPerspectivas();
+
+            // "Editar" no detalhe do objetivo chega com ?editar={cod}.
+            // Só abre para quem pode editar; edit() reconfere tudo.
+            $editar = request()->query('editar');
+            if (is_string($editar) && Auth::check() && Gate::allows('modulo.editar', 'planejamento-estrategico')
+                && Objetivo::whereKey($editar)->whereHas('perspectiva', fn ($q) => $q->where('cod_pei', $this->peiAtivo->cod_pei))->exists()) {
+                $this->edit($editar);
+            }
         }
     }
 

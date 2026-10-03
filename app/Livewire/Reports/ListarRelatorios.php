@@ -142,6 +142,10 @@ class ListarRelatorios extends Component
 
     public function atualizarOrganizacao($id)
     {
+        // Método público (e ouvinte de evento): o ID vem do cliente. Logado, só
+        // dentro do próprio escopo; o visitante da área pública só consulta.
+        abort_unless(! $id || ! Auth::check() || Auth::user()->podeAcessarOrganizacao($id), 403);
+
         $this->organizacaoId = $id;
         $this->organizacaoNome = $id ? Organization::find($id)?->nom_organizacao : null;
         $this->carregarIdentidade(); // Recarregar identidade ao mudar organização

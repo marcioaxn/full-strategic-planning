@@ -2,12 +2,12 @@
 
 namespace App\Livewire\StrategicPlanning;
 
-use App\Models\SystemSetting;
-use App\Services\Reports\AcabamentoPdf;
 use App\Models\StrategicPlanning\AtividadeCadeiaValor;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\StrategicPlanning\ProcessoAtividadeCadeiaValor;
+use App\Models\SystemSetting;
+use App\Services\Reports\AcabamentoPdf;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Session;
@@ -211,7 +211,7 @@ class CadeiaDeValor extends Component
 
         // Mesmo acabamento dos outros dez relatórios: um renderizador só.
         (new AcabamentoPdf('landscape'))->aplicar($pdf, [
-            'esquerda' => $this->peiAtivo?->dsc_pei ?? 'Planejamento Estratégico Institucional',
+            'esquerda' => $this->peiAtivo?->dsc_pei ?? 'Planejamento Estratégico Integrado',
             'centro' => 'Cadeia de Valor',
             'site' => (string) SystemSetting::getValue('orgao_site', ''),
             'emitido_em' => now()->format('d/m/Y'),

@@ -388,7 +388,7 @@
                                                 <small class="text-muted ms-2">({{ $sug['min'] }}% a {{ $sug['max'] }}%)</small>
                                             </div>
                                         </div>
-                                        <button wire:click="aplicarSugestao('{{ $sug['nome'] }}', '{{ $sug['cor'] }}', {{ $sug['min'] }}, {{ $sug['max'] }})" 
+                                        <button wire:click="aplicarSugestao(@js($sug['nome']), @js($sug['cor']), @js($sug['min']), @js($sug['max']))" 
                                                 class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
                                             <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}
                                         </button>
@@ -409,7 +409,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-6">
                         <h5 class="mb-0 fw-bold text-primary">
-                            <i class="bi bi-palette me-2"></i>Configuracao de Graus de Satisfacao
+                            <i class="bi bi-palette me-2"></i>Configuração de Graus de Satisfação
                         </h5>
                         <small class="text-muted">Defina os intervalos percentuais e cores para classificar o desempenho</small>
                     </div>
@@ -420,7 +420,7 @@
                             </span>
                             <input type="text"
                                    class="form-control border-start-0"
-                                   placeholder="Buscar por descricao ou cor..."
+                                   placeholder="Buscar por descrição ou cor..."
                                    wire:model.live.debounce.300ms="search">
                         </div>
                     </div>
@@ -448,12 +448,12 @@
                         <thead class="table-light text-nowrap">
                             <tr>
                                 <th class="px-4" style="width: 1%;">Cor</th>
-                                <th>Descricao</th>
+                                <th>Descrição</th>
                                 <th>Ciclo / Ano</th>
                                 <th class="text-center">Código da Cor</th>
                                 <th class="text-center">Min (%)</th>
                                 <th class="text-center">Max (%)</th>
-                                <th class="text-center" style="width: 1%;">Acoes</th>
+                                <th class="text-center" style="width: 1%;">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -506,7 +506,7 @@
                                     <td colspan="6" class="text-center py-5">
                                         <div class="text-muted">
                                             <i class="bi bi-palette fs-1 d-block mb-3 opacity-50"></i>
-                                            <p class="mb-2">Nenhum grau de satisfacao cadastrado</p>
+                                            <p class="mb-2">Nenhum grau de satisfação cadastrado</p>
                                             <button class="btn btn-primary btn-sm" wire:click="openModal">
                                                 <i class="bi bi-plus-circle me-1"></i> Cadastrar Primeiro Grau
                                             </button>

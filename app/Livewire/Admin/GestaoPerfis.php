@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Models\PerfilAcesso;
 use App\Models\User;
+use App\Services\Authorization\CapacidadeResolver;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -25,29 +26,65 @@ class GestaoPerfis extends Component
 
     /**
      * Matriz de permissões por perfil × funcionalidade.
-     * Reflete a lógica real implementada nas Policies do sistema.
-     * Legenda: T=Total(CRUD) · E=Edição · L=Leitura · —=Sem acesso
+     *
+     * Era uma tabela ESCRITA À MÃO que dizia refletir as Policies — e não
+     * refletia: mostrava "Leitura" no Planejamento e nos Indicadores para o
+     * Gestor Responsável, que pela MATRIZ real cria e edita. A tela de perfis
+     * mentia sobre quem pode o quê. Agora a tabela é DERIVADA da MATRIZ do
+     * CapacidadeResolver (a mesma que decide cada acesso), lida por reflexão.
+     *
+     * Legenda: T=Total (criar, editar e excluir) · E=Edição (cria e/ou edita)
+     * · L=Leitura · —=Sem acesso. O Super Admin tem tudo. Sobre isto ainda vale
+     * o escopo: cada perfil só age nas unidades a que está vinculado.
      */
     public function getMatrizProperty(): array
     {
+        $modulos = [
+            'Planejamento (ciclo, identidade, análises, objetivos)' => 'planejamento-estrategico',
+            'Indicadores' => 'indicadores',
+            'Iniciativas' => 'planos-de-acao',
+            'Entregas' => 'entregas',
+            'Riscos' => 'riscos',
+            'Graus de Satisfação' => 'graus-satisfacao',
+            'Relatórios' => 'relatorios',
+            'Organizações' => 'organizacoes',
+            'Usuários' => 'usuarios',
+            'Perfis de Acesso' => 'admin.perfis',
+            'Auditoria' => 'auditoria',
+            'Configurações do Sistema' => 'admin.configuracoes',
+        ];
+
+        $matriz = (new \ReflectionClass(CapacidadeResolver::class))->getConstant('MATRIZ');
+
+        $nivel = function (array $abilities): string {
+            $escreve = array_intersect(['criar', 'editar'], $abilities);
+            if ($escreve && in_array('excluir', $abilities, true) && in_array('criar', $abilities, true)) {
+                return 'T';
+            }
+            if ($escreve) {
+                return 'E';
+            }
+
+            return in_array('acessar', $abilities, true) ? 'L' : '—';
+        };
+
+        $perfis = [
+            'Administrador Geral' => array_fill(0, count($modulos), 'T'),
+        ];
+        foreach ([
+            'Admin de Unidade' => PerfilAcesso::ADMIN_UNIDADE,
+            'Gestor Responsável' => PerfilAcesso::GESTOR_RESPONSAVEL,
+            'Gestor Substituto' => PerfilAcesso::GESTOR_SUBSTITUTO,
+        ] as $rotulo => $codPerfil) {
+            $perfis[$rotulo] = array_map(
+                fn ($modulo) => $nivel($matriz[$modulo][$codPerfil] ?? []),
+                array_values($modulos)
+            );
+        }
+
         return [
-            'funcionalidades' => [
-                'Configurações do Sistema',
-                'Organizações',
-                'Usuários e Perfis',
-                'Ciclo PEI / Identidade',
-                'Objetivos e Indicadores',
-                'Iniciativas',
-                'Entregas',
-                'Riscos',
-                'Relatórios',
-            ],
-            'perfis' => [
-                'Administrador Geral' => ['T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T'],
-                'Admin de Unidade' => ['—', 'L', '—', 'E', 'E', 'T', 'T', 'E', 'L'],
-                'Gestor Responsável' => ['—', 'L', '—', 'L', 'L', 'E', 'E', 'L', 'L'],
-                'Gestor Substituto' => ['—', 'L', '—', 'L', 'L', 'E', 'E', 'L', 'L'],
-            ],
+            'funcionalidades' => array_keys($modulos),
+            'perfis' => $perfis,
         ];
     }
 

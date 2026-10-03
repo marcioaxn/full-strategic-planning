@@ -5,6 +5,7 @@ namespace App\Livewire\ActionPlan;
 use App\Models\ActionPlan\LicaoAprendida;
 use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\StrategicPlanning\PEI;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -52,6 +53,10 @@ class LicoesAprendidas extends Component
 
     public function atualizarOrganizacao($id): void
     {
+        // Método público (e ouvinte de evento): o ID vem do cliente. Logado, só
+        // dentro do próprio escopo; o visitante da área pública só consulta.
+        abort_unless(! $id || ! Auth::check() || Auth::user()->podeAcessarOrganizacao($id), 403);
+
         $this->organizacaoId = $id;
     }
 

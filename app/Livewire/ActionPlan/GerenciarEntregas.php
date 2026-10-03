@@ -2,12 +2,14 @@
 
 namespace App\Livewire\ActionPlan;
 
-use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\ActionPlan\Entrega;
+use App\Models\ActionPlan\PlanoDeAcao;
 use App\Services\IndicadorCalculoService;
-use Livewire\Attributes\Layout;
-use Livewire\Component;
+use Carbon\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
+use Livewire\Component;
 
 #[Layout('layouts.app')]
 class GerenciarEntregas extends Component
@@ -15,20 +17,32 @@ class GerenciarEntregas extends Component
     use AuthorizesRequests;
 
     public $plano;
+
     public $entregas = [];
+
     public $progresso = 0;
+
     public $progressoPonderado = 0;
+
     public $validacaoPesos = [];
 
     public bool $showModal = false;
+
+    // Só o servidor define (edit); o navegador não pode apontar para entrega de outro plano.
+    #[Locked]
     public $entregaId;
 
     // Campos do formulário
     public $dsc_entrega;
+
     public $bln_status = 'Não Iniciado';
+
     public $dsc_periodo_medicao;
+
     public $dte_prazo;
+
     public $num_nivel_hierarquico_apresentacao = 1;
+
     public $num_peso = 0;
 
     public $statusOptions = ['Não Iniciado', 'Em Andamento', 'Concluído', 'Cancelado', 'Suspenso'];
@@ -46,9 +60,9 @@ class GerenciarEntregas extends Component
             ->whereNull('cod_entrega_pai')
             ->ordenadoPorNivel()
             ->get();
-        
+
         $this->progresso = $this->plano->calcularProgressoEntregas();
-        
+
         // Calcular progresso ponderado e validação de pesos usando o service
         $service = app(IndicadorCalculoService::class);
         $this->progressoPonderado = $service->calcularProgressoPlano($this->plano);
@@ -59,21 +73,21 @@ class GerenciarEntregas extends Component
     {
         $this->authorize('update', $this->plano);
         $this->resetForm();
-        
+
         // Sugerir o próximo nível
         $maxNivel = $this->entregas->max('num_nivel_hierarquico_apresentacao') ?? 0;
         $this->num_nivel_hierarquico_apresentacao = $maxNivel + 1;
-        
+
         // Sugerir prazo final do plano
         $this->dte_prazo = $this->plano->dte_fim?->format('Y-m-d');
-        
+
         $this->showModal = true;
     }
 
     public function edit($id)
     {
-        $entrega = Entrega::findOrFail($id);
         $this->authorize('update', $this->plano);
+        $entrega = $this->entregaDoPlano($id);
 
         $this->entregaId = $id;
         $this->dsc_entrega = $entrega->dsc_entrega;
@@ -90,30 +104,36 @@ class GerenciarEntregas extends Component
     {
         $this->authorize('update', $this->plano);
 
-        $valData = \Carbon\Carbon::parse($this->dte_prazo);
-        $planoInicio = \Carbon\Carbon::parse($this->plano->dte_inicio);
-        $planoFim = \Carbon\Carbon::parse($this->plano->dte_fim);
+        $valData = Carbon::parse($this->dte_prazo);
+        $planoInicio = Carbon::parse($this->plano->dte_inicio);
+        $planoFim = Carbon::parse($this->plano->dte_fim);
 
         $this->validate([
             'dsc_entrega' => 'required|string|max:500',
-            'bln_status' => 'required|in:' . implode(',', $this->statusOptions),
+            'bln_status' => 'required|in:'.implode(',', $this->statusOptions),
             'dsc_periodo_medicao' => 'nullable|string|max:100',
             'dte_prazo' => [
                 'required',
                 'date',
                 function ($attribute, $value, $fail) use ($planoInicio, $planoFim) {
-                     $dt = \Carbon\Carbon::parse($value);
-                     if ($dt->lt($planoInicio)) {
-                         $fail("O prazo não pode ser anterior ao início do plano ({$planoInicio->format('d/m/Y')}).");
-                     }
-                     if ($dt->gt($planoFim)) {
-                         $fail("O prazo não pode exceder o fim do plano ({$planoFim->format('d/m/Y')}).");
-                     }
-                }
+                    $dt = Carbon::parse($value);
+                    if ($dt->lt($planoInicio)) {
+                        $fail("O prazo não pode ser anterior ao início do plano ({$planoInicio->format('d/m/Y')}).");
+                    }
+                    if ($dt->gt($planoFim)) {
+                        $fail("O prazo não pode exceder o fim do plano ({$planoFim->format('d/m/Y')}).");
+                    }
+                },
             ],
             'num_nivel_hierarquico_apresentacao' => 'required|integer|min:1',
             'num_peso' => 'nullable|numeric|min:0|max:100',
         ]);
+
+        // Edição: a entrega tem de ser deste plano — senão o updateOrCreate abaixo
+        // a "moveria" para cá, trocando o cod_plano_de_acao.
+        if ($this->entregaId) {
+            $this->entregaDoPlano($this->entregaId);
+        }
 
         Entrega::updateOrCreate(
             ['cod_entrega' => $this->entregaId],
@@ -136,9 +156,17 @@ class GerenciarEntregas extends Component
     public function delete($id)
     {
         $this->authorize('update', $this->plano);
-        Entrega::findOrFail($id)->delete();
+        $this->entregaDoPlano($id)->delete();
         $this->carregarDados();
         session()->flash('status', 'Entrega excluída!');
+    }
+
+    /**
+     * Entrega pelo id vindo do navegador, restrita ao plano da tela.
+     */
+    private function entregaDoPlano($id): Entrega
+    {
+        return Entrega::where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)->findOrFail($id);
     }
 
     public function resetForm()
@@ -157,10 +185,10 @@ class GerenciarEntregas extends Component
     public function redistribuirPesos()
     {
         $this->authorize('update', $this->plano);
-        
+
         $service = app(IndicadorCalculoService::class);
         $count = $service->redistribuirPesosIguais($this->plano);
-        
+
         $this->carregarDados();
         session()->flash('status', "Pesos redistribuídos igualmente entre {$count} entregas.");
     }

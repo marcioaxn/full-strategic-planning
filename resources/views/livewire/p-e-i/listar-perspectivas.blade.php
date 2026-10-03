@@ -368,7 +368,7 @@
                                                 <p class="small text-muted mb-0 mt-1 lh-sm">{{ $sugestao['descricao'] ?? '' }}</p>
                                             </div>
                                         </div>
-                                        <button wire:click="aplicarSugestao('{{ $sugestao['nome'] }}', {{ $sugestao['ordem'] }})" 
+                                        <button wire:click="aplicarSugestao(@js($sugestao['nome']), @js($sugestao['ordem']))" 
                                                 wire:loading.attr="disabled"
                                                 class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
                                             <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}

@@ -5,9 +5,10 @@ namespace App\Livewire\RiskManagement;
 use App\Models\RiskManagement\Risco;
 use App\Models\RiskManagement\RiscoMitigacao;
 use App\Models\User;
-use Livewire\Attributes\Layout;
-use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
+use Livewire\Component;
 
 #[Layout('layouts.app')]
 class GerenciarMitigacoes extends Component
@@ -15,10 +16,15 @@ class GerenciarMitigacoes extends Component
     use AuthorizesRequests;
 
     public $risco;
+
     public $mitigacoes = [];
+
     public $usuarios = [];
 
     public bool $showModal = false;
+
+    // Só o servidor define (edit); o navegador não pode apontar para registro de outro risco.
+    #[Locked]
     public $mitigacaoId;
 
     // Form Mitigação
@@ -44,7 +50,7 @@ class GerenciarMitigacoes extends Component
             ->orderBy('dte_prazo')
             ->get();
 
-        $this->usuarios = User::whereHas('organizacoes', function($q) {
+        $this->usuarios = User::whereHas('organizacoes', function ($q) {
             $q->where('tab_organizacoes.cod_organizacao', $this->risco->cod_organizacao);
         })->orderBy('name')->get();
     }
@@ -58,8 +64,8 @@ class GerenciarMitigacoes extends Component
 
     public function edit($id)
     {
-        $m = RiscoMitigacao::findOrFail($id);
         $this->authorize('update', $this->risco);
+        $m = $this->mitigacaoDoRisco($id);
 
         $this->mitigacaoId = $id;
         $this->form = [
@@ -88,6 +94,12 @@ class GerenciarMitigacoes extends Component
         $data = $this->form;
         $data['cod_risco'] = $this->risco->cod_risco;
 
+        // Edição: o registro tem de ser deste risco — senão o updateOrCreate abaixo
+        // o transferiria para cá, trocando o cod_risco.
+        if ($this->mitigacaoId) {
+            $this->mitigacaoDoRisco($this->mitigacaoId);
+        }
+
         RiscoMitigacao::updateOrCreate(
             ['cod_mitigacao' => $this->mitigacaoId],
             $data
@@ -101,8 +113,16 @@ class GerenciarMitigacoes extends Component
     public function delete($id)
     {
         $this->authorize('update', $this->risco);
-        RiscoMitigacao::findOrFail($id)->delete();
+        $this->mitigacaoDoRisco($id)->delete();
         $this->carregarDados();
+    }
+
+    /**
+     * Registro pelo id vindo do navegador, restrito ao risco da tela.
+     */
+    private function mitigacaoDoRisco($id): RiscoMitigacao
+    {
+        return RiscoMitigacao::where('cod_risco', $this->risco->cod_risco)->findOrFail($id);
     }
 
     public function resetForm()

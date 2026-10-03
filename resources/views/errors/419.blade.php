@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Auto-redirect para login em 2 segundos (fallback se JS não funcionar) -->
     <meta http-equiv="refresh" content="2;url={{ route('login') }}">
-    <title>Sessao Expirada - {{ config('app.name', 'SEAE') }}</title>
+    <title>Sessão Expirada - {{ config('app.name', 'Sistema PEI') }}</title>
     <style>
         * {
             margin: 0;

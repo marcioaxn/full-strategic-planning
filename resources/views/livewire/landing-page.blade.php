@@ -331,7 +331,7 @@
                 @endif
                 <h1 class="lp-hero-title mb-3">
                     <span>Planejamento Estratégico</span><br>
-                    Institucional
+                    Integrado
                 </h1>
                 @if($identidade?->dsc_missao)
                 <p class="lp-hero-sub mb-4">
@@ -353,7 +353,7 @@
                 </div>
                 <h1 class="lp-hero-title mb-4">
                     Planejamento Estratégico<br>
-                    <span>Institucional</span>
+                    <span>Integrado</span>
                 </h1>
                 <p class="lp-hero-sub mb-5">
                     Sistema integrado alinhado ao
@@ -430,7 +430,7 @@
                 <div class="text-center mb-4">
                     @if($stats['temMedicao'] ?? false)
                         <div class="lp-achieve-ring mx-auto mb-2" style="border-color:{{ $stats['corGlobal'] }};">
-                            <div class="lp-achieve-num" style="color:{{ $stats['corGlobal'] }};">{{ $stats['atingimentoGlobal'] }}%</div>
+                            <div class="lp-achieve-num" style="color:{{ $stats['corGlobal'] }};">@brazil_percent($stats['atingimentoGlobal'], 1)</div>
                             <div class="lp-achieve-sub">Atingimento<br>Global</div>
                         </div>
                         <p class="lp-hero-muted" style="font-size:.75rem;margin:0;">
@@ -472,17 +472,17 @@
                             <div class="lp-stack-title text-truncate">{{ $persp->dsc_perspectiva }}</div>
                             <div class="lp-stack-sub">
                                 {{ $persp->objetivos->count() }} {{ Str::plural('objetivo', $persp->objetivos->count()) }}
-                                &nbsp;·&nbsp; {{ $persp->atingimento_medio }}%
+                                &nbsp;·&nbsp; @brazil_percent($persp->atingimento_medio, 1)
                             </div>
                         </div>
                         <div style="flex-shrink:0;font-size:1.1rem;font-weight:800;color:{{ $persp->cor_atingimento }};">
-                            {{ $persp->atingimento_medio }}%
+                            @brazil_percent($persp->atingimento_medio, 1)
                         </div>
                     </div>
                     @endforeach
                     @if($perspectivas->count() > 3)
                     <div class="lp-hero-muted" style="font-size:.75rem;text-align:center;margin-top:.5rem;">
-                        + {{ $perspectivas->count() - 3 }} perspectivas adicionais
+                        + {{ $perspectivas->count() - 3 }} {{ $perspectivas->count() - 3 === 1 ? 'perspectiva adicional' : 'perspectivas adicionais' }}
                     </div>
                     @endif
                 </div>
@@ -840,7 +840,7 @@
     <div class="container">
         <div class="row align-items-center g-2">
             <div class="col-12 col-md-6 mb-2 mb-md-0">
-                <span style="font-size:.85rem;">Sistema de Planejamento Estratégico Institucional</span>
+                <span style="font-size:.85rem;">Sistema de Planejamento Estratégico Integrado</span>
                 <span class="mx-2" style="opacity:.3;">·</span>
                 <span style="font-size:.85rem;">Alinhado ao GPPEI/MGI 2025</span>
             </div>

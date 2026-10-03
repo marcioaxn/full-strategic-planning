@@ -257,7 +257,7 @@
                                             <div class="flex-grow-1">
                                                 <div class="fw-bold text-dark">{{ $sug['nome'] }}</div>
                                             </div>
-                                            <button wire:click="aplicarSugestao('{{ $sug['nome'] }}')" 
+                                            <button wire:click="aplicarSugestao(@js($sug['nome']))" 
                                                     class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
                                                 <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}
                                             </button>

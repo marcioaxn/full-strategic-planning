@@ -153,7 +153,7 @@
                         @forelse($responsaveis as $resp)
                             <li class="d-flex align-items-center mb-3">
                                 <div class="avatar-sm-det me-3 gradient-theme text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.8rem;">
-                                    {{ substr($resp->name, 0, 1) }}
+                                    {{ mb_strtoupper(mb_substr($resp->name, 0, 1)) }}
                                 </div>
                                 <div>
                                     <span class="fw-semibold d-block small">{{ $resp->name }}</span>
@@ -167,7 +167,8 @@
                 </div>
             </div>
 
-            <!-- Histórico de Alterações -->
+            <!-- Histórico de Alterações: só para quem está logado (a página também é pública e o histórico expõe nomes de servidores) -->
+            @auth
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white py-3 border-0">
                     <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Histórico</h5>
@@ -203,7 +204,8 @@
                             <p class="text-muted small text-center">Sem histórico registrado.</p>
                         @endforelse
                     </div>
-                    @if($auditoria->isNotEmpty())
+                    {{-- A Auditoria é restrita ao Super Admin: para os demais o link levava a 403. --}}
+                    @if($auditoria->isNotEmpty() && auth()->user()->can('modulo.acessar', 'auditoria'))
                         <div class="text-center mt-3">
                             <a href="{{ route('audit.index', ['filtroModel' => 'PlanoDeAcao', 'filtroId' => $plano->cod_plano_de_acao]) }}" 
                                wire:navigate 
@@ -214,6 +216,7 @@
                     @endif
                 </div>
             </div>
+            @endauth
         </div>
     </div>
 

@@ -128,8 +128,13 @@
                             @foreach($anos as $ano)
                                 <tr>
                                     <td>{{ $ano }}</td>
-                                    <td>@brazil_number($indicador->linhaBase->where('num_ano', $ano)->first()?->num_linha_base ?? 0, 2)</td>
-                                    <td class="fw-bold">@brazil_number($indicador->metasPorAno->where('num_ano', $ano)->first()?->meta ?? 0, 2)</td>
+                                    {{-- Ano sem registro mostra "—": exibir 0,00 afirmava uma meta (ou base) zero que ninguém definiu. --}}
+                                    @php
+                                        $lbAno = $indicador->linhaBase->where('num_ano', $ano)->first()?->num_linha_base;
+                                        $metaAno = $indicador->metasPorAno->where('num_ano', $ano)->first()?->meta;
+                                    @endphp
+                                    <td>@if($lbAno === null) <span class="text-muted">—</span> @else @brazil_number($lbAno, 2) @endif</td>
+                                    <td class="fw-bold">@if($metaAno === null) <span class="text-muted fw-normal">—</span> @else @brazil_number($metaAno, 2) @endif</td>
                                 </tr>
                             @endforeach
                         </tbody>

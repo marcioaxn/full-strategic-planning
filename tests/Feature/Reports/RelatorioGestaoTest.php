@@ -372,7 +372,7 @@ test('seção do modelo sem dado avisa o que falta, em PDF e em DOCX', function 
     $mensagens = [
         'Missão, visão, valores e objetivos ainda não foram cadastrados neste ciclo.',
         'Nenhum objetivo estratégico foi cadastrado neste ciclo, e por isso não há resultados a apurar.',
-        'A cadeia de valor ainda não foi cadastrada neste ciclo do Planejamento Estratégico Institucional.',
+        'A cadeia de valor ainda não foi cadastrada neste ciclo do Planejamento Estratégico Integrado.',
         'Nenhuma análise SWOT ou PESTEL foi registrada neste ciclo.',
         'Nenhum risco foi registrado para este ciclo no módulo de Gestão de Riscos.',
     ];

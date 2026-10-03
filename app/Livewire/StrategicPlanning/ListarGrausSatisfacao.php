@@ -65,6 +65,13 @@ class ListarGrausSatisfacao extends Component
         $this->authorize('modulo.acessar', 'graus-satisfacao');
 
         $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
+
+        // "Editar" no detalhe do grau chega com ?editar={cod}.
+        $editar = request()->query('editar');
+        if (is_string($editar) && auth()->user()->can('modulo.editar', 'graus-satisfacao')
+            && GrauSatisfacao::whereKey($editar)->exists()) {
+            $this->edit($editar);
+        }
     }
 
     public function closeSuccessModal()

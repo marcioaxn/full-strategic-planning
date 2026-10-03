@@ -56,6 +56,13 @@ class ListarOrganizacoes extends Component
     public function mount()
     {
         $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
+
+        // "Editar" no detalhe da organização chega com ?editar={cod} e já abre o
+        // modal. O botão de lá não fazia nada.
+        $editar = request()->query('editar');
+        if (is_string($editar) && ($alvo = Organization::find($editar)) && auth()->user()->can('update', $alvo)) {
+            $this->edit($editar);
+        }
     }
 
     public function pedirAjudaIA()

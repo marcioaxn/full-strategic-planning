@@ -91,7 +91,7 @@ class ReportGenerationService
         $organizacao = Organization::findOrFail($organizacaoId);
         $identidade = MissaoVisaoValores::where('cod_organizacao', $organizacaoId)->first() ?? new MissaoVisaoValores;
 
-        $pei = PEI::ativos()->first();
+        $pei = PEI::doContexto();
 
         // 1. Valores (Identidade Cultural)
         $valores = Valor::where('cod_pei', $pei?->cod_pei)
@@ -259,7 +259,7 @@ class ReportGenerationService
         $organizacao = Organization::findOrFail($organizacaoId);
         $identidade = MissaoVisaoValores::where('cod_organizacao', $organizacaoId)->first() ?? new MissaoVisaoValores;
 
-        $pei = PEI::ativos()->first();
+        $pei = PEI::doContexto();
 
         // Carregar Valores
         $valores = Valor::where('cod_pei', $pei?->cod_pei)
@@ -345,7 +345,7 @@ class ReportGenerationService
     public function generateObjetivos($organizacaoId = null, $ano = null, $perspectivaId = null)
     {
         $ano = $ano ?? date('Y');
-        $pei = PEI::ativos()->first();
+        $pei = PEI::doContexto();
 
         if (! $pei) {
             throw new \Exception('Nenhum ciclo PEI ativo encontrado.');
@@ -358,7 +358,7 @@ class ReportGenerationService
             $query->where('cod_perspectiva', $perspectivaId);
         }
 
-        $perspectivas = $query->with('objetivos')->ordenadoPorNivel()->get();
+        $perspectivas = $query->with('objetivos.ods')->ordenadoPorNivel()->get();
 
         $filtros = [
             'ano' => $ano,
@@ -382,10 +382,25 @@ class ReportGenerationService
         $organizacao = $organizacaoId ? Organization::find($organizacaoId) : null;
         $query = Indicador::query();
         if ($organizacaoId) {
-            $query->whereHas('organizacoes', function ($q) use ($organizacaoId) {
-                $q->where('tab_organizacoes.cod_organizacao', $organizacaoId);
-            })->orWhereHas('planoDeAcao', function ($q) use ($organizacaoId) {
-                $q->where('cod_organizacao', $organizacaoId);
+            // Mesmo critério da tela de Indicadores: o Super Admin vê a unidade e
+            // as subordinadas. O PDF olhava só a unidade exata — para o órgão
+            // raiz saíam 2 indicadores enquanto a tela mostrava 16.
+            $orgIds = auth()->user()?->isSuperAdmin()
+                ? (Organization::find($organizacaoId)?->getDescendantsAndSelfIds() ?? [$organizacaoId])
+                : [$organizacaoId];
+
+            // Agrupado: o orWhereHas solto anulava qualquer filtro somado depois.
+            $query->where(function ($q) use ($orgIds) {
+                $q->whereHas('organizacoes', fn ($o) => $o->whereIn('tab_organizacoes.cod_organizacao', $orgIds))
+                    ->orWhereHas('planoDeAcao', fn ($p) => $p->whereIn('cod_organizacao', $orgIds));
+            });
+        }
+
+        // Só o ciclo em contexto: o relatório misturava indicadores de todos os ciclos.
+        if ($pei = PEI::doContexto()) {
+            $query->where(function ($q) use ($pei) {
+                $q->whereHas('objetivo.perspectiva', fn ($p) => $p->where('cod_pei', $pei->cod_pei))
+                    ->orWhereHas('planoDeAcao.objetivo.perspectiva', fn ($p) => $p->where('cod_pei', $pei->cod_pei));
             });
         }
         $indicadores = $query->with(['objetivo', 'planoDeAcao'])->get();
@@ -409,7 +424,7 @@ class ReportGenerationService
         // 🔴 A régua vai JUNTO. Sem ela, a view caía nos cortes 80/50 escritos
         // no próprio Blade — cortes que a organização nunca definiu, e que
         // divergem do farol do Mapa Estratégico para o mesmo indicador.
-        $pei = PEI::ativos()->first();
+        $pei = PEI::doContexto();
         $grausSatisfacao = GrauSatisfacao::doPei($pei?->cod_pei, (int) $ano)->get();
 
         $pdf = Pdf::loadView('relatorios.indicadores', compact(
@@ -479,6 +494,11 @@ class ReportGenerationService
             $query->where('cod_organizacao', $organizacaoId);
         }
 
+        // Só o ciclo em contexto, como a tela de riscos.
+        if ($pei = PEI::doContexto()) {
+            $query->where('cod_pei', $pei->cod_pei);
+        }
+
         $riscos = $query->orderByRaw('(num_probabilidade * num_impacto) DESC')->get();
 
         $pdf = Pdf::loadView('relatorios.riscos', compact('riscos', 'organizacao'));
@@ -513,7 +533,7 @@ class ReportGenerationService
 
         $organizacao = Organization::findOrFail($organizacaoId);
         $identidade = MissaoVisaoValores::where('cod_organizacao', $organizacaoId)->first() ?? new MissaoVisaoValores;
-        $pei = PEI::ativos()->first();
+        $pei = PEI::doContexto();
 
         // Identidade & Valores
         $valores = Valor::where('cod_pei', $pei?->cod_pei)

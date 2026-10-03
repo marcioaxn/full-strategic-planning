@@ -14,7 +14,7 @@
                     <div class="lp-mobile-brand-icon">
                         <i class="bi bi-diagram-3 text-white"></i>
                     </div>
-                    <span class="lp-mobile-brand-text">SEAE</span>
+                    <span class="lp-mobile-brand-text">{{ config('app.name', 'Sistema PEI') }}</span>
                 </div>
             </div>
 

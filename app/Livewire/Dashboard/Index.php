@@ -17,6 +17,7 @@ use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Perspectiva;
 use App\Services\AI\AiServiceFactory;
 use App\Services\IndicadorCalculoService;
+use App\Support\CalculoPolaridade;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
@@ -82,6 +83,10 @@ class Index extends Component
 
     public function atualizarOrganizacao($id)
     {
+        // Método público (e ouvinte de evento): o ID vem do cliente. Logado, só
+        // dentro do próprio escopo; o visitante da área pública só consulta.
+        abort_unless(! $id || ! Auth::check() || Auth::user()->podeAcessarOrganizacao($id), 403);
+
         $this->organizacaoId = $id;
         $this->carregarNomeOrganizacao();
         $this->atualizarDadosGraficos();
@@ -405,9 +410,14 @@ class Index extends Component
         }
 
         // Buscar evoluções do ano selecionado vinculadas ao PEI
-        $evolucoes = EvolucaoIndicador::where('num_ano', $this->anoSelecionado)
+        // Só conta o que foi de fato lançado (realizado preenchido). Indicador
+        // informativo (polaridade "Não Aplicável") não entra em média.
+        $evolucoes = EvolucaoIndicador::with('indicador:cod_indicador,dsc_polaridade')
+            ->where('num_ano', $this->anoSelecionado)
+            ->whereNotNull('vlr_realizado')
             ->whereHas('indicador.objetivo.perspectiva', fn ($q) => $q->where('cod_pei', $this->peiAtivo->cod_pei))
-            ->get();
+            ->get()
+            ->reject(fn ($ev) => CalculoPolaridade::ehInformativo($ev->indicador?->dsc_polaridade));
 
         $dadosPorMes = [];
         for ($i = 1; $i <= 12; $i++) {
@@ -418,26 +428,20 @@ class Index extends Component
 
             $evolucoesMes = $evolucoes->where('num_mes', $i);
 
-            if ($evolucoesMes->count() > 0) {
-                // Média simples das porcentagens de atingimento (realizado vs 100% ou meta)
-                // Considerando polaridade simplificada (assumindo realizado é bom)
-                $somaAtingimento = 0;
-                $count = 0;
+            // Mês sem lançamento é lacuna (null), não 0%: zero desenharia uma
+            // queda de desempenho que não aconteceu.
+            if ($evolucoesMes->isEmpty()) {
+                $dadosPorMes[] = null;
 
-                foreach ($evolucoesMes as $ev) {
-                    $meta = $ev->vlr_previsto != 0 ? $ev->vlr_previsto : 1;
-                    $real = $ev->vlr_realizado;
-
-                    // Limitar a 100% para não distorcer o gráfico com outliers
-                    $perc = ($real / $meta) * 100;
-                    $somaAtingimento += min($perc, 100);
-                    $count++;
-                }
-
-                $dadosPorMes[] = round($somaAtingimento / $count, 1);
-            } else {
-                $dadosPorMes[] = 0;
+                continue;
             }
+
+            // Atingimento segundo a polaridade de cada indicador, limitado a
+            // 100% para um desvio isolado não distorcer a média.
+            $dadosPorMes[] = round(
+                $evolucoesMes->avg(fn ($ev) => min($ev->calcularAtingimento(), 100)),
+                1
+            );
         }
 
         $meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -456,7 +460,15 @@ class Index extends Component
 
         $service = app(IndicadorCalculoService::class);
 
-        return $service->calcularIQG($this->peiAtivo->cod_pei, (int) $this->anoSelecionado);
+        $iqg = $service->calcularIQG($this->peiAtivo->cod_pei, (int) $this->anoSelecionado);
+
+        // Cada perspectiva com a cor da SUA faixa: a tela pintava todas com a
+        // cor do índice geral, e uma perspectiva a 10% aparecia como "atenção".
+        $iqg['perspectivas'] = collect($iqg['perspectivas'] ?? [])
+            ->map(fn ($p) => $p + ['cor' => $this->getCorAtingimento($p['atingimento'] ?? 0)])
+            ->all();
+
+        return $iqg;
     }
 
     private function getCorAtingimento($percentual)

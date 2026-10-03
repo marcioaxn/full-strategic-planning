@@ -2,18 +2,20 @@
 
 namespace App\Livewire\StrategicPlanning;
 
-use App\Models\SystemSetting;
-use App\Services\Reports\AcabamentoPdf;
 use App\Models\Organization;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Rae;
 use App\Models\StrategicPlanning\RaeCausaRaiz;
 use App\Models\StrategicPlanning\RaeEncaminhamento;
+use App\Models\SystemSetting;
 use App\Models\User;
+use App\Services\Reports\AcabamentoPdf;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
@@ -50,10 +52,14 @@ class GerenciarRae extends Component
 
     public bool $showEncDelete = false;
 
+    // IDs definidos só pelo servidor (novo/editar): o navegador não pode trocá-los
+    // para operar em registro de outro RAE.
+    #[Locked]
     public ?string $encEditId = null;
 
     public ?string $encDeleteId = null;
 
+    #[Locked]
     public ?string $encRaeId = null;
 
     public array $encForm = [
@@ -70,8 +76,10 @@ class GerenciarRae extends Component
     // Causa Raiz (5 Porquês / Ishikawa)
     public bool $showCausaModal = false;
 
+    #[Locked]
     public ?string $causaEditId = null;
 
+    #[Locked]
     public ?string $causaRaeId = null;
 
     public array $causaForm = [
@@ -105,6 +113,10 @@ class GerenciarRae extends Component
 
     public function atualizarOrganizacao($id): void
     {
+        // Método público (e ouvinte de evento): o ID vem do cliente. Logado, só
+        // dentro do próprio escopo; o visitante da área pública só consulta.
+        abort_unless(! $id || ! Auth::check() || Auth::user()->podeAcessarOrganizacao($id), 403);
+
         $this->organizacaoId = $id;
         $this->organizacaoNome = $id ? Organization::find($id)?->nom_organizacao : null;
     }
@@ -227,10 +239,12 @@ class GerenciarRae extends Component
 
     public function gerarPdf(string $id): mixed
     {
-        // Exportar/visualizar o PDF é uma ação de leitura (não modifica
-        // dados) — não é restrita por organização, no mesmo padrão dos
-        // demais componentes de detalhamento/visualização do sistema.
+        // O PDF leva o conteúdo integral da RAE (problemas, encaminhamentos,
+        // participantes): é exportação de dado restrito, não leitura pública.
+        // O id vem do navegador — sem esta checagem, qualquer RAE de qualquer
+        // organização seria baixada.
         $rae = Rae::with(['pei', 'organizacao'])->findOrFail($id);
+        $this->garantirAcesso($rae->cod_organizacao, 'exportar');
 
         $pdf = Pdf::loadView('relatorios.rae', [
             'rae' => $rae,
@@ -336,8 +350,9 @@ class GerenciarRae extends Component
             'dsc_status' => $this->encForm['dsc_status'],
         ];
 
+        // Na edição, o encaminhamento tem de ser do RAE já autorizado acima.
         $this->encEditId
-            ? RaeEncaminhamento::findOrFail($this->encEditId)->update($data)
+            ? RaeEncaminhamento::where('cod_rae', $this->encRaeId)->findOrFail($this->encEditId)->update($data)
             : RaeEncaminhamento::create($data);
 
         $this->showEncModal = false;
@@ -432,6 +447,12 @@ class GerenciarRae extends Component
             'causaForm.dsc_categoria_ishikawa' => 'nullable|in:'.implode(',', RaeCausaRaiz::CATEGORIAS_ISHIKAWA),
         ], ['causaForm.dsc_problema.required' => 'Descreva o problema observado.']);
 
+        // O encaminhamento vinculado vem do formulário: só os do mesmo RAE.
+        $encVinculado = $this->causaForm['cod_encaminhamento_vinculado'] ?: null;
+        if ($encVinculado && ! RaeEncaminhamento::where('cod_rae', $this->causaRaeId)->whereKey($encVinculado)->exists()) {
+            abort(403);
+        }
+
         $porques = array_values(array_filter($this->causaForm['json_cinco_porques'], fn ($p) => trim($p) !== ''));
 
         $data = [
@@ -443,8 +464,9 @@ class GerenciarRae extends Component
             'cod_encaminhamento_vinculado' => $this->causaForm['cod_encaminhamento_vinculado'] ?: null,
         ];
 
+        // Na edição, a análise tem de ser do RAE já autorizado acima.
         $this->causaEditId
-            ? RaeCausaRaiz::findOrFail($this->causaEditId)->update($data)
+            ? RaeCausaRaiz::where('cod_rae', $this->causaRaeId)->findOrFail($this->causaEditId)->update($data)
             : RaeCausaRaiz::create($data);
 
         $this->showCausaModal = false;

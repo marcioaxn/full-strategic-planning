@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\PerformanceIndicators\Indicador;
+use App\Models\StrategicPlanning\PEI;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -21,10 +22,18 @@ class IndicadoresExport implements FromCollection, WithHeadings, WithMapping
         $query = Indicador::query()->with(['objetivo', 'planoDeAcao']);
 
         if ($this->organizacaoId) {
-            $query->whereHas('organizacoes', function($q) {
-                $q->where('tab_organizacoes.cod_organizacao', $this->organizacaoId);
-            })->orWhereHas('planoDeAcao', function($q) {
-                $q->where('cod_organizacao', $this->organizacaoId);
+            // Agrupado: o orWhereHas solto anulava o filtro de ciclo abaixo.
+            $query->where(function ($q) {
+                $q->whereHas('organizacoes', fn ($o) => $o->where('tab_organizacoes.cod_organizacao', $this->organizacaoId))
+                    ->orWhereHas('planoDeAcao', fn ($p) => $p->where('cod_organizacao', $this->organizacaoId));
+            });
+        }
+
+        // Só o ciclo em contexto (a planilha misturava todos os ciclos).
+        if ($pei = PEI::doContexto()) {
+            $query->where(function ($q) use ($pei) {
+                $q->whereHas('objetivo.perspectiva', fn ($p) => $p->where('cod_pei', $pei->cod_pei))
+                    ->orWhereHas('planoDeAcao.objetivo.perspectiva', fn ($p) => $p->where('cod_pei', $pei->cod_pei));
             });
         }
 
@@ -45,9 +54,9 @@ class IndicadoresExport implements FromCollection, WithHeadings, WithMapping
 
     public function map($indicador): array
     {
-        $vinculo = $indicador->cod_objetivo 
-            ? 'Objetivo: ' . $indicador->objetivo->nom_objetivo 
-            : 'Iniciativa: ' . $indicador->planoDeAcao->dsc_plano_de_acao;
+        $vinculo = $indicador->cod_objetivo
+            ? 'Objetivo: '.$indicador->objetivo->nom_objetivo
+            : 'Iniciativa: '.$indicador->planoDeAcao->dsc_plano_de_acao;
 
         return [
             $indicador->nom_indicador,

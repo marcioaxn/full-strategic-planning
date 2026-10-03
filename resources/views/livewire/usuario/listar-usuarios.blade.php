@@ -151,7 +151,7 @@
                             <td class="ps-4">
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="icon-circle-header avatar-modern">
-                                        {{ strtoupper(substr($user->name, 0, 2)) }}
+                                        {{ strtoupper(collect(preg_split('/\s+/', trim((string) $user->name)))->filter()->take(2)->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->join('')) }}
                                     </div>
                                     <div>
                                         <a href="{{ route('usuarios.detalhes', $user->id) }}" wire:navigate class="fw-semibold text-body-emphasis text-decoration-none hover-primary">{{ $user->name }}</a>
@@ -167,7 +167,7 @@
                                 @endphp
                                 @if($vinculosCount > 0)
                                     <span class="badge-modern badge-secondary" title="{{ $user->organizacoes->pluck('sgl_organizacao')->join(', ') }}">
-                                        <i class="bi bi-diagram-3 me-1"></i>{{ $vinculosCount }} Organizações
+                                        <i class="bi bi-diagram-3 me-1"></i>{{ $vinculosCount }} {{ $vinculosCount == 1 ? 'Organização' : 'Organizações' }}
                                     </span>
                                 @else
                                     <span class="text-muted small">Sem vínculos</span>
@@ -179,11 +179,11 @@
                             </td>
                             <td>
                                 @if($user->ativo)
-                                    <span class="badge badge-status status-success">
+                                    <span class="badge bg-success-subtle text-success">
                                         <i class="bi bi-check-circle-fill me-1"></i>Ativo
                                     </span>
                                 @else
-                                    <span class="badge badge-status status-warning">
+                                    <span class="badge bg-warning-subtle text-warning-emphasis">
                                         <i class="bi bi-dash-circle-fill me-1"></i>Inativo
                                     </span>
                                 @endif
@@ -253,7 +253,7 @@
                         <div class="d-flex align-items-start justify-content-between mb-3">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="icon-circle-header avatar-modern avatar-mobile">
-                                    {{ strtoupper(substr($user->name, 0, 2)) }}
+                                    {{ strtoupper(collect(preg_split('/\s+/', trim((string) $user->name)))->filter()->take(2)->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->join('')) }}
                                 </div>
                                 <div>
                                     <h6 class="mb-0 fw-semibold">{{ $user->name }}</h6>
@@ -261,16 +261,16 @@
                                 </div>
                             </div>
                             @if($user->ativo)
-                                <span class="badge badge-status status-success">Ativo</span>
+                                <span class="badge bg-success-subtle text-success">Ativo</span>
                             @else
-                                <span class="badge badge-status status-warning">Inativo</span>
+                                <span class="badge bg-warning-subtle text-warning-emphasis">Inativo</span>
                             @endif
                         </div>
 
                         <div class="mobile-contact-info">
                             <div class="contact-item">
                                 <i class="bi bi-diagram-3"></i>
-                                {{ $user->organizacoes->count() }} Organizações vinculadas
+                                {{ $user->organizacoes->count() }} {{ $user->organizacoes->count() == 1 ? 'Organização vinculada' : 'Organizações vinculadas' }}
                             </div>
                         </div>
 

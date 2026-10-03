@@ -182,7 +182,7 @@ class InaugurarIntegrar extends Component
             'dsc_tipo_instrumento' => $rec->dsc_tipo_instrumento,
             'txt_pontos_atencao' => $rec->txt_pontos_atencao ?? '',
             'txt_tarefas' => $rec->txt_tarefas ?? '',
-            'dsc_intensidade' => $rec->dsc_intensidade,
+            'dsc_intensidade' => IntegracaoInstrumento::normalizarIntensidade($rec->dsc_intensidade),
             'num_ordem' => $rec->num_ordem,
         ];
         $this->showFormIntegracao = true;
@@ -235,7 +235,9 @@ class InaugurarIntegrar extends Component
             $vinculos = $this->peiAtivo->ods()->get();
             $this->odsAderidos = $vinculos->pluck('num_ods')->map(fn ($n) => (int) $n)->toArray();
             $this->odsContribuicoes = $vinculos->pluck('pivot.txt_contribuicao', 'num_ods')->toArray();
-            $this->odsIntensidades = $vinculos->pluck('pivot.dsc_intensidade', 'num_ods')->toArray();
+            $this->odsIntensidades = $vinculos
+                ->mapWithKeys(fn ($o) => [(int) $o->num_ods => IntegracaoInstrumento::normalizarIntensidade($o->pivot->dsc_intensidade)])
+                ->toArray();
         } catch (\Throwable $e) {
             // Sem isto, a causa real desaparece: o cliente recebe uma
             // orientação genérica e não sobra rastro nenhum para investigar.

@@ -94,7 +94,8 @@ class ListarRiscos extends Component
         $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
         $this->estrategiasOptions = Risco::ESTRATEGIAS_RESPOSTA;
         $this->carregarPEI();
-        $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+        // Organização da sessão só vale se estiver no escopo do usuário.
+        $this->atualizarOrganizacao(Auth::user()->organizacaoSelecionadaId());
     }
 
     public function closeSuccessModal()
@@ -174,6 +175,9 @@ class ListarRiscos extends Component
 
     public function atualizarOrganizacao($id)
     {
+        // Método público (e ouvinte de evento): o ID vem do cliente.
+        abort_unless(! $id || Auth::user()?->podeAcessarOrganizacao($id), 403);
+
         $this->organizacaoId = $id;
         $this->resetPage();
         $this->carregarListasAuxiliares();
@@ -361,6 +365,11 @@ class ListarRiscos extends Component
 
         if ($this->organizacaoId) {
             $query->where('cod_organizacao', $this->organizacaoId);
+        }
+
+        // Só o ciclo selecionado no topo: a lista misturava riscos de todos os ciclos.
+        if ($this->peiAtivo) {
+            $query->where('cod_pei', $this->peiAtivo->cod_pei);
         }
 
         if ($this->search) {

@@ -13,7 +13,7 @@
             <i class="bi bi-diagram-3 text-white" style="font-size:1.3rem;"></i>
         </div>
         <div>
-            <div class="lp-login-bname">SEAE</div>
+            <div class="lp-login-bname">{{ config('app.name', 'Sistema PEI') }}</div>
             <div class="lp-login-bsub">Sistema de Gestão Estratégica</div>
         </div>
     </a>

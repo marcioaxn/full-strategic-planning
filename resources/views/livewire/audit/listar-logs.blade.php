@@ -51,7 +51,7 @@
                     <select wire:model.live="filtroModel" class="form-select">
                         <option value="">Todos os módulos</option>
                         @foreach($models as $m)
-                            <option value="{{ $m }}">{{ str_replace('App\\Models\\', '', $m) }}</option>
+                            <option value="{{ $m }}">{{ \App\Support\RotuloAuditoria::registro($m) }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -91,13 +91,13 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <div class="avatar-xs me-2 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 24px; height: 24px; font-size: 0.65rem;">
-                                        {{ substr($log->user->name ?? 'S', 0, 1) }}
+                                        {{ mb_strtoupper(mb_substr($log->user->name ?? 'S', 0, 1)) }}
                                     </div>
                                     <span class="fw-semibold">{{ $log->user->name ?? 'Sistema' }}</span>
                                 </div>
                             </td>
                             <td>
-                                <span class="badge bg-light text-dark border">{{ str_replace('App\\Models\\', '', $log->auditable_type) }}</span>
+                                <span class="badge bg-light text-dark border">{{ \App\Support\RotuloAuditoria::registro($log->auditable_type) }}</span>
                                 <small class="d-block text-muted" style="font-size: 0.65rem;">ID: ...{{ substr($log->auditable_id, -8) }}</small>
                             </td>
                             <td>

@@ -2,7 +2,7 @@
 
 @if(count($grupos) === 0)
     @include('relatorios.gestao.secoes._sem-registro', [
-        'mensagem' => 'A cadeia de valor ainda não foi cadastrada neste ciclo do Planejamento Estratégico Institucional.',
+        'mensagem' => 'A cadeia de valor ainda não foi cadastrada neste ciclo do Planejamento Estratégico Integrado.',
     ])
 @else
 <p class="rg-corpo">

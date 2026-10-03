@@ -22,7 +22,7 @@
                     <div style="width:38px;height:38px;background:linear-gradient(135deg,#1a3a5c,#1B408E);border-radius:.75rem;display:flex;align-items:center;justify-content:center;">
                         <i class="bi bi-diagram-3 text-white"></i>
                     </div>
-                    <span class="fw-bold" style="font-size:1.1rem;color:#0d1b2e;letter-spacing:-.02em;">SEAE</span>
+                    <span class="fw-bold" style="font-size:1.1rem;color:#0d1b2e;letter-spacing:-.02em;">{{ config('app.name', 'Sistema PEI') }}</span>
                 </div>
             </div>
 

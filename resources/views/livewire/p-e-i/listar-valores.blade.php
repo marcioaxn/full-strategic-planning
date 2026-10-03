@@ -200,6 +200,7 @@
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                        <li><a class="dropdown-item" href="{{ route('pei.valores.detalhes', $valor->cod_valor) }}" wire:navigate><i class="bi bi-eye me-2"></i>Detalhar</a></li>
                                         <li><button class="dropdown-item" wire:click="edit('{{ $valor->cod_valor }}')"><i class="bi bi-pencil me-2"></i>Editar</button></li>
                                         <li><button class="dropdown-item text-danger" wire:click="delete('{{ $valor->cod_valor }}')" wire:confirm="Excluir o valor '{{ $valor->nom_valor }}'? Esta ação é irreversível."><i class="bi bi-trash me-2"></i>Excluir</button></li>
                                     </ul>

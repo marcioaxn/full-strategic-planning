@@ -46,9 +46,9 @@
                         <div class="col-md-6">
                             <label class="form-label text-muted small text-uppercase fw-bold">Ano</label>
                             <select wire:model.live="ano" class="form-select">
-                                @for($i = now()->year - 2; $i <= now()->year + 2; $i++)
+                                @foreach($this->anosDisponiveis() as $i)
                                     <option value="{{ $i }}">{{ $i }}</option>
-                                @endfor
+                                @endforeach
                             </select>
                         </div>
                     </div>
@@ -178,7 +178,7 @@
                                         <td>
                                             @php $ating = $ev->calcularAtingimento(); @endphp
                                             <span class="fw-bold small text-{{ $ating >= 100 ? 'success' : ($ating >= 80 ? 'warning' : 'danger') }}">
-                                                {{ number_format($ating, 1) }}%
+                                                @brazil_percent($ating, 1)
                                             </span>
                                         </td>
                                         <td class="text-end pe-4">

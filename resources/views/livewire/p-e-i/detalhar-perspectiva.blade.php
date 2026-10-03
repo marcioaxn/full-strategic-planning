@@ -19,9 +19,11 @@
             <a href="{{ route('pei.perspectivas') }}" wire:navigate class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Voltar
             </a>
-            <button class="btn btn-primary gradient-theme">
+            @can('modulo.editar', 'planejamento-estrategico')
+            <a href="{{ route('pei.perspectivas', ['editar' => $perspectiva->cod_perspectiva]) }}" class="btn btn-primary gradient-theme">
                 <i class="bi bi-pencil me-1"></i> Editar
-            </button>
+            </a>
+            @endcan
         </div>
     </div>
 
@@ -66,10 +68,18 @@
                         </div>
                         <div>
                             <h6 class="card-subtitle text-muted mb-1">Desempenho Geral</h6>
-                            <h4 class="card-title mb-0">--%</h4>
+                            <h4 class="card-title mb-0">
+                                @if($estatisticas['progresso_medio'] === null)
+                                    <span class="text-muted fs-6">Sem indicador</span>
+                                @else
+                                    @brazil_percent($estatisticas['progresso_medio'], 1)
+                                @endif
+                            </h4>
                         </div>
                     </div>
-                    <small class="text-muted">Cálculo de desempenho em breve</small>
+                    <small class="text-muted">
+                        {{ $estatisticas['progresso_medio'] === null ? 'Nenhum objetivo desta perspectiva tem indicador para medir.' : 'Atingimento em '.$ano.', mesmo cálculo do Mapa Estratégico.' }}
+                    </small>
                 </div>
             </div>
         </div>
@@ -86,7 +96,7 @@
                     <tr>
                         <th class="ps-4">Objetivo</th>
                         <th>Indicadores</th>
-                        <th>Status</th>
+                        <th>Desempenho {{ $ano }}</th>
                         <th class="text-end pe-4">Ações</th>
                     </tr>
                 </thead>
@@ -105,10 +115,18 @@
                                 </span>
                             </td>
                             <td>
-                                <span class="badge bg-light text-dark border">Não iniciado</span>
+                                @php $d = $desempenhoObjetivos[$objetivo->cod_objetivo] ?? ['atingimento' => null, 'faixa' => null, 'cor' => null]; @endphp
+                                @if($d['atingimento'] === null)
+                                    <span class="badge bg-light text-muted border" title="Sem indicador direto nem de iniciativa">Sem indicador</span>
+                                @else
+                                    <span class="badge rounded-pill" style="background: {{ $d['cor'] }};">@brazil_percent($d['atingimento'], 1)</span>
+                                    @if($d['faixa'])
+                                        <small class="text-muted ms-1">{{ $d['faixa'] }}</small>
+                                    @endif
+                                @endif
                             </td>
                             <td class="text-end pe-4">
-                                <a href="#" class="btn btn-sm btn-icon btn-outline-primary" title="Detalhar Objetivo">
+                                <a href="{{ route('objetivos.detalhes', $objetivo->cod_objetivo) }}" wire:navigate class="btn btn-sm btn-icon btn-outline-primary" title="Detalhar Objetivo">
                                     <i class="bi bi-eye"></i>
                                 </a>
                             </td>

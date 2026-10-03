@@ -195,13 +195,14 @@
                                 <td><span class="badge bg-primary-subtle text-primary">{{ $integ->dsc_tipo_instrumento }}</span></td>
                                 <td>
                                     @php
-                                        $intClass = match($integ->dsc_intensidade) {
+                                        $intChave = \App\Models\StrategicPlanning\IntegracaoInstrumento::normalizarIntensidade($integ->dsc_intensidade);
+                                        $intClass = match($intChave) {
                                             'Alta'  => 'bg-danger-subtle text-danger',
                                             'Media' => 'bg-warning-subtle text-warning',
                                             default => 'bg-success-subtle text-success',
                                         };
                                     @endphp
-                                    <span class="badge {{ $intClass }}">{{ $integ->dsc_intensidade }}</span>
+                                    <span class="badge {{ $intClass }}">{{ \App\Models\StrategicPlanning\IntegracaoInstrumento::ROTULOS_INTENSIDADE[$intChave] }}</span>
                                 </td>
                                 <td class="small text-muted">{{ Str::limit($integ->txt_pontos_atencao ?? '—', 60) }}</td>
                                 <td class="text-end">
@@ -237,12 +238,12 @@
 
             {{-- Resumo --}}
             <div class="d-flex align-items-center gap-3 mb-3 p-3 rounded-3 bg-light">
-                @php $totalOds = $todosOds->count() ?: 18; @endphp
+                @php $totalOds = $todosOds->count(); @endphp
                 <div class="position-relative flex-shrink-0" style="width:48px;height:48px;">
                     <svg viewBox="0 0 36 36" style="width:48px;height:48px;transform:rotate(-90deg);">
                         <circle cx="18" cy="18" r="16" fill="none" stroke="#e9ecef" stroke-width="3"></circle>
                         <circle cx="18" cy="18" r="16" fill="none" stroke="#2e8b57" stroke-width="3"
-                                stroke-dasharray="{{ round((count($odsAderidos)/$totalOds)*100) }} 100" stroke-linecap="round"></circle>
+                                stroke-dasharray="{{ ($totalOds > 0 ? round((count($odsAderidos) / $totalOds) * 100) : 0) }} 100" stroke-linecap="round"></circle>
                     </svg>
                     <span class="position-absolute top-50 start-50 translate-middle fw-bold" style="font-size:.62rem;">{{ count($odsAderidos) }}/{{ $totalOds }}</span>
                 </div>
@@ -470,7 +471,7 @@
                                 <label class="form-label fw-bold small text-uppercase text-muted">Intensidade</label>
                                 <select wire:model="formIntegracao.dsc_intensidade" class="form-select">
                                     @foreach($intensidades as $i)
-                                        <option value="{{ $i }}">{{ $i }}</option>
+                                        <option value="{{ $i }}">{{ \App\Models\StrategicPlanning\IntegracaoInstrumento::ROTULOS_INTENSIDADE[$i] }}</option>
                                     @endforeach
                                 </select>
                             </div>

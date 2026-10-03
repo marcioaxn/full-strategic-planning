@@ -13,7 +13,7 @@
              @if($aiEnabled && $organizacaoId)
                 <button wire:click="gerarInsightIA" wire:loading.attr="disabled" class="btn btn-magic btn-lg shadow-sm rounded-3 btn-pulse">
                     <span wire:loading.remove wire:target="gerarInsightIA" class="d-flex align-items-center gap-2">
-                        <i class="bi bi-stars"></i> <span>AI Strategic Minute</span>
+                        <i class="bi bi-stars"></i> <span>Minuta Estratégica (IA)</span>
                     </span>
                     <span wire:loading wire:target="gerarInsightIA">
                         <div class="spinner-border spinner-border-sm text-white" role="status"></div> Analisando...
@@ -165,7 +165,7 @@
                                     <p class="fw-bold text-dark mb-1 small">Somente o que está preenchido</p>
                                     <p class="text-muted mb-3" style="font-size: .8rem;">
                                         Apenas as seções com informação registrada no Planejamento
-                                        Estratégico Institucional. Nenhuma seção vazia, nenhuma
+                                        Estratégico Integrado. Nenhuma seção vazia, nenhuma
                                         marcação — pronto para apresentar.
                                     </p>
                                     <div class="d-flex gap-2">
@@ -223,7 +223,7 @@
                             'type' => 'identidade' // Mantemos o ID interno por compatibilidade de rota, mas o conceito muda
                         ],
                         [
-                            'title' => 'Objetivos Táticos (BSC)',
+                            'title' => 'Objetivos Estratégicos (BSC)',
                             'desc' => 'Status por perspectiva.',
                             'icon' => 'bi-bullseye',
                             'color' => 'info',
@@ -346,7 +346,15 @@
                             @foreach($recentReports as $rep)
                                 <div class="list-group-item border-0 px-0 py-3 d-flex align-items-center">
                                     <div class="me-3 position-relative">
-                                        <i class="bi bi-file-earmark-pdf fs-3 text-danger"></i>
+                                        {{-- O ícone segue o formato real: o Word aparecia com ícone de PDF. --}}
+                                        @php
+                                            $iconeFormato = match ($rep->dsc_formato) {
+                                                'docx' => 'bi-file-earmark-word text-primary',
+                                                'xlsx' => 'bi-file-earmark-excel text-success',
+                                                default => 'bi-file-earmark-pdf text-danger',
+                                            };
+                                        @endphp
+                                        <i class="bi {{ $iconeFormato }} fs-3" title="{{ strtoupper($rep->dsc_formato ?? 'pdf') }}"></i>
                                         <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle">
                                             <span class="visually-hidden">New alerts</span>
                                         </span>
@@ -356,7 +364,7 @@
                                             {{ ucfirst($rep->dsc_tipo_relatorio) }}
                                         </h6>
                                         <small class="text-muted d-block">
-                                            {{ $rep->created_at->diffForHumans() }} &bull; {{ number_format($rep->num_tamanho_bytes / 1024, 1) }} KB
+                                            {{ $rep->created_at->diffForHumans() }} &bull; {{ strtoupper($rep->dsc_formato ?? 'pdf') }} &bull; {{ number_format($rep->num_tamanho_bytes / 1024, 1, ',', '.') }} KB
                                         </small>
                                     </div>
                                     {{--

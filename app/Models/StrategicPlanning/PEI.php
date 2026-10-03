@@ -100,6 +100,20 @@ class PEI extends Model
     }
 
     /**
+     * O ciclo em que o usuário está trabalhando: o selecionado no topo da tela
+     * ou, sem seleção (comando agendado, primeira visita), o ciclo vigente.
+     *
+     * Os relatórios usavam sempre o vigente: com outro ciclo selecionado, a
+     * tela mostrava um ciclo e o PDF saía de outro.
+     */
+    public static function doContexto(): ?self
+    {
+        $id = session('pei_selecionado_id');
+
+        return ($id ? static::find($id) : null) ?? static::ativos()->first();
+    }
+
+    /**
      * Métodos auxiliares
      */
 

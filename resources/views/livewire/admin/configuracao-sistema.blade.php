@@ -22,8 +22,15 @@
                         </div>
                     </div>
                     <div>
-                        <span class="badge {{ $connectionStatus === 'success' ? 'bg-success' : 'bg-warning' }} rounded-pill px-3 py-2">
-                            {{ $connectionStatus === 'success' ? __('Status: Operacional') : __('Status: Pendente') }}
+                        {{-- O selo só sabe o que o botão "Testar conexão" verificou.
+                             Antes do teste dizia "Pendente" com a IA funcionando. --}}
+                        <span class="badge {{ $connectionStatus === 'success' ? 'bg-success' : ($connectionStatus === 'error' ? 'bg-danger' : 'bg-secondary') }} rounded-pill px-3 py-2">
+                            {{ match ($connectionStatus) {
+                                'success' => 'Conexão verificada',
+                                'error' => 'Falha na conexão',
+                                'testing' => 'Testando...',
+                                default => 'Conexão não testada',
+                            } }}
                         </span>
                     </div>
                 </div>

@@ -19,9 +19,11 @@
             <a href="{{ route('organizacoes.index') }}" wire:navigate class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Voltar
             </a>
-            <button class="btn btn-primary gradient-theme">
+            @can('update', $organizacao)
+            <a href="{{ route('organizacoes.index', ['editar' => $organizacao->cod_organizacao]) }}" class="btn btn-primary gradient-theme">
                 <i class="bi bi-pencil me-1"></i> Editar
-            </button>
+            </a>
+            @endcan
         </div>
     </div>
 
@@ -193,7 +195,7 @@
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <div class="avatar-circle bg-primary text-white me-2" style="width: 32px; height: 32px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:12px;">
-                                                            {{ substr($user->name, 0, 2) }}
+                                                            {{ collect(preg_split('/\s+/', trim((string) $user->name)))->filter()->take(2)->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->join('') }}
                                                         </div>
                                                         <span class="fw-medium">{{ $user->name }}</span>
                                                     </div>

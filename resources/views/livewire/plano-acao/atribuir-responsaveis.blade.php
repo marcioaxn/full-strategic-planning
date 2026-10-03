@@ -14,7 +14,7 @@
                 <i class="bi bi-people-fill me-2 text-primary"></i>Gestores e Responsáveis
             </h2>
             <div class="d-flex align-items-center gap-2 mt-1">
-                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10 px-2">PLANO</span>
+                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10 px-2">INICIATIVA</span>
                 <span class="text-secondary fw-medium">{{ $plano->dsc_plano_de_acao }}</span>
             </div>
         </div>
@@ -128,7 +128,7 @@
                                     <tr>
                                         <td colspan="3" class="text-center py-5 text-muted">
                                             <i class="bi bi-person-exclamation fs-1 opacity-25 mb-3 d-block"></i>
-                                            Nenhum responsável atribuído a este plano.
+                                            Nenhum responsável atribuído a esta iniciativa.
                                         </td>
                                     </tr>
                                 @endforelse
@@ -276,7 +276,7 @@
             @if($comunicacoes->isEmpty())
                 <div class="text-center py-5 text-muted">
                     <i class="bi bi-megaphone fs-1 opacity-25 d-block mb-2"></i>
-                    <p class="small mb-0">Nenhum item de comunicação definido para este plano.</p>
+                    <p class="small mb-0">Nenhum item de comunicação definido para esta iniciativa.</p>
                 </div>
             @else
                 <div class="table-responsive">

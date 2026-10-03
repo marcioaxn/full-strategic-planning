@@ -67,11 +67,36 @@ class LancarEvolucao extends Component
         $this->indicador = Indicador::findOrFail($indicadorId);
         $this->authorize('update', $this->indicador);
 
-        $this->ano = session('ano_selecionado', now()->year);
+        $this->ano = (int) session('ano_selecionado', now()->year);
         $this->mes = now()->month;
+
+        // O ano de referência tem de estar entre as opções do seletor: senão a
+        // tela MOSTRA o primeiro ano da lista e GRAVA no ano da sessão.
+        $anos = $this->anosDisponiveis();
+        if (! in_array($this->ano, $anos, true)) {
+            $this->ano = in_array((int) now()->year, $anos, true) ? (int) now()->year : $anos[0];
+        }
 
         $this->carregarPeriodo();
         $this->carregarHistorico();
+    }
+
+    /**
+     * Anos lançáveis: os do ciclo PEI a que o indicador pertence (pelo
+     * objetivo direto ou pela iniciativa). A lista era fixa em hoje ± 2 —
+     * deixava de fora o 1º ano de um ciclo 2023-2027 e não oferecia nenhum
+     * ano de um ciclo futuro.
+     *
+     * @return list<int>
+     */
+    public function anosDisponiveis(): array
+    {
+        $pei = $this->indicador->objetivo?->perspectiva?->pei
+            ?? $this->indicador->planoDeAcao?->objetivo?->perspectiva?->pei;
+
+        return $pei
+            ? range((int) $pei->num_ano_inicio_pei, (int) $pei->num_ano_fim_pei)
+            : range((int) now()->year - 2, (int) now()->year + 2);
     }
 
     public function updatedAno()
@@ -120,6 +145,9 @@ class LancarEvolucao extends Component
 
     public function salvar()
     {
+        // Método público = endpoint: a autorização do mount não vale para as chamadas seguintes.
+        $this->authorize('update', $this->indicador);
+
         $this->validate();
 
         $evolucao = EvolucaoIndicador::updateOrCreate(
@@ -162,7 +190,12 @@ class LancarEvolucao extends Component
 
     public function excluirArquivo($id)
     {
-        $arquivo = Arquivo::findOrFail($id);
+        $this->authorize('update', $this->indicador);
+
+        // Só evidência de evolução DESTE indicador: o id vem do navegador.
+        $arquivo = Arquivo::whereIn('cod_evolucao_indicador', EvolucaoIndicador::where('cod_indicador', $this->indicador->cod_indicador)
+            ->select('cod_evolucao_indicador'))
+            ->findOrFail($id);
         Storage::disk('public')->delete($arquivo->dsc_nome_arquivo);
         $arquivo->delete();
         $this->carregarPeriodo();

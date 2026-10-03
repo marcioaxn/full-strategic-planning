@@ -14,8 +14,8 @@ use App\Services\PeiGuidanceService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -151,6 +151,9 @@ class ListarPlanos extends Component
 
     public function pedirAjudaIA()
     {
+        // Tela também pública: visitante não aciona a IA (serviço pago).
+        abort_unless(Auth::check(), 403);
+
         if (! $this->aiEnabled) {
             return;
         }
@@ -241,6 +244,10 @@ class ListarPlanos extends Component
 
     public function atualizarOrganizacao($id)
     {
+        // Método público (e ouvinte de evento): o ID vem do cliente. Logado, só
+        // dentro do próprio escopo; o visitante da área pública só consulta.
+        abort_unless(! $id || ! Auth::check() || Auth::user()->podeAcessarOrganizacao($id), 403);
+
         $this->organizacaoId = $id;
         $this->organizacaoNome = $id ? Organization::find($id)?->nom_organizacao : null;
         $this->resetPage();
@@ -322,6 +329,18 @@ class ListarPlanos extends Component
 
     public function save()
     {
+        // 🔴 Esta tela é servida também na área pública de transparência, e
+        // /livewire/update não passa pelo middleware `transparencia`: sem esta
+        // guarda, um visitante anônimo criava ou alterava iniciativas.
+        $planoExistente = $this->planoId ? PlanoDeAcao::findOrFail($this->planoId) : null;
+        $this->authorize($planoExistente ? 'update' : 'create', $planoExistente ?? PlanoDeAcao::class);
+
+        // As organizações vêm do cliente: cada uma tem de estar no escopo de quem grava.
+        $usuario = Auth::user();
+        foreach ((array) $this->organizacoes_ids as $codOrg) {
+            abort_unless($usuario->isSuperAdmin() || $usuario->podeAcessarOrganizacao($codOrg), 403);
+        }
+
         $messages = [
             'dsc_plano_de_acao.required' => 'A descrição do plano é obrigatória.',
             'cod_objetivo.required' => 'Vincule o plano a um objetivo estratégico.',
@@ -396,8 +415,8 @@ class ListarPlanos extends Component
             'json_modelo_logico' => array_filter($this->modelo_logico) ?: null,
         ];
 
-        if ($this->planoId) {
-            $plano = PlanoDeAcao::findOrFail($this->planoId);
+        if ($planoExistente) {
+            $plano = $planoExistente;
             $plano->update($data);
             $plano->organizacoes()->sync($this->organizacoes_ids);
         } else {

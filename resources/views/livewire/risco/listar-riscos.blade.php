@@ -452,7 +452,7 @@
                                                 <small class="text-dark">{{ $sug['mitigacao'] }}</small>
                                             </div>
                                         </div>
-                                        <button wire:click="aplicarSugestao('{{ $sug['titulo'] }}', '{{ $sug['categoria'] }}', '{{ $sug['descricao'] }}')" 
+                                        <button wire:click="aplicarSugestao(@js($sug['titulo']), @js($sug['categoria']), @js($sug['descricao']))" 
                                                 class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
                                             <i class="bi bi-plus-lg me-1"></i> {{ __('Identificar') }}
                                         </button>

@@ -6,6 +6,7 @@ use App\Models\ActionPlan\LicaoAprendida;
 use App\Models\ActionPlan\PlanoComunicacao;
 use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\User;
+use App\Services\IndicadorCalculoService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -23,24 +24,36 @@ class DetalharPlano extends Component
             'tipoExecucao',
             'organizacao',
             'entregas.responsaveis',
-            'indicadores'
+            'indicadores',
         ])->findOrFail($id);
     }
 
     public function render()
     {
         // Calcula progresso baseado nas entregas (Regra Unificada via Service)
-        $service = app(\App\Services\IndicadorCalculoService::class);
+        $service = app(IndicadorCalculoService::class);
         $progresso = $service->calcularProgressoPlano($this->plano);
 
-        // Busca responsáveis únicos de todas as entregas do plano
-        $responsaveis = User::join('rel_entrega_users_responsaveis as r', 'users.id', '=', 'r.cod_usuario')
-            ->join('tab_entregas as e', 'r.cod_entrega', '=', 'e.cod_entrega')
+        // Gestores da iniciativa (tela "Gestores e Responsáveis") primeiro;
+        // depois quem responde por alguma entrega e ainda não apareceu.
+        $gestores = User::join('organization.rel_users_tab_organizacoes_tab_perfil_acesso as pivot', 'users.id', '=', 'pivot.user_id')
+            ->join('organization.tab_perfil_acesso as perfil', 'perfil.cod_perfil', '=', 'pivot.cod_perfil')
+            ->where('pivot.cod_plano_de_acao', $this->plano->cod_plano_de_acao)
+            ->orderBy('perfil.dsc_perfil')
+            ->get(['users.id', 'users.name', 'perfil.dsc_perfil']);
+
+        $responsaveisEntregas = User::join('action_plan.rel_entrega_users_responsaveis as r', 'users.id', '=', 'r.cod_usuario')
+            ->join('action_plan.tab_entregas as e', 'r.cod_entrega', '=', 'e.cod_entrega')
             ->where('e.cod_plano_de_acao', $this->plano->cod_plano_de_acao)
-            ->select('users.*')
-            ->selectRaw("'Responsável' as dsc_perfil")
+            ->whereNull('e.deleted_at')
+            ->select('users.id', 'users.name')
+            ->selectRaw("'Responsável por entrega' as dsc_perfil")
             ->distinct()
             ->get();
+
+        $responsaveis = $gestores
+            ->concat($responsaveisEntregas->whereNotIn('id', $gestores->pluck('id')))
+            ->values();
 
         // Busca histórico de auditoria do plano
         $auditoria = $this->plano->audits()
@@ -63,11 +76,11 @@ class DetalharPlano extends Component
         // Layout dinâmico: o visitante chega aqui pelo Mapa Estratégico público
         // e não tem menu autenticado. Mesmo critério do MapaEstrategico.
         return view('livewire.plano-acao.detalhar-plano', [
-            'progresso'    => $progresso,
+            'progresso' => $progresso,
             'responsaveis' => $responsaveis,
-            'auditoria'    => $auditoria,
+            'auditoria' => $auditoria,
             'comunicacoes' => $comunicacoes,
-            'licoes'       => $licoes,
+            'licoes' => $licoes,
         ])
             ->layout(Auth::check() ? 'layouts.app' : 'layouts.public');
     }

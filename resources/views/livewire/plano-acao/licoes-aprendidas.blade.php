@@ -20,7 +20,7 @@
             <div class="row g-2 align-items-center">
                 <div class="col-md-5">
                     <select wire:model.live="planoFiltro" class="form-select">
-                        <option value="">Todos as Iniciativas</option>
+                        <option value="">Todas as Iniciativas</option>
                         @foreach($planos as $pl)
                             <option value="{{ $pl->cod_plano_de_acao }}">{{ Str::limit($pl->dsc_plano_de_acao, 60) }}</option>
                         @endforeach

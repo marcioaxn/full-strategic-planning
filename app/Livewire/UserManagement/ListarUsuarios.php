@@ -79,6 +79,18 @@ class ListarUsuarios extends Component
         'page' => ['except' => 1],
     ];
 
+    /**
+     * "Editar" no detalhe do usuário chega com ?editar={id} e já abre o modal.
+     * O botão de lá não fazia nada.
+     */
+    public function mount(): void
+    {
+        $editar = request()->query('editar');
+        if (is_string($editar) && ($alvo = User::find($editar)) && auth()->user()->can('update', $alvo)) {
+            $this->edit($editar);
+        }
+    }
+
     protected $listeners = [
         'organizacaoSelecionada' => '$refresh',
     ];

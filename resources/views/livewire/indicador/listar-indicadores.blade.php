@@ -23,7 +23,7 @@
         </div>
 
         <div class="d-flex align-items-center gap-2">
-            @if($organizacaoId)
+            @if($organizacaoId && auth()->check())
                 <div class="dropdown">
                     <button class="btn btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         <i class="bi bi-download me-1"></i> Exportar
@@ -421,7 +421,7 @@
                                             </div>
                                         </div>
                                         @auth
-                                        <button wire:click="aplicarSugestao('{{ $kpi['nome'] }}', '{{ $kpi['descricao'] }}', '{{ $kpi['unidade'] }}', '{{ $kpi['formula'] }}')" 
+                                        <button wire:click="aplicarSugestao(@js($kpi['nome']), @js($kpi['descricao']), @js($kpi['unidade']), @js($kpi['formula']))" 
                                                 class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
                                             <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}
                                         </button>
@@ -695,7 +695,8 @@
                                 <td class="text-end pe-4">
                                     <div class="d-flex align-items-center justify-content-end gap-2">
                                         {{-- Botão direto: Lançar Evolução (apenas para indicadores manuais) --}}
-                                        @if($ind->dsc_calculation_type !== 'action_plan')
+                                        {{-- Visitante da área pública só consulta: nada de lançar, metas ou exportar. --}}
+                                        @if(auth()->check() && $ind->dsc_calculation_type !== 'action_plan')
                                             <a href="{{ route('indicadores.evolucao', $ind->cod_indicador) }}"
                                                wire:navigate
                                                class="btn btn-sm btn-success px-3"
@@ -711,12 +712,13 @@
                                             <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                                                 <li><h6 class="dropdown-header small text-uppercase">Lançamentos</h6></li>
                                                 <li><a class="dropdown-item" href="{{ route('indicadores.detalhes', $ind->cod_indicador) }}" wire:navigate><i class="bi bi-eye me-2 text-primary"></i> Ficha Técnica</a></li>
+                                                @auth
                                                 <li><a class="dropdown-item" href="{{ route('indicadores.evolucao', $ind->cod_indicador) }}" wire:navigate><i class="bi bi-graph-up-arrow me-2 text-success"></i> Lançar Evolução</a></li>
                                                 <li><button class="dropdown-item" wire:click="abrirMetas('{{ $ind->cod_indicador }}')"><i class="bi bi-bullseye me-2 text-primary"></i> Gerenciar Metas</button></li>
                                                 <li><button class="dropdown-item" wire:click="abrirLinhaBase('{{ $ind->cod_indicador }}')"><i class="bi bi-bar-chart-steps me-2 text-warning"></i> Linha de Base</button></li>
+
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li><h6 class="dropdown-header small text-uppercase">Configuração</h6></li>
-                                                @auth
                                                 <li><button class="dropdown-item" wire:click="edit('{{ $ind->cod_indicador }}')"><i class="bi bi-pencil me-2"></i> Editar</button></li>
                                                 @endauth
                                                 @auth
@@ -1042,7 +1044,7 @@
                             <i class="bi bi-check-lg"></i>
                         </div>
                     </div>
-                    <h3 class="fw-bold text-dark mb-3">KPI Registrado!</h3>
+                    <h3 class="fw-bold text-dark mb-3">{{ str_contains($successMessage, 'atualizadas') ? 'KPI Atualizado!' : 'KPI Registrado!' }}</h3>
                     <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
                         <strong class="text-primary d-block mb-2">"{{ $createdIndicadorName }}"</strong>
                         {{ $successMessage }}

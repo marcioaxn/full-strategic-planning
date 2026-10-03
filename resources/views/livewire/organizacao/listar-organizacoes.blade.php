@@ -334,7 +334,7 @@
                                                                 <span class="badge bg-primary bg-opacity-10 text-primary fw-bold">Sugestão do Mentor IA</span>
                                                                 <button type="button" class="btn-close x-small" wire:click="$set('aiSuggestion', '')"></button>
                                                             </div>
-                                                            <button type="button" wire:click="aplicarSugestaoSigla('{{ $aiSuggestion['sigla'] }}')" 
+                                                            <button type="button" wire:click="aplicarSugestaoSigla(@js($aiSuggestion['sigla']))" 
                                                                     class="btn btn-sm btn-white border border-primary border-dashed px-3 fw-bold">
                                                                 Usar Sigla: <span class="text-primary">{{ $aiSuggestion['sigla'] }}</span>
                                                             </button>

@@ -402,11 +402,10 @@
     </div>
 
     {{-- Mentor de IA --}}
-    @if($peiAtivo && $perspectivas->isNotEmpty() && $aiEnabled)
+    {{-- Só para quem está logado: a mesma tela é servida ao visitante pela Transparência. --}}
+    @if($peiAtivo && $perspectivas->isNotEmpty() && $aiEnabled && auth()->check())
         <div class="ai-mentor-wrapper animate-fade-in mb-4">
             <div class="d-flex flex-wrap align-items-center gap-3">
-                @auth
-                @auth
                 <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="ai-magic-button shadow-sm">
                     <span wire:loading.remove wire:target="pedirAjudaIA">
                         <i class="bi bi-robot"></i> {{ __('Gerar Objetivos com IA') }}
@@ -415,8 +414,6 @@
                         <span class="spinner-border spinner-border-sm me-2"></span>{{ __('Analisando e gerando...') }}
                     </span>
                 </button>
-                @endauth
-                @endauth
 
                 <div class="d-flex align-items-center gap-2 bg-white rounded-pill px-3 py-1 shadow-sm border">
                     <i class="bi bi-funnel text-muted small"></i>
@@ -448,7 +445,7 @@
                                             <p class="small text-muted mb-0 mt-1 lh-sm">{{ $obj['descricao'] }}</p>
                                         </div>
                                         @auth
-                                        <button wire:click="aplicarSugestao('{{ $obj['nome'] }}', '{{ $obj['descricao'] }}', {{ $obj['ordem'] ?? 1 }})" 
+                                        <button wire:click="aplicarSugestao(@js($obj['nome']), @js($obj['descricao']), @js($obj['ordem'] ?? 1))" 
                                                 class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
                                             <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}
                                         </button>

@@ -13,8 +13,11 @@
  * exatamente o que a área pública tornou possível.
  */
 
+use App\Livewire\ActionPlan\ListarPlanos;
 use App\Livewire\PerformanceIndicators\ListarIndicadores;
 use App\Livewire\StrategicPlanning\DetalharObjetivo;
+use App\Livewire\StrategicPlanning\ListarObjetivos;
+use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\Organization;
 use App\Models\PerfilAcesso;
 use App\Models\PerformanceIndicators\Indicador;
@@ -84,6 +87,26 @@ test('visitante anônimo não remove comentário de ninguém', function () {
         ->assertForbidden();
 
     expect(ObjetivoComentario::count())->toBe(1);
+});
+
+test('visitante anônimo não cria iniciativa pela tela pública de iniciativas', function () {
+    // Achado de 03/10/2026: save() não chamava authorize. A rota /planos está
+    // no grupo público e /livewire/update não passa pelo middleware.
+    [$org, , $objetivo] = cenarioSoLeitura();
+
+    Livewire::test(ListarPlanos::class)
+        ->set('dsc_plano_de_acao', 'Iniciativa criada por visitante')
+        ->set('cod_objetivo', $objetivo->cod_objetivo)
+        ->set('organizacoes_ids', [$org->cod_organizacao])
+        ->call('save')
+        ->assertForbidden();
+
+    expect(PlanoDeAcao::count())->toBe(0);
+});
+
+test('visitante anônimo não aciona a IA nas telas públicas', function () {
+    Livewire::test(ListarPlanos::class)->call('pedirAjudaIA')->assertForbidden();
+    Livewire::test(ListarObjetivos::class)->call('pedirAjudaIA')->assertForbidden();
 });
 
 test('meta de indicador não é salva nem apagada sem autorização', function () {

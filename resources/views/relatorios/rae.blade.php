@@ -78,7 +78,7 @@
         @if($rae->num_progresso_geral !== null)
         <div class="meta-cell">
             <span class="meta-label">Progresso Geral</span>
-            <span class="meta-val">{{ number_format($rae->num_progresso_geral, 1) }}%</span>
+            <span class="meta-val">{{ number_format($rae->num_progresso_geral, 1, ',', '.') }}%</span>
             @php
                 $cor = \App\Models\StrategicPlanning\GrauSatisfacao::corDe(
                     (float) $rae->num_progresso_geral,
@@ -130,7 +130,7 @@
     @endif
 
     <div class="footer">
-        Documento gerado pelo Sistema de Planejamento Estratégico Institucional (PEI) &mdash;
+        Documento gerado pelo Sistema de Planejamento Estratégico Integrado (PEI) &mdash;
         Baseado no Guia Prático de Planejamento Estratégico Institucional (GPPEI/MGI 2025)
     </div>
 </body>

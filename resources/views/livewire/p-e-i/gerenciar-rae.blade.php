@@ -71,7 +71,7 @@
                                             <div class="progress-bar {{ $rae->num_progresso_geral >= 70 ? 'bg-success' : ($rae->num_progresso_geral >= 40 ? 'bg-warning' : 'bg-danger') }}"
                                                  style="width:{{ $rae->num_progresso_geral }}%"></div>
                                         </div>
-                                        <span class="small fw-bold">{{ number_format($rae->num_progresso_geral, 1) }}%</span>
+                                        <span class="small fw-bold">{{ number_format($rae->num_progresso_geral, 1, ',', '.') }}%</span>
                                     </div>
                                 @endif
                             </div>

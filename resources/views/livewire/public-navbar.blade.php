@@ -1,11 +1,11 @@
 <nav class="navbar navbar-expand-lg fixed-top public-navbar shadow-sm">
     <div class="container-fluid px-4 py-1">
-        <a class="navbar-brand fw-bold d-flex align-items-center" href="/" wire:navigate>
+        <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ route('welcome') }}" wire:navigate>
             <div class="icon-circle-header gradient-theme-icon rounded-circle me-2 shadow-sm pnav-marca-icone">
                 <i class="bi bi-diagram-3 text-white"></i>
             </div>
             <div>
-                <div class="brand-text-primary text-body lh-1 pnav-marca-titulo">SPS</div>
+                <div class="brand-text-primary text-body lh-1 pnav-marca-titulo">{{ config('app.name', 'Sistema PEI') }}</div>
                 <div class="brand-text-secondary text-muted lh-1 pnav-marca-sub">PORTAL DA TRANSPARÊNCIA</div>
             </div>
         </a>

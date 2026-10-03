@@ -142,7 +142,7 @@ class RenderizadorDocx
         $rodape = $secao->addFooter();
         $linha = $rodape->addTable(['width' => 100 * 50, 'unit' => 'pct']);
         $linha->addRow();
-        $linha->addCell(3333)->addText('Sistema de Planejamento Estratégico Institucional', 'rodape');
+        $linha->addCell(3333)->addText('Sistema de Planejamento Estratégico Integrado', 'rodape');
         $celulaPagina = $linha->addCell(3333);
         $celulaPagina->addPreserveText('PÁGINA {PAGE}', 'rodape', 'centro');
         $linha->addCell(3333)->addText('Emitido em '.$dados['capa']['emitido_em'], 'rodape', ['alignment' => Jc::END]);
@@ -169,7 +169,7 @@ class RenderizadorDocx
                   .'externos aparecem marcadas, com a indicação da fonte que as preenche. '
                   .'Complete-as antes de publicar.'
                 : 'Este documento apresenta as seções para as quais há informação registrada no '
-                  .'Planejamento Estratégico Institucional.',
+                  .'Planejamento Estratégico Integrado.',
             'nota',
             'justificado'
         );
@@ -209,7 +209,7 @@ class RenderizadorDocx
     {
         $secao->addText(
             'Seção a preencher pela unidade. Esta informação não é produzida pelo '
-            .'Planejamento Estratégico Institucional.',
+            .'Planejamento Estratégico Integrado.',
             'nota',
             'justificado'
         );
@@ -247,7 +247,7 @@ class RenderizadorDocx
         }
 
         $secao->addText(
-            'O Planejamento Estratégico Institucional'
+            'O Planejamento Estratégico Integrado'
             .($dados['capa']['ciclo'] ? ' '.$dados['capa']['ciclo'] : '')
             .' orienta a atuação da organização no período. Missão, visão, valores e '
             .'objetivos estratégicos abaixo são os que estavam vigentes no exercício de '
@@ -407,7 +407,7 @@ class RenderizadorDocx
         $grupos = $sub['dados']['grupos'] ?? [];
 
         if ($grupos === []) {
-            $this->semRegistro($secao, 'A cadeia de valor ainda não foi cadastrada neste ciclo do Planejamento Estratégico Institucional.');
+            $this->semRegistro($secao, 'A cadeia de valor ainda não foi cadastrada neste ciclo do Planejamento Estratégico Integrado.');
 
             return;
         }

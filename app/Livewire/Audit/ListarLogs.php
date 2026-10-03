@@ -3,6 +3,7 @@
 namespace App\Livewire\Audit;
 
 use App\Models\User;
+use App\Support\RotuloAuditoria;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -132,8 +133,8 @@ class ListarLogs extends Component
                         $log->id,
                         $log->created_at->format('d/m/Y H:i:s'),
                         $log->user->name ?? 'Sistema',
-                        $log->event,
-                        str_replace('App\\Models\\', '', $log->auditable_type),
+                        RotuloAuditoria::evento($log->event),
+                        RotuloAuditoria::registro($log->auditable_type),
                         $log->auditable_id,
                         $log->ip_address,
                     ], ';');

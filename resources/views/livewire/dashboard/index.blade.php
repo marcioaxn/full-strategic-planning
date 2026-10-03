@@ -149,7 +149,7 @@
         <button wire:click="generateAiSummary" wire:loading.attr="disabled" class="btn glass-panel text-primary fw-bold px-4 py-2 border d-flex align-items-center gap-2">
             <span wire:loading.remove wire:target="generateAiSummary" class="d-flex align-items-center gap-2">
                 <i class="bi bi-stars text-warning fs-5"></i>
-                <span>Gerar Análise AI</span>
+                <span>Gerar Análise (IA)</span>
             </span>
             <span wire:loading wire:target="generateAiSummary" class="d-flex align-items-center gap-2 d-none" wire:loading.class.remove="d-none">
                 <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
@@ -234,7 +234,7 @@
                     <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none"
                           stroke="{{ $iqgCor }}" stroke-width="18" stroke-linecap="round"
                           stroke-dasharray="{{ round(($iqgValor / 100) * 251.2) }} 251.2"/>
-                    <text x="100" y="96" text-anchor="middle" font-size="28" font-weight="800" fill="{{ $iqgCor }}">{{ number_format($iqgValor, 1) }}%</text>
+                    <text x="100" y="96" text-anchor="middle" font-size="28" font-weight="800" fill="{{ $iqgCor }}">{{ number_format($iqgValor, 1, ',', '.') }}%</text>
                     <text x="100" y="112" text-anchor="middle" font-size="10" fill="#6c757d">{{ $iqgNome }}</text>
                 </svg>
                 <p class="fw-bold text-dark mb-0 small">Índice de Qualidade de Gestão</p>
@@ -248,10 +248,10 @@
                 <div class="mb-2">
                     <div class="d-flex justify-content-between align-items-center small mb-1">
                         <span class="text-muted">{{ Str::limit($p['perspectiva'], 35) }}</span>
-                        <span class="fw-bold" style="color:{{ $iqgCor }}">{{ $p['atingimento'] }}%</span>
+                        <span class="fw-bold" style="color:{{ $p['cor'] ?? $iqgCor }}">@brazil_percent($p['atingimento'], 1)</span>
                     </div>
                     <div class="progress" style="height:6px;">
-                        <div class="progress-bar" style="width:{{ min(100, $p['atingimento']) }}%;background-color:{{ $iqgCor }};"></div>
+                        <div class="progress-bar" style="width:{{ min(100, $p['atingimento']) }}%;background-color:{{ $p['cor'] ?? $iqgCor }};"></div>
                     </div>
                 </div>
                 @endforeach
@@ -373,7 +373,7 @@
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
                         <p class="text-secondary text-uppercase fw-bold mb-1" style="font-size: 0.7rem;">Execução no Exercício</p>
-                        <h2 class="metric-value mb-0" style="font-size: 2.5rem;">{{ number_format($stats['progressoPlanos'], 1) }}%</h2>
+                        <h2 class="metric-value mb-0" style="font-size: 2.5rem;">{{ number_format($stats['progressoPlanos'], 1, ',', '.') }}%</h2>
                     </div>
                     <div class="bg-primary bg-opacity-10 p-2 rounded-circle text-primary"><i class="bi bi-activity fs-4"></i></div>
                 </div>
@@ -589,7 +589,7 @@
                             <div class="progress-bar {{ $ultimaRae->num_progresso_geral >= 70 ? 'bg-success' : 'bg-warning' }}"
                                  style="width:{{ $ultimaRae->num_progresso_geral }}%"></div>
                         </div>
-                        <small class="text-muted">Progresso registrado: {{ number_format($ultimaRae->num_progresso_geral, 1) }}%</small>
+                        <small class="text-muted">Progresso registrado: {{ number_format($ultimaRae->num_progresso_geral, 1, ',', '.') }}%</small>
                         @endif
                     @else
                         <i class="bi bi-arrow-repeat fs-1 text-muted mb-2 d-block opacity-25"></i>

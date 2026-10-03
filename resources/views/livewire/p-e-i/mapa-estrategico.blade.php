@@ -215,7 +215,10 @@
                                                            class="text-decoration-none indicador-link" @auth onclick="event.stopPropagation();" @endauth>
                                                             <div class="d-flex justify-content-between mb-1 align-items-center">
                                                                 <span class="stat-label-modern">KPIs</span>
-                                                                <span class="stat-value-modern" style="color: {{ $ind['cor'] }};">@brazil_percent($ind['percentual'], 1)</span>
+                                                                {{-- Sem indicador não há medição: "0,0%" em vermelho afirmava desempenho péssimo. --}}
+                                                                <span class="stat-value-modern" style="color: {{ $ind['quantidade'] > 0 ? $ind['cor'] : '#6c757d' }};">
+                                                                    @if($ind['quantidade'] > 0) @brazil_percent($ind['percentual'], 1) @else Sem indicador @endif
+                                                                </span>
                                                             </div>
                                                             <div class="stat-progress-container bg-light-custom">
                                                                 <div class="stat-progress-fill" style="width: {{ min($ind['percentual'], 100) }}%; background-color: {{ $ind['cor'] }};"></div>
@@ -229,11 +232,11 @@
                                                             <div class="d-flex justify-content-between mb-1 align-items-center">
                                                                 {{-- Rótulo com Quantidade --}}
                                                                 <span class="stat-label-modern" style="text-transform: uppercase;">
-                                                                    {{ $pln['quantidade'] }} Iniciativas Ativas
+                                                                    {{ $pln['quantidade'] }} {{ $pln['quantidade'] == 1 ? 'Iniciativa Ativa' : 'Iniciativas Ativas' }}
                                                                 </span>
-                                                                {{-- Percentual em Destaque --}}
+                                                                {{-- Percentual em Destaque (sem iniciativa não há progresso a medir) --}}
                                                                 <span class="stat-value-modern" style="color: {{ $pln['cor'] }}; font-size: 0.8rem;">
-                                                                    @brazil_percent($pln['media_progresso'] ?? 0, 1)
+                                                                    @if($pln['quantidade'] > 0) @brazil_percent($pln['media_progresso'] ?? 0, 1) @else — @endif
                                                                 </span>
                                                             </div>
                                                             {{-- Barra de Progresso --}}

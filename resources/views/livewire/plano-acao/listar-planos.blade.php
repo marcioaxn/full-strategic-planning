@@ -343,8 +343,8 @@
         <div class="alert alert-warning shadow-sm border-0 d-flex align-items-center p-4" role="alert">
             <i class="bi bi-building-exclamation fs-2 me-4"></i>
             <div>
-                <h5 class="alert-heading fw-bold mb-1">Selecione uma Organizacao</h5>
-                <p class="mb-0">Selecione uma organizacao no menu superior para gerenciar as iniciativas.</p>
+                <h5 class="alert-heading fw-bold mb-1">Selecione uma Organização</h5>
+                <p class="mb-0">Selecione uma organização no menu superior para gerenciar as iniciativas.</p>
             </div>
         </div>
     @else
@@ -683,8 +683,8 @@
                                     <div class="mb-3">
                                         <i class="bi bi-clipboard-x fs-1 text-muted opacity-25"></i>
                                     </div>
-                                    <h5 class="text-muted">Nenhum plano encontrado.</h5>
-                                    <p class="text-muted small">Tente ajustar os filtros ou crie um novo plano.</p>
+                                    <h5 class="text-muted">Nenhuma iniciativa encontrada.</h5>
+                                    <p class="text-muted small">Tente ajustar os filtros ou crie uma nova iniciativa.</p>
                                 </td>
                             </tr>
                         @endforelse
