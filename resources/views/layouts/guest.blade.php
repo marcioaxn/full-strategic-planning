@@ -277,7 +277,7 @@
                     try {
                         const response = await originalFetch.apply(this, args);
                         if (response.status === 419) {
-                            console.warn('[SEAE] Sessão expirada (419). Redirecionando para login...');
+                            console.warn('[PEI] Sessão expirada (419). Redirecionando para login...');
                             redirectToLogin();
                         }
                         return response;

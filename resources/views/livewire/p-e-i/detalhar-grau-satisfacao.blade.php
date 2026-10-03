@@ -20,11 +20,11 @@
             <a href="{{ route('graus-satisfacao.index') }}" wire:navigate class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Voltar
             </a>
-            @can('modulo.editar', 'graus-satisfacao')
+            @if(auth()->user()?->can('modulo.editar', 'graus-satisfacao') && auth()->user()->can('editar-institucional'))
             <a href="{{ route('graus-satisfacao.index', ['editar' => $grau->cod_grau_satisfacao]) }}" class="btn btn-primary gradient-theme">
                 <i class="bi bi-pencil me-1"></i> Editar
             </a>
-            @endcan
+            @endif
         </div>
     </div>
 

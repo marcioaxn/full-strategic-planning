@@ -4,10 +4,12 @@ namespace App\Livewire\ActionPlan;
 
 use App\Models\ActionPlan\LicaoAprendida;
 use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\Organization;
 use App\Models\StrategicPlanning\PEI;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
@@ -15,12 +17,17 @@ class LicoesAprendidas extends Component
 {
     public $peiAtivo;
 
+    // Só o servidor define (atualizarOrganizacao confere o escopo): um $set
+    // do navegador listava as lições de qualquer unidade.
+    #[Locked]
     public $organizacaoId;
 
+    // Muda pelo select da tela; o render() descarta plano fora do escopo.
     public ?string $planoFiltro = null;
 
     public bool $showModal = false;
 
+    #[Locked]
     public ?string $licaoEditId = null;
 
     public array $form = [
@@ -33,6 +40,7 @@ class LicoesAprendidas extends Component
 
     public bool $showDelete = false;
 
+    #[Locked]
     public ?string $deleteId = null;
 
     protected $listeners = [
@@ -42,8 +50,11 @@ class LicoesAprendidas extends Component
 
     public function mount(): void
     {
+        $this->authorize('modulo.acessar', 'planos-de-acao');
+
         $this->peiAtivo = PEI::find(Session::get('pei_selecionado_id')) ?? PEI::ativos()->first();
-        $this->organizacaoId = Session::get('organizacao_selecionada_id');
+        // Validada contra o escopo — nunca a sessão crua.
+        $this->organizacaoId = Auth::user()->organizacaoSelecionadaId();
     }
 
     public function atualizarPEI($id): void
@@ -55,9 +66,10 @@ class LicoesAprendidas extends Component
     {
         // Método público (e ouvinte de evento): o ID vem do cliente. Logado, só
         // dentro do próprio escopo; o visitante da área pública só consulta.
-        abort_unless(! $id || ! Auth::check() || Auth::user()->podeAcessarOrganizacao($id), 403);
+        abort_unless(Auth::check() && (! $id ? Auth::user()->isSuperAdmin() : Auth::user()->podeAcessarOrganizacao($id)), 403);
 
         $this->organizacaoId = $id;
+        $this->planoFiltro = null;
     }
 
     public function novaLicao(): void
@@ -115,6 +127,7 @@ class LicoesAprendidas extends Component
 
     public function confirmarExclusao(string $id): void
     {
+        $this->authorize('update', PlanoDeAcao::findOrFail(LicaoAprendida::findOrFail($id)->cod_plano_de_acao));
         $this->deleteId = $id;
         $this->showDelete = true;
     }
@@ -130,19 +143,46 @@ class LicoesAprendidas extends Component
         $this->dispatch('notify', message: 'Lição removida.', style: 'warning');
     }
 
+    /**
+     * Unidades cujas lições aparecem: a selecionada e as subordinadas, dentro
+     * do que o usuário alcança. Null = sem filtro (só para Super Admin).
+     *
+     * @return array<int, string>|null
+     */
+    private function orgIdsVisiveis(): ?array
+    {
+        $usuario = Auth::user();
+
+        if (! $this->organizacaoId) {
+            return $usuario->isSuperAdmin() ? null : $usuario->organizacaoIdsPermitidas()->all();
+        }
+
+        $ids = Organization::descendentesEProprio($this->organizacaoId);
+
+        return $usuario->isSuperAdmin() ? $ids : array_values(array_intersect($ids, $usuario->organizacaoIdsPermitidas()->all()));
+    }
+
     public function render()
     {
+        $orgIds = $this->orgIdsVisiveis();
+
+        // O plano do filtro vem do select do navegador: fora do escopo, é descartado.
+        if ($this->planoFiltro && $orgIds !== null
+            && ! PlanoDeAcao::where('cod_plano_de_acao', $this->planoFiltro)->whereIn('cod_organizacao', $orgIds)->exists()) {
+            $this->planoFiltro = null;
+        }
+
         $planos = collect();
         if ($this->peiAtivo) {
             $planos = PlanoDeAcao::whereHas('objetivo.perspectiva', fn ($q) => $q->where('cod_pei', $this->peiAtivo->cod_pei))
-                ->when($this->organizacaoId, fn ($q) => $q->where('cod_organizacao', $this->organizacaoId))
+                ->when($orgIds !== null, fn ($q) => $q->whereIn('cod_organizacao', $orgIds))
                 ->orderBy('dsc_plano_de_acao')
                 ->get();
         }
 
         $query = LicaoAprendida::with('plano')
             ->when($this->peiAtivo, fn ($q) => $q->whereHas('plano.objetivo.perspectiva', fn ($inner) => $inner->where('cod_pei', $this->peiAtivo->cod_pei)))
-            ->when($this->organizacaoId, fn ($q) => $q->whereHas('plano', fn ($p) => $p->where('cod_organizacao', $this->organizacaoId)))
+            ->when($orgIds !== null, fn ($q) => $q->whereHas('plano', fn ($p) => $p->whereIn('cod_organizacao', $orgIds)))
             ->when($this->planoFiltro, fn ($q) => $q->where('cod_plano_de_acao', $this->planoFiltro))
             ->orderBy('dsc_tipo')->orderBy('dsc_categoria');
 

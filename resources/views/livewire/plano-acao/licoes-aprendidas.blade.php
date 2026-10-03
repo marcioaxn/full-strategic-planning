@@ -8,9 +8,11 @@
         breadcrumb="Lições Aprendidas"
         :projetos="227">
         <x-slot name="actions">
+            @can('modulo.editar', 'planos-de-acao')
             <button wire:click="novaLicao" class="btn btn-light rounded-pill px-4 fw-bold">
                 <i class="bi bi-plus-lg me-2"></i>Nova Lição
             </button>
+            @endcan
         </x-slot>
     </x-module-header>
 
@@ -39,9 +41,11 @@
                 <i class="bi bi-lightbulb fs-1 text-muted opacity-25 d-block mb-3"></i>
                 <h5 class="fw-bold">Nenhuma lição aprendida registrada</h5>
                 <p class="text-muted small mb-3">Documente aprendizados, problemas e melhorias identificadas durante a execução dos projetos.</p>
+                @can('modulo.editar', 'planos-de-acao')
                 <button wire:click="novaLicao" class="btn btn-primary gradient-theme-btn px-4 rounded-pill">
                     <i class="bi bi-plus-lg me-2"></i>Registrar Primeira Lição
                 </button>
+                @endcan
             </div>
         </div>
     @else
@@ -72,12 +76,14 @@
                                 @endif
                             </div>
                             <div class="d-flex gap-1 flex-shrink-0">
+                                @if($licao->plano && auth()->user()->can('update', $licao->plano))
                                 <button wire:click="editar('{{ $licao->cod_licao }}')" class="btn btn-xs btn-outline-primary py-1 px-2">
                                     <i class="bi bi-pencil" style="font-size:.7rem;"></i>
                                 </button>
                                 <button wire:click="confirmarExclusao('{{ $licao->cod_licao }}')" class="btn btn-xs btn-outline-danger py-1 px-2">
                                     <i class="bi bi-trash" style="font-size:.7rem;"></i>
                                 </button>
+                                @endif
                             </div>
                         </div>
                     </div>

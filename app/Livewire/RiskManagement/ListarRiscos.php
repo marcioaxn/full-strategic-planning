@@ -2,6 +2,7 @@
 
 namespace App\Livewire\RiskManagement;
 
+use App\Models\Organization;
 use App\Models\RiskManagement\Risco;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\PEI;
@@ -50,6 +51,8 @@ class ListarRiscos extends Component
 
     public string $createdRiscoName = '';
 
+    // Só o servidor define (edit/confirmDelete, ambos autorizados).
+    #[Locked]
     public $riscoId;
 
     public bool $aiEnabled = false;
@@ -91,6 +94,8 @@ class ListarRiscos extends Component
 
     public function mount()
     {
+        $this->authorize('modulo.acessar', 'riscos');
+
         $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
         $this->estrategiasOptions = Risco::ESTRATEGIAS_RESPOSTA;
         $this->carregarPEI();
@@ -113,6 +118,8 @@ class ListarRiscos extends Component
 
     public function pedirAjudaIA()
     {
+        $this->authorize('create', [Risco::class, $this->organizacaoId]);
+
         if (! $this->aiEnabled) {
             return;
         }
@@ -178,6 +185,11 @@ class ListarRiscos extends Component
         // Método público (e ouvinte de evento): o ID vem do cliente.
         abort_unless(! $id || Auth::user()?->podeAcessarOrganizacao($id), 403);
 
+        // Sem Super Admin, "nenhuma organização" não é "todas".
+        if (! $id && ! Auth::user()->isSuperAdmin()) {
+            $id = Auth::user()->organizacaoSelecionadaId();
+        }
+
         $this->organizacaoId = $id;
         $this->resetPage();
         $this->carregarListasAuxiliares();
@@ -211,7 +223,7 @@ class ListarRiscos extends Component
 
     public function create()
     {
-        $this->authorize('create', Risco::class);
+        $this->authorize('create', [Risco::class, $this->organizacaoId]);
         $this->resetForm();
         if (! $this->organizacaoId) {
             $this->dispatch('notify', message: 'Selecione uma organização.', style: 'warning');
@@ -265,6 +277,32 @@ class ListarRiscos extends Component
             'form.txt_justificativa_estrategia.required_if' => 'Ao aceitar o risco, é obrigatório justificar a decisão.',
         ]);
 
+        // Autoriza ANTES do try: dentro dele a negação virava "erro técnico".
+        $riscoExistente = $this->riscoId ? Risco::findOrFail($this->riscoId) : null;
+        $riscoExistente
+            ? $this->authorize('update', $riscoExistente)
+            : $this->authorize('create', [Risco::class, $this->organizacaoId]);
+
+        // Responsável e objetivos vêm do navegador: o responsável precisa ser da
+        // unidade do risco e os objetivos, do ciclo do risco.
+        $orgDoRisco = $riscoExistente?->cod_organizacao ?? $this->organizacaoId;
+        $responsavelValido = User::where('id', $this->form['cod_responsavel_monitoramento'])
+            ->where(fn ($q) => $q->whereHas('organizacoes', fn ($o) => $o->where('tab_organizacoes.cod_organizacao', $orgDoRisco))
+                ->orWhereHas('perfisAcesso', fn ($p) => $p->where('rel_users_tab_organizacoes_tab_perfil_acesso.cod_organizacao', $orgDoRisco)))
+            ->exists();
+        if (! $responsavelValido) {
+            $this->addError('form.cod_responsavel_monitoramento', 'Escolha um responsável da unidade do risco.');
+
+            return;
+        }
+        $peiDoRisco = $riscoExistente?->cod_pei ?? $this->peiAtivo?->cod_pei;
+        $objetivos = array_values(array_filter((array) $this->form['objetivos_vinculados']));
+        if ($objetivos && Objetivo::whereIn('cod_objetivo', $objetivos)->whereHas('perspectiva', fn ($q) => $q->where('cod_pei', $peiDoRisco))->count() !== count(array_unique($objetivos))) {
+            $this->addError('form.objetivos_vinculados', 'Há objetivo de outro ciclo na seleção.');
+
+            return;
+        }
+
         try {
             $data = $this->form;
             unset($data['objetivos_vinculados']);
@@ -280,9 +318,8 @@ class ListarRiscos extends Component
                 }
             }
 
-            if ($this->riscoId) {
-                $risco = Risco::findOrFail($this->riscoId);
-                $this->authorize('update', $risco);
+            if ($riscoExistente) {
+                $risco = $riscoExistente;
                 $risco->update($data);
                 $this->successMessage = 'As definições do risco foram atualizadas com sucesso e a matriz já reflete a nova avaliação.';
             } else {
@@ -292,7 +329,6 @@ class ListarRiscos extends Component
 
                     return;
                 }
-                $this->authorize('create', Risco::class);
                 $data['cod_pei'] = $this->peiAtivo->cod_pei;
                 $data['cod_organizacao'] = $this->organizacaoId;
                 $risco = Risco::create($data);
@@ -318,6 +354,7 @@ class ListarRiscos extends Component
 
     public function confirmDelete($id)
     {
+        $this->authorize('delete', Risco::findOrFail($id));
         $this->riscoId = $id;
         $this->showDeleteModal = true;
     }
@@ -363,8 +400,18 @@ class ListarRiscos extends Component
     {
         $query = Risco::query()->with(['responsavel', 'objetivos']);
 
+        // A unidade selecionada e as subordinadas, dentro do que o usuário
+        // alcança. 🔴 Sem organização, a lista trazia os riscos (causas,
+        // responsáveis) de TODAS as unidades a qualquer usuário.
+        $usuario = Auth::user();
         if ($this->organizacaoId) {
-            $query->where('cod_organizacao', $this->organizacaoId);
+            $orgIds = Organization::descendentesEProprio($this->organizacaoId);
+            if (! $usuario->isSuperAdmin()) {
+                $orgIds = array_values(array_intersect($orgIds, $usuario->organizacaoIdsPermitidas()->all()));
+            }
+            $query->whereIn('cod_organizacao', $orgIds);
+        } else {
+            $usuario->aplicarEscopoOrganizacional($query);
         }
 
         // Só o ciclo selecionado no topo: a lista misturava riscos de todos os ciclos.

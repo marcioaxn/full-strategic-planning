@@ -51,6 +51,15 @@ class PerfilAcesso extends Model
 
     const GESTOR_SUBSTITUTO = 'c00b9ebc-7014-4d37-97dc-7875e55fff5d';
 
+    /** Somente leitura e exportação de relatórios, na unidade e nas subordinadas. */
+    const CONSULTA = 'c00b9ebc-7014-4d37-97dc-7875e55fff6e';
+
+    /**
+     * Perfis que valem também nas unidades SUBORDINADAS à do vínculo.
+     * Os de Gestor valem só na unidade do vínculo (e, para a iniciativa, só nela).
+     */
+    const PERFIS_HIERARQUICOS = [self::ADMIN_UNIDADE, self::CONSULTA];
+
     /**
      * Relacionamento: Usuários com este perfil
      */
@@ -63,7 +72,7 @@ class PerfilAcesso extends Model
             'user_id',
             'cod_perfil',
             'id'
-        )->withPivot('cod_organizacao', 'cod_plano_de_acao');
+        )->withPivot('cod_organizacao', 'cod_plano_de_acao')->wherePivotNull('deleted_at');
     }
 
     /**

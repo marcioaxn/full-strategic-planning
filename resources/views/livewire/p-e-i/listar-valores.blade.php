@@ -23,9 +23,11 @@
         </div>
 
         @if($peiAtivo && $organizacaoId)
+            @if($podeCriar)
             <button type="button" class="btn btn-primary gradient-theme-btn px-4 shadow-sm" wire:click="create">
                 <i class="bi bi-plus-lg me-1"></i> Novo Valor
             </button>
+            @endif
         @endif
     </div>
 
@@ -179,9 +181,11 @@
                 <i class="bi bi-heart fs-1 text-muted opacity-50 d-block mb-3"></i>
                 <h5 class="fw-bold">Nenhum valor cadastrado</h5>
                 <p class="text-muted mb-3">Comece registrando os princípios que orientam a sua organização.</p>
+                @if($podeCriar)
                 <button wire:click="create" class="btn btn-primary gradient-theme-btn">
                     <i class="bi bi-plus-lg me-1"></i> Adicionar o primeiro valor
                 </button>
+                @endif
             </div>
         </div>
     @else
@@ -201,8 +205,12 @@
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                         <li><a class="dropdown-item" href="{{ route('pei.valores.detalhes', $valor->cod_valor) }}" wire:navigate><i class="bi bi-eye me-2"></i>Detalhar</a></li>
+                                        @if($podeEditar)
                                         <li><button class="dropdown-item" wire:click="edit('{{ $valor->cod_valor }}')"><i class="bi bi-pencil me-2"></i>Editar</button></li>
+                                        @endif
+                                        @if($podeExcluir)
                                         <li><button class="dropdown-item text-danger" wire:click="delete('{{ $valor->cod_valor }}')" wire:confirm="Excluir o valor '{{ $valor->nom_valor }}'? Esta ação é irreversível."><i class="bi bi-trash me-2"></i>Excluir</button></li>
+                                        @endif
                                     </ul>
                                 </div>
                             </div>

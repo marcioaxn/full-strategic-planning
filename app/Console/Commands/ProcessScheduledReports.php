@@ -5,9 +5,11 @@ namespace App\Console\Commands;
 use App\Models\Reports\RelatorioAgendado;
 use App\Models\Reports\RelatorioGerado;
 use App\Models\SystemSetting;
+use App\Models\User;
 use App\Services\Reports\ReportGenerationService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Gate;
 
 class ProcessScheduledReports extends Command
 {
@@ -67,6 +69,20 @@ class ProcessScheduledReports extends Command
 
                 // Extrair filtros comuns
                 $organizacaoId = $filtros['organizacao_id'] ?? null;
+
+                if ($motivo = $this->motivoParaNaoExecutar($agendamento, $organizacaoId)) {
+                    $agendamento->bln_ativo = false;
+                    $agendamento->save();
+
+                    $this->warn("Agendamento {$agendamento->cod_agendamento} desativado: {$motivo}");
+                    \Log::warning('Agendamento de relatório desativado', [
+                        'cod_agendamento' => $agendamento->cod_agendamento,
+                        'user_id' => $agendamento->user_id,
+                        'motivo' => $motivo,
+                    ]);
+
+                    continue;
+                }
                 $ano = $filtros['ano'] ?? date('Y');
                 $periodo = $filtros['periodo'] ?? 'anual';
                 $perspectivaId = $filtros['perspectiva'] ?? null;
@@ -129,6 +145,40 @@ class ProcessScheduledReports extends Command
         }
 
         $this->info('Processamento concluído.');
+    }
+
+    /**
+     * O agendamento roda sem ninguém logado, semanas depois de criado. O acesso
+     * é reconferido AGORA, com o usuário como está hoje.
+     *
+     * 🔴 Só se checava na criação: quem era desativado ou saía da unidade
+     * continuava recebendo — e baixando — o relatório dela.
+     */
+    private function motivoParaNaoExecutar(RelatorioAgendado $agendamento, ?string $organizacaoId): ?string
+    {
+        $usuario = User::find($agendamento->user_id);
+
+        if (! $usuario) {
+            return 'usuário não existe mais';
+        }
+
+        if (! $usuario->isAtivo()) {
+            return 'usuário inativo';
+        }
+
+        if (! $usuario->temPerfilDeAcesso()) {
+            return 'usuário sem perfil de acesso';
+        }
+
+        if ($organizacaoId) {
+            $pode = $usuario->podeAcessarOrganizacao($organizacaoId)
+                && Gate::forUser($usuario)->allows('modulo.exportar', ['relatorios', $organizacaoId]);
+
+            return $pode ? null : 'usuário sem acesso à organização do relatório';
+        }
+
+        // Sem organização = todas as unidades: só o Super Admin.
+        return $usuario->isSuperAdmin() ? null : 'relatório de todas as unidades exige Super Administrador';
     }
 
     private function atualizarProximaExecucao(RelatorioAgendado $agendamento)

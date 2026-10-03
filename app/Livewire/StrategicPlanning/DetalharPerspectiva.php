@@ -24,6 +24,8 @@ class DetalharPerspectiva extends Component
 
     public function mount($id)
     {
+        $this->authorize('modulo.acessar', 'planejamento-estrategico');
+
         $this->perspectiva = Perspectiva::with(['pei', 'objetivos.indicadores', 'objetivos.planosAcao.entregas'])->findOrFail($id);
         $this->ano = (int) Session::get('ano_selecionado', now()->year);
 

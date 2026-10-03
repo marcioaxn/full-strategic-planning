@@ -72,9 +72,16 @@ test('gestor substituto não exclui item da PESTEL (só pode editar)', function 
 test('gestor substituto não cria item na SWOT', function () {
     [$user] = cenarioPlanejamento(PerfilAcesso::GESTOR_SUBSTITUTO);
 
+    // A recusa vem já ao abrir o formulário de criação...
     Livewire::actingAs($user)
         ->test(AnaliseSWOT::class)
         ->call('create', AnaliseAmbiental::SWOT_FORCA)
+        ->assertForbidden();
+
+    // ...e também a quem pula o formulário e chama save() direto do navegador.
+    Livewire::actingAs($user)
+        ->test(AnaliseSWOT::class)
+        ->set('dsc_categoria', AnaliseAmbiental::SWOT_FORCA)
         ->set('dsc_item', 'Força criada sem capacidade')
         ->call('save')
         ->assertForbidden();

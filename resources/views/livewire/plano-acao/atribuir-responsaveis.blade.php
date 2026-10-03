@@ -45,6 +45,13 @@
                     <h5 class="mb-0 fw-bold"><i class="bi bi-person-plus me-2 text-primary"></i>Nova Atribuição</h5>
                 </div>
                 <div class="card-body p-4 pt-0">
+                    {{-- Designar gestor é do administrador da unidade; o próprio gestor só consulta. --}}
+                    @cannot('designarGestores', $plano)
+                        <p class="small text-muted mb-0">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Somente o Administrador da unidade da iniciativa designa o Gestor Responsável e o Substituto.
+                        </p>
+                    @else
                     <form wire:submit.prevent="adicionar">
                         <div class="mb-3">
                             <label class="form-label text-muted small text-uppercase fw-bold">Selecionar Usuário</label>
@@ -77,6 +84,7 @@
                             <i class="bi bi-plus-lg me-2"></i>Atribuir à Iniciativa
                         </button>
                     </form>
+                    @endcannot
                 </div>
             </div>
         </div>
@@ -103,7 +111,7 @@
                                         <td class="ps-4 py-3">
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-sm me-3 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold">
-                                                    {{ substr($resp->name, 0, 1) }}
+                                                    {{ mb_strtoupper(mb_substr($resp->name, 0, 1)) }}
                                                 </div>
                                                 <div>
                                                     <span class="fw-bold d-block">{{ $resp->name }}</span>
@@ -117,11 +125,13 @@
                                             </span>
                                         </td>
                                         <td class="text-end pe-4">
-                                            <button wire:click="remover('{{ $resp->id }}')" 
+                                            @can('designarGestores', $plano)
+                                            <button wire:click="remover('{{ $resp->id }}')"
                                                     class="btn btn-sm btn-outline-danger border-0"
                                                     onclick="return confirm('Remover atribuição?')">
                                                 <i class="bi bi-person-x fs-5"></i>
                                             </button>
+                                            @endcan
                                         </td>
                                     </tr>
                                 @empty

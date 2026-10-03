@@ -18,9 +18,11 @@
             <a href="{{ route('riscos.index') }}" wire:navigate class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Voltar
             </a>
+            @can('update', $risco)
             <button wire:click="create" class="btn btn-success gradient-theme">
                 <i class="bi bi-shield-plus me-2"></i>Novo Plano
             </button>
+            @endcan
         </div>
     </div>
 
@@ -88,8 +90,11 @@
                                         <span class="badge {{ $m->getStatusBadgeClass() }} rounded-pill px-3">{{ $m->dsc_status }}</span>
                                     </td>
                                     <td class="text-end pe-4">
+                                        @can('update', $risco)
                                         <button wire:click="edit('{{ $m->cod_mitigacao }}')" class="btn btn-sm btn-outline-secondary border-0"><i class="bi bi-pencil"></i></button>
-                                        <button wire:click="delete('{{ $m->cod_mitigacao }}')" class="btn btn-sm btn-outline-danger border-0" onclick="confirm('Remover mitigação?')"><i class="bi bi-trash"></i></button>
+                                        {{-- "return": sem ele o Cancelar da confirmação não impedia a exclusão. --}}
+                                        <button wire:click="delete('{{ $m->cod_mitigacao }}')" class="btn btn-sm btn-outline-danger border-0" onclick="return confirm('Remover mitigação?')"><i class="bi bi-trash"></i></button>
+                                        @endcan
                                     </td>
                                 </tr>
                             @empty

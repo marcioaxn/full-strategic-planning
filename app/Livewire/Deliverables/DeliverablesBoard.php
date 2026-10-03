@@ -7,6 +7,7 @@ use App\Models\ActionPlan\EntregaAnexo;
 use App\Models\ActionPlan\EntregaComentario;
 use App\Models\ActionPlan\EntregaLabel;
 use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\Organization;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\User;
@@ -184,7 +185,8 @@ class DeliverablesBoard extends Component
         $idParaCarregar = $planoId;
 
         if (! $idParaCarregar) {
-            $orgId = session('organizacao_selecionada_id');
+            // Organização validada contra o escopo — nunca a sessão crua.
+            $orgId = Auth::user()?->organizacaoSelecionadaId();
             if ($orgId) {
                 $idParaCarregar = PlanoDeAcao::where('cod_organizacao', $orgId)->orderBy('created_at', 'desc')->first()?->cod_plano_de_acao;
             }
@@ -205,7 +207,11 @@ class DeliverablesBoard extends Component
         } else {
             // Se nenhum plano for encontrado, tentamos pegar qualquer um que o usuário tenha acesso para não mostrar tela vazia
             // Só cai num plano qualquer se o usuário puder vê-lo; senão, quadro vazio.
-            $primeiroDisponivel = PlanoDeAcao::first();
+            $usuario = Auth::user();
+            $primeiroDisponivel = PlanoDeAcao::query()
+                ->when($usuario && ! $usuario->isSuperAdmin(), fn ($q) => $q->whereIn('cod_organizacao', $usuario->organizacaoIdsPermitidas()))
+                ->orderBy('created_at', 'desc')
+                ->first();
             if ($primeiroDisponivel && Gate::allows('view', $primeiroDisponivel)) {
                 $this->plano = $primeiroDisponivel;
                 $this->calcularProgresso();
@@ -228,7 +234,14 @@ class DeliverablesBoard extends Component
     public function carregarListasEstrategicas()
     {
         $peiId = session('pei_selecionado_id');
-        $orgId = session('organizacao_selecionada_id');
+        $usuario = Auth::user();
+        $orgId = $usuario?->organizacaoSelecionadaId();
+
+        // A unidade selecionada e as subordinadas, dentro do que o usuário alcança.
+        $orgIds = $orgId ? Organization::descendentesEProprio($orgId) : [];
+        if ($usuario && ! $usuario->isSuperAdmin()) {
+            $orgIds = array_values(array_intersect($orgIds, $usuario->organizacaoIdsPermitidas()->all()));
+        }
 
         // 1. Carrega Perspectivas do PEI
         $this->perspectivasDisponiveis = Perspectiva::where('cod_pei', $peiId)
@@ -244,7 +257,7 @@ class DeliverablesBoard extends Component
 
         // 3. Carrega Planos (Filtrados por Objetivo se houver, ou apenas pela Org)
         $this->planosDisponiveis = PlanoDeAcao::query()
-            ->where('cod_organizacao', $orgId)
+            ->whereIn('cod_organizacao', $orgIds)
             ->when($this->objetivoId, fn ($q) => $q->where('cod_objetivo', $this->objetivoId))
             ->orderBy('dsc_plano_de_acao')
             ->get();
@@ -273,6 +286,8 @@ class DeliverablesBoard extends Component
     public function mudarPlano($id)
     {
         if ($id) {
+            $this->authorize('view', PlanoDeAcao::findOrFail($id));
+
             return redirect()->route('planos.entregas', $id);
         }
     }
@@ -362,7 +377,41 @@ class DeliverablesBoard extends Component
 
     protected function getUsuarios()
     {
-        return User::orderBy('name')->get(['id', 'name', 'email']);
+        return $this->consultaUsuariosDaIniciativa()->orderBy('name')->get(['users.id', 'users.name', 'users.email']);
+    }
+
+    /**
+     * Quem pode ser responsável por entrega: as pessoas das unidades da
+     * iniciativa. Antes a lista trazia TODOS os usuários do sistema (nome e
+     * e-mail) para quem abrisse o quadro, e aceitava qualquer id.
+     */
+    protected function consultaUsuariosDaIniciativa()
+    {
+        $orgs = $this->plano->organizacoes()->pluck('tab_organizacoes.cod_organizacao')
+            ->push($this->plano->cod_organizacao)->filter()->unique()->all();
+
+        return User::query()->where(function ($q) use ($orgs) {
+            $q->whereHas('organizacoes', fn ($o) => $o->whereIn('tab_organizacoes.cod_organizacao', $orgs))
+                ->orWhereHas('perfisAcesso', fn ($p) => $p->whereIn('rel_users_tab_organizacoes_tab_perfil_acesso.cod_organizacao', $orgs));
+        });
+    }
+
+    /** @param  array<int, mixed>  $ids */
+    private function garantirResponsaveisDaIniciativa(array $ids): void
+    {
+        $ids = array_values(array_unique(array_filter($ids)));
+
+        abort_unless(
+            $ids === [] || $this->consultaUsuariosDaIniciativa()->whereIn('users.id', $ids)->count() === count($ids),
+            422,
+            'Responsável fora das unidades da iniciativa.'
+        );
+    }
+
+    /** Excluir (lixeira ou definitivo) e restaurar: capacidade própria — o Gestor Substituto não exclui. */
+    private function autorizarExclusao(string $entregaId): void
+    {
+        $this->authorize('delete', $this->entregasDoPlano()->withTrashed()->findOrFail($entregaId));
     }
 
     protected function calcularProgresso(): void
@@ -578,7 +627,7 @@ class DeliverablesBoard extends Component
 
     public function openQuickAdd(string $status = 'Não Iniciado'): void
     {
-        $this->authorize('update', $this->plano);
+        $this->authorize('create', [Entrega::class, $this->plano]);
         $this->quickAddStatus = $status;
         $this->quickAddTitulo = '';
         $this->showQuickAdd = true;
@@ -592,7 +641,7 @@ class DeliverablesBoard extends Component
 
     public function criarRapido(): void
     {
-        $this->authorize('update', $this->plano);
+        $this->authorize('create', [Entrega::class, $this->plano]);
 
         $this->validate([
             'quickAddTitulo' => 'required|string|min:3|max:500',
@@ -629,7 +678,9 @@ class DeliverablesBoard extends Component
 
     public function openEditModal(?string $entregaId = null): void
     {
-        $this->authorize('update', $this->plano);
+        $entregaId
+            ? $this->authorize('update', $this->entregasDoPlano()->findOrFail($entregaId))
+            : $this->authorize('create', [Entrega::class, $this->plano]);
 
         if ($entregaId) {
             $entrega = $this->entregasDoPlano()->with('responsaveis')->findOrFail($entregaId);
@@ -669,7 +720,9 @@ class DeliverablesBoard extends Component
 
     public function salvarEntrega(): void
     {
-        $this->authorize('update', $this->plano);
+        $this->editEntregaId
+            ? $this->authorize('update', $this->entregasDoPlano()->findOrFail($this->editEntregaId))
+            : $this->authorize('create', [Entrega::class, $this->plano]);
 
         $this->validate([
             'editTitulo' => 'required|string|min:3|max:500',
@@ -680,6 +733,8 @@ class DeliverablesBoard extends Component
             'editResponsaveis.*' => 'exists:users,id',
             'editTipo' => 'required|in:'.implode(',', array_keys(Entrega::TIPO_OPTIONS)),
         ]);
+
+        $this->garantirResponsaveisDaIniciativa((array) $this->editResponsaveis);
 
         $w5h2Filtrado = array_filter($this->edit5w2h);
         $propsExistentes = [];
@@ -797,6 +852,7 @@ class DeliverablesBoard extends Component
     {
         $this->authorize('update', $this->plano);
 
+        $this->garantirResponsaveisDaIniciativa($userIds);
         $entrega = $this->entregasDoPlano()->findOrFail($entregaId);
         $entrega->responsaveis()->sync($userIds);
 
@@ -881,7 +937,7 @@ class DeliverablesBoard extends Component
 
     public function confirmDeleteEntrega(string $entregaId, bool $isPermanent = false): void
     {
-        $this->authorize('update', $this->plano);
+        $this->autorizarExclusao($entregaId);
         $this->entregaParaExcluirId = $this->entregasDoPlano()->withTrashed()->findOrFail($entregaId)->cod_entrega;
         $this->isPermanentDelete = $isPermanent;
         $this->showDeleteModal = true;
@@ -889,7 +945,6 @@ class DeliverablesBoard extends Component
 
     public function excluir(): void
     {
-        $this->authorize('update', $this->plano);
 
         // Sem entrega escolhida não há o que excluir. Antes seguia adiante e
         // quebrava com "Undefined variable $title" (erro 500 na tela).
@@ -898,6 +953,8 @@ class DeliverablesBoard extends Component
 
             return;
         }
+
+        $this->autorizarExclusao($this->entregaParaExcluirId);
 
         if ($this->entregaParaExcluirId) {
             if ($this->isPermanentDelete) {
@@ -926,7 +983,7 @@ class DeliverablesBoard extends Component
 
     public function restaurar(string $entregaId): void
     {
-        $this->authorize('update', $this->plano);
+        $this->autorizarExclusao($entregaId);
 
         $this->entregasDoPlano()->withTrashed()->where('cod_entrega', $entregaId)->restore();
 
@@ -940,7 +997,7 @@ class DeliverablesBoard extends Component
 
     public function excluirPermanente(string $entregaId): void
     {
-        $this->authorize('update', $this->plano);
+        $this->autorizarExclusao($entregaId);
 
         $this->entregasDoPlano()->withTrashed()->where('cod_entrega', $entregaId)->forceDelete();
 
@@ -1065,7 +1122,9 @@ class DeliverablesBoard extends Component
         $this->authorize('update', $this->plano);
 
         $this->validate([
-            'anexosUpload.*' => 'required|file|max:10240', // Max 10MB por arquivo
+            // Só formatos de documento e imagem: o arquivo é servido pelo disco
+            // público, e um .html/.svg enviado ali rodaria script na origem do sistema.
+            'anexosUpload.*' => 'required|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,odt,ods,odp,png,jpg,jpeg,gif,txt,csv,zip', // Max 10MB por arquivo
         ]);
 
         if (! $this->entregaDetalheId || ! $this->entregasDoPlano()->where('cod_entrega', $this->entregaDetalheId)->exists()) {

@@ -571,11 +571,13 @@
 
     @php
         $totalCobertos = count($odsPorObjetivo ?? []);
+        // O total vem do cadastro de ODS, nunca escrito no relatório.
+        $totalOdsCadastrados = \App\Models\Agenda2030\ODS::count();
     @endphp
 
     <p style="font-size:9px; color:#4a5568; margin-bottom:10px;">
         Alinhamento da estratégia institucional aos Objetivos de Desenvolvimento Sustentável da ONU.
-        <strong>{{ $totalCobertos }} de 18 ODS</strong> contam com objetivos estratégicos vinculados neste ciclo.
+        <strong>{{ $totalCobertos }} de {{ $totalOdsCadastrados }} ODS</strong> contam com objetivos estratégicos vinculados neste ciclo.
     </p>
 
     {{-- Aderência institucional declarada (PEI ↔ ODS) --}}

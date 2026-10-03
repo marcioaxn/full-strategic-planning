@@ -84,10 +84,30 @@ Route::middleware(['transparencia'])->group(function () {
     Route::get('/planos/{id}/detalhes', DetalharPlano::class)->name('planos.detalhes');
 });
 
+// Encerrar a impersonação fica fora do grupo que exige perfil: o Super Admin
+// que assumiu a identidade de uma conta sem perfil precisa conseguir voltar.
+Route::middleware(['auth:sanctum', config('jetstream.auth_session')])
+    ->post('/impersonate-stop', [ImpersonateController::class, 'stop'])
+    ->name('impersonate.stop');
+
+// Conta autenticada SEM perfil de acesso (autocadastro) cai aqui e só aqui.
+Route::middleware(['auth:sanctum', config('jetstream.auth_session')])
+    ->get('/acesso-pendente', fn () => view('auth.acesso-pendente'))
+    ->name('acesso.pendente');
+
+// 🔴 A troca de senha obrigatória fica FORA do grupo que exige perfil. Dentro
+// dele, a conta recém-criada pelo autocadastro (que nasce com troca de senha
+// pendente e sem perfil) entrava em laço: troca de senha → exige perfil →
+// acesso pendente → exige troca de senha → … até o navegador desistir.
+Route::middleware(['auth:sanctum', config('jetstream.auth_session')])
+    ->get('/trocar-senha', TrocarSenha::class)
+    ->name('auth.trocar-senha');
+
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
+    'perfil',
 ])->group(function () {
     // CSRF Token Refresh Endpoint — requer autenticação
     Route::get('/refresh-csrf', function () {
@@ -109,8 +129,6 @@ Route::middleware([
 
     Route::get('/licoes-aprendidas', LicoesAprendidas::class)->name('licoes.index');
 
-    Route::get('/trocar-senha', TrocarSenha::class)->name('auth.trocar-senha');
-
     // Strategic Planning Module
     Route::get('/organizacoes', ListarOrganizacoes::class)->name('organizacoes.index');
     Route::get('/organizacoes/{id}/detalhes', DetalharOrganizacao::class)->name('organizacoes.detalhes');
@@ -119,8 +137,9 @@ Route::middleware([
 
     // Gestão de Perfis de Acesso e Impersonação (Administrador Geral)
     Route::get('/admin/perfis', GestaoPerfis::class)->name('admin.perfis');
-    Route::get('/impersonate/{userId}', [ImpersonateController::class, 'start'])->name('impersonate.start');
-    Route::get('/impersonate-stop', [ImpersonateController::class, 'stop'])->name('impersonate.stop');
+    // POST com CSRF: em GET, um simples link ou <img> numa página qualquer
+    // fazia o Super Admin assumir uma identidade sem perceber.
+    Route::post('/impersonate/{userId}', [ImpersonateController::class, 'start'])->name('impersonate.start');
     Route::get('/configuracoes', ConfiguracaoSistema::class)->name('admin.configuracoes');
     Route::get('/graus-satisfacao', ListarGrausSatisfacao::class)->name('graus-satisfacao.index');
     Route::get('/graus-satisfacao/{id}/detalhes', DetalharGrauSatisfacao::class)->name('graus-satisfacao.detalhes');

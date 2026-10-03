@@ -25,7 +25,7 @@
         </div>
 
         <div class="d-flex align-items-center gap-2">
-            @can('update', $plano)
+            @can('create', [\App\Models\ActionPlan\Entrega::class, $plano])
                 <button wire:click="openEditModal" class="btn btn-primary gradient-theme-btn">
                     <i class="bi bi-plus-lg me-2"></i>Nova Entrega
                 </button>

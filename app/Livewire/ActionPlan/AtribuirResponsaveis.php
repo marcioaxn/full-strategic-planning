@@ -82,23 +82,40 @@ class AtribuirResponsaveis extends Component
             ->join('users', 'users.id', '=', 'pivot.user_id')
             ->join('tab_perfil_acesso as perfil', 'perfil.cod_perfil', '=', 'pivot.cod_perfil')
             ->where('pivot.cod_plano_de_acao', $this->plano->cod_plano_de_acao)
+            ->whereNull('pivot.deleted_at')
             ->select('users.name', 'users.email', 'perfil.dsc_perfil', 'pivot.id', 'pivot.user_id', 'pivot.cod_perfil')
             ->get();
 
-        // 2. Carregar Usuários da mesma Organização (para o select)
-        $this->usuariosDisponiveis = User::whereHas('organizacoes', function ($q) {
+        // 2. Usuários que podem receber o papel: os da unidade da iniciativa,
+        // menos quem está designando (ninguém se designa a si mesmo).
+        $this->usuariosDisponiveis = $this->consultaUsuariosDisponiveis()->orderBy('name')->get();
+    }
+
+    private function consultaUsuariosDisponiveis()
+    {
+        return User::whereHas('organizacoes', function ($q) {
             $q->where('tab_organizacoes.cod_organizacao', $this->plano->cod_organizacao);
-        })->orderBy('name')->get();
+        })->where('users.id', '!=', auth()->id());
     }
 
     public function adicionar()
     {
-        $this->authorize('update', $this->plano);
+        // 🔴 Antes bastava poder EDITAR a iniciativa: o Gestor Substituto se
+        // promovia a Responsável, ou dava o papel a qualquer conta do sistema.
+        // Designar gestor é ato de quem administra a unidade da iniciativa.
+        $this->authorize('designarGestores', $this->plano);
 
         $this->validate([
             'novo_usuario_id' => 'required|exists:users,id',
             'novo_perfil_id' => 'required|in:'.PerfilAcesso::GESTOR_RESPONSAVEL.','.PerfilAcesso::GESTOR_SUBSTITUTO,
         ]);
+
+        // O id vem do navegador: só vale quem está na lista oferecida pela tela.
+        if (! $this->consultaUsuariosDisponiveis()->where('users.id', $this->novo_usuario_id)->exists()) {
+            $this->addError('novo_usuario_id', 'Escolha um usuário da unidade da iniciativa (e não você mesmo).');
+
+            return;
+        }
 
         // Verificar duplicata
         $existe = DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')
@@ -132,7 +149,7 @@ class AtribuirResponsaveis extends Component
 
     public function remover($pivotId)
     {
-        $this->authorize('update', $this->plano);
+        $this->authorize('designarGestores', $this->plano);
 
         // O id vem do navegador: só sai o vínculo de gestor DESTE plano, nesta organização.
         // Sem o recorte, qualquer linha da pivot de perfis (inclusive Admin de outra

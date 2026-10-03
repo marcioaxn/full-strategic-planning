@@ -23,6 +23,7 @@ class GerenciarRae extends Component
 {
     public $peiAtivo;
 
+    #[Locked]
     public $organizacaoId;
 
     public $organizacaoNome;
@@ -32,8 +33,10 @@ class GerenciarRae extends Component
 
     public bool $showDelete = false;
 
+    #[Locked]
     public ?string $raeEditId = null;
 
+    #[Locked]
     public ?string $raeDeleteId = null;
 
     public array $form = [
@@ -57,6 +60,7 @@ class GerenciarRae extends Component
     #[Locked]
     public ?string $encEditId = null;
 
+    #[Locked]
     public ?string $encDeleteId = null;
 
     #[Locked]
@@ -99,8 +103,11 @@ class GerenciarRae extends Component
 
     public function mount(): void
     {
+        $this->authorize('modulo.acessar', 'planejamento-estrategico');
+
         $this->peiAtivo = PEI::find(Session::get('pei_selecionado_id')) ?? PEI::ativos()->first();
-        $this->organizacaoId = Session::get('organizacao_selecionada_id');
+        // Nunca a sessão crua: a seleção só vale se estiver no escopo do usuário.
+        $this->organizacaoId = Auth::user()->organizacaoSelecionadaId();
         $this->organizacaoNome = $this->organizacaoId
             ? Organization::find($this->organizacaoId)?->nom_organizacao
             : null;
@@ -133,7 +140,8 @@ class GerenciarRae extends Component
 
         abort_unless(
             $codOrganizacao && $user?->podeAcessarOrganizacao($codOrganizacao)
-                && Gate::forUser($user)->allows("modulo.{$ability}", 'planejamento-estrategico'),
+                // A capacidade vale NA unidade da RAE, não na soma dos vínculos.
+                && Gate::forUser($user)->allows("modulo.{$ability}", ['planejamento-estrategico', $codOrganizacao]),
             403,
             'Você não tem permissão para operar nesta organização.'
         );
@@ -185,6 +193,8 @@ class GerenciarRae extends Component
         if ($this->raeEditId) {
             $raeExistente = Rae::findOrFail($this->raeEditId);
             $this->garantirAcesso($raeExistente->cod_organizacao, 'editar');
+            // Salvar grava a unidade em tela: editar a RAE de outra unidade a mudaria de dono.
+            abort_unless($raeExistente->cod_organizacao === $this->organizacaoId, 403);
         }
 
         $this->validate([
@@ -222,6 +232,7 @@ class GerenciarRae extends Component
 
     public function confirmarExclusao(string $id): void
     {
+        $this->garantirAcesso(Rae::findOrFail($id)->cod_organizacao, 'excluir');
         $this->raeDeleteId = $id;
         $this->showDelete = true;
     }
@@ -243,8 +254,18 @@ class GerenciarRae extends Component
         // participantes): é exportação de dado restrito, não leitura pública.
         // O id vem do navegador — sem esta checagem, qualquer RAE de qualquer
         // organização seria baixada.
+        //
+        // A permissão é a de EXPORTAR RELATÓRIOS — a mesma de todo PDF do
+        // sistema. Exigia "exportar" em Planejamento, que o Gestor Substituto
+        // não tem: o botão aparecia para ele e devolvia 403.
         $rae = Rae::with(['pei', 'organizacao'])->findOrFail($id);
-        $this->garantirAcesso($rae->cod_organizacao, 'exportar');
+        $user = auth()->user();
+        abort_unless(
+            $rae->cod_organizacao && $user?->podeAcessarOrganizacao($rae->cod_organizacao)
+                && Gate::forUser($user)->allows('modulo.exportar', 'relatorios'),
+            403,
+            'Você não tem permissão para exportar esta RAE.'
+        );
 
         $pdf = Pdf::loadView('relatorios.rae', [
             'rae' => $rae,
@@ -253,7 +274,7 @@ class GerenciarRae extends Component
 
         (new AcabamentoPdf('portrait'))->aplicar($pdf, [
             'esquerda' => $rae->organizacao?->nom_organizacao ?? 'Todas as unidades',
-            'centro' => 'Reunião de Avaliação Estratégica',
+            'centro' => 'Revisão e Avaliação da Estratégia',
             'site' => (string) SystemSetting::getValue('orgao_site', ''),
             'emitido_em' => now()->format('d/m/Y'),
         ]);
@@ -495,7 +516,16 @@ class GerenciarRae extends Component
                 ->get()
             : collect();
 
-        $usuarios = User::where('ativo', true)->orderBy('name')->get(['id', 'name']);
+        // Responsável por encaminhamento: pessoas da unidade em tela. Antes a
+        // lista trazia o nome de todos os usuários ativos do sistema.
+        $usuarios = $this->organizacaoId
+            ? User::where('ativo', true)
+                ->whereHas('organizacoes', fn ($q) => $q->where('tab_organizacoes.cod_organizacao', $this->organizacaoId))
+                ->orderBy('name')->get(['id', 'name'])
+            : collect();
+
+        $pode = fn (string $a) => $this->organizacaoId !== null
+            && Gate::allows("modulo.{$a}", ['planejamento-estrategico', $this->organizacaoId]);
 
         return view('livewire.p-e-i.gerenciar-rae', [
             'raes' => $raes,
@@ -504,6 +534,11 @@ class GerenciarRae extends Component
             'statusEnc' => RaeEncaminhamento::STATUS,
             'usuarios' => $usuarios,
             'categoriasIshikawa' => RaeCausaRaiz::CATEGORIAS_ISHIKAWA,
+            // A tela só oferece o botão que o servidor aceita.
+            'podeCriar' => $pode('criar'),
+            'podeEditar' => $pode('editar'),
+            'podeExcluir' => $pode('excluir'),
+            'podeExportar' => Gate::allows('modulo.exportar', 'relatorios'),
         ]);
     }
 }

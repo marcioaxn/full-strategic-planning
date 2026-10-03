@@ -19,11 +19,11 @@
             <a href="{{ route('pei.perspectivas') }}" wire:navigate class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Voltar
             </a>
-            @can('modulo.editar', 'planejamento-estrategico')
+            @if(auth()->user()?->can('modulo.editar', 'planejamento-estrategico') && auth()->user()->can('editar-institucional'))
             <a href="{{ route('pei.perspectivas', ['editar' => $perspectiva->cod_perspectiva]) }}" class="btn btn-primary gradient-theme">
                 <i class="bi bi-pencil me-1"></i> Editar
             </a>
-            @endcan
+            @endif
         </div>
     </div>
 

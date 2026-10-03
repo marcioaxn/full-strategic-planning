@@ -41,7 +41,6 @@ class PapeisResponsabilidades extends Component
 
     private const DESCRICAO_ABILITY = [
         'acessar' => 'Abrir a tela e consultar',
-        'ver-sensivel' => 'Ver dados restritos (responsáveis, valores detalhados)',
         'criar' => 'Cadastrar novo registro',
         'editar' => 'Alterar registro existente e lançar evolução',
         'excluir' => 'Excluir registro',
@@ -55,6 +54,7 @@ class PapeisResponsabilidades extends Component
             PerfilAcesso::ADMIN_UNIDADE => 'Admin de Unidade',
             PerfilAcesso::GESTOR_RESPONSAVEL => 'Gestor Responsável',
             PerfilAcesso::GESTOR_SUBSTITUTO => 'Gestor Substituto',
+            PerfilAcesso::CONSULTA => 'Consulta',
         ];
 
         $linhas = [];

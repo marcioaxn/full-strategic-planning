@@ -26,8 +26,9 @@
             <div class="alert alert-warning border-0 mb-0">
                 <i class="bi bi-exclamation-triangle me-2"></i>
                 Um usuário com o perfil <strong>Gestor Responsável</strong> que não esteja vinculado a
-                nenhuma Iniciativa não conseguirá lançar evolução em lugar nenhum. Ao criar o usuário,
-                vincule-o às Iniciativas pelas quais ele responde.
+                nenhuma Iniciativa não conseguirá lançar evolução em lugar nenhum. Depois de criar o usuário,
+                o Administrador da unidade o vincula em <strong>Iniciativas → Gestores e Responsáveis</strong>,
+                em cada Iniciativa pela qual ele responde.
             </div>
         </div>
     </div>
@@ -49,17 +50,42 @@
                     <div class="p-3 border rounded-3 h-100">
                         <span class="badge bg-primary mb-2">2</span>
                         <h6 class="fw-bold">A sua unidade</h6>
-                        <p class="small text-muted mb-0">O registro precisa pertencer a uma organização que você alcança — a sua e as abaixo dela.</p>
+                        <p class="small text-muted mb-0">
+                            Cada perfil vale na unidade em que foi dado. Administrador e Consulta valem também nas unidades
+                            abaixo dela; Gestores, só na própria. Ser Administrador numa unidade não dá poder nenhum em outra.
+                        </p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="p-3 border rounded-3 h-100">
                         <span class="badge bg-primary mb-2">3</span>
                         <h6 class="fw-bold">A titularidade</h6>
-                        <p class="small text-muted mb-0">Para o Gestor Responsável: você responde por <em>esta</em> Iniciativa especificamente?</p>
+                        <p class="small text-muted mb-0">Para o Gestor Responsável e o Substituto: você responde por <em>esta</em> Iniciativa especificamente?</p>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-primary me-2"></i>Três regras que completam a tabela</h5>
+            <ul class="mb-0">
+                <li class="mb-2">
+                    <strong>O que é da instituição inteira</strong> — perspectivas, objetivos estratégicos, faixas do farol
+                    (graus de satisfação), cadeia de valor e a abertura do ciclo (Inaugurar e Integrar) — só o
+                    <strong>Super Administrador</strong> ou o <strong>Administrador da unidade raiz</strong> alteram.
+                    Uma mudança ali vale para todas as unidades.
+                </li>
+                <li class="mb-2">
+                    <strong>Consulta</strong> é o perfil de quem acompanha: abre as telas da unidade (e das abaixo dela)
+                    e exporta relatórios, mas não cadastra, não altera e não exclui nada.
+                </li>
+                <li>
+                    <strong>Conta sem perfil</strong> (por exemplo, criada pelo autocadastro) não entra na área restrita
+                    até um administrador vinculá-la a uma unidade com um perfil.
+                </li>
+            </ul>
         </div>
     </div>
 

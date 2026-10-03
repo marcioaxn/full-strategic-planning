@@ -9,6 +9,7 @@ use App\Models\SystemSetting;
 use App\Services\AI\AiServiceFactory;
 use App\Services\PeiGuidanceService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -18,6 +19,19 @@ use Livewire\Component;
 class ListarPerspectivas extends Component
 {
     use AuthorizesRequests;
+
+    /**
+     * Este registro não tem organização: vale para a INSTITUIÇÃO inteira
+     * (todas as unidades). Por isso, além da capacidade no módulo, gravar
+     * exige poder editar o que é institucional — Super Admin ou Administrador
+     * da unidade raiz. Antes, o Administrador de qualquer unidade folha (ou
+     * um Gestor) alterava o que vale para todas.
+     */
+    private function autorizarInstitucional(string $ability): void
+    {
+        $this->authorize("modulo.{$ability}", 'planejamento-estrategico');
+        $this->authorize('editar-institucional');
+    }
 
     public $perspectivas = [];
 
@@ -59,6 +73,8 @@ class ListarPerspectivas extends Component
 
     public function mount()
     {
+        $this->authorize('modulo.acessar', 'planejamento-estrategico');
+
         $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
 
@@ -68,6 +84,7 @@ class ListarPerspectivas extends Component
             // "Editar" no detalhe da perspectiva chega com ?editar={cod}.
             $editar = request()->query('editar');
             if (is_string($editar) && auth()->user()?->can('modulo.editar', 'planejamento-estrategico')
+                && auth()->user()->can('editar-institucional')
                 && Perspectiva::whereKey($editar)->where('cod_pei', $this->peiAtivo->cod_pei)->exists()) {
                 $this->edit($editar);
             }
@@ -89,6 +106,8 @@ class ListarPerspectivas extends Component
 
     public function pedirAjudaIA()
     {
+        $this->autorizarInstitucional('criar');
+
         if (! $this->aiEnabled) {
             return;
         }
@@ -190,6 +209,8 @@ class ListarPerspectivas extends Component
 
     public function create(PeiGuidanceService $service)
     {
+        $this->autorizarInstitucional('criar');
+
         $guidance = $service->analyzeCompleteness($this->peiAtivo->cod_pei);
 
         if ($guidance['status'] === 'warning' && $guidance['current_phase'] === 'identidade') {
@@ -207,7 +228,7 @@ class ListarPerspectivas extends Component
 
     public function edit($id)
     {
-        $this->authorize('modulo.editar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('editar');
         $p = Perspectiva::findOrFail($id);
         abort_unless($this->peiAtivo && $p->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->perspectivaId = $id;
@@ -220,7 +241,7 @@ class ListarPerspectivas extends Component
 
     public function save()
     {
-        $this->authorize($this->perspectivaId ? 'modulo.editar' : 'modulo.criar', 'planejamento-estrategico');
+        $this->autorizarInstitucional($this->perspectivaId ? 'editar' : 'criar');
 
         if (! $this->peiAtivo) {
             session()->flash('error', 'Selecione um Ciclo PEI antes de salvar.');
@@ -240,6 +261,11 @@ class ListarPerspectivas extends Component
             $this->addError('num_peso_indicadores', 'A soma dos pesos deve ser exatamente 100%.');
 
             return;
+        }
+
+        if ($this->perspectivaId) {
+            // O peso desta perspectiva muda o farol de todo o ciclo: só a do ciclo em tela.
+            abort_unless(Perspectiva::whereKey($this->perspectivaId)->where('cod_pei', $this->peiAtivo->cod_pei)->exists(), 403);
         }
 
         try {
@@ -278,7 +304,7 @@ class ListarPerspectivas extends Component
 
     public function confirmDelete($id)
     {
-        $this->authorize('modulo.excluir', 'planejamento-estrategico');
+        $this->autorizarInstitucional('excluir');
         $p = Perspectiva::findOrFail($id);
         abort_unless($this->peiAtivo && $p->cod_pei === $this->peiAtivo->cod_pei, 403);
         $this->perspectivaId = $id;
@@ -287,7 +313,7 @@ class ListarPerspectivas extends Component
 
     public function delete()
     {
-        $this->authorize('modulo.excluir', 'planejamento-estrategico');
+        $this->autorizarInstitucional('excluir');
         $p = Perspectiva::findOrFail($this->perspectivaId);
         abort_unless($this->peiAtivo && $p->cod_pei === $this->peiAtivo->cod_pei, 403);
         $p->delete();
@@ -314,6 +340,13 @@ class ListarPerspectivas extends Component
 
     public function render()
     {
-        return view('livewire.p-e-i.listar-perspectivas');
+        // Perspectivas valem para a instituição inteira: a tela só oferece o botão que o servidor aceita.
+        $institucional = Gate::allows('editar-institucional');
+
+        return view('livewire.p-e-i.listar-perspectivas', [
+            'podeCriar' => $institucional && Gate::allows('modulo.criar', 'planejamento-estrategico'),
+            'podeEditar' => $institucional && Gate::allows('modulo.editar', 'planejamento-estrategico'),
+            'podeExcluir' => $institucional && Gate::allows('modulo.excluir', 'planejamento-estrategico'),
+        ]);
     }
 }

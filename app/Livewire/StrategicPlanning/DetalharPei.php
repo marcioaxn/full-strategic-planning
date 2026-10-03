@@ -19,6 +19,8 @@ class DetalharPei extends Component
 
     public function mount($id)
     {
+        $this->authorize('modulo.acessar', 'planejamento-estrategico');
+
         $this->pei = PEI::with(['identidadeEstrategica', 'valores'])->findOrFail($id);
         $this->carregarEstatisticas();
     }

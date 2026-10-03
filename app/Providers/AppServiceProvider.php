@@ -194,11 +194,19 @@ class AppServiceProvider extends ServiceProvider
      */
     private function registrarGatesDeAutorizacao(): void
     {
-        foreach (['acessar', 'ver-sensivel', 'criar', 'editar', 'excluir', 'exportar'] as $ability) {
-            Gate::define("modulo.{$ability}", function (User $user, string $nomPath) use ($ability): bool {
-                return CapacidadeResolver::podeNoModulo($user, $nomPath, $ability);
+        // Uso: Gate::allows('modulo.editar', 'riscos') — vale na organização
+        // selecionada no topo; ou Gate::allows('modulo.editar', ['riscos', $codOrg])
+        // — vale na organização do registro.
+        foreach (CapacidadeResolver::ABILITIES as $ability) {
+            Gate::define("modulo.{$ability}", function (User $user, string $nomPath, ?string $codOrganizacao = null) use ($ability): bool {
+                return CapacidadeResolver::podeNoModulo($user, $nomPath, $ability, $codOrganizacao);
             });
         }
+
+        // Dados da instituição inteira (perspectivas, objetivos, faixas do
+        // farol, cadeia de valor, abertura do ciclo): Super Admin ou
+        // Administrador da unidade raiz. Ver User::podeEditarInstitucional().
+        Gate::define('editar-institucional', fn (User $user): bool => $user->podeEditarInstitucional());
 
         // ABAC — estado do usuário: veto total para conta inativa, antes de
         // qualquer outra checagem. Retornar null (não true/false) para os

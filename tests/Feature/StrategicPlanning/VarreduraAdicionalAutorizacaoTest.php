@@ -16,11 +16,22 @@ use Livewire\Livewire;
  * de escrita (mesma classe de falha já corrigida em GerenciarRae,
  * GerenciarFuturoAlmejado, MissaoVisao e LicoesAprendidas).
  */
-test('usuário sem nenhum perfil NÃO consegue salvar uma atividade da Cadeia de Valor', function () {
+/** Perfil só de leitura: abre a tela, não grava. (Conta sem perfil nem abre.) */
+function usuarioSoLeitura(): User
+{
+    $org = Organization::create(['nom_organizacao' => 'Órgão Consulta', 'sgl_organizacao' => 'OC', 'cod_organizacao_pai' => null]);
+    $user = User::factory()->create(['ativo' => true]);
+    $user->perfisAcesso()->attach(PerfilAcesso::CONSULTA, ['cod_organizacao' => $org->cod_organizacao]);
+    $user->organizacoes()->syncWithoutDetaching([$org->cod_organizacao]);
+
+    return $user->fresh();
+}
+
+test('perfil Consulta NÃO consegue salvar uma atividade da Cadeia de Valor', function () {
     $pei = PEI::create(['dsc_pei' => 'Ciclo', 'num_ano_inicio_pei' => 2024, 'num_ano_fim_pei' => 2027, 'bln_ativo' => true]);
     session(['pei_selecionado_id' => $pei->cod_pei]);
 
-    $user = User::factory()->create(['ativo' => true]);
+    $user = usuarioSoLeitura();
 
     Livewire::actingAs($user)
         ->test(CadeiaDeValor::class)
@@ -47,11 +58,11 @@ test('admin de unidade consegue salvar uma atividade da Cadeia de Valor', functi
     expect(AtividadeCadeiaValor::where('dsc_atividade', 'Atividade Teste')->count())->toBe(1);
 });
 
-test('usuário sem nenhum perfil NÃO consegue salvar o registro de Inaugurar o Ciclo PEI', function () {
+test('perfil Consulta NÃO consegue salvar o registro de Inaugurar o Ciclo PEI', function () {
     $pei = PEI::create(['dsc_pei' => 'Ciclo', 'num_ano_inicio_pei' => 2024, 'num_ano_fim_pei' => 2027, 'bln_ativo' => true]);
     session(['pei_selecionado_id' => $pei->cod_pei]);
 
-    $user = User::factory()->create(['ativo' => true]);
+    $user = usuarioSoLeitura();
 
     Livewire::actingAs($user)
         ->test(InaugurarIntegrar::class)

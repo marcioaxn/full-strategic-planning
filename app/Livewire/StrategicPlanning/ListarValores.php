@@ -7,6 +7,7 @@ use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Valor;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -43,9 +44,21 @@ class ListarValores extends Component
 
     public function mount()
     {
+        $this->authorize('modulo.acessar', 'planejamento-estrategico');
+
         $this->carregarPEI();
         // Organização da sessão só vale se estiver no escopo do usuário.
         $this->atualizarOrganizacao(Auth::user()->organizacaoSelecionadaId());
+    }
+
+    /**
+     * Valor é da UNIDADE: a capacidade vale na unidade desta tela, não na
+     * soma dos vínculos do usuário em todas as unidades.
+     */
+    private function autorizarNaUnidade(string $ability): void
+    {
+        abort_unless($this->organizacaoId !== null, 403);
+        $this->authorize("modulo.{$ability}", ['planejamento-estrategico', $this->organizacaoId]);
     }
 
     public function atualizarPEI($id)
@@ -100,6 +113,8 @@ class ListarValores extends Component
 
     public function create()
     {
+        $this->autorizarNaUnidade('criar');
+
         if (! $this->peiAtivo) {
             session()->flash('error', 'Não há um Ciclo PEI selecionado.');
 
@@ -111,7 +126,7 @@ class ListarValores extends Component
 
     public function edit($id)
     {
-        $this->authorize('modulo.editar', 'planejamento-estrategico');
+        $this->autorizarNaUnidade('editar');
         $valor = Valor::findOrFail($id);
         abort_unless($valor->cod_organizacao === $this->organizacaoId, 403);
         $this->valorId = $id;
@@ -122,12 +137,16 @@ class ListarValores extends Component
 
     public function save()
     {
-        $this->authorize($this->valorId ? 'modulo.editar' : 'modulo.criar', 'planejamento-estrategico');
-
         if (! $this->peiAtivo || ! $this->organizacaoId) {
             session()->flash('error', 'Selecione um Ciclo PEI e uma organização antes de salvar.');
 
             return;
+        }
+
+        $this->autorizarNaUnidade($this->valorId ? 'editar' : 'criar');
+
+        if ($this->valorId) {
+            abort_unless(Valor::findOrFail($this->valorId)->cod_organizacao === $this->organizacaoId, 403);
         }
 
         $this->validate([
@@ -152,7 +171,7 @@ class ListarValores extends Component
 
     public function delete($id)
     {
-        $this->authorize('modulo.excluir', 'planejamento-estrategico');
+        $this->autorizarNaUnidade('excluir');
         $valor = Valor::findOrFail($id);
         abort_unless($valor->cod_organizacao === $this->organizacaoId, 403);
         $valor->delete();
@@ -169,6 +188,14 @@ class ListarValores extends Component
 
     public function render()
     {
-        return view('livewire.p-e-i.listar-valores');
+        $pode = fn (string $a) => $this->organizacaoId !== null
+            && Gate::allows("modulo.{$a}", ['planejamento-estrategico', $this->organizacaoId]);
+
+        // A tela só oferece o botão que o servidor aceita.
+        return view('livewire.p-e-i.listar-valores', [
+            'podeCriar' => $pode('criar'),
+            'podeEditar' => $pode('editar'),
+            'podeExcluir' => $pode('excluir'),
+        ]);
     }
 }

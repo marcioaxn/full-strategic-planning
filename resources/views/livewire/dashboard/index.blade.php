@@ -238,12 +238,18 @@
                     <text x="100" y="112" text-anchor="middle" font-size="10" fill="#6c757d">{{ $iqgNome }}</text>
                 </svg>
                 <p class="fw-bold text-dark mb-0 small">Índice de Qualidade de Gestão</p>
-                <p class="x-small text-muted mb-0">Exercício {{ $anoSelecionado }}</p>
+                <p class="x-small text-muted mb-0">Exercício {{ $anoSelecionado }} · ciclo inteiro</p>
             </div>
             <div class="col-md-8">
-                <h6 class="fw-bold text-dark mb-3">
+                <h6 class="fw-bold text-dark mb-1">
                     <i class="bi bi-speedometer2 me-2" style="color:{{ $iqgCor }}"></i>Desempenho por Perspectiva
                 </h6>
+                {{-- O índice é do CICLO (perspectivas e objetivos são da instituição
+                     inteira), não da unidade selecionada no topo. Sem este aviso,
+                     uma unidade sem nenhum indicador exibia 60,9% como se fosse dela. --}}
+                <p class="x-small text-muted mb-3">
+                    Resultado de toda a instituição no ciclo — não muda com a unidade selecionada no topo.
+                </p>
                 @foreach($iqg['perspectivas'] as $p)
                 <div class="mb-2">
                     <div class="d-flex justify-content-between align-items-center small mb-1">
@@ -268,7 +274,7 @@
                 <i class="bi bi-globe-americas text-success fs-5"></i>
                 <h5 class="fw-bold text-dark mb-0 fs-6">Agenda 2030 — Contribuição aos ODS</h5>
                 <span class="badge rounded-pill {{ $qtdCobertos > 0 ? 'bg-success' : 'bg-secondary' }} bg-opacity-75">
-                    {{ $qtdCobertos }} / {{ $odsCobertura['total'] ?? 18 }} cobertos
+                    {{ $qtdCobertos }} / {{ $odsCobertura['total'] ?? 0 }} cobertos
                 </span>
             </div>
             <a href="{{ route('agenda2030.index') }}" wire:navigate class="btn btn-sm btn-outline-success rounded-pill px-3">
@@ -277,7 +283,7 @@
         </div>
 
         <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
-            @for($n = 1; $n <= ($odsCobertura['total'] ?? 18); $n++)
+            @for($n = 1; $n <= ($odsCobertura['total'] ?? 0); $n++)
                 @php $coberto = in_array($n, $odsCobertura['cobertos'] ?? []); @endphp
                 <a href="{{ route('agenda2030.index') }}" wire:navigate
                    class="text-decoration-none"

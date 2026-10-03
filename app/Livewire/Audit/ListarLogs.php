@@ -65,6 +65,11 @@ class ListarLogs extends Component
 
     public function verDetalhes($id)
     {
+        // Métodos públicos são invocados direto pelo navegador: a permissão é
+        // conferida de novo a cada ação (quem perdeu o perfil com a aba aberta
+        // não continua lendo nem exportando a trilha de auditoria).
+        $this->authorize('modulo.acessar', 'auditoria');
+
         $this->auditSelecionada = Audit::with('user')->findOrFail($id);
         $this->showModal = true;
     }
@@ -109,6 +114,8 @@ class ListarLogs extends Component
 
     public function exportar()
     {
+        $this->authorize('modulo.acessar', 'auditoria');
+
         $query = $this->getQuery();
 
         $filename = 'audit_logs_'.now()->format('Ymd_His').'.csv';
@@ -125,7 +132,7 @@ class ListarLogs extends Component
             // Adicionar BOM para Excel ler UTF-8 corretamente
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
 
-            fputcsv($file, ['ID', 'Data', 'Usuario', 'Evento', 'Modulo', 'ID Objeto', 'IP'], ';');
+            fputcsv($file, ['ID', 'Data', 'Usuário', 'Evento', 'Módulo', 'ID do registro', 'IP'], ';');
 
             $query->chunk(200, function ($logs) use ($file) {
                 foreach ($logs as $log) {
@@ -149,6 +156,8 @@ class ListarLogs extends Component
 
     public function render()
     {
+        $this->authorize('modulo.acessar', 'auditoria');
+
         $query = $this->getQuery();
 
         // Obter lista de models únicos que possuem auditoria para o filtro

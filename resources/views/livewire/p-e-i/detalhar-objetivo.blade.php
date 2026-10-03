@@ -20,11 +20,11 @@
                 <i class="bi bi-arrow-left me-1"></i> Voltar
             </a>
             @auth
-                @can('modulo.editar', 'planejamento-estrategico')
+                @if(auth()->user()->can('modulo.editar', 'planejamento-estrategico') && auth()->user()->can('editar-institucional'))
                     <a href="{{ route('objetivos.index', ['editar' => $objetivo->cod_objetivo]) }}" class="btn btn-primary gradient-theme">
                         <i class="bi bi-pencil me-1"></i> Editar
                     </a>
-                @endcan
+                @endif
             @endauth
         </div>
     </div>
@@ -276,6 +276,8 @@
                     <h5 class="card-title mb-0 fw-bold">Colaboração e Comentários</h5>
                 </div>
                 <div class="card-body">
+                    {{-- Comentar é escrita: o perfil Consulta só lê os comentários. --}}
+                    @if($podeComentar)
                     <div class="mb-4">
                         <textarea wire:model="novoComentario" class="form-control" rows="3" placeholder="Escreva um comentário ou sugestão sobre este objetivo..."></textarea>
                         <div class="d-flex justify-content-end mt-2">
@@ -284,6 +286,7 @@
                             </button>
                         </div>
                     </div>
+                    @endif
 
                     <div class="comments-list">
                         @forelse($objetivo->comentarios()->latest()->get() as $comment)

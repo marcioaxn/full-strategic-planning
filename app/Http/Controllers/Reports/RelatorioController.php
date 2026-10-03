@@ -20,6 +20,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 
 class RelatorioController extends Controller
@@ -104,17 +105,37 @@ class RelatorioController extends Controller
      * Sem organização (= todas as unidades), só o Super Admin — salvo nos
      * relatórios que são do ciclo, e não de uma unidade.
      */
-    private function garantirExportacao(?string $organizacaoId, bool $todasExigeSuperAdmin = true): void
+    /**
+     * Devolve a organização EFETIVA do relatório.
+     *
+     * 🔴 O Relatório de Gestão aceitava organização vazia de qualquer
+     * exportador: aberto sem organizacao_id, trazia riscos, SWOT, PESTEL e
+     * iniciativas de TODAS as unidades. Agora, sem organização, quem não é
+     * Super Admin recebe o relatório da própria unidade (a selecionada,
+     * validada); e a capacidade de exportar é conferida NA organização do
+     * relatório, não na selecionada no topo.
+     */
+    private function garantirExportacao(?string $organizacaoId, bool $todasExigeSuperAdmin = true): ?string
     {
-        $this->authorize('modulo.exportar', 'relatorios');
-
         $usuario = Auth::user();
 
+        if (! $organizacaoId && $todasExigeSuperAdmin && ! $usuario->isSuperAdmin()) {
+            $organizacaoId = $usuario->organizacaoSelecionadaId();
+        }
+
         if ($organizacaoId) {
-            abort_unless($usuario->podeAcessarOrganizacao($organizacaoId), 403);
+            abort_unless(
+                $usuario->podeAcessarOrganizacao($organizacaoId)
+                    && Gate::forUser($usuario)->allows('modulo.exportar', ['relatorios', $organizacaoId]),
+                403
+            );
         } elseif ($todasExigeSuperAdmin) {
             abort_unless($usuario->isSuperAdmin(), 403);
+        } else {
+            $this->authorize('modulo.exportar', 'relatorios');
         }
+
+        return $organizacaoId;
     }
 
     public function executivo(Request $request, $organizacaoId = null)
@@ -128,7 +149,7 @@ class RelatorioController extends Controller
         $periodo = $request->query('periodo') ?? 'anual';
         $perspectivaId = $request->query('perspectiva');
 
-        $this->garantirExportacao($organizacaoId);
+        $organizacaoId = $this->garantirExportacao($organizacaoId);
 
         $result = $this->reportService->generateExecutivo($organizacaoId, $ano, $periodo, $perspectivaId);
 
@@ -138,7 +159,7 @@ class RelatorioController extends Controller
     public function identidade(Request $request, $organizacaoId)
     {
         $ano = $request->query('ano') ?? session('ano_selecionado') ?? date('Y');
-        $this->garantirExportacao($organizacaoId);
+        $organizacaoId = $this->garantirExportacao($organizacaoId);
 
         $result = $this->reportService->generateIdentidade($organizacaoId, $ano);
 
@@ -177,7 +198,7 @@ class RelatorioController extends Controller
         $ano = $request->query('ano') ?? session('ano_selecionado') ?? date('Y');
         $periodo = $request->query('periodo') ?? 'anual';
 
-        $this->garantirExportacao($organizacaoId);
+        $organizacaoId = $this->garantirExportacao($organizacaoId);
 
         $result = $this->reportService->generateIndicadores($organizacaoId, $ano, $periodo);
 
@@ -188,7 +209,7 @@ class RelatorioController extends Controller
     {
         $organizacaoId = $organizacaoId ?? session('organizacao_selecionada_id');
 
-        $this->garantirExportacao($organizacaoId);
+        $organizacaoId = $this->garantirExportacao($organizacaoId);
 
         return Excel::download(new IndicadoresExport($organizacaoId), 'Indicadores_Desempenho.xlsx');
     }
@@ -198,7 +219,7 @@ class RelatorioController extends Controller
         $organizacaoId = $request->query('organizacao_id') ?? session('organizacao_selecionada_id');
         $ano = $request->query('ano') ?? session('ano_selecionado') ?? date('Y');
 
-        $this->garantirExportacao($organizacaoId);
+        $organizacaoId = $this->garantirExportacao($organizacaoId);
 
         $result = $this->reportService->generatePlanos($organizacaoId, $ano);
 
@@ -210,7 +231,7 @@ class RelatorioController extends Controller
         $organizacaoId = $request->query('organizacao_id') ?? session('organizacao_selecionada_id');
         $ano = $request->query('ano') ?? session('ano_selecionado') ?? date('Y');
 
-        $this->garantirExportacao($organizacaoId);
+        $organizacaoId = $this->garantirExportacao($organizacaoId);
 
         $organizacao = $organizacaoId ? Organization::find($organizacaoId) : null;
         $nomeArquivo = $organizacao ? "Planos_Acao_{$organizacao->sgl_organizacao}_{$ano}.xlsx" : "Planos_Acao_{$ano}.xlsx";
@@ -222,7 +243,7 @@ class RelatorioController extends Controller
     {
         $organizacaoId = $request->query('organizacao_id') ?? session('organizacao_selecionada_id');
 
-        $this->garantirExportacao($organizacaoId);
+        $organizacaoId = $this->garantirExportacao($organizacaoId);
 
         $result = $this->reportService->generateRiscos($organizacaoId);
 
@@ -233,7 +254,7 @@ class RelatorioController extends Controller
     {
         $organizacaoId = $request->query('organizacao_id') ?? session('organizacao_selecionada_id');
 
-        $this->garantirExportacao($organizacaoId);
+        $organizacaoId = $this->garantirExportacao($organizacaoId);
 
         $organizacao = $organizacaoId ? Organization::find($organizacaoId) : null;
         $nomeArquivo = $organizacao ? "Riscos_{$organizacao->sgl_organizacao}.xlsx" : 'Riscos_Geral.xlsx';
@@ -252,7 +273,7 @@ class RelatorioController extends Controller
         $periodo = $request->query('periodo') ?? 'anual';
         $includeAi = $request->query('include_ai') === '1';
 
-        $this->garantirExportacao($organizacaoId);
+        $organizacaoId = $this->garantirExportacao($organizacaoId);
 
         // Aumentar recursos para geração de PDF pesado (Relatório Estratégico Integrado)
         ini_set('memory_limit', '512M');
@@ -270,7 +291,7 @@ class RelatorioController extends Controller
     public function comunicacao(Request $request)
     {
         $organizacaoId = $request->query('organizacao_id') ?? session('organizacao_selecionada_id');
-        $this->garantirExportacao($organizacaoId);
+        $organizacaoId = $this->garantirExportacao($organizacaoId);
 
         $organizacao = $organizacaoId ? Organization::find($organizacaoId) : null;
         $pei = PEI::doContexto();
@@ -333,7 +354,8 @@ class RelatorioController extends Controller
         $this->authorize('modulo.exportar', 'relatorios');
 
         [$organizacaoId, $ano, $variante] = $this->parametrosGestao($request);
-        $this->garantirExportacao($organizacaoId, false);
+        // Gestão traz riscos, SWOT, PESTEL e iniciativas da unidade: não é do ciclo.
+        $organizacaoId = $this->garantirExportacao($organizacaoId);
 
         $dados = (new EstruturaRelatorioGestao($variante))->montar($organizacaoId, $ano);
 
@@ -385,7 +407,8 @@ class RelatorioController extends Controller
         $this->authorize('modulo.exportar', 'relatorios');
 
         [$organizacaoId, $ano, $variante] = $this->parametrosGestao($request);
-        $this->garantirExportacao($organizacaoId, false);
+        // Gestão traz riscos, SWOT, PESTEL e iniciativas da unidade: não é do ciclo.
+        $organizacaoId = $this->garantirExportacao($organizacaoId);
 
         $dados = (new EstruturaRelatorioGestao($variante))->montar($organizacaoId, $ano);
 

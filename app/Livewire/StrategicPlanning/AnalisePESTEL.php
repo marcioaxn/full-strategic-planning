@@ -9,6 +9,7 @@ use App\Models\SystemSetting;
 use App\Services\AI\AiServiceFactory;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -65,14 +66,29 @@ class AnalisePESTEL extends Component
 
     public function mount()
     {
+        $this->authorize('modulo.acessar', 'planejamento-estrategico');
+
         $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
         $this->carregarPEI();
         // Organização da sessão só vale se estiver no escopo do usuário.
         $this->atualizarOrganizacao(Auth::user()->organizacaoSelecionadaId());
     }
 
+    /**
+     * A capacidade vale na unidade EM OPERAÇÃO — a desta tela, que é a dos
+     * registros. Antes, o Gate somava os perfis de todas as unidades do
+     * usuário: Administrador na A e Gestor Substituto na B excluía itens da B.
+     */
+    private function autorizarNaUnidade(string $ability): void
+    {
+        abort_unless($this->organizacaoId !== null, 403);
+        $this->authorize("modulo.{$ability}", ['planejamento-estrategico', $this->organizacaoId]);
+    }
+
     public function pedirAjudaIA()
     {
+        $this->autorizarNaUnidade('criar');
+
         if (! $this->aiEnabled) {
             return;
         }
@@ -105,8 +121,8 @@ class AnalisePESTEL extends Component
 
     public function adicionarSugerido($categoria, $item)
     {
-        $this->authorize('modulo.criar', 'planejamento-estrategico');
-        abort_unless($this->peiAtivo !== null && $this->organizacaoId !== null, 403);
+        $this->autorizarNaUnidade('criar');
+        abort_unless($this->peiAtivo !== null, 403);
 
         AnaliseAmbiental::create([
             'cod_pei' => $this->peiAtivo->cod_pei,
@@ -177,6 +193,9 @@ class AnalisePESTEL extends Component
 
         if ($this->organizacaoId) {
             $query->where('cod_organizacao', $this->organizacaoId);
+        } else {
+            // Sem unidade, nunca "todas": o escopo do usuário (Super Admin vê tudo).
+            Auth::user()->aplicarEscopoOrganizacional($query);
         }
 
         $itens = $query->get();
@@ -191,6 +210,7 @@ class AnalisePESTEL extends Component
 
     public function create($categoria)
     {
+        $this->autorizarNaUnidade('criar');
         $this->resetForm();
         $this->dsc_categoria = $categoria;
         $this->showModal = true;
@@ -198,7 +218,7 @@ class AnalisePESTEL extends Component
 
     public function edit($id)
     {
-        $this->authorize('modulo.editar', 'planejamento-estrategico');
+        $this->autorizarNaUnidade('editar');
 
         $item = AnaliseAmbiental::findOrFail($id);
         abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
@@ -212,7 +232,7 @@ class AnalisePESTEL extends Component
 
     public function save()
     {
-        $this->authorize($this->itemId ? 'modulo.editar' : 'modulo.criar', 'planejamento-estrategico');
+        $this->autorizarNaUnidade($this->itemId ? 'editar' : 'criar');
 
         if (! $this->peiAtivo) {
             session()->flash('error', 'Selecione um Ciclo PEI antes de salvar.');
@@ -253,7 +273,7 @@ class AnalisePESTEL extends Component
 
     public function delete($id)
     {
-        $this->authorize('modulo.excluir', 'planejamento-estrategico');
+        $this->autorizarNaUnidade('excluir');
 
         $item = AnaliseAmbiental::findOrFail($id);
         abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
@@ -275,6 +295,17 @@ class AnalisePESTEL extends Component
     {
         return view('livewire.p-e-i.analise-p-e-s-t-e-l', [
             'categorias' => AnaliseAmbiental::categoriasPESTEL(),
+            // A tela só oferece o botão que o servidor aceita.
+            ...$this->permissoesNaUnidade(),
         ]);
+    }
+
+    /** @return array{podeCriar: bool, podeEditar: bool, podeExcluir: bool} */
+    private function permissoesNaUnidade(): array
+    {
+        $pode = fn (string $a) => $this->organizacaoId !== null
+            && Gate::allows("modulo.{$a}", ['planejamento-estrategico', $this->organizacaoId]);
+
+        return ['podeCriar' => $pode('criar'), 'podeEditar' => $pode('editar'), 'podeExcluir' => $pode('excluir')];
     }
 }

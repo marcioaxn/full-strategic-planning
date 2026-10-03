@@ -91,6 +91,18 @@ class GerenciarMitigacoes extends Component
             'form.dte_prazo' => 'required|date',
         ]);
 
+        // O responsável vem do navegador: só pessoa da unidade do risco (a
+        // mesma lista que a tela oferece).
+        // (Consulta ao banco, não à propriedade $usuarios, que o navegador altera.)
+        $daUnidade = User::where('id', $this->form['cod_responsavel'])
+            ->whereHas('organizacoes', fn ($q) => $q->where('tab_organizacoes.cod_organizacao', $this->risco->cod_organizacao))
+            ->exists();
+        if (! $daUnidade) {
+            $this->addError('form.cod_responsavel', 'Escolha um responsável da unidade do risco.');
+
+            return;
+        }
+
         $data = $this->form;
         $data['cod_risco'] = $this->risco->cod_risco;
 

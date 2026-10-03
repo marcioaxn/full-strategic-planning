@@ -3,77 +3,55 @@
 namespace App\Policies;
 
 use App\Models\Organization;
-use App\Models\PerfilAcesso;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 
 class OrganizationPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return true; // Todos usuários logados podem ver organizações
+        return Gate::forUser($user)->allows('modulo.acessar', 'organizacoes');
     }
 
     /**
-     * Determine whether the user can view the model.
+     * 🔴 Devolvia true para qualquer pessoa logada: o detalhe de QUALQUER
+     * unidade, com nome e e-mail dos usuários dela, abria para todo mundo.
      */
     public function view(User $user, Organization $organization): bool
     {
-        return true;
+        return $user->isSuperAdmin()
+            || ($user->podeAcessarOrganizacao($organization->cod_organizacao)
+                && Gate::forUser($user)->allows('modulo.acessar', ['organizacoes', $organization->cod_organizacao]));
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
         // Apenas Super Admin pode criar organizações
         return $user->isSuperAdmin();
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
+    /** Administrador da unidade, ou de uma superior a ela. */
     public function update(User $user, Organization $organization): bool
     {
-        if (! Gate::forUser($user)->allows('modulo.editar', 'organizacoes')) {
-            return false;
-        }
-
         if ($user->isSuperAdmin()) {
             return true;
         }
 
-        // Verifica se é Admin da Unidade desta organização específica
-        return $user->perfisAcesso()
-            ->where('tab_perfil_acesso.cod_perfil', PerfilAcesso::ADMIN_UNIDADE)
-            ->wherePivot('cod_organizacao', $organization->cod_organizacao)
-            ->exists();
+        return Gate::forUser($user)->allows('modulo.editar', ['organizacoes', $organization->cod_organizacao])
+            && $user->ehAdministradorEm($organization->cod_organizacao);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Organization $organization): bool
     {
         // Apenas Super Admin pode excluir
         return $user->isSuperAdmin();
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
     public function restore(User $user, Organization $organization): bool
     {
         return $user->isSuperAdmin();
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Organization $organization): bool
     {
         return $user->isSuperAdmin();

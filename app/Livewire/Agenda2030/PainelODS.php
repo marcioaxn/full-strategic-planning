@@ -26,6 +26,8 @@ class PainelODS extends Component
 
     public function mount(): void
     {
+        $this->authorize('modulo.acessar', 'planejamento-estrategico');
+
         $this->ano = (int) Session::get('ano_selecionado', now()->year);
         $this->carregarPEI();
     }

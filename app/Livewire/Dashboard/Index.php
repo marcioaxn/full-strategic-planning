@@ -21,11 +21,15 @@ use App\Support\CalculoPolaridade;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class Index extends Component
 {
+    // Locked: o painel recalcula a cada poll com este id; vindo do navegador,
+    // bastaria trocá-lo para ler o painel de qualquer unidade.
+    #[Locked]
     public $organizacaoId;
 
     public $organizacaoNome;
@@ -53,14 +57,19 @@ class Index extends Component
     public function mount()
     {
         $this->anoSelecionado = Session::get('ano_selecionado', date('Y'));
-        $this->organizacaoId = Session::get('organizacao_selecionada_id');
+
+        // A organização vem SEMPRE validada contra o escopo do usuário.
+        //
+        // 🔴 Com a sessão vazia (primeira tela após o login), o painel gravava a
+        // unidade RAIZ na sessão sem checar se o usuário tinha acesso a ela: um
+        // Gestor de uma unidade folha via o consolidado da instituição inteira,
+        // e as telas seguintes (RAE, Lições, Entregas) liam essa raiz.
+        // Quem não é Super Admin cai na primeira unidade do próprio escopo.
+        $this->organizacaoId = Auth::user()->organizacaoSelecionadaId();
 
         // O Dashboard monta antes do SeletorOrganizacao (slot renderiza antes do layout).
-        // Se a sessão está vazia, auto-seleciona a primeira org disponível para o usuário,
-        // garantindo chartData correto desde o primeiro render sem depender de AJAX.
-        if (! $this->organizacaoId) {
-            // Seleciona a organização raiz (auto-referenciada) para alinhar com o
-            // SeletorOrganizacao, que exibe a raiz como primeiro item da árvore.
+        // Super Admin sem seleção: começa pela raiz, alinhado ao seletor.
+        if (! $this->organizacaoId && Auth::user()->isSuperAdmin()) {
             $org = Organization::raiz()->orderBy('nom_organizacao')->first();
             if ($org) {
                 $this->organizacaoId = $org->cod_organizacao;
@@ -68,6 +77,12 @@ class Index extends Component
                 Session::put('organizacao_selecionada_nom', $org->nom_organizacao);
                 Session::put('organizacao_selecionada_sgl', $org->sgl_organizacao);
             }
+        }
+
+        if ($this->organizacaoId && ! Session::has('organizacao_selecionada_nom')) {
+            $org = Organization::find($this->organizacaoId);
+            Session::put('organizacao_selecionada_nom', $org?->nom_organizacao);
+            Session::put('organizacao_selecionada_sgl', $org?->sgl_organizacao);
         }
 
         $this->carregarPEI();
@@ -85,7 +100,10 @@ class Index extends Component
     {
         // Método público (e ouvinte de evento): o ID vem do cliente. Logado, só
         // dentro do próprio escopo; o visitante da área pública só consulta.
-        abort_unless(! $id || ! Auth::check() || Auth::user()->podeAcessarOrganizacao($id), 403);
+        // Organização vazia ("todas as unidades") é só do Super Admin: para os
+        // demais, vazio passava sem filtro e o painel mostrava a instituição inteira.
+        $user = Auth::user();
+        abort_unless($id ? $user->podeAcessarOrganizacao($id) : $user->isSuperAdmin(), 403);
 
         $this->organizacaoId = $id;
         $this->carregarNomeOrganizacao();
@@ -490,14 +508,15 @@ class Index extends Component
     private function getOdsCobertura(): array
     {
         $codPei = $this->peiAtivo?->cod_pei;
-        $total = 18;
+        // O total é o do cadastro de ODS, nunca um número escrito no código.
+        $total = 0;
 
         if (! $codPei) {
             return ['cobertos' => [], 'total' => $total];
         }
 
         try {
-            $total = ODS::count() ?: 18;
+            $total = ODS::count();
             $cobertos = ODS::whereHas('objetivos', function ($q) use ($codPei) {
                 $q->whereHas('perspectiva', fn ($qp) => $qp->where('cod_pei', $codPei));
             })->pluck('num_ods')->map(fn ($n) => (int) $n)->toArray();

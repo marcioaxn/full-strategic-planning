@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -34,6 +35,8 @@ class ListarIndicadores extends Component
 
     public $filtroObjetivo = '';
 
+    // Só o servidor define (atualizarOrganizacao confere o escopo).
+    #[Locked]
     public $organizacaoId;
 
     public $peiAtivo;
@@ -54,6 +57,8 @@ class ListarIndicadores extends Component
 
     public bool $showLinhaBaseModal = false;
 
+    // Só o servidor define (edit/confirmDelete, ambos autorizados).
+    #[Locked]
     public $indicadorId;
 
     public $indicadorSelecionado;
@@ -132,7 +137,11 @@ class ListarIndicadores extends Component
 
     public function mount()
     {
-        $this->organizacaoId = Session::get('organizacao_selecionada_id');
+        // Logado: organização validada contra o escopo. Visitante da
+        // Transparência: a seleção pública da sessão, como antes.
+        $this->organizacaoId = Auth::check()
+            ? Auth::user()->organizacaoSelecionadaId()
+            : Session::get('organizacao_selecionada_id');
 
         if ($this->filtroObjetivo) {
             $obj = Objetivo::with('perspectiva.pei')->find($this->filtroObjetivo);
@@ -155,6 +164,11 @@ class ListarIndicadores extends Component
         // Método público (e ouvinte de evento): o ID vem do cliente. Logado, só
         // dentro do próprio escopo; o visitante da área pública só consulta.
         abort_unless(! $id || ! Auth::check() || Auth::user()->podeAcessarOrganizacao($id), 403);
+
+        // Logado sem Super Admin: "nenhuma organização" não é "todas".
+        if (! $id && Auth::check() && ! Auth::user()->isSuperAdmin()) {
+            $id = Auth::user()->organizacaoSelecionadaId();
+        }
 
         $this->organizacaoId = $id;
         $this->resetPage();
@@ -223,7 +237,7 @@ class ListarIndicadores extends Component
 
             return;
         }
-        $this->authorize('create', Indicador::class);
+        $this->authorize('create', [Indicador::class, $this->organizacaoId]);
         $this->resetForm();
         if ($this->organizacaoId) {
             $this->form['organizacoes_ids'] = [$this->organizacaoId];
@@ -289,6 +303,8 @@ class ListarIndicadores extends Component
 
         $this->validate($rules, $messages);
 
+        $this->autorizarGravacao();
+
         try {
             $data = $this->form;
             $orgIds = $data['organizacoes_ids'] ?? [];
@@ -306,12 +322,10 @@ class ListarIndicadores extends Component
             DB::transaction(function () use ($data, $orgIds) {
                 if ($this->indicadorId) {
                     $indicador = Indicador::findOrFail($this->indicadorId);
-                    $this->authorize('update', $indicador);
                     $indicador->update($data);
                     $indicador->organizacoes()->sync($orgIds);
                     $this->successMessage = 'As configurações do indicador foram atualizadas com sucesso e as organizações vinculadas já refletem as mudanças.';
                 } else {
-                    $this->authorize('create', Indicador::class);
                     $indicador = Indicador::create($data);
                     $indicador->organizacoes()->sync($orgIds);
                     $this->successMessage = 'O novo indicador foi registrado com sucesso e vinculado às unidades organizacionais selecionadas.';
@@ -329,6 +343,49 @@ class ListarIndicadores extends Component
 
             $this->errorMessage = 'Não foi possível processar o registro do indicador. Por favor, revise as informações e tente novamente.';
             $this->showErrorModal = true;
+        }
+    }
+
+    /**
+     * Organizações e iniciativa vêm do navegador: cada uma é conferida.
+     *
+     * 🔴 Antes só se checava o perfil: o Administrador da unidade A criava
+     * indicador vinculado à B, e o Gestor de uma iniciativa trocava o vínculo
+     * para uma iniciativa de outra unidade.
+     */
+    private function autorizarGravacao(): void
+    {
+        abort_unless(Auth::check(), 403);
+        $usuario = Auth::user();
+        $orgs = array_values(array_filter((array) ($this->form['organizacoes_ids'] ?? [])));
+        $existente = $this->indicadorId ? Indicador::with(['organizacoes', 'planoDeAcao'])->findOrFail($this->indicadorId) : null;
+
+        if ($existente) {
+            $this->authorize('update', $existente);
+            $atuais = $existente->organizacoes->pluck('cod_organizacao')->all();
+            // Unidade nova no vínculo: só quem a administra.
+            foreach (array_diff($orgs, $atuais) as $org) {
+                abort_unless($usuario->isSuperAdmin() || $usuario->ehAdministradorEm($org), 403);
+            }
+        } else {
+            foreach ($orgs as $org) {
+                abort_unless($usuario->podeAcessarOrganizacao($org), 403);
+                $this->authorize('create', [Indicador::class, $org]);
+            }
+        }
+
+        $codPlano = ($this->form['dsc_tipo'] ?? '') === 'Iniciativa' ? ($this->form['cod_plano_de_acao'] ?? null) : null;
+
+        if ($codPlano && $codPlano !== $existente?->cod_plano_de_acao) {
+            // A iniciativa escolhida precisa ser uma que o usuário pode editar.
+            $this->authorize('update', PlanoDeAcao::findOrFail($codPlano));
+        }
+
+        // Quem não administra nenhuma das unidades (o Gestor) só cria indicador
+        // de uma iniciativa pela qual responde — nunca de objetivo.
+        if (! $existente && ! $usuario->isSuperAdmin()) {
+            $administra = collect($orgs)->contains(fn ($org) => $usuario->ehAdministradorEm($org));
+            abort_unless($administra || ($codPlano && $usuario->ehGestorDaIniciativa($codPlano)), 403);
         }
     }
 
@@ -436,6 +493,7 @@ class ListarIndicadores extends Component
 
     public function confirmDelete($id)
     {
+        $this->authorize('delete', Indicador::findOrFail($id));
         $this->indicadorId = $id;
         $this->showDeleteModal = true;
     }
@@ -573,12 +631,15 @@ class ListarIndicadores extends Component
                     });
             });
         } elseif ($this->organizacaoId) {
-            // Admin vê indicadores da org selecionada e todos os descendentes na hierarquia.
-            // Usuário comum vê apenas a org exata.
-            $isAdmin = auth()->user()?->isSuperAdmin();
-            $orgIds = $isAdmin
-                ? (Organization::find($this->organizacaoId)?->getDescendantsAndSelfIds() ?? [$this->organizacaoId])
-                : [$this->organizacaoId];
+            // A unidade selecionada e as subordinadas, dentro do que o usuário
+            // alcança. Visitante: só a unidade exata, como antes.
+            $usuario = auth()->user();
+            $orgIds = Organization::descendentesEProprio($this->organizacaoId);
+            if ($usuario && ! $usuario->isSuperAdmin()) {
+                $orgIds = array_values(array_intersect($orgIds, $usuario->organizacaoIdsPermitidas()->all()));
+            } elseif (! $usuario) {
+                $orgIds = [$this->organizacaoId];
+            }
 
             $query->where(function ($q) use ($orgIds) {
                 $q->whereIn('tab_indicador.cod_indicador', function ($sub) use ($orgIds) {

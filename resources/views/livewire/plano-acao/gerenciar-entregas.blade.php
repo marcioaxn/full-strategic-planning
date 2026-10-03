@@ -15,7 +15,7 @@
                     {{ $plano->dsc_plano_de_acao }}
                 </p>
             </div>
-            @can('update', $plano)
+            @can('create', [\App\Models\ActionPlan\Entrega::class, $plano])
                 <button wire:click="create" class="btn btn-primary gradient-theme-btn">
                     <i class="bi bi-plus-lg me-2"></i>Nova Entrega
                 </button>
@@ -169,10 +169,12 @@
                                 </span>
                             </td>
                             <td class="text-end pe-4">
-                                @can('update', $plano)
+                                @can('update', $entrega)
                                     <button wire:click="edit('{{ $entrega->cod_entrega }}')" class="btn btn-sm btn-outline-secondary border-0">
                                         <i class="bi bi-pencil"></i>
                                     </button>
+                                @endcan
+                                @can('delete', $entrega)
                                     <button wire:click="delete('{{ $entrega->cod_entrega }}')" 
                                             class="btn btn-sm btn-outline-danger border-0"
                                             onclick="return confirm('Excluir entrega?')">

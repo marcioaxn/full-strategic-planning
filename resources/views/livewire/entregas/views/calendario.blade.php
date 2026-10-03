@@ -148,7 +148,7 @@
 
                         <div
                             class="notion-calendario-day {{ !$isMesAtual ? 'other-month' : '' }} {{ $isHoje ? 'today' : '' }} {{ $isWeekend ? 'weekend' : '' }} {{ $entregasAtrasadas > 0 ? 'has-overdue' : '' }}"
-                            @can('update', $plano)
+                            @can('create', [\App\Models\ActionPlan\Entrega::class, $plano])
                                 wire:click="openQuickAdd('Não Iniciado')"
                                 style="cursor: pointer;"
                             @endcan

@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\CheckPasswordChange;
+use App\Http\Middleware\ExigePerfilDeAcesso;
+use App\Http\Middleware\TransparenciaPublica;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Database\QueryException;
@@ -9,8 +11,17 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
+use Illuminate\Support\Env;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+
+// 🔴 O .env não vai para putenv(). No Apache do Windows (mpm_winnt, um processo
+// com várias threads) o ambiente do processo é compartilhado entre as
+// requisições simultâneas: uma requisição limpava ou sobrescrevia o que a outra
+// lia, e a vizinha morria com MissingAppKeyException (e caía em APP_ENV
+// "production", sem banco). Lidas de $_ENV/$_SERVER, as variáveis ficam
+// isoladas por requisição. Nenhum código do sistema usa getenv() direto.
+Env::disablePutenv();
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -35,7 +46,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Ver App\Http\Middleware\TransparenciaPublica e o bloco de rotas
         // "Transparência" em routes/web.php.
         $middleware->alias([
-            'transparencia' => \App\Http\Middleware\TransparenciaPublica::class,
+            'transparencia' => TransparenciaPublica::class,
+            'perfil' => ExigePerfilDeAcesso::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

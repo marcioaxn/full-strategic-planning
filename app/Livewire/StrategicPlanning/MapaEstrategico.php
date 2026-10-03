@@ -58,19 +58,21 @@ class MapaEstrategico extends Component
 
     public function mount()
     {
-        $this->organizacaoId = Session::get('organizacao_selecionada_id');
+        // Logado: a seleção do topo, validada contra o escopo (nunca a sessão
+        // crua). Visitante da Transparência: a seleção que houver, ou a raiz.
+        if (Auth::check()) {
+            $this->authorize('modulo.acessar', 'planejamento-estrategico');
+            $this->organizacaoId = Auth::user()->organizacaoSelecionadaId();
+        } else {
+            $this->organizacaoId = Session::get('organizacao_selecionada_id');
+        }
         $this->viewMode = Session::get('mapa_view_mode', 'grouped');
 
         if (! $this->organizacaoId) {
-            // Tenta obter a organização do usuário logado
-            if (Auth::check() && Auth::user()->cod_organizacao) {
-                $this->organizacaoId = Auth::user()->cod_organizacao;
-            } else {
-                // Fallback para raiz
-                $orgRaiz = Organization::whereColumn('cod_organizacao', 'rel_cod_organizacao')->first()
-                           ?? Organization::orderBy('sgl_organizacao')->first();
-                $this->organizacaoId = $orgRaiz?->cod_organizacao;
-            }
+            // Super Admin sem seleção, ou visitante: a unidade raiz.
+            $orgRaiz = Organization::whereColumn('cod_organizacao', 'rel_cod_organizacao')->first()
+                       ?? Organization::orderBy('sgl_organizacao')->first();
+            $this->organizacaoId = $orgRaiz?->cod_organizacao;
         }
         $this->carregarPEI();
     }

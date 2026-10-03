@@ -3,6 +3,7 @@
 namespace App\Concerns;
 
 use App\Models\Organization;
+use App\Models\PerfilAcesso;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -20,7 +21,10 @@ trait ResolveEscopoOrganizacional
 {
     /**
      * IDs de todas as organizações que o usuário pode enxergar.
-     * Super Admin enxerga todas; os demais, apenas as vinculadas.
+     *
+     * Super Admin enxerga todas. Os demais, as unidades a que estão vinculados
+     * e — onde o vínculo é de Administrador da Unidade ou de Consulta — também
+     * as subordinadas a elas (a regra que a tela de perfis sempre declarou).
      */
     public function organizacaoIdsPermitidas(): Collection
     {
@@ -28,11 +32,32 @@ trait ResolveEscopoOrganizacional
             return Organization::query()->pluck('cod_organizacao');
         }
 
-        if (! $this->relationLoaded('organizacoes')) {
-            $this->load('organizacoes');
+        if (! $this->relationLoaded('perfisAcesso')) {
+            $this->load('perfisAcesso');
         }
 
-        return $this->organizacoes->pluck('cod_organizacao');
+        // 🔴 O escopo sai SÓ dos vínculos de PERFIL — é o que dá permissão.
+        // Antes somava também o vínculo genérico usuário × unidade, que fica
+        // para trás quando o Gestor é retirado de uma iniciativa de outra
+        // unidade: a unidade continuava "dele", o sistema o colocava nela por
+        // padrão e lá ele não tinha perfil nenhum — tudo negado.
+        $ids = collect();
+
+        foreach ($this->perfisAcesso as $perfil) {
+            $org = $perfil->pivot->cod_organizacao;
+
+            if (! $org) {
+                continue;
+            }
+
+            $ids->push($org);
+
+            if (in_array($perfil->cod_perfil, PerfilAcesso::PERFIS_HIERARQUICOS, true)) {
+                $ids = $ids->merge(Organization::descendentesEProprio($org));
+            }
+        }
+
+        return $ids->unique()->values();
     }
 
     public function podeAcessarOrganizacao(?string $codOrganizacao): bool
@@ -53,11 +78,24 @@ trait ResolveEscopoOrganizacional
     {
         $selecionada = session('organizacao_selecionada_id');
 
-        if (! $selecionada) {
+        if ($selecionada && $this->podeAcessarOrganizacao($selecionada)) {
+            return $selecionada;
+        }
+
+        // Sem seleção válida, quem não é Super Admin cai na PRIMEIRA unidade do
+        // próprio escopo — nunca em "nenhuma", que várias telas liam como
+        // "todas as unidades". Super Admin sem seleção continua vendo tudo.
+        if ($this->isSuperAdmin()) {
             return null;
         }
 
-        return $this->podeAcessarOrganizacao($selecionada) ? $selecionada : null;
+        $primeira = $this->organizacaoIdsPermitidas()->first();
+
+        if ($primeira) {
+            session(['organizacao_selecionada_id' => $primeira]);
+        }
+
+        return $primeira;
     }
 
     /**

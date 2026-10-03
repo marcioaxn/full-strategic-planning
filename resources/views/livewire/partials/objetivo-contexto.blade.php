@@ -250,7 +250,7 @@
                                         <small class="text-muted">
                                             <i class="bi bi-info-circle me-1"></i>
                                             Para indicadores <strong>acumulados</strong>, soma-se todos os valores do periodo.
-                                            Para <strong>nao acumulados</strong>, usa-se o ultimo valor disponivel.
+                                            Para <strong>não acumulados</strong>, usa-se o último valor disponível.
                                         </small>
                                     </div>
                                     <div class="col-md-6">

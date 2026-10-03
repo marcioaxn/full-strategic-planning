@@ -110,7 +110,8 @@
     @endif
 
     {{-- Indicador de Lixeira --}}
-    @if($entrega->trashed())
+    {{-- Restaurar e excluir definitivamente: só quem pode excluir entregas. --}}
+    @if($entrega->trashed() && auth()->user()?->can('delete', $entrega))
         <div class="mt-2 d-flex gap-2">
             <button 
                 wire:click.stop="restaurar('{{ $entrega->cod_entrega }}')" 

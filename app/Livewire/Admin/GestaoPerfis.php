@@ -6,6 +6,7 @@ use App\Models\PerfilAcesso;
 use App\Models\User;
 use App\Services\Authorization\CapacidadeResolver;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -75,6 +76,7 @@ class GestaoPerfis extends Component
             'Admin de Unidade' => PerfilAcesso::ADMIN_UNIDADE,
             'Gestor Responsável' => PerfilAcesso::GESTOR_RESPONSAVEL,
             'Gestor Substituto' => PerfilAcesso::GESTOR_SUBSTITUTO,
+            'Consulta' => PerfilAcesso::CONSULTA,
         ] as $rotulo => $codPerfil) {
             $perfis[$rotulo] = array_map(
                 fn ($modulo) => $nivel($matriz[$modulo][$codPerfil] ?? []),
@@ -120,7 +122,11 @@ class GestaoPerfis extends Component
 
     public function render()
     {
-        $perfis = PerfilAcesso::withCount('usuarios')->get();
+        // Pessoas DISTINTAS com vínculo ativo: um Gestor de duas iniciativas tem
+        // dois vínculos, mas é uma pessoa — e vínculo excluído não conta.
+        $perfis = PerfilAcesso::withCount([
+            'usuarios as usuarios_count' => fn ($q) => $q->select(DB::raw('count(distinct users.id)')),
+        ])->get();
 
         $usuarios = User::query()
             ->when($this->buscaUsuario, fn ($q) => $q->where(function ($sub) {

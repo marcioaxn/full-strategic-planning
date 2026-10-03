@@ -101,7 +101,7 @@
                         <input type="password" name="password_confirmation" id="password_confirmation"
                                class="lp-field-input" placeholder="Repita a senha criada" required
                                autocomplete="new-password" data-pwd-confirm>
-                        <button type="button" class="lp-pass-toggle" onclick="lpToggleField('password_confirmation','icPwdResetConfirm')" title="Mostrar ou ocultar confirmacao">
+                        <button type="button" class="lp-pass-toggle" onclick="lpToggleField('password_confirmation','icPwdResetConfirm')" title="Mostrar ou ocultar confirmação">
                             <i class="bi bi-eye" id="icPwdResetConfirm"></i>
                         </button>
                     </div>

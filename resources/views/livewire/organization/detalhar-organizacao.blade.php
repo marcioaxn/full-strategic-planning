@@ -167,18 +167,22 @@
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white border-bottom-0 pb-0">
+                    {{-- Nome e e-mail das pessoas: só para quem administra usuários desta unidade. --}}
                     <ul class="nav nav-tabs card-header-tabs" id="orgTabs" role="tablist">
+                        @if($podeVerUsuarios)
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">Usuários</button>
                         </li>
+                        @endif
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="planos-tab" data-bs-toggle="tab" data-bs-target="#planos" type="button" role="tab">Iniciativas</button>
+                            <button class="nav-link {{ $podeVerUsuarios ? '' : 'active' }}" id="planos-tab" data-bs-toggle="tab" data-bs-target="#planos" type="button" role="tab">Iniciativas</button>
                         </li>
                     </ul>
                 </div>
                 <div class="card-body">
                     <div class="tab-content" id="orgTabsContent">
                         <!-- Usuários Tab -->
+                        @if($podeVerUsuarios)
                         <div class="tab-pane fade show active" id="users" role="tabpanel">
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
@@ -216,9 +220,10 @@
                                 </table>
                             </div>
                         </div>
+                        @endif
 
                         <!-- Aba de Iniciativas -->
-                        <div class="tab-pane fade" id="planos" role="tabpanel">
+                        <div class="tab-pane fade {{ $podeVerUsuarios ? '' : 'show active' }}" id="planos" role="tabpanel">
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="table-light">

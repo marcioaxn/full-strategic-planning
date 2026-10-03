@@ -193,7 +193,9 @@ test('o quadro de entregas não apaga nem altera entrega de outro plano', functi
     $componente = Livewire::actingAs(adminDaUnidade($orgA))
         ->test(DeliverablesBoard::class, ['planoId' => $planoA->cod_plano_de_acao]);
 
-    $componente->call('excluirPermanente', $entregaB->cod_entrega);
+    // excluirPermanente agora busca a entrega DESTE plano para autorizar a
+    // exclusão: id de outro plano dá "não encontrado" (antes, nada acontecia).
+    chamarIgnorandoNaoEncontrado(fn () => $componente->call('excluirPermanente', $entregaB->cod_entrega));
     $componente->call('atualizarTitulo', $entregaB->cod_entrega, 'título trocado por outro órgão');
     chamarIgnorandoNaoEncontrado(fn () => $componente->call('confirmDeleteEntrega', $entregaB->cod_entrega));
 

@@ -99,7 +99,7 @@ class User extends Authenticatable
             'cod_organizacao',
             'id',
             'cod_organizacao'
-        );
+        )->wherePivotNull('deleted_at');
     }
 
     /**
@@ -114,7 +114,97 @@ class User extends Authenticatable
             'cod_perfil',
             'id',
             'cod_perfil'
-        )->withPivot('cod_organizacao', 'cod_plano_de_acao');
+        )->withPivot('cod_organizacao', 'cod_plano_de_acao')->wherePivotNull('deleted_at');
+    }
+
+    /**
+     * Os perfis que valem PARA UMA organização.
+     *
+     * 🔴 Antes, a permissão juntava todos os perfis do usuário, em qualquer
+     * unidade: quem era Administrador na unidade A e Gestor Substituto na B
+     * tinha poderes de Administrador também na B. Agora cada vínculo vale
+     * onde foi dado:
+     *  - Administrador da Unidade e Consulta: na unidade do vínculo e nas
+     *    subordinadas a ela;
+     *  - Gestor Responsável e Substituto: só na unidade do vínculo.
+     *
+     * @return array<int, string> cod_perfil distintos
+     */
+    public function perfisEfetivosNaOrganizacao(string $codOrganizacao): array
+    {
+        if (! $this->relationLoaded('perfisAcesso')) {
+            $this->load('perfisAcesso');
+        }
+
+        $acima = Organization::ascendentesEProprio($codOrganizacao);
+
+        return $this->perfisAcesso
+            ->filter(function (PerfilAcesso $perfil) use ($codOrganizacao, $acima) {
+                $orgDoVinculo = $perfil->pivot->cod_organizacao;
+
+                if ($orgDoVinculo === $codOrganizacao) {
+                    return true;
+                }
+
+                return in_array($perfil->cod_perfil, PerfilAcesso::PERFIS_HIERARQUICOS, true)
+                    && in_array($orgDoVinculo, $acima, true);
+            })
+            ->pluck('cod_perfil')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Pode alterar o que é da INSTITUIÇÃO inteira, não de uma unidade:
+     * perspectivas, objetivos, faixas do farol, cadeia de valor, a abertura do
+     * ciclo e o futuro almejado. Essas tabelas não têm organização — uma
+     * alteração vale para todas as unidades. Por isso só o Super Administrador
+     * ou o Administrador da unidade RAIZ.
+     */
+    public function podeEditarInstitucional(): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        if (! $this->relationLoaded('perfisAcesso')) {
+            $this->load('perfisAcesso');
+        }
+
+        $raizes = Organization::query()->raiz()->pluck('cod_organizacao')->all();
+
+        return $this->perfisAcesso->contains(
+            fn (PerfilAcesso $p) => $p->cod_perfil === PerfilAcesso::ADMIN_UNIDADE
+                && in_array($p->pivot->cod_organizacao, $raizes, true)
+        );
+    }
+
+    /** É Administrador nesta unidade — pelo vínculo nela ou numa superior. */
+    public function ehAdministradorEm(?string $codOrganizacao): bool
+    {
+        if (! $codOrganizacao) {
+            return false;
+        }
+
+        return in_array(PerfilAcesso::ADMIN_UNIDADE, $this->perfisEfetivosNaOrganizacao($codOrganizacao), true);
+    }
+
+    /** Responde por esta iniciativa, como Gestor Responsável ou Substituto. */
+    public function ehGestorDaIniciativa(?string $codPlanoDeAcao): bool
+    {
+        return $codPlanoDeAcao
+            && ($this->isGestorResponsavel($codPlanoDeAcao) || $this->isGestorSubstituto($codPlanoDeAcao));
+    }
+
+    /** Tem algum vínculo de perfil? Conta recém-criada pelo autocadastro não tem. */
+    public function temPerfilDeAcesso(): bool
+    {
+        if (! $this->relationLoaded('perfisAcesso')) {
+            $this->load('perfisAcesso');
+        }
+
+        return $this->perfisAcesso->isNotEmpty();
     }
 
     /**

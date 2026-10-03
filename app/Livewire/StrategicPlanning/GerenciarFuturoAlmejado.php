@@ -4,18 +4,34 @@ namespace App\Livewire\StrategicPlanning;
 
 use App\Models\StrategicPlanning\FuturoAlmejado;
 use App\Models\StrategicPlanning\Objetivo;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class GerenciarFuturoAlmejado extends Component
 {
+    /**
+     * Este registro não tem organização: vale para a INSTITUIÇÃO inteira
+     * (todas as unidades). Por isso, além da capacidade no módulo, gravar
+     * exige poder editar o que é institucional — Super Admin ou Administrador
+     * da unidade raiz. Antes, o Administrador de qualquer unidade folha (ou
+     * um Gestor) alterava o que vale para todas.
+     */
+    private function autorizarInstitucional(string $ability): void
+    {
+        $this->authorize("modulo.{$ability}", 'planejamento-estrategico');
+        $this->authorize('editar-institucional');
+    }
+
     public $objetivo;
 
     public $futuros = [];
 
     public bool $showModal = false;
 
+    #[Locked]
     public $futuroId;
 
     public array $form = [
@@ -28,10 +44,24 @@ class GerenciarFuturoAlmejado extends Component
 
     public function mount($objetivoId)
     {
-        // Visualização é livre para qualquer usuário autenticado. Só a
-        // escrita (create/edit/save/delete) exige capacidade RBAC.
+        // Ler exige o módulo (todo perfil com vínculo tem). Escrever exige
+        // poder editar o que é institucional (ver autorizarInstitucional).
+        $this->authorize('modulo.acessar', 'planejamento-estrategico');
+
         $this->objetivo = Objetivo::findOrFail($objetivoId);
         $this->carregarFuturos();
+    }
+
+    /**
+     * O id vem do navegador: o registro tem de ser DESTE objetivo. Antes,
+     * editava-se ou excluía-se o futuro almejado de qualquer objetivo.
+     */
+    private function doObjetivo(string $id): FuturoAlmejado
+    {
+        $f = FuturoAlmejado::findOrFail($id);
+        abort_unless($f->cod_objetivo === $this->objetivo->cod_objetivo, 403);
+
+        return $f;
     }
 
     public function carregarFuturos()
@@ -41,7 +71,7 @@ class GerenciarFuturoAlmejado extends Component
 
     public function create()
     {
-        $this->authorize('modulo.criar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('criar');
 
         $this->resetForm();
         $this->showModal = true;
@@ -49,9 +79,9 @@ class GerenciarFuturoAlmejado extends Component
 
     public function edit($id)
     {
-        $this->authorize('modulo.editar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('editar');
 
-        $f = FuturoAlmejado::findOrFail($id);
+        $f = $this->doObjetivo($id);
         $this->futuroId = $id;
         $this->form = [
             'dsc_situacao_atual' => $f->dsc_situacao_atual ?? '',
@@ -65,13 +95,17 @@ class GerenciarFuturoAlmejado extends Component
 
     public function save()
     {
-        $this->authorize($this->futuroId ? 'modulo.editar' : 'modulo.criar', 'planejamento-estrategico');
+        $this->autorizarInstitucional($this->futuroId ? 'editar' : 'criar');
 
         $this->validate([
             'form.dsc_futuro_almejado' => 'required|string|max:1000',
             'form.vlr_referencia_meta' => 'nullable|numeric|min:0',
             'form.dte_horizonte' => 'nullable|date',
         ], ['form.dsc_futuro_almejado.required' => 'Descreva o futuro almejado.']);
+
+        if ($this->futuroId) {
+            $this->doObjetivo($this->futuroId);
+        }
 
         FuturoAlmejado::updateOrCreate(
             ['cod_futuro_almejado' => $this->futuroId],
@@ -91,9 +125,9 @@ class GerenciarFuturoAlmejado extends Component
 
     public function delete($id)
     {
-        $this->authorize('modulo.excluir', 'planejamento-estrategico');
+        $this->autorizarInstitucional('excluir');
 
-        FuturoAlmejado::findOrFail($id)->delete();
+        $this->doObjetivo($id)->delete();
         $this->carregarFuturos();
         session()->flash('status', 'Futuro almejado excluído com sucesso!');
     }
@@ -112,6 +146,13 @@ class GerenciarFuturoAlmejado extends Component
 
     public function render()
     {
-        return view('livewire.p-e-i.gerenciar-futuro-almejado');
+        // O futuro almejado é da instituição: a tela só oferece o botão que o servidor aceita.
+        $institucional = Gate::allows('editar-institucional');
+
+        return view('livewire.p-e-i.gerenciar-futuro-almejado', [
+            'podeCriar' => $institucional && Gate::allows('modulo.criar', 'planejamento-estrategico'),
+            'podeEditar' => $institucional && Gate::allows('modulo.editar', 'planejamento-estrategico'),
+            'podeExcluir' => $institucional && Gate::allows('modulo.excluir', 'planejamento-estrategico'),
+        ]);
     }
 }

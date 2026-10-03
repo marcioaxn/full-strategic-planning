@@ -49,6 +49,10 @@ class LancarEvolucao extends Component
         'vlr_realizado' => 'nullable|string|max:30',
         'txt_avaliacao' => 'nullable|string|max:2000',
         'bln_atualizado' => 'required|in:Sim,Não',
+        // Evidência é servida pelo disco público: só documento e imagem — um
+        // .html/.svg ali rodaria script na origem do sistema. Até 10 MB.
+        'arquivosTemporarios' => 'nullable|array',
+        'arquivosTemporarios.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,odt,ods,odp,png,jpg,jpeg,gif,txt,csv,zip',
     ];
 
     protected $listeners = [

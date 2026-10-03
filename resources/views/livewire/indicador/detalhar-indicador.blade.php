@@ -17,9 +17,12 @@
             <a href="{{ route('indicadores.index') }}" wire:navigate class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Voltar
             </a>
+            {{-- A ficha também é pública: o botão só para quem pode lançar neste indicador. --}}
+            @if(auth()->user()?->can('update', $indicador))
             <a href="{{ route('indicadores.evolucao', $indicador->cod_indicador) }}" wire:navigate class="btn btn-success rounded-pill px-3">
                 <i class="bi bi-graph-up-arrow me-1"></i> Lançar Resultados
             </a>
+            @endif
         </div>
     </div>
 

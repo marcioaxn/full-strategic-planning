@@ -76,7 +76,7 @@ Ainda no topo:
 
 O painel inicial resume o ciclo e o ano:
 
-- **Atingimento por perspectiva**, com a cor do farol de cada uma (ver [seção 9](#9-como-ler-os-números-e-as-cores)).
+- **Índice de Qualidade de Gestão e atingimento por perspectiva**, com a cor do farol de cada uma (ver [seção 9](#9-como-ler-os-números-e-as-cores)). São números **do ciclo inteiro, da instituição toda**: não mudam com a unidade selecionada no topo, porque perspectivas e objetivos são da instituição.
 - **Evolução mensal**, que considera só meses com resultado lançado. Mês sem lançamento fica em branco, não em zero.
 - **Alertas** e **atalhos**.
 - **Gerar Análise (IA)**: pede ao agente de IA um comentário sobre os números. Só funciona se a IA estiver configurada ([7.4](#74-configuração-do-agente-de-ia)).
@@ -196,6 +196,18 @@ Define as faixas de cor usadas em todo o sistema (ex.: Crítico 0–50%, Atenç�
 75–90%, Excelente acima de 90%). **Detalhar** uma faixa lista os indicadores que estão nela no ano. A
 mesma régua pinta o Dashboard, o Mapa, as fichas e o Portal, então um número tem sempre a mesma cor em
 todo lugar.
+
+**Cadastrar ou editar uma faixa:**
+
+1. Informe nome, cor, ciclo e, se quiser, o ano.
+2. Digite os percentuais mínimo e máximo como se escreve normalmente, com vírgula (ex.: **29,99**). O
+   campo aceita apagar e reescrever como qualquer texto.
+3. As faixas de um mesmo ciclo e ano **não podem se cruzar**, porque um mesmo resultado teria duas cores.
+   Encostar no limite é permitido (0–50 e 50–75); cruzar não (0–60 e 50–75). O sistema avisa qual faixa
+   está em conflito.
+
+Só o Super Administrador ou o Administrador da unidade raiz alteram a régua: ela vale para a instituição
+inteira.
 
 ---
 
@@ -323,11 +335,19 @@ Substituto) e as pessoas que respondem por alguma entrega.
 responsáveis. O **Progresso Consolidado** é calculado a partir dos status das entregas.
 ![Entregas](img/27-entregas-kanban.jpg)
 
-**Gestores e Responsáveis** — atribui o Gestor Responsável e o Substituto da iniciativa. Abaixo ficam a
-**Matriz RACI** e o **Plano de Comunicação**.
+**Gestores e Responsáveis** — o **Administrador da unidade** designa aqui o Gestor Responsável e o
+Substituto da iniciativa, escolhendo entre as pessoas da própria unidade. Os Gestores veem a tela, mas não
+designam nem se promovem. Abaixo ficam a **Matriz RACI** e o **Plano de Comunicação**.
 ![Gestores e responsáveis](img/28-gestores-responsaveis.jpg)
 
 > "Gestor Responsável" é um vínculo **com uma iniciativa específica**, não um crachá geral. Ver [7.6](#76-papéis-e-responsabilidades).
+
+**Quem faz o quê nas iniciativas:**
+
+- **Criar e excluir:** o Administrador da unidade cria a iniciativa e designa os gestores. Excluir a
+  iniciativa leva junto as entregas, os indicadores e os vínculos de gestor dela.
+- **Atualizar:** o Gestor Responsável atualiza a iniciativa, as entregas (inclusive excluindo) e os
+  indicadores dela. O Substituto também, mas sem excluir entregas.
 
 ### 6.3 Minhas Entregas
 
@@ -424,23 +444,46 @@ iniciativas e indicadores da unidade), lápis (editar) e lixeira (excluir).
 
 ![Usuários](img/38-usuarios.jpg)
 
-A lista traz busca, filtro por organização e por status (Ativo/Inativo). Para cada usuário define-se o
-vínculo com organizações e o perfil em cada uma. O detalhe do usuário mostra entregas, última atividade e,
-para quem tem acesso à auditoria, o histórico de ações.
+A lista traz busca, filtro por organização e por status (Ativo/Inativo). O Super Administrador vê todos e
+é quem cria, edita e exclui usuários. O Administrador da Unidade consulta só os usuários da própria unidade
+e das abaixo dela. Gestores e Consulta não acessam o diretório.
+
+Para cada usuário define-se o vínculo — **unidade + perfil**. O vínculo de Gestor com uma iniciativa
+específica não é feito aqui, e sim em **Iniciativas → Gestores e Responsáveis** (ver [6.2](#62-iniciativas-carteira-de-projetos-e-ações)).
+Editar o usuário preserva esses vínculos de iniciativa.
+
+O detalhe do usuário mostra entregas, última atividade e, para quem tem acesso à auditoria, o histórico de
+ações.
+
+**Conta criada pelo autocadastro** ("Criar conta" no login) nasce sem perfil: troca a senha no primeiro
+acesso e depois vê só a página "Acesso aguardando liberação". Nenhuma tela restrita abre até um
+administrador vinculá-la a uma unidade com um perfil.
 
 ### 7.3 Perfis de Acesso
 
 ![Perfis](img/39-perfis-acesso.jpg)
 
-Os quatro perfis, com quantos usuários há em cada um, e a **Matriz de Permissões por Funcionalidade**. A
+Os cinco perfis, com quantos usuários há em cada um, e a **Matriz de Permissões por Funcionalidade**. A
 matriz é lida da mesma regra que o sistema aplica, então o que a tela mostra é o que de fato vale.
 
 | Perfil | Alcance |
 |---|---|
-| **Super Administrador** | Tudo, em todas as unidades. Único que cria ciclos PEI. |
-| **Administrador da Unidade** | Tudo, na sua unidade e nas subordinadas. |
-| **Gestor(a) Responsável** | Edita as iniciativas pelas quais responde e lança a evolução dos indicadores delas. |
-| **Gestor(a) Substituto(a)** | Atua nas mesmas iniciativas do responsável, com permissões um pouco menores (ver a matriz na tela). |
+| **Super Administrador** | Tudo, em todas as unidades. Único que cria ciclos PEI e usuários. |
+| **Administrador da Unidade** | Tudo, na sua unidade e nas subordinadas: cria iniciativas, designa os gestores delas, cuida da missão, valores, análises, riscos e RAE da unidade. |
+| **Gestor(a) Responsável** | Lê o planejamento da unidade. Edita **as iniciativas às quais está vinculado**: entregas, indicadores e evolução. Não cria iniciativa nem designa gestores. |
+| **Gestor(a) Substituto(a)** | Como o Responsável, sem excluir entregas. |
+| **Consulta** | Abre as telas da unidade e das subordinadas e exporta relatórios. Não cadastra, não altera e não exclui nada. |
+
+**Três regras completam a tabela:**
+
+1. **Cada perfil vale na unidade em que foi dado.** Ser Administrador numa unidade não dá poder nenhum em
+   outra, nem para quem também tem outro perfil nela. Administrador e Consulta valem também nas unidades
+   abaixo; Gestores, só na própria.
+2. **O que é da instituição inteira** — perspectivas, objetivos estratégicos, graus de satisfação, cadeia
+   de valor e a abertura do ciclo — só o Super Administrador ou o Administrador da **unidade raiz**
+   alteram.
+3. Botões que o perfil não pode usar **não aparecem**. Se alguém tentar a ação por fora da tela, o sistema
+   recusa.
 
 ### 7.4 Configuração do Agente de IA
 

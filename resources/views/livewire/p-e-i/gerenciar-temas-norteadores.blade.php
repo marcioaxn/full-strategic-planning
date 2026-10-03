@@ -22,9 +22,11 @@
 
         <div class="d-flex align-items-center gap-2">
             @if($peiAtivo)
+                @if($podeCriar)
                 <button wire:click="create" class="btn btn-primary gradient-theme-btn shadow-sm">
                     <i class="bi bi-plus-lg me-2"></i>Novo Tema
                 </button>
+                @endif
             @endif
         </div>
     </div>
@@ -231,6 +233,7 @@
         {{-- Mentor de IA --}}
         @if($aiEnabled)
             <div class="ai-mentor-wrapper animate-fade-in">
+                @if($podeCriar)
                 <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="ai-magic-button shadow-sm">
                     <span wire:loading.remove wire:target="pedirAjudaIA">
                         <i class="bi bi-robot"></i> {{ __('Sugerir Temas com IA') }}
@@ -239,6 +242,7 @@
                         <span class="spinner-border spinner-border-sm me-2"></span>{{ __('Analisando contexto organizacional...') }}
                     </span>
                 </button>
+                @endif
 
                 @if($aiSuggestion)
                     <div class="ai-insight-card animate-fade-in">
@@ -257,10 +261,12 @@
                                             <div class="flex-grow-1">
                                                 <div class="fw-bold text-dark">{{ $sug['nome'] }}</div>
                                             </div>
+                                            @if($podeCriar)
                                             <button wire:click="aplicarSugestao(@js($sug['nome']))" 
                                                     class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
                                                 <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}
                                             </button>
+                                            @endif
                                         </div>
                                     @endforeach
                                 </div>
@@ -316,12 +322,16 @@
                                 </td>
                                 <td class="text-end pe-4">
                                     <div class="d-flex justify-content-end gap-2">
+                                        @if($podeEditar)
                                         <button wire:click="edit('{{ $obj->cod_tema_norteador }}')" class="btn btn-sm btn-icon btn-ghost-primary rounded-circle" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </button>
+                                        @endif
+                                        @if($podeExcluir)
                                         <button wire:click="confirmDelete('{{ $obj->cod_tema_norteador }}')" class="btn btn-sm btn-icon btn-ghost-danger rounded-circle" title="Excluir">
                                             <i class="bi bi-trash"></i>
                                         </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

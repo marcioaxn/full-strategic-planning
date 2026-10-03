@@ -44,6 +44,11 @@ class PerfilAcessoSeeder extends Seeder
                 'dsc_perfil' => 'Gestor(a) Substituto(a)',
                 'dsc_permissao' => 'Servidor(a) que tem como responsabilidade manter a atualização do Plano de Ação ao qual está como substituto(a)',
             ],
+            [
+                'cod_perfil' => PerfilAcesso::CONSULTA,
+                'dsc_perfil' => 'Consulta',
+                'dsc_permissao' => 'Servidor(a) que acompanha o planejamento da unidade e das subordinadas somente para leitura e exportação de relatórios, sem cadastrar, alterar ou excluir nada',
+            ],
         ];
     }
 

@@ -271,14 +271,15 @@ test('quem não tem a capacidade de exportar relatórios não gera o Relatório 
         'sgl_organizacao' => 'OSE',
     ]);
 
-    // Usuário autenticado, mas SEM perfil algum: a matriz nega por padrão.
+    // Usuário autenticado, mas SEM perfil algum: nem chega à área restrita —
+    // vai para a página de acesso pendente.
     $user = User::factory()->create();
 
     foreach (['relatorios.gestao.pdf', 'relatorios.gestao.docx'] as $rota) {
         $resposta = $this->actingAs($user)
             ->get(route($rota, ['organizacao_id' => $org->cod_organizacao, 'ano' => 2026]));
 
-        $resposta->assertRedirect(route('dashboard'));
+        $resposta->assertRedirect(route('acesso.pendente'));
 
         expect($resposta->getContent())->not->toContain('%PDF-');
     }

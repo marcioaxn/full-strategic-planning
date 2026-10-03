@@ -73,7 +73,9 @@ class ListarRelatorios extends Component
 
         $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
         $this->includeAi = false; // Padrão agora é desmarcado
-        $this->organizacoes = Organization::orderBy('nom_organizacao')->get();
+        // Só as unidades do escopo de quem gera o relatório (Super Admin: todas).
+        $this->organizacoes = Organization::whereIn('cod_organizacao', Auth::user()->organizacaoIdsPermitidas())
+            ->orderBy('nom_organizacao')->get();
 
         // Carregar Anos (baseado nos ciclos PEI ativos/recentes)
         $this->anos = range(date('Y') - 1, date('Y') + 4);
@@ -83,7 +85,20 @@ class ListarRelatorios extends Component
         $this->carregarPEI();
         // Identidade é carregada dentro de carregarPEI agora
 
-        $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+        // Organização validada contra o escopo, nunca a sessão crua.
+        $this->atualizarOrganizacao(Auth::user()->organizacaoSelecionadaId());
+    }
+
+    /**
+     * A organização do relatório vem do navegador (seletor da tela e eventos):
+     * só dentro do escopo do usuário; vazia ("todas as unidades") só para o
+     * Super Admin — vazia passava sem filtro e o relatório trazia todas.
+     */
+    private function garantirOrganizacao(?string $id): void
+    {
+        $user = Auth::user();
+
+        abort_unless($id ? $user->podeAcessarOrganizacao($id) : $user->isSuperAdmin(), 403);
     }
 
     public function atualizarPEI($id)
@@ -142,9 +157,8 @@ class ListarRelatorios extends Component
 
     public function atualizarOrganizacao($id)
     {
-        // Método público (e ouvinte de evento): o ID vem do cliente. Logado, só
-        // dentro do próprio escopo; o visitante da área pública só consulta.
-        abort_unless(! $id || ! Auth::check() || Auth::user()->podeAcessarOrganizacao($id), 403);
+        // Método público (e ouvinte de evento): o ID vem do cliente.
+        $this->garantirOrganizacao($id ?: null);
 
         $this->organizacaoId = $id;
         $this->organizacaoNome = $id ? Organization::find($id)?->nom_organizacao : null;
@@ -158,6 +172,8 @@ class ListarRelatorios extends Component
 
     public function setOrganizacao($id)
     {
+        $this->garantirOrganizacao($id ?: null);
+
         $this->organizacaoId = $id;
         $this->organizacaoNome = $id ? Organization::find($id)?->nom_organizacao : null;
         // Sincronizar com sessão global se desejado, ou manter apenas local para o relatório

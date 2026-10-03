@@ -135,13 +135,15 @@
             </div>
 
             <!-- Histórico de Alterações -->
+            {{-- Trilha de auditoria: só para quem tem o módulo Auditoria. --}}
+            @if($podeVerHistorico)
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-light py-3">
                     <h6 class="card-title mb-0 fw-bold">Histórico de Alterações</h6>
                 </div>
                 <div class="card-body p-0">
                     <ul class="list-group list-group-flush small">
-                        @forelse($identidade->audits()->latest()->take(5)->get() as $audit)
+                        @forelse($historico as $audit)
                             <li class="list-group-item px-3 py-3">
                                 <div class="d-flex justify-content-between mb-1">
                                     <span class="fw-bold text-dark">{{ $audit->user->name ?? 'Sistema' }}</span>
@@ -149,7 +151,7 @@
                                 </div>
                                 <div class="text-muted mb-1">
                                     <span class="badge bg-{{ $audit->event == 'created' ? 'success' : 'primary' }} bg-opacity-10 text-{{ $audit->event == 'created' ? 'success' : 'primary' }} border border-opacity-10">
-                                        {{ ucfirst($audit->event) }}
+                                        {{ \App\Support\RotuloAuditoria::evento($audit->event) }}
                                     </span>
                                 </div>
                                 @if($audit->event == 'updated')
@@ -170,13 +172,14 @@
                             </li>
                         @endforelse
                     </ul>
-                    @if($identidade->audits()->count() > 5)
+                    @if($totalHistorico > 5)
                         <div class="card-footer bg-white text-center p-2">
-                            <a href="#" class="small text-decoration-none">Ver histórico completo</a>
+                            <a href="{{ route('audit.index') }}" wire:navigate class="small text-decoration-none">Ver histórico completo na Auditoria</a>
                         </div>
                     @endif
                 </div>
             </div>
+            @endif
         </div>
     </div>
 </div>

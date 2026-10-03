@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -55,6 +56,8 @@ class ListarOrganizacoes extends Component
 
     public function mount()
     {
+        $this->authorize('viewAny', Organization::class);
+
         $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
 
         // "Editar" no detalhe da organização chega com ?editar={cod} e já abre o
@@ -142,12 +145,32 @@ class ListarOrganizacoes extends Component
 
     public function getOrganizacoesPaiProperty()
     {
-        return Organization::getTreeForSelector($this->editing?->cod_organizacao);
+        $arvore = Organization::getTreeForSelector($this->editing?->cod_organizacao);
+
+        // Quem não é Super Admin só pendura a unidade em outra do próprio escopo.
+        if (! auth()->user()->isSuperAdmin()) {
+            $permitidas = auth()->user()->organizacaoIdsPermitidas()->all();
+            $arvore = array_values(array_filter($arvore, fn ($o) => in_array($o['id'], $permitidas, true)));
+        }
+
+        return $arvore;
+    }
+
+    /** Unidades que o usuário enxerga (Super Admin: null = todas). */
+    protected function escopo(): ?array
+    {
+        $user = auth()->user();
+
+        return $user->isSuperAdmin() ? null : $user->organizacaoIdsPermitidas()->all();
     }
 
     protected function baseQuery(): Builder
     {
         $query = Organization::query()->with('pai');
+
+        if (($escopo = $this->escopo()) !== null) {
+            $query->whereIn('cod_organizacao', $escopo);
+        }
         $search = trim($this->search);
 
         if ($search !== '') {
@@ -172,7 +195,15 @@ class ListarOrganizacoes extends Component
     {
         $all = Organization::with('pai')->get()->keyBy('cod_organizacao');
 
-        $roots = $all->filter(fn ($org) => $org->isRaiz())->sortBy('nom_organizacao');
+        // Fora do Super Admin, a árvore começa nas unidades do escopo cuja
+        // superior não está no escopo (a "raiz" de quem consulta).
+        if (($escopo = $this->escopo()) !== null) {
+            $all = $all->only($escopo);
+            $roots = $all->filter(fn ($org) => $org->isRaiz() || ! $all->has($org->rel_cod_organizacao))
+                ->sortBy('nom_organizacao');
+        } else {
+            $roots = $all->filter(fn ($org) => $org->isRaiz())->sortBy('nom_organizacao');
+        }
 
         $result = collect();
         foreach ($roots as $root) {
@@ -231,8 +262,27 @@ class ListarOrganizacoes extends Component
         try {
             $data = $this->validate()['form'];
 
+            // "Nenhuma (unidade raiz)" chega do seletor como texto vazio. Ia
+            // assim para a coluna UUID e o cadastro da unidade raiz — o primeiro
+            // passo de todo cliente novo — quebrava com erro de SQL na tela.
+            // Raiz, na base, é a unidade que aponta para si mesma.
+            $semSuperior = ($data['rel_cod_organizacao'] ?? '') === '';
+            $data['rel_cod_organizacao'] = $semSuperior ? null : $data['rel_cod_organizacao'];
+
             if ($this->editing) {
                 $this->authorize('update', $this->editing);
+                $this->validarNovaSuperior($this->editing, $data['rel_cod_organizacao']);
+
+                if ($semSuperior) {
+                    // Só o Super Admin transforma uma unidade em raiz.
+                    if (! auth()->user()?->isSuperAdmin()) {
+                        throw ValidationException::withMessages([
+                            'form.rel_cod_organizacao' => 'Somente o Super Administrador define uma unidade raiz. Escolha a unidade superior.',
+                        ]);
+                    }
+                    $data['rel_cod_organizacao'] = $this->editing->cod_organizacao;
+                }
+
                 $this->editing->update($data);
                 $this->successMessage = __('Unidade organizacional atualizada com sucesso.');
                 $this->createdOrgName = $this->editing->nom_organizacao;
@@ -240,7 +290,7 @@ class ListarOrganizacoes extends Component
                 $this->authorize('create', Organization::class);
                 $org = Organization::create($data);
 
-                if (empty($data['rel_cod_organizacao'])) {
+                if ($semSuperior) {
                     $org->rel_cod_organizacao = $org->cod_organizacao;
                     $org->save();
                 }
@@ -252,13 +302,43 @@ class ListarOrganizacoes extends Component
             $this->showFormModal = false;
             $this->showSuccessModal = true;
             $this->resetForm();
+        } catch (ValidationException $e) {
+            // Erro de preenchimento aparece no próprio campo, não num modal genérico.
+            throw $e;
         } catch (\Exception $e) {
             // Sem isto, a causa real desaparece: o cliente recebe uma
             // orientação genérica e não sobra rastro nenhum para investigar.
             report($e);
 
-            $this->errorMessage = $e->getMessage();
+            // A mensagem técnica (SQL, nome de tabela, host do banco) vai para o
+            // log; o usuário recebe o que pode fazer a respeito.
+            $this->errorMessage = 'Não foi possível salvar a unidade. Confira os campos e tente de novo; se persistir, informe o suporte.';
             $this->showErrorModal = true;
+        }
+    }
+
+    /**
+     * 🔴 A regra só exigia que a superior existisse. Definir como superior a
+     * própria unidade ou uma subordinada a ela criava um ciclo na árvore: a
+     * unidade sumia da listagem e o Dashboard entrava em recursão infinita.
+     * O seletor da tela já escondia essas opções — mas o valor vem do navegador.
+     */
+    protected function validarNovaSuperior(Organization $org, ?string $novaSuperior): void
+    {
+        if (! $novaSuperior || $novaSuperior === $org->rel_cod_organizacao) {
+            return;
+        }
+
+        if (in_array($novaSuperior, Organization::descendentesEProprio($org->cod_organizacao), true)) {
+            throw ValidationException::withMessages([
+                'form.rel_cod_organizacao' => 'A unidade superior não pode ser a própria unidade nem uma subordinada a ela.',
+            ]);
+        }
+
+        if (($escopo = $this->escopo()) !== null && ! in_array($novaSuperior, $escopo, true)) {
+            throw ValidationException::withMessages([
+                'form.rel_cod_organizacao' => 'Escolha como superior uma unidade que você administra.',
+            ]);
         }
     }
 

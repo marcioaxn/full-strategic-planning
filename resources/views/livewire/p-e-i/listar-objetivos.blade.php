@@ -23,11 +23,11 @@
 
         <div class="d-flex align-items-center gap-2">
             @if($peiAtivo)
-                @auth
+                @if($podeCriar)
                 <button type="button" class="btn btn-primary gradient-theme-btn px-4 shadow-sm" wire:click="create">
                     <i class="bi bi-plus-lg me-1"></i> {{ __('Novo Objetivo') }}
                 </button>
-                @endauth
+                @endif
             @endif
         </div>
     </div>
@@ -403,7 +403,7 @@
 
     {{-- Mentor de IA --}}
     {{-- Só para quem está logado: a mesma tela é servida ao visitante pela Transparência. --}}
-    @if($peiAtivo && $perspectivas->isNotEmpty() && $aiEnabled && auth()->check())
+    @if($peiAtivo && $perspectivas->isNotEmpty() && $aiEnabled && $podeCriar)
         <div class="ai-mentor-wrapper animate-fade-in mb-4">
             <div class="d-flex flex-wrap align-items-center gap-3">
                 <button wire:click="pedirAjudaIA" wire:loading.attr="disabled" class="ai-magic-button shadow-sm">
@@ -444,12 +444,12 @@
                                             <div class="fw-bold text-dark">{{ $obj['nome'] }}</div>
                                             <p class="small text-muted mb-0 mt-1 lh-sm">{{ $obj['descricao'] }}</p>
                                         </div>
-                                        @auth
+                                        @if($podeCriar)
                                         <button wire:click="aplicarSugestao(@js($obj['nome']), @js($obj['descricao']), @js($obj['ordem'] ?? 1))" 
                                                 class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold flex-shrink-0">
                                             <i class="bi bi-plus-lg me-1"></i> {{ __('Adicionar') }}
                                         </button>
-                                        @endauth
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>
@@ -532,16 +532,16 @@
                                             <a href="{{ route('objetivos.detalhes', $objetivo->cod_objetivo) }}" wire:navigate class="btn btn-sm btn-icon btn-ghost-info rounded-circle" title="{{ __('Detalhar') }}">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            @auth
+                                            @if($podeEditar)
                                             <button wire:click="edit('{{ $objetivo->cod_objetivo }}')" class="btn btn-sm btn-icon btn-ghost-primary rounded-circle" title="{{ __('Editar') }}">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            @endauth
-                                            @auth
+                                            @endif
+                                            @if($podeExcluir)
                                             <button wire:click="confirmDelete('{{ $objetivo->cod_objetivo }}')" class="btn btn-sm btn-icon btn-ghost-danger rounded-circle" title="{{ __('Excluir') }}">
                                                 <i class="bi bi-trash"></i>
                                             </button>
-                                            @endauth
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -575,16 +575,16 @@
                                             <a href="{{ route('objetivos.detalhes', $filho->cod_objetivo) }}" wire:navigate class="btn btn-sm btn-icon btn-ghost-info rounded-circle" title="{{ __('Detalhar') }}">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            @auth
+                                            @if($podeEditar)
                                             <button wire:click="edit('{{ $filho->cod_objetivo }}')" class="btn btn-sm btn-icon btn-ghost-primary rounded-circle" title="{{ __('Editar') }}">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            @endauth
-                                            @auth
+                                            @endif
+                                            @if($podeExcluir)
                                             <button wire:click="confirmDelete('{{ $filho->cod_objetivo }}')" class="btn btn-sm btn-icon btn-ghost-danger rounded-circle" title="{{ __('Excluir') }}">
                                                 <i class="bi bi-trash"></i>
                                             </button>
-                                            @endauth
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -593,9 +593,9 @@
                                 <tr>
                                     <td colspan="4" class="text-center py-4 text-muted small italic">
                                         <i class="bi bi-inbox me-1"></i> {{ __('Nenhum objetivo cadastrado nesta perspectiva.') }}
-                                        @auth
+                                        @if($podeCriar)
                                         <button wire:click="create('{{ $perspectiva->cod_perspectiva }}')" class="btn btn-link btn-sm p-0 text-primary fw-bold ms-1">{{ __('Adicionar o primeiro') }}</button>
-                                        @endauth
+                                        @endif
                                     </td>
                                 </tr>
                             @endforelse

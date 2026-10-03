@@ -18,10 +18,18 @@ test('a matriz exibida na tela de perfis é a mesma que autoriza o acesso', func
 
     $indice = array_search('Planejamento (ciclo, identidade, análises, objetivos)', $matrizTela['funcionalidades'], true);
 
-    // Gestor Responsável cria e edita no planejamento (sem excluir) → "Edição".
-    expect($matrizReal['planejamento-estrategico'][PerfilAcesso::GESTOR_RESPONSAVEL])->toContain('criar', 'editar')
-        ->and($matrizTela['perfis']['Gestor Responsável'][$indice])->toBe('E')
+    // Gestor Responsável só LÊ o planejamento da unidade (age nas iniciativas
+    // dele); a tela tem de dizer "Leitura", não "Edição".
+    expect($matrizReal['planejamento-estrategico'][PerfilAcesso::GESTOR_RESPONSAVEL])->not->toContain('criar')
+        ->and($matrizReal['planejamento-estrategico'][PerfilAcesso::GESTOR_RESPONSAVEL])->not->toContain('editar')
+        ->and($matrizTela['perfis']['Gestor Responsável'][$indice])->toBe('L')
         ->and($matrizTela['perfis']['Admin de Unidade'][$indice])->toBe('T');
+
+    // Consulta aparece na tela e é leitura em tudo que alcança.
+    expect($matrizTela['perfis'])->toHaveKey('Consulta');
+    foreach ($matrizTela['perfis']['Consulta'] as $nivel) {
+        expect($nivel)->toBeIn(['L', '—']);
+    }
 
     $auditoria = array_search('Auditoria', $matrizTela['funcionalidades'], true);
     expect($matrizTela['perfis']['Admin de Unidade'][$auditoria])->toBe('—');

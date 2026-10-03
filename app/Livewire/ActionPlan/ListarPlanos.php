@@ -17,6 +17,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -37,6 +38,9 @@ class ListarPlanos extends Component
 
     public $filtroObjetivo = '';
 
+    // Só o servidor define (atualizarOrganizacao confere o escopo): sem a
+    // trava, um $set do navegador listava iniciativas de qualquer unidade.
+    #[Locked]
     public $organizacaoId;
 
     public $organizacaoNome;
@@ -45,6 +49,8 @@ class ListarPlanos extends Component
 
     public bool $showDeleteModal = false;
 
+    // Só o servidor define (edit/confirmDelete, ambos autorizados).
+    #[Locked]
     public $planoId;
 
     // Campos do Formulário
@@ -134,7 +140,12 @@ class ListarPlanos extends Component
         }
 
         $this->carregarPEI();
-        $this->atualizarOrganizacao(Session::get('organizacao_selecionada_id'));
+        // Logado: a organização vem validada contra o escopo (nunca a sessão
+        // crua, que podia apontar para a raiz e dar 403 a quem não é dela).
+        // Visitante da Transparência: mantém a seleção pública da sessão.
+        $this->atualizarOrganizacao(Auth::check()
+            ? Auth::user()->organizacaoSelecionadaId()
+            : Session::get('organizacao_selecionada_id'));
         $this->tiposExecucao = TipoExecucao::where('cod_tipo_execucao', '!=', 'ecef6a50-c010-4cda-afc3-cbda245b55b0')
             ->orderBy('dsc_tipo_execucao')
             ->get();
@@ -283,7 +294,9 @@ class ListarPlanos extends Component
         }
 
         try {
-            $this->authorize('create', PlanoDeAcao::class);
+            // Iniciativa nasce pelas mãos do Administrador da unidade, que
+            // designa os gestores depois (Gestor não cria iniciativa).
+            $this->authorize('create', [PlanoDeAcao::class, $this->organizacaoId]);
         } catch (AuthorizationException $e) {
             // Sem isto, a causa real desaparece: o cliente recebe uma
             // orientação genérica e não sobra rastro nenhum para investigar.
@@ -332,13 +345,28 @@ class ListarPlanos extends Component
         // 🔴 Esta tela é servida também na área pública de transparência, e
         // /livewire/update não passa pelo middleware `transparencia`: sem esta
         // guarda, um visitante anônimo criava ou alterava iniciativas.
-        $planoExistente = $this->planoId ? PlanoDeAcao::findOrFail($this->planoId) : null;
-        $this->authorize($planoExistente ? 'update' : 'create', $planoExistente ?? PlanoDeAcao::class);
+        $planoExistente = $this->planoId ? PlanoDeAcao::with('organizacoes')->findOrFail($this->planoId) : null;
+        abort_unless(Auth::check(), 403);
 
-        // As organizações vêm do cliente: cada uma tem de estar no escopo de quem grava.
         $usuario = Auth::user();
-        foreach ((array) $this->organizacoes_ids as $codOrg) {
-            abort_unless($usuario->isSuperAdmin() || $usuario->podeAcessarOrganizacao($codOrg), 403);
+        $orgsInformadas = array_values(array_filter((array) $this->organizacoes_ids));
+
+        if ($planoExistente) {
+            $this->authorize('update', $planoExistente);
+
+            // O Gestor edita a SUA iniciativa, mas não a transfere de unidade:
+            // cada unidade acrescentada exige ser Administrador dela.
+            $atuais = $planoExistente->organizacoes->pluck('cod_organizacao')->all();
+            foreach (array_diff($orgsInformadas, $atuais) as $codOrg) {
+                abort_unless($usuario->isSuperAdmin() || $usuario->ehAdministradorEm($codOrg), 403);
+            }
+        } else {
+            // As organizações vêm do cliente: em cada uma, quem grava precisa
+            // poder CRIAR iniciativa — não basta enxergá-la.
+            foreach ($orgsInformadas as $codOrg) {
+                abort_unless($usuario->podeAcessarOrganizacao($codOrg), 403);
+                $this->authorize('create', [PlanoDeAcao::class, $codOrg]);
+            }
         }
 
         $messages = [
@@ -438,6 +466,7 @@ class ListarPlanos extends Component
 
     public function confirmDelete($id)
     {
+        $this->authorize('delete', PlanoDeAcao::findOrFail($id));
         $this->planoId = $id;
         $this->showDeleteModal = true;
     }
@@ -485,12 +514,16 @@ class ListarPlanos extends Component
         if ($this->filtroObjetivo) {
             $query->where('cod_objetivo', $this->filtroObjetivo);
         } elseif ($this->organizacaoId) {
-            // Admin vê planos da org selecionada e todos os descendentes na hierarquia.
-            // Usuário comum vê apenas a org exata.
-            $isAdmin = auth()->user()?->isSuperAdmin();
-            $orgIds = $isAdmin
-                ? (Organization::find($this->organizacaoId)?->getDescendantsAndSelfIds() ?? [$this->organizacaoId])
-                : [$this->organizacaoId];
+            // A unidade selecionada e as subordinadas — limitadas ao que o
+            // usuário de fato alcança (o Administrador e a Consulta alcançam as
+            // subordinadas; o Gestor, só a própria unidade).
+            $orgIds = Organization::descendentesEProprio($this->organizacaoId);
+            $usuario = auth()->user();
+            if ($usuario && ! $usuario->isSuperAdmin()) {
+                $orgIds = array_values(array_intersect($orgIds, $usuario->organizacaoIdsPermitidas()->all()));
+            } elseif (! $usuario) {
+                $orgIds = [$this->organizacaoId];
+            }
 
             $query->whereHas('organizacoes', function ($sub) use ($orgIds) {
                 $sub->whereIn('tab_organizacoes.cod_organizacao', $orgIds);

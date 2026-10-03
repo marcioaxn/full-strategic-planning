@@ -71,7 +71,9 @@ class GerenciarEntregas extends Component
 
     public function create()
     {
-        $this->authorize('update', $this->plano);
+        // Entrega segue a iniciativa: capacidade na unidade dela e, para o
+        // Gestor, titularidade (EntregaPolicy).
+        $this->authorize('create', [Entrega::class, $this->plano]);
         $this->resetForm();
 
         // Sugerir o próximo nível
@@ -86,8 +88,8 @@ class GerenciarEntregas extends Component
 
     public function edit($id)
     {
-        $this->authorize('update', $this->plano);
         $entrega = $this->entregaDoPlano($id);
+        $this->authorize('update', $entrega);
 
         $this->entregaId = $id;
         $this->dsc_entrega = $entrega->dsc_entrega;
@@ -102,7 +104,11 @@ class GerenciarEntregas extends Component
 
     public function save()
     {
-        $this->authorize('update', $this->plano);
+        if ($this->entregaId) {
+            $this->authorize('update', $this->entregaDoPlano($this->entregaId));
+        } else {
+            $this->authorize('create', [Entrega::class, $this->plano]);
+        }
 
         $valData = Carbon::parse($this->dte_prazo);
         $planoInicio = Carbon::parse($this->plano->dte_inicio);
@@ -155,8 +161,10 @@ class GerenciarEntregas extends Component
 
     public function delete($id)
     {
-        $this->authorize('update', $this->plano);
-        $this->entregaDoPlano($id)->delete();
+        // Excluir é capacidade própria: o Gestor Substituto edita, mas não exclui.
+        $entrega = $this->entregaDoPlano($id);
+        $this->authorize('delete', $entrega);
+        $entrega->delete();
         $this->carregarDados();
         session()->flash('status', 'Entrega excluída!');
     }

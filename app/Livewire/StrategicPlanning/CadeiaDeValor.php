@@ -10,19 +10,35 @@ use App\Models\SystemSetting;
 use App\Services\Reports\AcabamentoPdf;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class CadeiaDeValor extends Component
 {
+    /**
+     * Este registro não tem organização: vale para a INSTITUIÇÃO inteira
+     * (todas as unidades). Por isso, além da capacidade no módulo, gravar
+     * exige poder editar o que é institucional — Super Admin ou Administrador
+     * da unidade raiz. Antes, o Administrador de qualquer unidade folha (ou
+     * um Gestor) alterava o que vale para todas.
+     */
+    private function autorizarInstitucional(string $ability): void
+    {
+        $this->authorize("modulo.{$ability}", 'planejamento-estrategico');
+        $this->authorize('editar-institucional');
+    }
+
     public $peiAtivo;
 
     // Formulário atividade
     public bool $showModalAtividade = false;
 
+    #[Locked]
     public ?string $atividadeEditId = null;
 
     public array $formAtividade = [
@@ -35,8 +51,10 @@ class CadeiaDeValor extends Component
     // Formulário processo
     public bool $showModalProcesso = false;
 
+    #[Locked]
     public ?string $processoEditId = null;
 
+    #[Locked]
     public ?string $processoAtivId = null;
 
     public array $formProcesso = [
@@ -48,14 +66,18 @@ class CadeiaDeValor extends Component
     // Feedback
     public bool $showDeleteModal = false;
 
+    #[Locked]
     public string $deleteTarget = '';
 
+    #[Locked]
     public string $deleteId = '';
 
     protected $listeners = ['peiSelecionado' => 'atualizarPEI'];
 
     public function mount(): void
     {
+        $this->authorize('modulo.acessar', 'planejamento-estrategico');
+
         $this->peiAtivo = PEI::find(Session::get('pei_selecionado_id')) ?? PEI::ativos()->first();
     }
 
@@ -65,11 +87,31 @@ class CadeiaDeValor extends Component
         $this->reset(['showModalAtividade', 'showModalProcesso', 'showDeleteModal']);
     }
 
+    /**
+     * O id vem do navegador: a atividade tem de ser do ciclo em tela. Antes,
+     * editava-se ou excluía-se a atividade de qualquer ciclo pelo id.
+     */
+    private function atividadeDoCiclo(string $id): AtividadeCadeiaValor
+    {
+        $a = AtividadeCadeiaValor::findOrFail($id);
+        abort_unless($this->peiAtivo && $a->cod_pei === $this->peiAtivo->cod_pei, 403);
+
+        return $a;
+    }
+
+    private function processoDoCiclo(string $id): ProcessoAtividadeCadeiaValor
+    {
+        $p = ProcessoAtividadeCadeiaValor::findOrFail($id);
+        $this->atividadeDoCiclo($p->cod_atividade_cadeia_valor);
+
+        return $p;
+    }
+
     // ── Atividades ───────────────────────────────────────────────────────────
 
     public function novaAtividade(): void
     {
-        $this->authorize('modulo.criar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('criar');
 
         $this->atividadeEditId = null;
         $this->formAtividade = ['dsc_atividade' => '', 'dsc_tipo' => 'Finalística', 'cod_perspectiva' => '', 'num_ordem' => 0];
@@ -78,9 +120,9 @@ class CadeiaDeValor extends Component
 
     public function editarAtividade(string $id): void
     {
-        $this->authorize('modulo.editar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('editar');
 
-        $a = AtividadeCadeiaValor::findOrFail($id);
+        $a = $this->atividadeDoCiclo($id);
         $this->atividadeEditId = $id;
         $this->formAtividade = [
             'dsc_atividade' => $a->dsc_atividade,
@@ -93,7 +135,7 @@ class CadeiaDeValor extends Component
 
     public function salvarAtividade(): void
     {
-        $this->authorize($this->atividadeEditId ? 'modulo.editar' : 'modulo.criar', 'planejamento-estrategico');
+        $this->autorizarInstitucional($this->atividadeEditId ? 'editar' : 'criar');
 
         $this->validate([
             'formAtividade.dsc_atividade' => 'required|string|max:500',
@@ -111,7 +153,7 @@ class CadeiaDeValor extends Component
         }
 
         $this->atividadeEditId
-            ? AtividadeCadeiaValor::findOrFail($this->atividadeEditId)->update($data)
+            ? $this->atividadeDoCiclo($this->atividadeEditId)->update($data)
             : AtividadeCadeiaValor::create($data);
 
         $this->showModalAtividade = false;
@@ -121,6 +163,8 @@ class CadeiaDeValor extends Component
 
     public function confirmarExcluirAtividade(string $id): void
     {
+        $this->autorizarInstitucional('excluir');
+        $this->atividadeDoCiclo($id);
         $this->deleteTarget = 'atividade';
         $this->deleteId = $id;
         $this->showDeleteModal = true;
@@ -130,7 +174,8 @@ class CadeiaDeValor extends Component
 
     public function novoProcesso(string $atividadeId): void
     {
-        $this->authorize('modulo.criar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('criar');
+        $this->atividadeDoCiclo($atividadeId);
 
         $this->processoAtivId = $atividadeId;
         $this->processoEditId = null;
@@ -140,9 +185,9 @@ class CadeiaDeValor extends Component
 
     public function editarProcesso(string $id): void
     {
-        $this->authorize('modulo.editar', 'planejamento-estrategico');
+        $this->autorizarInstitucional('editar');
 
-        $p = ProcessoAtividadeCadeiaValor::findOrFail($id);
+        $p = $this->processoDoCiclo($id);
         $this->processoAtivId = $p->cod_atividade_cadeia_valor;
         $this->processoEditId = $id;
         $this->formProcesso = [
@@ -155,16 +200,17 @@ class CadeiaDeValor extends Component
 
     public function salvarProcesso(): void
     {
-        $this->authorize($this->processoEditId ? 'modulo.editar' : 'modulo.criar', 'planejamento-estrategico');
+        $this->autorizarInstitucional($this->processoEditId ? 'editar' : 'criar');
 
         $this->validate([
             'formProcesso.dsc_transformacao' => 'required|string|max:500',
         ], ['formProcesso.dsc_transformacao.required' => 'Informe a transformação/processo.']);
 
+        $this->atividadeDoCiclo((string) $this->processoAtivId);
         $data = array_merge($this->formProcesso, ['cod_atividade_cadeia_valor' => $this->processoAtivId]);
 
         $this->processoEditId
-            ? ProcessoAtividadeCadeiaValor::findOrFail($this->processoEditId)->update($data)
+            ? $this->processoDoCiclo($this->processoEditId)->update($data)
             : ProcessoAtividadeCadeiaValor::create($data);
 
         $this->showModalProcesso = false;
@@ -173,6 +219,8 @@ class CadeiaDeValor extends Component
 
     public function confirmarExcluirProcesso(string $id): void
     {
+        $this->autorizarInstitucional('excluir');
+        $this->processoDoCiclo($id);
         $this->deleteTarget = 'processo';
         $this->deleteId = $id;
         $this->showDeleteModal = true;
@@ -182,11 +230,11 @@ class CadeiaDeValor extends Component
 
     public function executarExclusao(): void
     {
-        $this->authorize('modulo.excluir', 'planejamento-estrategico');
+        $this->autorizarInstitucional('excluir');
 
         match ($this->deleteTarget) {
-            'atividade' => AtividadeCadeiaValor::findOrFail($this->deleteId)->delete(),
-            'processo' => ProcessoAtividadeCadeiaValor::findOrFail($this->deleteId)->delete(),
+            'atividade' => $this->atividadeDoCiclo($this->deleteId)->delete(),
+            'processo' => $this->processoDoCiclo($this->deleteId)->delete(),
             default => null,
         };
         $this->showDeleteModal = false;
@@ -195,6 +243,9 @@ class CadeiaDeValor extends Component
 
     public function gerarPdf()
     {
+        // Exportar é capacidade própria, a mesma de todo PDF do sistema: o
+        // método é público e invocável direto pelo navegador.
+        $this->authorize('modulo.exportar', 'relatorios');
         abort_unless($this->peiAtivo, 404);
 
         $atividades = AtividadeCadeiaValor::with('processos', 'perspectiva')
@@ -242,6 +293,11 @@ class CadeiaDeValor extends Component
             'grupos' => $this->agruparPorTipo($atividades),
             'perspectivas' => $perspectivas,
             'tipos' => AtividadeCadeiaValor::TIPOS,
+            // A cadeia de valor é da instituição: a tela só oferece o botão que o servidor aceita.
+            'podeCriar' => Gate::allows('modulo.criar', 'planejamento-estrategico') && Gate::allows('editar-institucional'),
+            'podeEditar' => Gate::allows('modulo.editar', 'planejamento-estrategico') && Gate::allows('editar-institucional'),
+            'podeExcluir' => Gate::allows('modulo.excluir', 'planejamento-estrategico') && Gate::allows('editar-institucional'),
+            'podeExportar' => Gate::allows('modulo.exportar', 'relatorios'),
         ]);
     }
 

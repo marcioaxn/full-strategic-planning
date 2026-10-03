@@ -157,11 +157,14 @@
                                 @endif
                             </td>
                             <td class="text-end pe-4">
-                                <a href="{{ route('impersonate.start', $u->id) }}"
-                                   class="btn btn-sm btn-outline-warning rounded-pill px-3"
-                                   onclick="return confirm('Assumir a identidade de {{ $u->name }}?');">
-                                    <i class="bi bi-person-bounding-box me-1"></i>Assumir
-                                </a>
+                                {{-- POST com CSRF (em GET, um link de outra página bastava). --}}
+                                <form method="POST" action="{{ route('impersonate.start', $u->id) }}" class="d-inline"
+                                      onsubmit="return confirm({{ \Illuminate\Support\Js::from('Assumir a identidade de '.$u->name.'?') }});">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill px-3">
+                                        <i class="bi bi-person-bounding-box me-1"></i>Assumir
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         @empty
