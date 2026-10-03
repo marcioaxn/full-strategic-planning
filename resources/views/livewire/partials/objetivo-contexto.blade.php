@@ -155,7 +155,7 @@
                          title="<strong>Média Ponderada</strong><br>Soma(Atingimento x Peso) / Soma(Pesos)<br><small class='text-muted'>Clique em 'Ver cálculo' para detalhes</small>">
                         <div class="card-body py-2 px-3 text-center">
                             <div class="d-flex align-items-center justify-content-center gap-1">
-                                <div class="fs-4 fw-bold" style="color: {{ $corFarolHex ?? '#6c757d' }};">@brazil_percent($mediaAtingimento, 1)</div>
+                                <div class="fs-4 fw-bold cor-texto-legivel" style="--cor-texto: {{ $corFarolHex ?? '#6c757d' }};">@brazil_percent($mediaAtingimento, 1)</div>
                                 <i class="bi bi-info-circle text-muted small" style="cursor: help;"></i>
                             </div>
                             <small class="text-muted">
@@ -335,7 +335,7 @@
                                                 <td colspan="4" class="text-end">Total:</td>
                                                 <td class="text-center">{{ $somaPesos }}</td>
                                                 <td colspan="2" class="text-end">
-                                                    <span style="color: {{ $corFarolHex ?? '#6c757d' }};">@brazil_percent($mediaAtingimento, 1)</span>
+                                                    <span class="cor-texto-legivel" style="--cor-texto: {{ $corFarolHex ?? '#6c757d' }};">@brazil_percent($mediaAtingimento, 1)</span>
                                                     <small class="text-muted fw-normal d-block">
                                                         ({{ array_sum(array_column($detalhesIndicadores, 'contribuicao')) }} / {{ $somaPesos }})
                                                     </small>

@@ -381,13 +381,14 @@
     background: var(--bs-border-color);
     min-width: 8px;
 }
+/* Cinza com opacidade 0,55 dava 2,1:1 no claro e 1,9:1 no escuro (WCAG pede
+   4,5:1). --bs-secondary-color já segue o tema e passa nos dois. */
 .sidebar-section-sep .sep-label {
-    font-size: 0.585rem;
+    font-size: 0.65rem;
     font-weight: 700;
     letter-spacing: 0.09em;
     text-transform: uppercase;
-    color: var(--bs-secondary);
-    opacity: 0.55;
+    color: var(--bs-secondary-color);
     white-space: nowrap;
 }
 .app-sidebar.is-collapsed .sidebar-section-sep {
@@ -395,9 +396,6 @@
 }
 [data-bs-theme="dark"] .sidebar-section-sep .sep-line {
     background: rgba(255, 255, 255, 0.1);
-}
-[data-bs-theme="dark"] .sidebar-section-sep .sep-label {
-    opacity: 0.4;
 }
 
 /* Accordion/Group Styles */
@@ -614,7 +612,7 @@
 
 .user-email {
     font-size: 0.75rem;
-    color: var(--bs-secondary);
+    color: var(--bs-secondary-color);
     margin-bottom: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -788,7 +786,7 @@
 
 .user-email-mobile {
     font-size: 0.8125rem;
-    color: var(--bs-secondary);
+    color: var(--bs-secondary-color);
     margin-bottom: 0;
     overflow: hidden;
     text-overflow: ellipsis;

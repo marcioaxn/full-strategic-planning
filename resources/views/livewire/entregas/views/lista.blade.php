@@ -3,6 +3,22 @@
     class="notion-lista"
     x-data="{
         init() {
+            this.prepararSortable(0);
+        },
+        // O SortableJS só era carregado pela visão Kanban: abrindo direto em
+        // Lista (ou chegando por navegação interna) dava 'Sortable is not
+        // defined' e reordenar não funcionava. Carrega se faltar e espera.
+        prepararSortable(tentativa) {
+            if (typeof window.Sortable === 'undefined') {
+                if (!document.querySelector('script[data-sortablejs]')) {
+                    const s = document.createElement('script');
+                    s.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js';
+                    s.dataset.sortablejs = '1';
+                    document.head.appendChild(s);
+                }
+                if (tentativa < 100) setTimeout(() => this.prepararSortable(tentativa + 1), 100);
+                return;
+            }
             new Sortable(this.$refs.listaBody, {
                 animation: 150,
                 handle: '.notion-drag-handle',
@@ -61,13 +77,13 @@
                             <td>
                                 <div 
                                     class="notion-inline-edit {{ $entrega->isConcluida() ? 'text-decoration-line-through text-muted' : '' }}"
-                                    x-data="{ editing: false, title: '{{ addslashes($entrega->dsc_entrega) }}' }"
+                                    x-data="{ editing: false, title: @js($entrega->dsc_entrega) }"
                                 >
                                     {{-- Labels inline --}}
                                     @if($entrega->labels->count() > 0)
                                         <div class="d-flex flex-wrap gap-1 mb-1">
                                             @foreach($entrega->labels->take(2) as $label)
-                                                <span class="notion-label" style="background-color: {{ $label->dsc_cor }}20; color: {{ $label->dsc_cor }}">
+                                                <span class="notion-label cor-texto-legivel" style="background-color: {{ $label->dsc_cor }}20; --cor-texto: {{ $label->dsc_cor }}">
                                                     {{ $label->dsc_label }}
                                                 </span>
                                             @endforeach

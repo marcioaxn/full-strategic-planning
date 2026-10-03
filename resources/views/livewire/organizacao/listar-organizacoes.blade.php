@@ -53,6 +53,24 @@
         </div>
     @endif
 
+    <x-secao-educativa
+        titulo="O que são as Unidades Organizacionais?"
+        subtitulo="A árvore que mostra o órgão principal e as unidades que fazem parte dele."
+        icone="building"
+        por-que="É essa árvore que diz de quem é cada objetivo, iniciativa, risco e indicador, e até onde vai o acesso de cada pessoa. Ela ajuda todas as unidades a caminharem na mesma direção."
+        :passos="[
+            'Confira qual é a unidade raiz (o órgão como um todo).',
+            'Clique em Nova Organização e informe a sigla, o nome e a unidade superior.',
+            'Use a mesma sigla e o mesmo nome da estrutura oficial do órgão.',
+            'Atualize a árvore sempre que houver reestruturação.',
+        ]"
+        exemplo="A raiz é o Ministério Federal da Inovação Rural (fictício). Abaixo dela fica a Secretaria de Tecnologia Agrícola e, abaixo desta, o Departamento de Sementes e a Coordenação de Extensão Rural."
+        dica="a árvore precisa refletir a estrutura real: quem administra uma unidade também alcança as que estão abaixo dela."
+        referencia="GPPEI p. 9 e 54 · Mintzberg (1979)">
+        Pense na árvore genealógica de uma família: há o tronco e os galhos. A <strong>unidade raiz</strong> é o órgão como um todo;
+        as <strong>unidades subordinadas</strong> são as secretarias, diretorias e coordenações que ficam abaixo dela.
+    </x-secao-educativa>
+
     {{-- Filters Card --}}
     <div class="card card-modern filters-card mb-4">
         <div class="card-body p-4">

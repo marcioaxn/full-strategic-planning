@@ -10,14 +10,14 @@
         <div class="d-flex flex-wrap gap-1 mb-2">
             @foreach($entrega->labels->take(3) as $label)
                 <span 
-                    class="notion-label" 
-                    style="background-color: {{ $label->dsc_cor }}20; color: {{ $label->dsc_cor }}"
+                    class="notion-label cor-texto-legivel" 
+                    style="background-color: {{ $label->dsc_cor }}20; --cor-texto: {{ $label->dsc_cor }}"
                 >
                     {{ $label->dsc_label }}
                 </span>
             @endforeach
             @if($entrega->labels->count() > 3)
-                <span class="notion-label" style="background-color: #e3e2e080; color: #6b6b6b">
+                <span class="notion-label notion-priority-baixa">
                     +{{ $entrega->labels->count() - 3 }}
                 </span>
             @endif

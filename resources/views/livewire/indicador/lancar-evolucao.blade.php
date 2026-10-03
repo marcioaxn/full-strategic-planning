@@ -19,6 +19,27 @@
         </a>
     </div>
 
+    <x-secao-educativa
+        titulo="O que é lançar a evolução de um indicador?"
+        subtitulo="Anotar, mês a mês, quanto foi feito de verdade, ao lado do que foi previsto."
+        icone="graph-up-arrow"
+        por-que="O indicador é a régua que mostra o quanto o órgão se aproxima do objetivo. Sem lançamentos em dia, o painel, o mapa e a RAE ficam sem base."
+        :passos="[
+            'Escolha o mês do lançamento.',
+            'Confira o valor previsto (a meta do mês).',
+            'Informe o valor realizado, a partir de uma fonte confiável.',
+            'Escreva uma avaliação curta, sobretudo quando houver desvio, e anexe evidências se tiver.',
+            'Salve e veja no gráfico ao lado como o mês se compara com os anteriores.',
+        ]"
+        exemplo="No Serviço Federal de Emissão de Passaportes (fictício), o indicador “Tempo médio de emissão (dias)” é do tipo “menor é melhor”. Em março, o previsto era 10 dias e o realizado foi 12. A avaliação registra o motivo: greve nos Correios."
+        dica="olhe a polaridade antes de interpretar o resultado. Em “menor é melhor”, ficar abaixo da meta é bom. Quanto mais qualificada a informação lançada, menos retrabalho depois."
+        referencia="GPPEI p. 31, 43, 52 e 103–105 · Jannuzzi (2001)">
+        É como uma planilha de mesada: de um lado o que você planejou guardar, do outro o que guardou de fato.
+        A cada mês você registra o <strong>realizado</strong>, e o sistema compara com o <strong>previsto</strong>.
+        A <strong>polaridade</strong> diz se “mais é melhor” (ex.: pessoas atendidas) ou “menos é melhor” (ex.: tempo de espera).
+        O <strong>acumulado</strong> soma os meses para mostrar o total até agora.
+    </x-secao-educativa>
+
     @if (session()->has('status'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i> {{ session('status') }}

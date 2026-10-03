@@ -10,15 +10,19 @@
         .capa-org { font-size: 15px; color: #4a5568; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
         .capa-titulo { font-size: 38px; font-weight: bold; color: #1a3a5c; margin: 14px 0 6px 0; letter-spacing: -1px; }
         .capa-linha { width: 90px; height: 4px; background: #e07b39; margin: 18px auto 30px auto; border-radius: 2px; }
-        .capa-sub { font-size: 13px; color: #718096; }
+        .capa-sub { font-size: 13px; color: #5a6577; }
         .capa-meta { margin-top: 60px; display: inline-block; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px 36px; background: #f7fafc; font-size: 10px; color: #4a5568; line-height: 1.9; }
         .capa-meta strong { color: #1a3a5c; }
         .capa-modulos { margin-top: 40px; }
         .capa-mod { display: inline-block; margin: 0 6px; padding: 6px 14px; border-radius: 999px; font-size: 8px; font-weight: bold; color: #fff; }
 
         /* Capítulo */
-        .cap { font-size: 9px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #e07b39; margin-top: 6px; }
-        .cap-titulo { font-size: 19px; font-weight: bold; color: #1a3a5c; margin: 2px 0 4px 0; border-bottom: 2px solid #1a3a5c; padding-bottom: 8px; }
+        /* Os capítulos seguem em fluxo: a quebra forçada antes de cada um deixava
+           páginas com dois terços em branco (capítulos curtos). O título fica
+           preso ao conteúdo que o segue (page-break-after: avoid). */
+        .cap-sep { height: 0; margin-top: 30px; border-top: 1px solid #D3EED1; padding-top: 12px; }
+        .cap { font-size: 9px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #a5531c; margin-top: 6px; page-break-after: avoid; }
+        .cap-titulo { font-size: 19px; font-weight: bold; color: #1a3a5c; margin: 2px 0 10px 0; border-bottom: 2px solid #1a3a5c; padding-bottom: 8px; page-break-after: avoid; }
 
         /* Cards identidade */
         .id-card { background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid #1B408E; border-radius: 8px; padding: 14px; vertical-align: top; }
@@ -99,7 +103,7 @@
         @forelse($valores as $valor)
             <span class="chip">{{ $valor->nom_valor }}</span>
         @empty
-            <span style="font-style:italic; color:#a0aec0; font-size:8px;">Valores não cadastrados.</span>
+            <span style="font-style:italic; color:#6b7280; font-size:8px;">Valores não cadastrados.</span>
         @endforelse
     </div>
 
@@ -115,12 +119,12 @@
     @if($aiSummary)
     <div class="ai-box">
         <strong>&#9733; INSIGHT ESTRATÉGICO (IA)</strong>
-        <p>{!! nl2br(e($aiSummary)) !!}</p>
+        @include('relatorios.partials.texto-ia', ['texto' => $aiSummary])
     </div>
     @endif
 
     {{-- ═══════════════ CAP 2 — INAUGURAR E INTEGRAR ═══════════════ --}}
-    <div class="page-break"></div>
+    <div class="cap-sep"></div>
     <div class="cap" style="color:#1a3a5c;">Capítulo 2 · Módulo 01 — Inaugurar e Integrar</div>
     <div class="cap-titulo">Planejamento do Processo e Integração</div>
 
@@ -132,7 +136,7 @@
             </td>
             <td class="kpi-card success" style="width:25%;">
                 <p class="kpi-label">Aprovação</p>
-                <p class="kpi-value" style="font-size:14px; color:{{ $inaugurar->bln_aprovado ? '#2e8b57' : '#d97706' }};">{{ $inaugurar->bln_aprovado ? 'Aprovado' : 'Pendente' }}</p>
+                <p class="kpi-value" style="font-size:14px; color:{{ $inaugurar->bln_aprovado ? '#22704a' : '#9a5408' }};">{{ $inaugurar->bln_aprovado ? 'Aprovado' : 'Pendente' }}</p>
                 <p class="kpi-sub">pela Alta Direção</p>
             </td>
             <td class="kpi-card accent" style="width:25%;">
@@ -170,7 +174,7 @@
     @endif
 
     {{-- ═══════════════ CAP 3 — CADEIA DE VALOR ═══════════════ --}}
-    <div class="page-break"></div>
+    <div class="cap-sep"></div>
     <div class="cap">Capítulo 3 · Módulo 02 — Planejar</div>
     <div class="cap-titulo">Cadeia de Valor</div>
 
@@ -186,10 +190,10 @@
                     <td class="row-desc">
                         @forelse($a->processos as $proc)
                             &#8226; {{ Str::limit($proc->dsc_transformacao, 70) }}<br>
-                        @empty <span style="color:#cbd5e0;">Sem processos detalhados.</span> @endforelse
+                        @empty <span style="color:#6b7280;">Sem processos detalhados.</span> @endforelse
                     </td>
                 </tr>
-                @empty <tr><td colspan="2" class="text-center" style="color:#a0aec0;">—</td></tr> @endforelse
+                @empty <tr><td colspan="2" class="text-center" style="color:#6b7280;">—</td></tr> @endforelse
             </tbody>
         </table>
         <div class="grupo-band" style="background:#475569;">Atividades de Suporte <span class="contador">{{ $suporte->count() }}</span></div>
@@ -201,10 +205,10 @@
                     <td class="row-titulo">{{ $a->dsc_atividade }}</td>
                     <td class="row-desc">
                         @forelse($a->processos as $proc) &#8226; {{ Str::limit($proc->dsc_transformacao, 70) }}<br>
-                        @empty <span style="color:#cbd5e0;">Sem processos detalhados.</span> @endforelse
+                        @empty <span style="color:#6b7280;">Sem processos detalhados.</span> @endforelse
                     </td>
                 </tr>
-                @empty <tr><td colspan="2" class="text-center" style="color:#a0aec0;">—</td></tr> @endforelse
+                @empty <tr><td colspan="2" class="text-center" style="color:#6b7280;">—</td></tr> @endforelse
             </tbody>
         </table>
     @else
@@ -212,7 +216,7 @@
     @endif
 
     {{-- ═══════════════ CAP 4 — ANÁLISE DE AMBIENTE ═══════════════ --}}
-    <div class="page-break"></div>
+    <div class="cap-sep"></div>
     <div class="cap">Capítulo 4 · Módulo 02 — Planejar</div>
     <div class="cap-titulo">Análise de Ambiente</div>
 
@@ -223,21 +227,21 @@
         <tr>
             <td class="swot-cell" style="background:#e8f5e9;">
                 <strong style="color:#198754;">FORÇAS</strong>
-                <ul>@forelse($swot->get('Força', []) as $i)<li>{{ $i->dsc_item }} @if(($i->num_gravidade ?? 0))<span style="color:#718096;">(GUT {{ ($i->num_gravidade)*($i->num_urgencia)*($i->num_tendencia) }})</span>@endif</li>@empty<li style="list-style:none;color:#a0aec0;">—</li>@endforelse</ul>
+                <ul>@forelse($swot->get('Força', []) as $i)<li>{{ $i->dsc_item }} @if(($i->num_gravidade ?? 0))<span style="color:#5a6577;">(GUT {{ ($i->num_gravidade)*($i->num_urgencia)*($i->num_tendencia) }})</span>@endif</li>@empty<li style="list-style:none;color:#6b7280;">—</li>@endforelse</ul>
             </td>
             <td class="swot-cell" style="background:#fbecec;">
                 <strong style="color:#dc3545;">FRAQUEZAS</strong>
-                <ul>@forelse($swot->get('Fraqueza', []) as $i)<li>{{ $i->dsc_item }} @if(($i->num_gravidade ?? 0))<span style="color:#718096;">(GUT {{ ($i->num_gravidade)*($i->num_urgencia)*($i->num_tendencia) }})</span>@endif</li>@empty<li style="list-style:none;color:#a0aec0;">—</li>@endforelse</ul>
+                <ul>@forelse($swot->get('Fraqueza', []) as $i)<li>{{ $i->dsc_item }} @if(($i->num_gravidade ?? 0))<span style="color:#5a6577;">(GUT {{ ($i->num_gravidade)*($i->num_urgencia)*($i->num_tendencia) }})</span>@endif</li>@empty<li style="list-style:none;color:#6b7280;">—</li>@endforelse</ul>
             </td>
         </tr>
         <tr>
             <td class="swot-cell" style="background:#e7f1ff;">
                 <strong style="color:#1B408E;">OPORTUNIDADES</strong>
-                <ul>@forelse($swot->get('Oportunidade', []) as $i)<li>{{ $i->dsc_item }}</li>@empty<li style="list-style:none;color:#a0aec0;">—</li>@endforelse</ul>
+                <ul>@forelse($swot->get('Oportunidade', []) as $i)<li>{{ $i->dsc_item }}</li>@empty<li style="list-style:none;color:#6b7280;">—</li>@endforelse</ul>
             </td>
             <td class="swot-cell" style="background:#fff8e1;">
-                <strong style="color:#d97706;">AMEAÇAS</strong>
-                <ul>@forelse($swot->get('Ameaça', []) as $i)<li>{{ $i->dsc_item }}</li>@empty<li style="list-style:none;color:#a0aec0;">—</li>@endforelse</ul>
+                <strong style="color:#9a5408;">AMEAÇAS</strong>
+                <ul>@forelse($swot->get('Ameaça', []) as $i)<li>{{ $i->dsc_item }}</li>@empty<li style="list-style:none;color:#6b7280;">—</li>@endforelse</ul>
             </td>
         </tr>
     </table>
@@ -299,7 +303,7 @@
     @endif
 
     {{-- ═══════════════ CAP 5 — MAPA ESTRATÉGICO ═══════════════ --}}
-    <div class="page-break"></div>
+    <div class="cap-sep"></div>
     <div class="cap">Capítulo 5 · Módulo 02 — Planejar</div>
     <div class="cap-titulo">Mapa Estratégico (BSC)</div>
 
@@ -312,7 +316,7 @@
             <div class="persp-header" style="background:{{ $corP }};">{{ $persp->dsc_perspectiva }}</div>
             <div class="persp-body">
                 @if($persp->objetivos->isEmpty())
-                    <span style="font-style:italic; color:#a0aec0; font-size:8px;">Sem objetivos vinculados.</span>
+                    <span style="font-style:italic; color:#6b7280; font-size:8px;">Sem objetivos vinculados.</span>
                 @else
                 <table style="width:100%; border-collapse:separate; border-spacing:4px;">
                     @foreach($chunks as $chunk)
@@ -321,7 +325,7 @@
                         @php $at = $obj->calcularAtingimentoConsolidado($filtros['ano'], $filtros['mesLimite']); $cor = $getCorSatisfacao($at); @endphp
                         <td style="width:33.33%; vertical-align:top; background:#fff; border:1px solid #e2e8f0; border-left:3px solid {{ $cor }}; border-radius:6px; padding:8px;">
                             <span class="obj-title">{{ $obj->nom_objetivo }}</span>
-                            <div style="font-size:8px; color:#718096; margin-top:3px;">
+                            <div style="font-size:8px; color:#5a6577; margin-top:3px;">
                                 <span class="farol" style="background:{{ $cor }};"></span> {{ number_format($at, 1, ',', '.') }}%
                             </div>
                             @if(($obj->ods ?? collect())->isNotEmpty())
@@ -345,12 +349,12 @@
     @endforeach
 
     {{-- ═══════════════ CAP 6 — INDICADORES ═══════════════ --}}
-    <div class="page-break"></div>
+    <div class="cap-sep"></div>
     <div class="cap">Capítulo 6 · Módulo 03 — Monitorar e Avaliar</div>
     <div class="cap-titulo">Monitoramento de Indicadores (KPIs)</div>
 
     <div class="legend-container" style="background:#f7fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; margin-bottom:12px;">
-        <span style="font-size:8px; font-weight:bold; color:#718096; text-transform:uppercase;">Grau de Satisfação:</span>
+        <span style="font-size:8px; font-weight:bold; color:#5a6577; text-transform:uppercase;">Grau de Satisfação:</span>
         @foreach($grausSatisfacao as $grau)
             <span style="font-size:8px; margin-left:10px;"><span class="farol" style="background:{{ $grau->cor }};"></span> {{ $grau->dsc_grau_satisfcao ?? $grau->dsc_grau_satisfacao ?? '' }}</span>
         @endforeach
@@ -391,7 +395,7 @@
     @endforeach
 
     {{-- ═══════════════ CAP 7 — PLANOS, ENTREGAS, MODELO LÓGICO E RACI ═══════════════ --}}
-    <div class="page-break"></div>
+    <div class="cap-sep"></div>
     <div class="cap">Capítulo 7 · Módulo 02 — Planejar</div>
     <div class="cap-titulo">Portfólio de Iniciativas e Entregas</div>
 
@@ -409,8 +413,8 @@
                 <table style="width:100%; border:none;"><tr style="border:none;">
                     <td style="border:none;">
                         <strong style="color:#1a3a5c; font-size:10px;">{{ $plano->dsc_plano_de_acao }}</strong>
-                        @if($plano->objetivo)<div style="font-size:8px; color:#a0aec0;">Objetivo: {{ Str::limit($plano->objetivo->nom_objetivo, 70) }}</div>@endif
-                        <div style="font-size:8px; color:#718096;">{{ $plano->dte_inicio?->format('d/m/Y') }} a {{ $plano->dte_fim?->format('d/m/Y') }} · <strong style="color:{{ $cor }};">{{ number_format($prog, 1, ',', '.') }}% concluído</strong> · {{ count($entregas) }} {{ count($entregas) == 1 ? 'entrega' : 'entregas' }}</div>
+                        @if($plano->objetivo)<div style="font-size:8px; color:#6b7280;">Objetivo: {{ Str::limit($plano->objetivo->nom_objetivo, 70) }}</div>@endif
+                        <div style="font-size:8px; color:#5a6577;">{{ $plano->dte_inicio?->format('d/m/Y') }} a {{ $plano->dte_fim?->format('d/m/Y') }} · <strong style="color:{{ \App\Support\CorLegivel::paraTextoSobreBranco($cor) }};">{{ number_format($prog, 1, ',', '.') }}% concluído</strong> · {{ count($entregas) }} {{ count($entregas) == 1 ? 'entrega' : 'entregas' }}</div>
                     </td>
                     <td style="border:none; text-align:right;"><span class="pill" style="background:{{ $cor }}; color:#fff;">{{ $st }}</span></td>
                 </tr></table>
@@ -434,7 +438,7 @@
                     <tr>
                         <td style="padding-left:12px;">{{ $e['entrega'] ?? '—' }}</td>
                         <td class="text-center" style="font-size:8px;">{{ $e['prazo'] ?? '—' }}</td>
-                        <td class="text-center" style="font-size:8px;">{{ number_format($e['peso'] ?? 0, 1) }}%</td>
+                        <td class="text-center" style="font-size:8px;">{{ number_format((float) ($e['peso'] ?? 0), 1, ',', '.') }}%</td>
                         <td class="text-center"><span class="pill {{ $cE }}">{{ $stE }}</span></td>
                     </tr>
                     @endforeach
@@ -459,7 +463,7 @@
                 @endif
                 @if($raciPlano->isNotEmpty())
                 <div style="font-size:8px;">
-                    <strong style="color:#d97706; text-transform:uppercase;">RACI:</strong>
+                    <strong style="color:#9a5408; text-transform:uppercase;">RACI:</strong>
                     @foreach($raciPlano as $r)<span class="chip" style="font-size:7px; background:#fef3c7; color:#92400e; border-color:#fde68a;">{{ $r->dsc_papel }} · {{ $r->usuario?->name ?? '—' }}</span>@endforeach
                 </div>
                 @endif
@@ -471,8 +475,8 @@
     @endforelse
 
     {{-- ═══════════════ CAP 8 — RISCOS ═══════════════ --}}
-    <div class="page-break"></div>
-    <div class="cap" style="color:#dc3545;">Capítulo 8 · Módulo 02 — Planejar</div>
+    <div class="cap-sep"></div>
+    <div class="cap" style="color:#b02a37;">Capítulo 8 · Módulo 02 — Planejar</div>
     <div class="cap-titulo">Gestão de Riscos</div>
 
     <table class="rpt">
@@ -481,32 +485,32 @@
             @forelse($riscosDetalhado as $risco)
             @php $mit = $risco->mitigacoes->first(); @endphp
             <tr>
-                <td class="text-center" style="font-weight:bold; color:{{ $risco->getNivelRiscoCor() }};">{{ $risco->num_nivel_risco }}</td>
+                <td class="text-center" style="font-weight:bold; color:{{ \App\Support\CorLegivel::paraTextoSobreBranco($risco->getNivelRiscoCor()) }};">{{ $risco->num_nivel_risco }}</td>
                 <td class="row-titulo">{{ $risco->dsc_titulo }}</td>
                 <td class="row-desc">{{ $risco->dsc_categoria }}</td>
                 <td class="text-center">
                     @if($risco->mitigacoes->count() > 0)<span class="pill pill-info">{{ $risco->mitigacoes->count() }}</span>
-                    @else<span style="color:#cbd5e0;">—</span>@endif
+                    @else<span style="color:#6b7280;">—</span>@endif
                 </td>
                 <td class="row-desc">
                     @if($mit)
                         {{ Str::limit($mit->txt_descricao ?? '', 70) ?: '—' }}
                         @if($mit->dsc_status)<br><span class="pill pill-neutral" style="font-size:7px;">{{ $mit->dsc_status }}</span>@endif
                     @else
-                        <span style="color:#cbd5e0;">Sem mitigação cadastrada</span>
+                        <span style="color:#6b7280;">Sem mitigação cadastrada</span>
                     @endif
                 </td>
             </tr>
             @empty
-            <tr><td colspan="5" class="text-center" style="color:#a0aec0;">Nenhum risco monitorado.</td></tr>
+            <tr><td colspan="5" class="text-center" style="color:#6b7280;">Nenhum risco monitorado.</td></tr>
             @endforelse
         </tbody>
     </table>
 
     {{-- ═══════════════ CAP 9 — COMUNICAÇÃO ═══════════════ --}}
     @if($comunicacoes->isNotEmpty())
-    <div class="page-break"></div>
-    <div class="cap" style="color:#0891b2;">Capítulo 9 · Módulo 03 — Monitorar e Avaliar</div>
+    <div class="cap-sep"></div>
+    <div class="cap" style="color:#0e6e85;">Capítulo 9 · Módulo 03 — Monitorar e Avaliar</div>
     <div class="cap-titulo">Plano de Comunicação</div>
     <table class="rpt">
         <thead><tr><th>Público-Alvo</th><th>Mensagem-Chave</th><th class="text-center">Canal</th><th class="text-center">Frequência</th></tr></thead>
@@ -525,7 +529,7 @@
 
     {{-- ═══════════════ CAP 10 — RAE ═══════════════ --}}
     @if($raes->isNotEmpty())
-    <div class="page-break"></div>
+    <div class="cap-sep"></div>
     <div class="cap" style="color:#6a4c9c;">Capítulo 10 · Módulo 03 — Monitorar e Avaliar</div>
     <div class="cap-titulo">Revisão e Avaliação da Estratégia (RAE)</div>
     @foreach($raes as $rae)
@@ -534,7 +538,7 @@
             <td style="border:none;"><strong style="color:#6a4c9c; font-size:10px;">{{ $rae->dsc_tipo_reuniao }} · Ref. {{ $rae->dte_referencia->format('m/Y') }}</strong></td>
             <td style="border:none; text-align:right;">@if($rae->num_progresso_geral !== null)<span class="pill pill-info">Progresso: {{ number_format($rae->num_progresso_geral, 1, ',', '.') }}%</span>@endif</td>
         </tr></table>
-        @if($rae->txt_destaques_positivos)<div style="font-size:8.5px; margin-top:5px;"><strong style="color:#2e8b57;">Destaques:</strong> {{ Str::limit($rae->txt_destaques_positivos, 150) }}</div>@endif
+        @if($rae->txt_destaques_positivos)<div style="font-size:8.5px; margin-top:5px;"><strong style="color:#22704a;">Destaques:</strong> {{ Str::limit($rae->txt_destaques_positivos, 150) }}</div>@endif
         @if($rae->txt_problemas_identificados)<div style="font-size:8.5px; margin-top:3px;"><strong style="color:#dc3545;">Problemas:</strong> {{ Str::limit($rae->txt_problemas_identificados, 150) }}</div>@endif
         @if($rae->txt_encaminhamentos)<div style="font-size:8.5px; margin-top:3px;"><strong style="color:#1B408E;">Encaminhamentos:</strong> {{ Str::limit($rae->txt_encaminhamentos, 150) }}</div>@endif
     </div>
@@ -543,8 +547,8 @@
 
     {{-- ═══════════════ CAP 11 — LIÇÕES APRENDIDAS ═══════════════ --}}
     @if($licoesAprendidas->isNotEmpty())
-    <div class="page-break"></div>
-    <div class="cap" style="color:#d97706;">Capítulo 11 · Guia de Projetos — Domínio 7</div>
+    <div class="cap-sep"></div>
+    <div class="cap" style="color:#9a5408;">Capítulo 11 · Guia de Projetos — Domínio 7</div>
     <div class="cap-titulo">Impacto e Aprendizado · Lições Aprendidas</div>
     @foreach($licoesAprendidas as $tipo => $licoes)
     <div class="grupo-band" style="background:{{ $licaoMeta[$tipo] ?? '#475569' }};">{{ $tipo }} <span class="contador">{{ $licoes->count() }}</span></div>
@@ -565,8 +569,8 @@
 
     {{-- ═══════════════ CAP 12 — AGENDA 2030 (ODS) ═══════════════ --}}
     @if(($odsAderencia ?? collect())->isNotEmpty() || !empty($odsPorObjetivo))
-    <div class="page-break"></div>
-    <div class="cap" style="color:#2e8b57;">Capítulo 12 · Desenvolvimento Sustentável</div>
+    <div class="cap-sep"></div>
+    <div class="cap" style="color:#22704a;">Capítulo 12 · Desenvolvimento Sustentável</div>
     <div class="cap-titulo">Contribuição à Agenda 2030 (ODS)</div>
 
     @php
@@ -593,7 +597,7 @@
                 </td>
                 <td class="row-titulo">{{ $ods->nom_ods }}</td>
                 <td class="text-center">
-                    @php $int = $ods->pivot->dsc_intensidade ?? 'Media'; $intCor = $int === 'Alta' ? '#dc3545' : ($int === 'Baixa' ? '#2e8b57' : '#d97706'); @endphp
+                    @php $int = $ods->pivot->dsc_intensidade ?? 'Media'; $intCor = $int === 'Alta' ? '#dc3545' : ($int === 'Baixa' ? '#22704a' : '#9a5408'); @endphp
                     <span class="pill" style="background:{{ $intCor }}; color:#fff;">{{ $int }}</span>
                 </td>
                 <td class="row-desc">{{ $ods->pivot->txt_contribuicao ?: '—' }}</td>

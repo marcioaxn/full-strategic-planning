@@ -53,6 +53,24 @@
         </div>
     @endif
 
+    <x-secao-educativa
+        titulo="Quem são os Usuários?"
+        subtitulo="As pessoas que têm acesso ao sistema para consultar e alimentar o plano."
+        icone="people"
+        por-que="O plano é alimentado por uma rede de gestores. Cada pessoa precisa de acesso próprio, no tamanho certo para a sua função."
+        :passos="[
+            'Clique em Novo Usuário e informe o nome e o e-mail institucional.',
+            'Escolha como a senha inicial será definida: por link enviado ao e-mail ou informada por você.',
+            'Adicione os vínculos: em qual unidade a pessoa atua e com qual perfil.',
+            'Ao desligamento ou mudança de função, desative o usuário ou ajuste os vínculos no mesmo dia.',
+        ]"
+        exemplo="Na Agência Federal de Inspeção de Barragens (fictícia), uma nova analista é cadastrada na Coordenação de Monitoramento com o perfil de consulta. O servidor que se aposentou tem o acesso desativado no mesmo dia."
+        dica="cadastrar sem capacitar gera dado ruim. Combine o acesso com uma orientação sobre como alimentar o sistema."
+        referencia="GPPEI p. 52 · LGPD (Lei nº 13.709/2018), art. 46">
+        É a lista de quem pode entrar no sistema, como a lista de alunos com crachá da escola. Cada usuário tem nome, e-mail e
+        <strong>vínculos</strong>: a unidade em que atua e o <strong>perfil</strong> que diz o que ele pode fazer ali.
+    </x-secao-educativa>
+
     {{-- Filters Card --}}
     <div class="card card-modern filters-card mb-4">
         <div class="card-body p-4">

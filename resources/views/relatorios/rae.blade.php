@@ -11,7 +11,7 @@
         .header { border-bottom: 3px solid #1B408E; padding-bottom: 10px; margin-bottom: 20px; }
         .header-title { font-size: 20px; font-weight: bold; color: #1B408E; text-transform: uppercase; margin: 0 0 4px 0; }
         .header-sub { font-size: 11px; color: #555; margin: 0; }
-        .header-meta { font-size: 9px; color: #888; text-align: right; }
+        .header-meta { font-size: 9px; color: #6b6b6b; text-align: right; }
 
         .section { margin-bottom: 18px; page-break-inside: avoid; }
         .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #fff; padding: 5px 10px; margin-bottom: 8px; border-radius: 3px; }
@@ -38,7 +38,7 @@
         .participantes { font-size: 9px; color: #555; margin-top: 6px; }
         .participante-tag { display: inline-block; background: #e9ecef; border-radius: 3px; padding: 2px 6px; margin: 2px; font-size: 9px; }
 
-        .footer { border-top: 1px solid #dee2e6; padding-top: 8px; margin-top: 30px; font-size: 8px; color: #aaa; text-align: center; }
+        .footer { border-top: 1px solid #dee2e6; padding-top: 8px; margin-top: 30px; font-size: 8px; color: #6b6b6b; text-align: center; }
     </style>
 </head>
 <body>

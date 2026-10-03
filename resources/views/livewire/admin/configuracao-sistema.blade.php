@@ -10,6 +10,26 @@
 
     <div class="row justify-content-center">
         <div class="col-12 col-xxl-9">
+            <x-secao-educativa
+                titulo="O que é o agente de IA do sistema?"
+                subtitulo="Um assistente de inteligência artificial que ajuda a resumir e organizar as informações do plano."
+                icone="robot"
+                por-que="O próprio GPPEI sugere usar IA para organizar textos de entrevistas e sistematizar as memórias da RAE em formato executivo, o que economiza tempo da equipe."
+                :passos="[
+                    'Escolha o provedor de IA contratado pelo órgão (Google AI Studio ou Vertex AI) e o modelo.',
+                    'Informe a credencial. Ela é guardada cifrada e não volta a aparecer na tela.',
+                    'Ative o recurso e clique em Testar conexão: o selo do topo passa a mostrar se funcionou.',
+                    'Revise periodicamente se o uso está de acordo com as regras do órgão.',
+                ]"
+                exemplo="A Fundação Federal de Estatísticas Regionais (fictícia) ativa o agente para gerar rascunhos de análise dos indicadores. Cada rascunho é lido e corrigido pelo gestor antes de ir para o relatório."
+                dica="o texto da IA é um rascunho: valide antes de usar. Não envie à IA dados pessoais ou sigilosos sem base legal (LGPD)."
+                referencia="GPPEI p. 18, 51 e 55 · Princípios de IA da OCDE (2019)">
+                É como um ajudante que lê muito rápido e sugere um resumo, mas não decide por você. Nesta tela, o administrador
+                escolhe o <strong>provedor de IA</strong>, informa a <strong>credencial de acesso</strong> e liga ou desliga o recurso.
+                Com ele ligado, o sistema pode, por exemplo, sugerir a análise de um indicador ou organizar as anotações de uma reunião.
+            </x-secao-educativa>
+        </div>
+        <div class="col-12 col-xxl-9">
             <div class="card card-modern border-0 shadow-lg rounded-4 overflow-hidden bg-white">
                 <div class="card-header border-0 p-4 bg-primary text-white d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center gap-3">
@@ -18,7 +38,7 @@
                         </div>
                         <div>
                             <h4 class="mb-0 fw-bold">{{ __('Cérebro de Inteligência Artificial') }}</h4>
-                            <p class="mb-0 small text-white-50 opacity-75">{{ __('Gerencie a integração com o Google Gemini para análises estratégicas do PEI.') }}</p>
+                            <p class="mb-0 small text-white">{{ __('Gerencie a integração com o Google Gemini para análises estratégicas do PEI.') }}</p>
                         </div>
                     </div>
                     <div>
@@ -83,7 +103,7 @@
                                             <div class="col-12 col-md-6">
                                                 <label class="w-100 cursor-pointer" wire:click="$set('aiProvider', 'gemini-studio')">
                                                     <input type="radio" wire:model="aiProvider" value="gemini-studio" class="btn-check">
-                                                    <div class="card h-100 border-2 transition-all {{ $aiProvider === 'gemini-studio' ? 'border-primary bg-primary-subtle' : 'border-light bg-light opacity-75' }} rounded-4 p-3 shadow-sm">
+                                                    <div class="card h-100 border-2 transition-all {{ $aiProvider === 'gemini-studio' ? 'border-primary bg-primary-subtle' : 'border-light bg-light' }} rounded-4 p-3 shadow-sm">
                                                         <div class="d-flex align-items-center gap-2">
                                                             <i class="bi bi-google text-primary fs-5"></i>
                                                             <h6 class="fw-bold mb-0">Google AI Studio</h6>
@@ -95,7 +115,7 @@
                                             <div class="col-12 col-md-6">
                                                 <label class="w-100 cursor-pointer" wire:click="$set('aiProvider', 'vertex-ai')">
                                                     <input type="radio" wire:model="aiProvider" value="vertex-ai" class="btn-check">
-                                                    <div class="card h-100 border-2 transition-all {{ $aiProvider === 'vertex-ai' ? 'border-primary bg-primary-subtle' : 'border-light bg-light opacity-75' }} rounded-4 p-3 shadow-sm">
+                                                    <div class="card h-100 border-2 transition-all {{ $aiProvider === 'vertex-ai' ? 'border-primary bg-primary-subtle' : 'border-light bg-light' }} rounded-4 p-3 shadow-sm">
                                                         <div class="d-flex align-items-center gap-2">
                                                             <i class="bi bi-shield-lock-fill text-success fs-5"></i>
                                                             <h6 class="fw-bold mb-0">Google Vertex AI</h6>
@@ -114,7 +134,7 @@
                                         <div class="col-12 col-md-6">
                                             <label class="w-100 cursor-pointer" wire:click="$set('aiModel', 'gemini-2.5-flash')">
                                                 <input type="radio" wire:model="aiModel" value="gemini-2.5-flash" class="btn-check">
-                                                <div class="card h-100 border-2 transition-all {{ $aiModel === 'gemini-2.5-flash' ? 'border-primary bg-primary-subtle' : 'border-light bg-light opacity-75' }} rounded-4 p-3 shadow-sm">
+                                                <div class="card h-100 border-2 transition-all {{ $aiModel === 'gemini-2.5-flash' ? 'border-primary bg-primary-subtle' : 'border-light bg-light' }} rounded-4 p-3 shadow-sm">
                                                     <div class="d-flex align-items-center gap-3">
                                                         <div class="bg-white rounded-3 p-2 shadow-sm border">
                                                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
@@ -123,7 +143,7 @@
                                                         </div>
                                                         <div>
                                                             <h6 class="fw-bold mb-0">Gemini 2.5 Flash</h6>
-                                                            <span class="x-small text-success fw-bold">{{ __('Rápido & Inteligente') }}</span>
+                                                            <span class="x-small text-success-emphasis fw-bold">{{ __('Rápido & Inteligente') }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -132,7 +152,7 @@
                                         <div class="col-12 col-md-6">
                                             <label class="w-100 cursor-pointer" wire:click="$set('aiModel', 'gemini-2.5-pro')">
                                                 <input type="radio" wire:model="aiModel" value="gemini-2.5-pro" class="btn-check">
-                                                <div class="card h-100 border-2 transition-all {{ $aiModel === 'gemini-2.5-pro' ? 'border-primary bg-primary-subtle' : 'border-light bg-light opacity-75' }} rounded-4 p-3 shadow-sm">
+                                                <div class="card h-100 border-2 transition-all {{ $aiModel === 'gemini-2.5-pro' ? 'border-primary bg-primary-subtle' : 'border-light bg-light' }} rounded-4 p-3 shadow-sm">
                                                     <div class="d-flex align-items-center gap-3">
                                                         <div class="bg-white rounded-3 p-2 shadow-sm border">
                                                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24">

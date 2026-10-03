@@ -147,7 +147,7 @@
                                 <span class="pill pill-neutral" style="font-size:7px;">Iniciativa</span>
                                 {{ Str::limit($ind->planoDeAcao->dsc_plano_de_acao ?? '—', 32) }}
                             @else
-                                <span style="color:#a0aec0;">—</span>
+                                <span style="color:#6b7280;">—</span>
                             @endif
                         </td>
                         <td style="font-size:8px;">{{ $ind->dsc_unidade_medida }}</td>
@@ -158,7 +158,7 @@
                         </td>
                         <td>
                             @if($na)
-                                <div class="text-center" style="color:#a0aec0; font-size:8px;">N/A</div>
+                                <div class="text-center" style="color:#6b7280; font-size:8px;">N/A</div>
                             @else
                                 <table style="width:100%; border:none;"><tr style="border:none;">
                                     <td style="border:none; width:12px; padding:0; vertical-align:middle;">
@@ -169,7 +169,7 @@
                                             <div class="progress-fill" style="width:{{ min(100, max(0, $at)) }}%; background:{{ $cor }};"></div>
                                         </div>
                                     </td>
-                                    <td style="border:none; text-align:right; vertical-align:middle; font-weight:bold; font-size:9px; color:{{ $cor }}; padding:0; white-space:nowrap;">
+                                    <td style="border:none; text-align:right; vertical-align:middle; font-weight:bold; font-size:9px; color:{{ \App\Support\CorLegivel::paraTextoSobreBranco($cor) }}; padding:0; white-space:nowrap;">
                                         {{ number_format($at, 1, ',', '.') }}%
                                     </td>
                                 </tr></table>

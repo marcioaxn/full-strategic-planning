@@ -574,7 +574,7 @@
             <!-- T - Tecnológico -->
             <div class="col-md-6 col-lg-4">
                 <div class="card h-100" style="border-color: #fd7e14;">
-                    <div class="card-header text-white d-flex justify-content-between align-items-center" style="background-color: #fd7e14;">
+                    <div class="card-header text-white d-flex justify-content-between align-items-center" style="background-color: #a9500a;">
                         <span>
                             <i class="bi bi-cpu me-2"></i>
                             <strong>TECNOLÓGICO</strong>
@@ -594,7 +594,7 @@
                                         <div class="flex-grow-1">
                                             <p class="mb-1 small">{{ $item['dsc_item'] }}</p>
                                             <div class="d-flex align-items-center gap-2">
-                                                <span class="badge" style="background-color: rgba(253, 126, 20, 0.2); color: #fd7e14;">
+                                                <span class="badge badge-pestel-tecnologico">
                                                     Impacto: {{ $item['num_impacto'] }}/5
                                                 </span>
                                                 @if($item['txt_observacao'])
@@ -632,7 +632,7 @@
             <!-- E - Ambiental (Environmental) -->
             <div class="col-md-6 col-lg-4">
                 <div class="card h-100" style="border-color: #20c997;">
-                    <div class="card-header text-white d-flex justify-content-between align-items-center" style="background-color: #20c997;">
+                    <div class="card-header text-white d-flex justify-content-between align-items-center" style="background-color: #13795b;">
                         <span>
                             <i class="bi bi-tree me-2"></i>
                             <strong>AMBIENTAL</strong>
@@ -652,7 +652,7 @@
                                         <div class="flex-grow-1">
                                             <p class="mb-1 small">{{ $item['dsc_item'] }}</p>
                                             <div class="d-flex align-items-center gap-2">
-                                                <span class="badge" style="background-color: rgba(32, 201, 151, 0.2); color: #20c997;">
+                                                <span class="badge badge-pestel-ambiental">
                                                     Impacto: {{ $item['num_impacto'] }}/5
                                                 </span>
                                                 @if($item['txt_observacao'])

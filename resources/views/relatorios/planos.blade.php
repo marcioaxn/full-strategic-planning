@@ -29,7 +29,7 @@
                 </td>
                 <td class="kpi-card success" style="width:25%;">
                     <p class="kpi-label">Concluídos</p>
-                    <p class="kpi-value" style="color:#2e8b57;">{{ $resumo['concluidos'] }}</p>
+                    <p class="kpi-value" style="color:#22704a;">{{ $resumo['concluidos'] }}</p>
                     <p class="kpi-sub">de {{ $resumo['total'] }} planos</p>
                 </td>
                 <td class="kpi-card danger" style="width:25%;">
@@ -58,7 +58,7 @@
                     @endif
                 @endforeach
             </div>
-            <div style="margin-top:6px; font-size:8px; color:#718096;">
+            <div style="margin-top:6px; font-size:8px; color:#5a6577;">
                 @foreach($segments as $s)
                     <span style="margin-right:14px;"><span class="farol" style="background:{{ $s['c'] }};"></span> {{ $s['l'] }}: <strong>{{ $s['n'] }}</strong></span>
                 @endforeach
@@ -98,7 +98,7 @@
                     <td class="row-desc">{{ $plano->objetivo?->nom_objetivo ?? '—' }}</td>
                     <td class="text-center" style="font-size:8px;">
                         {{ $plano->dte_inicio?->format('d/m/y') ?? '—' }}<br>
-                        <span style="color:#a0aec0;">a {{ $plano->dte_fim?->format('d/m/y') ?? '—' }}</span>
+                        <span style="color:#6b7280;">a {{ $plano->dte_fim?->format('d/m/y') ?? '—' }}</span>
                     </td>
                     <td class="text-center"><span class="pill {{ $stCfg['pill'] }}">{{ $st }}</span></td>
                     <td>

@@ -49,7 +49,7 @@
 
     /* ─────────────── Títulos ─────────────── */
     .rpt-doc-titulo {
-        font-size: 17px; font-weight: bold; color: #3D9B33;
+        font-size: 17px; font-weight: bold; color: #2f7a28;
         margin: 0 0 4px 0; page-break-after: avoid;
     }
     .rpt-doc-sub { font-size: 9.5px; color: #595959; margin: 0 0 14px 0; }
@@ -93,8 +93,8 @@
         padding: 11px 12px; text-align: center; vertical-align: top;
     }
     .kpi-label { font-size: 7.5px; font-weight: bold; text-transform: uppercase; letter-spacing: .05em; color: #595959; margin: 0; }
-    .kpi-value { font-size: 20px; font-weight: bold; color: #3D9B33; margin: 4px 0 0 0; line-height: 1.1; }
-    .kpi-sub { font-size: 7.5px; color: #95969A; margin: 3px 0 0 0; }
+    .kpi-value { font-size: 20px; font-weight: bold; color: #2f7a28; margin: 4px 0 0 0; line-height: 1.1; }
+    .kpi-sub { font-size: 7.5px; color: #6b6c70; margin: 3px 0 0 0; }
 
     /* Variantes: a cor só entra quando o número CARREGA um juízo. Cartão de
        contagem ("total de indicadores") não tem juízo nenhum e fica neutro. */
@@ -160,12 +160,24 @@
        aparecer mesmo assim, tem de dizer o que falta — título seguido de
        espaço em branco não informa nada a quem lê. */
     .vazio {
-        text-align: center; padding: 18px; color: #95969A; font-style: italic;
+        text-align: center; padding: 18px; color: #6b6c70; font-style: italic;
         font-size: 9px; background: #FAFAFA; border: 1px dashed #C8C9CB;
     }
 
     /* Bordas em toda a tabela — usado onde a leitura é célula a célula. */
     table.rpt.bordered tbody td, table.rpt.bordered thead th { border: 1px solid #B9BABD; }
+
+    /* ─────────────── Texto da IA (partials/texto-ia) ───────────────
+       Corpo normal, sem itálico: em texto longo o itálico cansa a leitura. */
+    .ai-texto { font-size: 9px; line-height: 1.55; color: #2C2E35; margin-top: 6px; }
+    .ai-texto p { margin: 0 0 6px 0; text-align: justify; }
+    .ai-texto ul, .ai-texto ol { margin: 0 0 6px 0; padding-left: 14px; }
+    .ai-texto li { margin-bottom: 2px; text-align: justify; }
+    .ai-texto strong { color: #1F2A44; }
+    .ai-texto h1, .ai-texto h2, .ai-texto h3, .ai-texto h4 {
+        font-size: 10px; font-weight: bold; color: #1F2A44; margin: 10px 0 4px 0; page-break-after: avoid;
+    }
+    .ai-texto hr { border: 0; border-top: 1px solid #D3EED1; margin: 8px 0; }
 
     .avoid-break { page-break-inside: avoid; }
     .page-break { page-break-before: always; }

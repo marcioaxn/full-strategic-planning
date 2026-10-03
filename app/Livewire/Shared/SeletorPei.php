@@ -17,6 +17,12 @@ class SeletorPei extends Component
         $this->carregarPEIs();
         $this->selecionadoId = Session::get('pei_selecionado_id');
 
+        // Ciclo guardado na sessão que foi excluído depois: o topo exibia o
+        // período dele enquanto as telas mostravam outro ciclo.
+        if ($this->selecionadoId && ! $this->peis->contains('cod_pei', $this->selecionadoId)) {
+            $this->selecionadoId = null;
+        }
+
         if (! $this->selecionadoId && $this->peis->isNotEmpty()) {
             $peiAtivo = $this->peis->first(fn ($p) => $p->isAtivo()) ?? $this->peis->first();
             $this->definirSessao($peiAtivo);

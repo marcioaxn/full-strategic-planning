@@ -18,6 +18,25 @@
         </a>
     </div>
 
+    <x-secao-educativa
+        titulo="O que é a Matriz de Riscos?"
+        subtitulo="Um quadro que mostra quais problemas podem acontecer e quais são os mais perigosos."
+        icone="grid-3x3-gap"
+        por-que="A matriz ajuda a se antecipar às ameaças e a escolher onde agir primeiro, deixando a estratégia menos vulnerável."
+        :passos="[
+            'Cada risco aparece na casa que cruza a sua probabilidade (eixo de baixo) com o seu impacto (eixo do lado).',
+            'Quanto mais para cima e para a direita, maior o nível de risco: as casas vermelhas são críticas.',
+            'Comece pelos riscos das casas vermelhas e laranjas: eles precisam de plano de resposta.',
+            'Para cadastrar ou mudar a nota de um risco, volte à tela Gestão de Riscos.',
+        ]"
+        exemplo="O Instituto Federal de Meteorologia Aplicada (fictício) tem o risco “Atraso na compra de radares por licitação deserta”: probabilidade média e impacto alto. Ele cai numa casa laranja e ganha prioridade de resposta."
+        dica="a matriz não é feita uma vez só. Atualize as notas ao longo do ciclo e ajuste as respostas."
+        referencia="GPPEI p. 93–96 · ISO 31000:2018 · TCU, Referencial Básico de Gestão de Riscos (2018)">
+        Antes de um passeio, você pensa: pode chover? Se chover, estraga tudo? <strong>Risco</strong> é um evento que
+        <em>pode</em> acontecer e atrapalhar um objetivo. A matriz cruza a <strong>probabilidade</strong> (a chance de acontecer)
+        com o <strong>impacto</strong> (o tamanho do estrago). O resultado é o <strong>nível de risco</strong>, do baixo ao crítico.
+    </x-secao-educativa>
+
     <div class="card border-0 shadow-sm overflow-hidden">
         <div class="card-header bg-white py-3 border-bottom text-center">
             <h5 class="mb-0 fw-bold text-uppercase">Matriz Probabilidade x Impacto - {{ $organizacaoNome }}</h5>

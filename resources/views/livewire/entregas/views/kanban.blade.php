@@ -8,7 +8,7 @@
     class="notion-kanban"
     x-data="{
         retryCount: 0,
-        maxRetries: 20,
+        maxRetries: 100, // até 10 s: 2 s não bastavam com a CDN lenta
         init() {
             this.waitForSortableAndInit();
 

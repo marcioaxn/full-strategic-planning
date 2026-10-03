@@ -76,15 +76,16 @@
     }
 
     /* ─────────── Sumário ─────────── */
-    .rg-sumario { page-break-after: always; }
+    /* .rg-sumario sem page-break-after: o primeiro capítulo já abre página
+       nova (.rg-cap). As duas quebras juntas deixavam a página 3 em branco. */
     .rg-sum-col { width: 50%; vertical-align: top; padding-right: 26px; }
-    .rg-sum-cap { font-size: 11.5px; font-weight: bold; color: #3D9B33; margin: 12px 0 5px 0; }
+    .rg-sum-cap { font-size: 11.5px; font-weight: bold; color: #2f7a28; margin: 12px 0 5px 0; }
     .rg-sum-item { font-size: 9.5px; color: #2C2E35; margin: 0 0 2px 10px; }
-    .rg-sum-item .rg-sum-ext { color: #95969A; font-size: 8.5px; }
+    .rg-sum-item .rg-sum-ext { color: #6b6c70; font-size: 8.5px; }
 
     /* ─────────── Títulos ─────────── */
     .rg-cap-titulo {
-        font-size: 17px; font-weight: bold; color: #3D9B33;
+        font-size: 17px; font-weight: bold; color: #2f7a28;
         margin: 0 0 12px 0; page-break-after: avoid;
     }
     .rg-sec-titulo {
@@ -162,7 +163,7 @@
     /* ─────────── Grandes números ─────────── */
     table.rg-numeros { width: 100%; border-collapse: separate; border-spacing: 7px 0; margin-bottom: 12px; }
     .rg-numero-card { border: 1px solid #D3EED1; background: #F4FBF3; padding: 11px; text-align: center; vertical-align: top; }
-    .rg-numero-valor { font-size: 20px; font-weight: bold; color: #3D9B33; margin: 0; line-height: 1.1; }
+    .rg-numero-valor { font-size: 20px; font-weight: bold; color: #2f7a28; margin: 0; line-height: 1.1; }
     .rg-numero-rotulo { font-size: 7.5px; color: #595959; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: .04em; }
 
     /* ─────────── Seção de fonte externa (só na variante réplica) ─────────── */
@@ -172,9 +173,9 @@
         page-break-inside: avoid;
     }
     .rg-externa-aviso { font-size: 9px; color: #595959; margin: 0; }
-    .rg-externa-fonte { font-size: 8.5px; color: #95969A; margin: 3px 0 0 0; }
+    .rg-externa-fonte { font-size: 8.5px; color: #6b6c70; margin: 3px 0 0 0; }
 
-    .rg-vazio { font-size: 9px; color: #95969A; font-style: italic; }
+    .rg-vazio { font-size: 9px; color: #6b6c70; font-style: italic; }
     .rg-cap { page-break-before: always; }
     .rg-cap-primeiro { page-break-before: avoid; }
     .rg-link { color: #3550A0; }

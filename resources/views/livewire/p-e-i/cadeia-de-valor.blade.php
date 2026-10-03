@@ -24,6 +24,26 @@
         @endif
     </x-module-header>
 
+    <x-secao-educativa
+        titulo="O que é a Cadeia de Valor?"
+        subtitulo="Um retrato de tudo o que o órgão entrega à sociedade e de como faz isso."
+        icone="diagram-2"
+        por-que="É a base para entender como o órgão existe e funciona, e para achar gargalos, pontos fortes e pontos fracos antes de definir os objetivos."
+        :passos="[
+            'Clique em Nova Atividade.',
+            'Escolha o tipo: finalística (entrega direta ao cidadão), de gestão (dá direção e controle) ou de suporte (pessoas, TI, orçamento, compras).',
+            'Descreva a atividade em poucas palavras, sem deixar dúvida.',
+            'Se quiser, detalhe os processos: entrada, transformação e saída.',
+            'Revise o diagrama para que fique claro para quem não conhece o órgão.',
+        ]"
+        exemplo="Na Fundação Nacional de Bibliotecas Públicas (fictícia), as atividades finalísticas são “Fomentar acervos municipais” e “Capacitar bibliotecários”; a de gestão é “Planejar e monitorar a estratégia”; as de suporte são “Gerir pessoas”, “Gerir TI” e “Gerir orçamento e contratos”."
+        dica="não tente fazer um diagrama em que “caiba tudo”, mas também não o simplifique a ponto de perder as ligações entre as partes."
+        referencia="GPPEI p. 24–25, 34 e 64–65 · Porter (1985)">
+        Pense numa padaria: o pão que chega ao cliente é a entrega final, mas por trás dele há comprar farinha, assar e limpar o forno.
+        A Cadeia de Valor desenha isso para o órgão público: as atividades <strong>finalísticas</strong> entregam algo diretamente ao cidadão;
+        as <strong>de gestão</strong> dão direção e controle; as <strong>de suporte</strong> sustentam tudo, como pessoas, TI, orçamento e compras.
+    </x-secao-educativa>
+
     @if(!$peiAtivo)
         <div class="alert alert-warning border-0 shadow-sm">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>Selecione um ciclo PEI para gerenciar a Cadeia de Valor.

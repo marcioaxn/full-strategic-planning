@@ -35,6 +35,25 @@
         </div>
     </div>
 
+    <x-secao-educativa
+        titulo="O que são as Minhas Entregas?"
+        subtitulo="A sua lista pessoal de tudo o que você precisa entregar no plano."
+        icone="person-check"
+        por-que="São as entregas de cada iniciativa que fazem os objetivos estratégicos andarem. Quem está na ponta precisa enxergar os próprios compromissos para não perder prazos."
+        :passos="[
+            'Veja os números do topo: quantas entregas estão em andamento e quantas estão atrasadas.',
+            'Percorra a lista, agrupada por iniciativa, e comece pelas de prazo mais próximo.',
+            'Abra a entrega para atualizar a situação (não iniciada, em andamento, concluída).',
+            'Se houver risco de atraso, avise o gestor da iniciativa a tempo.',
+        ]"
+        exemplo="Um analista da Secretaria Nacional de Cadastros Rurais (fictícia) vê três entregas. “Publicar o manual do novo cadastro” vence em 15 dias; “Treinar 200 operadores” está em andamento; “Migrar a base antiga” está atrasada, e ele registra a causa do atraso."
+        dica="registrar a conclusão no sistema faz parte da entrega. É assim que o avanço aparece no painel e nos relatórios."
+        referencia="GPPEI p. 32, 43 e 147–150">
+        É como a agenda de lição de casa, mas só com as suas tarefas. Uma <strong>entrega</strong> é um produto ou resultado
+        concreto de uma iniciativa: um sistema no ar, um curso realizado, um edital publicado.
+        Esta tela reúne, num só lugar, as entregas pelas quais <strong>você</strong> responde, com prazo e situação.
+    </x-secao-educativa>
+
     {{-- ═══════════ KPIs ═══════════ --}}
     <div class="row g-3 mb-4">
         <div class="col-6 col-lg-3">
@@ -191,7 +210,7 @@
                                 @if($entrega->dte_prazo)
                                     <span class="me-prazo {{ $atrasada ? 'is-late' : '' }}">
                                         <i class="bi bi-calendar3 me-1"></i>{{ $entrega->dte_prazo->format('d/m/Y') }}
-                                        <span class="opacity-75">· {{ $entrega->dte_prazo->diffForHumans() }}</span>
+                                        <span>· {{ $entrega->dte_prazo->diffForHumans() }}</span>
                                     </span>
                                 @endif
                             </div>
@@ -265,7 +284,9 @@
             display: inline-flex; align-items: center;
             font-size: .75rem; color: var(--bs-secondary-color); font-weight: 500;
         }
-        .me-prazo.is-late { color: #dc3545; font-weight: 700; }
+        /* #dc3545 sobre o rosa da linha atrasada dava 4,2:1 (e 3,3:1 no escuro). */
+        .me-prazo.is-late { color: #a52834; font-weight: 700; }
+        [data-bs-theme="dark"] .me-prazo.is-late { color: #ff8a95; }
 
         .me-empty-icon {
             width: 72px; height: 72px; border-radius: 50%;

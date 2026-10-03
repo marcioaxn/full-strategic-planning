@@ -102,6 +102,8 @@
             {{ $slot }}
         </div>
 
+        <x-rodape-versao :fixo="true" />
+
         @livewireScripts
 
         <style>

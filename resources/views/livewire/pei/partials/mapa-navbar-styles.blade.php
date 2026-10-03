@@ -132,8 +132,9 @@
         icon.className = `bi ${icons[theme] || icons.system} fs-5`;
     }
 
-    // Initialize theme on page load
-    document.addEventListener('DOMContentLoaded', function() {
+    // Initialize theme on page load — e também na navegação interna
+    // (wire:navigate), em que o DOMContentLoaded não dispara de novo.
+    function iniciarTemaMapa() {
         const THEME_KEY = 'app.theme';
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
         let currentTheme = localStorage.getItem(THEME_KEY) || 'system';
@@ -151,5 +152,11 @@
                 document.documentElement.setAttribute('data-bs-theme', prefersDark.matches ? 'dark' : 'light');
             }
         });
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', iniciarTemaMapa);
+    } else {
+        iniciarTemaMapa();
+    }
 </script>

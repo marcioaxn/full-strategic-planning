@@ -17,6 +17,25 @@
         </button>
     </div>
 
+    <x-secao-educativa
+        titulo="O que é a Auditoria?"
+        subtitulo="Um registro automático de quem fez o quê, e quando, no sistema."
+        icone="journal-text"
+        por-que="No setor público é preciso provar a origem de cada número publicado. A trilha permite investigar erros, responder aos órgãos de controle e dar segurança a quem usa os dados."
+        :passos="[
+            'Filtre por usuário, evento (criação, alteração ou exclusão), módulo ou período.',
+            'Abra os detalhes de um registro para ver o valor antes e depois da mudança.',
+            'Use a trilha para explicar uma mudança em indicador, meta ou iniciativa.',
+            'Clique em Exportar CSV se o controle interno pedir o recorte.',
+        ]"
+        exemplo="A meta de um indicador da Agência Federal de Navegação Interior (fictícia) muda de 80% para 60%. A auditoria mostra quem alterou e quando, e o controle interno confirma que a mudança seguiu a decisão registrada na última RAE."
+        dica="a trilha serve à transparência e à correção, não para vigiar pessoas. Consulte-a com um objetivo definido."
+        referencia="GPPEI p. 52 · ISO/IEC 27002:2022, controle 8.15 · TCU, Referencial de Governança (2020)">
+        É como as câmeras e o livro de visitas de um prédio: fica anotado quem entrou, a hora e o que mexeu.
+        Toda <strong>criação</strong>, <strong>alteração</strong> ou <strong>exclusão</strong> gera um registro com o usuário, a data,
+        o item afetado e o valor antes e depois. Ninguém edita essa trilha: ela só é consultada.
+    </x-secao-educativa>
+
     <!-- Filtros Avançados -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4 bg-light rounded-3">

@@ -450,6 +450,8 @@
                         {{ $slot }}
                     </div>
                 </main>
+
+                <x-rodape-versao />
             </div>
         </div>
 

@@ -23,7 +23,7 @@
                                 class="d-flex align-items-center justify-content-between p-2 rounded-2 cursor-pointer notion-label-option"
                                 style="background-color: {{ in_array($label->cod_label, $idsSelecionados) ? $label->dsc_cor . '20' : 'transparent' }};"
                             >
-                                <span class="notion-label" style="background-color: {{ $label->dsc_cor }}30; color: {{ $label->dsc_cor }};">
+                                <span class="notion-label cor-texto-legivel" style="background-color: {{ $label->dsc_cor }}30; --cor-texto: {{ $label->dsc_cor }};">
                                     {{ $label->dsc_label }}
                                 </span>
                                 @if(in_array($label->cod_label, $idsSelecionados))

@@ -54,10 +54,14 @@
                     </div>
                     <div class="mb-0">
                         <label class="small text-muted text-uppercase fw-bold d-block">Vínculo</label>
-                        @if($indicador->cod_objetivo)
+                        {{-- Indicador sem objetivo nem iniciativa (ou com o vínculo excluído)
+                             derrubava a ficha com 500. --}}
+                        @if($indicador->objetivo)
                             <small class="text-primary fw-bold"><i class="bi bi-bullseye"></i> Objetivo: {{ $indicador->objetivo->nom_objetivo }}</small>
-                        @else
+                        @elseif($indicador->planoDeAcao)
                             <small class="text-info fw-bold"><i class="bi bi-list-task"></i> Iniciativa: {{ $indicador->planoDeAcao->dsc_plano_de_acao }}</small>
+                        @else
+                            <small class="text-muted fw-bold"><i class="bi bi-link-45deg"></i> Sem vínculo com objetivo ou iniciativa</small>
                         @endif
                     </div>
                 </div>
@@ -168,7 +172,17 @@
                     initChart() {
                         const canvas = document.getElementById('evolucaoChart');
                         if (!canvas) return;
-                        
+
+                        // No portal público o Chart.js vem no fim desta página. Chegando
+                        // por navegação interna (wire:navigate), o Alpine roda antes de o
+                        // script terminar de carregar e o gráfico ficava em branco.
+                        // Espera a biblioteca (até 10 s) e então desenha.
+                        if (typeof window.Chart === 'undefined') {
+                            this.esperasChart = (this.esperasChart || 0) + 1;
+                            if (this.esperasChart <= 100) setTimeout(() => this.initChart(), 100);
+                            return;
+                        }
+
                         // Garante que não existam gráficos fantasmas no mesmo canvas
                         const existingChart = Chart.getChart(canvas);
                         if (existingChart) existingChart.destroy();
@@ -233,6 +247,7 @@
                     },
                     updateChartData(data) {
                         const canvas = document.getElementById('evolucaoChart');
+                        if (typeof window.Chart === 'undefined') return;
                         const chart = Chart.getChart(canvas);
                         if (chart && data) {
                             chart.data.datasets[0].data = data.previsto;

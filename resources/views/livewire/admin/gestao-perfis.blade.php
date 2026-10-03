@@ -31,6 +31,25 @@
         </div>
     @endif
 
+    <x-secao-educativa
+        titulo="O que são os Perfis de Acesso?"
+        subtitulo="As chaves que definem o que cada pessoa pode ver e alterar no sistema."
+        icone="shield-lock"
+        por-que="Limitar o acesso protege os dados contra erro e uso indevido e deixa claro quem pode mudar o quê."
+        :passos="[
+            'Leia nos cartões o que cada um dos cinco perfis pode fazer.',
+            'Consulte a matriz de permissões por funcionalidade: ela é gerada da mesma regra que o sistema aplica.',
+            'Ao dar acesso a alguém (em Usuários), escolha o perfil com o mínimo de poderes de que a pessoa precisa.',
+            'Revise periodicamente quem tem cada perfil e retire os que não são mais necessários.',
+        ]"
+        exemplo="No Instituto Nacional de Dados Hidrográficos (fictício), os coordenadores são Gestores das próprias iniciativas, a equipe de planejamento é Administradora da unidade e os demais servidores têm o perfil Consulta."
+        dica="siga o princípio do menor privilégio: cada pessoa recebe só o acesso de que precisa. Perfil “a mais” por conveniência é uma porta aberta."
+        referencia="Saltzer e Schroeder (1975) · ISO/IEC 27002:2022, controle 5.15 · LGPD, art. 46">
+        Na escola, o aluno lê o mural, o professor lança as notas e a diretora muda o calendário: cada um tem a sua chave.
+        Os perfis funcionam assim: um só consulta, outro cuida das suas iniciativas, outro administra a unidade.
+        <strong>Cada perfil vale na unidade em que foi dado</strong>, e o de Administrador e o de Consulta valem também nas unidades abaixo.
+    </x-secao-educativa>
+
     {{-- Cards dos Perfis --}}
     <div class="row g-3 mb-4">
         @foreach($perfis as $perfil)
