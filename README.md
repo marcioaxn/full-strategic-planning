@@ -3,7 +3,9 @@
 Plataforma web de gestão estratégica para **organizações públicas brasileiras**, construída sobre **Laravel 12 + Livewire 4**. Permite definir, executar e monitorar a estratégia institucional usando a metodologia **Balanced Scorecard (BSC)**, indicadores de desempenho (KPIs), planos de ação, entregas e gestão de riscos — alinhada ao **Guia Prático de Planejamento Estratégico Institucional (GPPEI / MGI 2025)** e à **Agenda 2030 / ODS**.
 
 > **Referência metodológica:** `documentacao/pdf/Guia_PEI_VF.pdf`
-> **Documento mestre do projeto:** `documentacao/documento-mestre-evolucao-sistema-pei.md`
+> **Documento mestre do projeto (GPPEI, gap analysis, roadmap):** `artefatos/README.md`
+> **Regras de código para quem contribui:** [`CONTRIBUTING.md`](CONTRIBUTING.md)
+> **Manual do usuário:** [`documentacao/manual/MANUAL-DE-USO.md`](documentacao/manual/MANUAL-DE-USO.md) (também em PDF na mesma pasta)
 
 ---
 
@@ -16,6 +18,8 @@ Plataforma web de gestão estratégica para **organizações públicas brasileir
 - [Instalação passo a passo](#-instalação-passo-a-passo)
   - [Opção A — Servidor Linux / Apache](#opção-a--servidor-linux--apache)
   - [Opção B — php artisan serve (desenvolvimento rápido)](#opção-b--php-artisan-serve-desenvolvimento-rápido)
+  - [Atualizando uma instalação existente (deploy)](#atualizando-uma-instalação-existente-deploy)
+  - [Versão em execução e data do último deploy](#versão-em-execução-e-data-do-último-deploy)
 - [Configuração do ambiente (.env)](#-configuração-do-ambiente-env)
 - [Seeders: o acesso inicial](#-seeders-o-acesso-inicial)
 - [Primeiro acesso e passos iniciais](#-primeiro-acesso-e-passos-iniciais)
@@ -37,26 +41,34 @@ O PEI cobre o **ciclo completo de planejamento estratégico institucional**, do 
 
 | Módulo | O que entrega |
 |---|---|
-| **Planejamento Estratégico (BSC)** | Ciclos PEI, Identidade (Missão / Visão / Valores), Perspectivas, Objetivos, Mapa Estratégico, Graus de Satisfação |
+| **Inaugurar e Integrar (GPPEI)** | Abertura do ciclo, instâncias de governança e integração com os instrumentos de planejamento (`/pei/inaugurar`) |
+| **Planejamento Estratégico (BSC)** | Ciclos PEI (com **"Salvar como"**: copia um ciclo inteiro para um novo, inclusive no mesmo período, com outra descrição), Identidade (Missão / Visão / Valores), Temas Norteadores, Perspectivas, Objetivos, Futuro Almejado, Mapa Estratégico, Cadeia de Valor e Graus de Satisfação |
 | **Análises de Ambiente** | SWOT e PESTEL com interface guiada |
 | **Indicadores (KPIs)** | Indicadores com metas por ano, linha de base, evolução histórica, cálculo automático de farol (semáforo) e polaridade |
-| **Planos de Ação** | Planos vinculados a objetivos estratégicos, tipos de execução, responsáveis e prazos |
-| **Entregas (modelo Notion)** | Quadro Kanban, Lista, Timeline e Calendário; subtarefas hierárquicas, rótulos, comentários, anexos, histórico de alterações e múltiplos responsáveis |
+| **Planos de Ação (Iniciativas)** | Planos vinculados a objetivos estratégicos, tipos de execução, responsáveis, prazos e lições aprendidas |
+| **Entregas (modelo Notion)** | Quadro Kanban, Lista, Timeline e Calendário; subtarefas hierárquicas, rótulos, comentários, anexos, histórico de alterações e múltiplos responsáveis; painel "Minhas Entregas" |
 | **Gestão de Riscos** | Matriz de risco 5 × 5, planos de mitigação e registro de ocorrências |
-| **Agenda 2030 / ODS** | 17 Objetivos de Desenvolvimento Sustentável como eixo transversal, vínculo objetivo ↔ ODS e painel dedicado |
-| **Relatórios e Dashboard** | Dashboard executivo com gráficos (Chart.js), geração de relatórios em PDF e exportações em Excel |
-| **Organização** | Estrutura hierárquica de organizações com perfis de acesso granulares |
+| **Monitorar e Avaliar** | Relatório de Avaliação da Estratégia (RAE) e lições aprendidas |
+| **Agenda 2030 / ODS** | Os 17 Objetivos de Desenvolvimento Sustentável da ONU **mais o ODS 18 (Igualdade Étnico-Racial) adotado pelo Brasil**, como eixo transversal **opcional**: vínculo objetivo ↔ ODS e painel dedicado |
+| **Relatórios e Dashboard** | Dashboard executivo com gráficos (Chart.js); relatórios em PDF (Executivo, Integrado, Identidade, Objetivos, Indicadores, Planos, Riscos, Comunicação, Relatório de Gestão), exportações em Excel e Relatório de Gestão também em Word; agendamento automático |
+| **Documentos** | Acervo de documentos em PDF (nome, tipo, ano, origem, ciclo PEI e área), com arquivo em disco privado e download controlado por permissão (`/acervo-documentos`) |
+| **Transparência pública** | Mapa Estratégico, Objetivos, Indicadores e Planos consultáveis **sem login**, somente leitura |
+| **Organização** | Estrutura hierárquica de organizações com perfis de acesso por unidade |
 | **Auditoria** | Trilha de alterações completa (quem, o quê, quando) em todas as entidades de negócio |
-| **Administração** | Configurações sistêmicas, alertas estratégicos e gestão de usuários |
+| **Administração** | Configurações sistêmicas, agente de IA, gestão de usuários e perfis, impersonação controlada |
+
+Toda tela de trabalho traz uma **seção educativa** recolhível ("O que é esta tela?"), escrita para ser entendida por quem nunca fez planejamento estratégico: por que a etapa existe, os passos, um exemplo e a referência ao GPPEI. E o **rodapé de todas as telas — com ou sem login — mostra a versão, o commit e a data do último deploy** (ver [Versão em execução](#versão-em-execução-e-data-do-último-deploy)).
 
 ### Fluxo metodológico guiado
 
-O serviço `PeiGuidanceService` orienta o gestor em etapas sequenciais, garantindo que o ciclo PEI seja construído na ordem metodológica correta:
+O menu segue as três fases do GPPEI — **Inaugurar e Integrar → Planejar → Monitorar e Avaliar** — e o serviço `PeiGuidanceService` orienta o gestor em etapas sequenciais, garantindo que o ciclo PEI seja construído na ordem metodológica correta:
 
 ```
-Ciclo PEI → Identidade (Missão/Visão/Valores) → Perspectivas BSC
+Ciclo PEI → Inaugurar e Integrar → Identidade (Missão/Visão/Valores)
+  → Análises (SWOT/PESTEL, Cadeia de Valor) → Perspectivas BSC
   → Objetivos Estratégicos → Graus de Satisfação
-  → Indicadores (KPIs) → Planos de Ação → Dashboard
+  → Indicadores (KPIs) → Planos de Ação e Entregas
+  → Monitoramento (Dashboard, Riscos, RAE, Relatórios)
 ```
 
 ---
@@ -91,11 +103,10 @@ O sistema é **resiliente por padrão**: a classe `AiServiceFactory` retorna `nu
 
 | Provedor | Autenticação | Dados para treino | Indicado para |
 |---|---|---|---|
-| **Google AI Studio** | API Key | Sim (plano gratuito) | Prototipagem e desenvolvimento |
-| **Google Vertex AI** | Service Account JSON | Não (enterprise) | Produção em ambientes GCP |
-| **Claude (Anthropic) via Vertex AI** | Service Account JSON (mesma do Vertex) | Não (enterprise) | Alternativa enterprise com modelos Claude |
+| **Google AI Studio (Gemini)** | API Key | Sim (plano gratuito) | Prototipagem e desenvolvimento |
+| **Google Vertex AI** | Project ID + Service Account JSON | Não (enterprise) | Produção em ambientes GCP |
 
-> Documentação de implementação do provedor Claude via Vertex AI: [`documentacao/integracao-claude-vertex-ai.md`](documentacao/integracao-claude-vertex-ai.md)
+São os dois provedores oferecidos na tela de Configurações. Existe também uma classe `OpenAiProvider` em `app/Services/AI/`, mas ela **não está ligada** à `AiServiceFactory` nem à tela — não é uma opção disponível ao administrador.
 
 ### Arquitetura da integração
 
@@ -126,14 +137,15 @@ As credenciais são armazenadas com **criptografia em repouso** (`Crypt::encrypt
 
 | Camada | Tecnologia |
 |---|---|
-| **Backend** | PHP 8.2+ · Laravel 12 · Livewire 4.0.0 · Alpine.js 3 (embutido no Livewire 4) |
-| **Frontend** | Bootstrap 5.3 + Bootstrap Icons · Vite 7 · Livewire Blaze |
-| **Banco de dados** | PostgreSQL 13+ (arquitetura multi-schema, 6 domínios) |
-| **Autenticação** | Laravel Fortify + Jetstream + Sanctum |
+| **Backend** | PHP 8.2+ · Laravel 12 · Livewire 4.4 · Alpine.js 3 (embutido no Livewire 4, com os plugins `mask` e `focus`) |
+| **Frontend** | Bootstrap 5.3 + Bootstrap Icons · Sass · Vite 7 · Chart.js · Livewire Blaze (sem Tailwind) |
+| **Banco de dados** | PostgreSQL (arquitetura multi-schema, 6 domínios; compatível com versões antigas — ver requisitos) |
+| **Autenticação** | Laravel Fortify (com 2FA) + Jetstream + Sanctum |
 | **Fila / Cache / Sessão** | Driver `database` (sem dependência de Redis ou Memcached) |
-| **Testes** | Pest 4 |
-| **Lint** | Laravel Pint (PSR-12) |
+| **Testes** | Pest 4 sobre PHPUnit 12 |
+| **Lint** | Laravel Pint (preset Laravel) |
 | **PDF** | `barryvdh/laravel-dompdf` |
+| **Word** | `phpoffice/phpword` (Relatório de Gestão em .docx) |
 | **Excel** | `maatwebsite/excel` |
 | **Auditoria** | `owen-it/laravel-auditing` |
 | **HTML helpers** | `spatie/laravel-html` |
@@ -151,8 +163,11 @@ Antes de começar, certifique-se de que o ambiente possui:
 | **Composer** | 2.x | Gerenciador de dependências PHP |
 | **Node.js** | 20 LTS | Para compilar os assets (CSS/JS) com Vite |
 | **npm** | 10+ | Incluído com o Node.js 20 LTS |
-| **PostgreSQL** | 13+ | Mínimo absoluto: 9.4 (necessário `jsonb` e `gen_random_uuid`) |
+| **PostgreSQL** | 9.4 | Recomendado 13+. O mínimo é 9.4 por causa de `gen_random_uuid()` (extensão `pgcrypto`); o código evita recursos mais novos (`ON CONFLICT`, `jsonb`, `FILTER`) para rodar em servidores antigos |
 | **Servidor web** | Apache 2.4+ / Nginx | Ou `php artisan serve` para desenvolvimento local |
+| **Git** | 2.x | O deploy é feito por `git pull`, e o rodapé lê a versão da pasta `.git` |
+
+> **Limite de upload (menu Documentos):** o acervo aceita PDF de até 20 MB. No `php.ini` do servidor web: `upload_max_filesize = 20M` e `post_max_size = 25M`; com nginx na frente, `client_max_body_size 25m`.
 
 ### Verificando os requisitos
 
@@ -161,7 +176,7 @@ php -v                    # deve mostrar 8.2.x ou superior
 php -m | grep pgsql       # deve listar pdo_pgsql e pgsql
 composer --version        # deve mostrar 2.x
 node --version            # deve mostrar v20.x ou superior
-psql --version            # deve mostrar 13.x ou superior
+psql --version            # 9.4 ou superior (recomendado 13.x+)
 ```
 
 > **Extensões PHP ausentes?** No Ubuntu/Debian: `sudo apt install php8.2-pgsql php8.2-intl php8.2-mbstring php8.2-gd php8.2-zip php8.2-xml`. No XAMPP para Windows, habilite as extensões no `php.ini` removendo o `;` antes de `extension=pgsql` e `extension=pdo_pgsql`.
@@ -193,15 +208,17 @@ GRANT ALL PRIVILEGES ON DATABASE pei_producao TO pei_user;
 
 ```bash
 cd /var/www
-git clone <url_do_repositorio> pei
+git clone https://github.com/marcioaxn/full-strategic-planning.git pei
 cd pei
 ```
+
+> Mantenha a instalação como um clone do git: as atualizações chegam por `git pull`, e o rodapé do sistema lê da pasta `.git` a versão e a data do último deploy.
 
 **2. Instale as dependências:**
 
 ```bash
-composer install --no-dev --optimize-autoloader
-npm install
+composer install --no-dev --optimize-autoloader --no-interaction
+npm ci
 npm run build
 ```
 
@@ -260,12 +277,14 @@ DB_PASSWORD=senha_forte_aqui
 
 ```bash
 php artisan key:generate
-php artisan migrate
-php artisan db:seed
+php artisan migrate --force
+php artisan db:seed --force
 php artisan storage:link
 ```
 
-> O `php artisan db:seed` **apaga todos os dados** do banco antes de recriar o acesso inicial. Em uma instalação nova isso é inofensivo, mas leia a seção [Seeders: o acesso inicial](#-seeders-o-acesso-inicial) antes de repetir o comando em um banco que já contenha dados.
+> O `--force` é obrigatório com `APP_ENV=production`: sem ele o comando pede confirmação e, sem terminal interativo, é cancelado. O `db:seed` **não apaga dados** — só cria o acesso inicial e os cadastros básicos, e pode ser repetido (ver [Seeders: o acesso inicial](#-seeders-o-acesso-inicial)). As migrations ficam em subpastas por domínio, todas registradas no `AppServiceProvider`: o `migrate` encontra todas sozinho.
+
+**7. Configure o worker da fila e o cron do agendador** — ver [Filas e relatórios agendados](#-filas-e-relatórios-agendados).
 
 ---
 
@@ -274,11 +293,11 @@ php artisan storage:link
 Ideal para desenvolvimento local sem necessidade de configurar Apache ou Nginx.
 
 ```bash
-git clone <url_do_repositorio> pei
+git clone https://github.com/marcioaxn/full-strategic-planning.git pei
 cd pei
 
 composer install
-npm install
+npm ci
 
 cp .env.example .env
 ```
@@ -311,6 +330,50 @@ Acesse: `http://localhost:8000`
 
 ---
 
+### Atualizando uma instalação existente (deploy)
+
+Na pasta do projeto, nesta ordem:
+
+```bash
+php artisan down
+git pull origin main
+composer install --no-dev --optimize-autoloader --no-interaction
+npm ci
+npm run build
+php artisan migrate --force
+php artisan db:seed --class=PerfilAcessoSeeder --force
+php artisan db:seed --class=TipoExecucaoSeeder --force
+php artisan storage:link
+php artisan optimize:clear
+php artisan queue:restart
+php artisan up
+```
+
+- Os seeders e o `storage:link` são idempotentes: podem ser repetidos sem duplicar nem apagar nada.
+- `queue:restart` faz o worker da fila (Supervisor/systemd) recarregar o código novo.
+- Conferência: `php artisan migrate:status` não deve listar nenhuma migration como `Pending`.
+- Cada entrega gera um **chamado de implantação** em Word a partir de `documentacao/chamados/gerador/` — é ele que a equipe de infraestrutura executa, com os passos específicos daquela versão.
+
+---
+
+### Versão em execução e data do último deploy
+
+O rodapé de **todas as telas — inclusive a de login e as páginas públicas** — mostra:
+
+```
+v2.0.0 · 4468184 · último deploy 03/10/2026 17:25
+```
+
+| Parte | De onde vem |
+|---|---|
+| `v2.0.0` | `config/versao.php` (pode ser trocado por `APP_VERSAO` no `.env`) |
+| `4468184` | O commit em execução, lido de `.git/HEAD` (ou `packed-refs`) |
+| `último deploy …` | O momento em que o `git pull` moveu o código, lido da última linha de `.git/logs/HEAD` |
+
+Tudo é lido por **leitura de arquivo** em `App\Support\VersaoAplicacao` — nenhum processo `git` roda por requisição e nenhum passo extra entra no deploy. Para conferir: o código do rodapé deve ser o mesmo de `git log -1 --format=%h` no servidor. Se o rodapé disser **"deploy não identificado"**, a pasta `.git` não existe no servidor ou o usuário do servidor web não tem permissão de leitura nela.
+
+---
+
 ## ⚙️ Configuração do ambiente (.env)
 
 As variáveis mais importantes e seus impactos:
@@ -324,6 +387,8 @@ As variáveis mais importantes e seus impactos:
 | `APP_DEBUG` | `false` | Em produção, **sempre `false`** — evita expor stack traces |
 | `APP_URL` | `https://pei.org.gov.br` | URL completa de acesso, incluindo subdiretório se houver |
 | `APP_KEY` | gerada por `key:generate` | Nunca compartilhe ou versione esta chave |
+| `APP_VERSAO` | `2.0.0` | Opcional. Número exibido no rodapé; sem ele vale o de `config/versao.php` |
+| `SEED_ADMIN_PASSWORD` | `"SuaSenhaForte#2026"` | Opcional. Senha do administrador inicial; sem ela a seed sorteia uma (ver [Credenciais iniciais](#credenciais-iniciais)) |
 
 ### Banco de dados
 
@@ -360,7 +425,7 @@ As variáveis mais importantes e seus impactos:
 
 ## 🌱 Seeders: o acesso inicial
 
-O sistema tem **uma única seed**, e ela faz uma única coisa: deixar o banco limpo e criar o mínimo necessário para o **Super Administrador conseguir entrar**. Nenhum dado de planejamento (ciclos PEI, objetivos, indicadores, planos, riscos) é criado — tudo isso é cadastrado pela própria instituição na interface.
+O `db:seed` cria o mínimo necessário para o **Super Administrador conseguir entrar** e os cadastros básicos do sistema. Nenhum dado de planejamento (ciclos PEI, objetivos, indicadores, planos, riscos) é criado — tudo isso é cadastrado pela própria instituição na interface.
 
 ### Como executar
 
@@ -368,30 +433,24 @@ O sistema tem **uma única seed**, e ela faz uma única coisa: deixar o banco li
 php artisan db:seed
 ```
 
-É só isso. O comando roda três etapas, nessa ordem:
+É só isso. O comando roda quatro etapas, nessa ordem:
 
 | # | Seeder | O que faz |
 |---|---|---|
-| 1 | `PerfilAcessoSeeder` | Garante os 4 perfis de acesso do sistema |
+| 1 | `PerfilAcessoSeeder` | Garante os 5 perfis de acesso do sistema (inclusive **Consulta**, somente leitura) |
 | 2 | `OrganizacaoRaizSeeder` | Garante a organização raiz da instituição |
 | 3 | `SuperAdministradorSeeder` | Garante o usuário administrador e seus dois vínculos |
+| 4 | `TipoExecucaoSeeder` | Garante os tipos de execução dos planos de ação |
 
 Ao final, o próprio comando imprime as credenciais no terminal.
 
-> **O `db:seed` não apaga nada.** As três etapas são idempotentes: cada uma atualiza o registro que já existe, ou cria o que falta. Rodá-lo em um banco com dados reais é seguro, e rodá-lo duas vezes não duplica registro nenhum.
+> **O `db:seed` não apaga nada.** As quatro etapas são idempotentes: cada uma atualiza o registro que já existe, ou cria o que falta. Rodá-lo em um banco com dados reais é seguro, e rodá-lo duas vezes não duplica registro nenhum.
+>
+> **Base migrada da v1** (`migracao:v1-para-v2`): rode só `--class=PerfilAcessoSeeder` e `--class=TipoExecucaoSeeder`. O administrador e a organização raiz já vieram da v1.
 
 ### Atualizando uma instalação já existente
 
-Se o sistema já está instalado e você vai apenas trazer esta versão das seeders:
-
-```bash
-git pull
-composer dump-autoload
-php artisan optimize:clear
-php artisan db:seed
-```
-
-O `composer dump-autoload` reconstrói o mapa de classes: as seeders antigas deixaram de existir e as novas precisam entrar no lugar. Pular esse passo pode fazer o `db:seed` reclamar de classe não encontrada em servidores que instalaram as dependências com `--optimize-autoloader`.
+Siga o roteiro de [Atualizando uma instalação existente (deploy)](#atualizando-uma-instalação-existente-deploy): ele já roda o `composer install` (que reconstrói o mapa de classes, onde entram seeders novas) e só as seeders de cadastro básico — `PerfilAcessoSeeder` e `TipoExecucaoSeeder`, com `--class`.
 
 > Em ambientes XAMPP, use `php artisan optimize:clear` — **nunca** `config:cache` ou `optimize`.
 
@@ -482,11 +541,11 @@ O projeto traz uma suíte dedicada que roda **contra o banco configurado no seu 
 php artisan test --testsuite=Seeders
 ```
 
-Ela verifica, entre outras coisas: que o truncate zera todas as tabelas e preserva `migrations`; que os 4 perfis têm os UUIDs exigidos pelas Policies; que a organização é auto-referenciada; que a senha do README confere com o hash do banco; que o e-mail passa no validador do Laravel; que `isSuperAdmin()` é verdadeiro; que o **login pela rota `/login` funciona** e abre o Dashboard sem desvio para troca de senha; e que rodar a seed duas vezes não duplica registro nenhum.
+Ela verifica, entre outras coisas: que o truncate zera todas as tabelas e preserva `migrations`; que os 5 perfis têm os UUIDs exigidos pelas Policies; que a organização é auto-referenciada; que a senha do README confere com o hash do banco; que o e-mail passa no validador do Laravel; que `isSuperAdmin()` é verdadeiro; que o **login pela rota `/login` funciona** e abre o Dashboard sem desvio para troca de senha; e que rodar a seed duas vezes não duplica registro nenhum.
 
 Ao terminar, a suíte **recompõe o acesso inicial**: o banco fica no mesmo estado que `php artisan db:seed` produz, com o administrador pronto para entrar. Não é preciso rodar nada depois dela.
 
-> ⚠️ **A suíte é destrutiva** — ela executa a seed, que trunca o banco. Rode-a **logo após a instalação**, antes de cadastrar dados reais, ou em um ambiente de homologação.
+> ⚠️ **A suíte é destrutiva** — ela executa o `TruncarBancoSeeder`, que trunca o banco. Rode-a **logo após a instalação**, antes de cadastrar dados reais, ou em um ambiente de homologação.
 >
 > Como proteção, se o `.env` estiver com `APP_ENV=production` a suíte é **pulada**. Para executá-la mesmo assim, depois de fazer backup:
 >
@@ -511,14 +570,19 @@ Ao terminar, a suíte **recompõe o acesso inicial**: o banco fica no mesmo esta
 O sistema possui um **assistente de configuração guiado** (`PeiGuidanceService`) que orientará cada etapa. Mesmo assim, aqui está o roteiro recomendado:
 
 1. **Trocar a senha padrão** — Menu de perfil no canto superior direito
-2. **Configurar a organização** — `/organizacoes` — cadastre a unidade institucional antes de qualquer outro dado
-3. **Iniciar o Ciclo PEI** — `/pei/ciclos` — defina o ciclo vigente (ex.: 2024–2027)
-4. **Preencher a Identidade Estratégica** — `/pei` — Missão, Visão e Valores da organização
-5. **Configurar as Perspectivas BSC** — `/pei/perspectivas` — as dimensões que estruturam os objetivos
-6. **Cadastrar Objetivos Estratégicos** — `/objetivos` — vinculados às perspectivas
-7. **Criar Indicadores** — `/indicadores` — com metas anuais para cada objetivo
-8. **Criar Planos de Ação** — `/planos` — detalhando como os objetivos serão atingidos
-9. **Acompanhar no Dashboard** — `/dashboard` — visão consolidada do ciclo
+2. **Configurar a organização** — `/organizacoes` — cadastre a unidade institucional e as subunidades antes de qualquer outro dado
+3. **Cadastrar os usuários** — `/usuarios` — cada um com o perfil na unidade em que atua
+4. **Iniciar o Ciclo PEI** — `/pei/ciclos` — defina o ciclo vigente (ex.: 2024–2027)
+5. **Inaugurar e Integrar** — `/pei/inaugurar` — governança do ciclo e integração com os demais instrumentos
+6. **Preencher a Identidade Estratégica** — `/pei` — Missão, Visão e Valores da organização
+7. **Fazer as análises** — `/pei/swot`, `/pei/pestel` e `/pei/cadeia-valor`
+8. **Configurar as Perspectivas BSC** — `/pei/perspectivas` — as dimensões que estruturam os objetivos
+9. **Cadastrar Objetivos Estratégicos** — `/objetivos` — vinculados às perspectivas (e, se quiser, aos ODS)
+10. **Criar Indicadores** — `/indicadores` — com metas anuais para cada objetivo
+11. **Criar Planos de Ação** — `/planos` — detalhando como os objetivos serão atingidos, com suas entregas
+12. **Acompanhar** — `/dashboard`, `/riscos`, `/monitoramento/rae` e `/relatorios`
+
+O passo a passo de cada tela, com imagens, está no [Manual de Uso](documentacao/manual/MANUAL-DE-USO.md).
 
 ---
 
@@ -544,7 +608,8 @@ Laravel Scheduler executa reports:process-scheduled a cada hora
     ↓
 Comando busca registros com dte_proxima_execucao <= agora
     ↓
-PDF gerado → salvo em storage/app/public/relatorios/YYYY/MM/
+PDF gerado → salvo no disco privado "relatorios" (storage/app/relatorios/relatorios/YYYY/MM/)
+    — não é servido publicamente; o download passa pela Policy
     ↓
 Registro criado em pei.tab_relatorios_gerados
     ↓
@@ -786,56 +851,89 @@ graph TD
 ```text
 app/
 ├── Livewire/                   # Componentes Livewire por domínio
-│   ├── StrategicPlanning/      # PEI, Identidade, Perspectivas, Objetivos, Mapa, SWOT, PESTEL
-│   ├── ActionPlan/             # Planos de Ação
-│   ├── Deliverables/           # Entregas (Kanban / Lista / Timeline / Calendário)
+│   ├── StrategicPlanning/      # Ciclos PEI, Inaugurar, Identidade, Valores, Temas, Perspectivas,
+│   │                           #   Objetivos, Futuro Almejado, Mapa, SWOT, PESTEL, Cadeia de Valor, RAE
+│   ├── ActionPlan/             # Planos de Ação, responsáveis e lições aprendidas
+│   ├── Deliverables/           # Entregas (Kanban / Lista / Timeline / Calendário) e Minhas Entregas
 │   ├── PerformanceIndicators/  # Indicadores e Evolução
-│   ├── RiskManagement/         # Riscos e Mitigações
-│   ├── Organization/           # Organizações e Perfis
-│   ├── Reports/                # Relatórios
+│   ├── RiskManagement/         # Riscos, Matriz, Mitigações e Ocorrências
+│   ├── Agenda2030/             # Painel ODS
+│   ├── Documentos/             # Acervo de documentos em PDF
+│   ├── Organization/           # Organizações
+│   ├── UserManagement/         # Usuários
+│   ├── Reports/                # Relatórios e histórico
 │   ├── Audit/                  # Auditoria
-│   ├── Admin/                  # Configurações do sistema
-│   └── Dashboard/              # Dashboard executivo
+│   ├── Admin/                  # Configurações do sistema e perfis
+│   ├── Ajuda/                  # Papéis e responsabilidades
+│   ├── Dashboard/              # Dashboard executivo
+│   └── Shared/                 # Seletores (organização, PEI, ano) e componentes comuns
 ├── Models/                     # Eloquent com schema qualificado explícito
-├── Services/                   # PeiGuidanceService · IndicadorCalculoService · ReportGenerationService
-├── Policies/                   # OrganizacaoPolicy · PlanoDeAcaoPolicy · IndicadorPolicy · RiscoPolicy
+├── Services/                   # PeiGuidanceService · IndicadorCalculoService · NotificationService
+│                               # Reports/ (ReportGenerationService, AcabamentoPdf, Relatório de Gestão)
+│                               # StrategicPlanning/CopiarPeiService ("Salvar como")
+│                               # Authorization/CapacidadeResolver · AI/ (provedores de IA)
+├── Policies/                   # Organization · User · PlanoDeAcao · Entrega · Indicador · Risco
+│                               # Documento · RelatorioGerado
+├── Support/                    # CorLegivel (contraste de texto) · VersaoAplicacao (rodapé de versão)
 └── Observers/                  # EntregaObserver (recálculo automático de indicadores)
 
 resources/views/livewire/       # Views Blade organizadas por domínio
+resources/views/relatorios/     # Modelos dos PDFs (design comum em partials/estilos.blade.php)
 database/
 ├── migrations/                 # Organizadas em subpastas por domínio
-└── seeders/                    # Acesso inicial: Truncar · PerfilAcesso · OrganizacaoRaiz · SuperAdministrador
+└── seeders/                    # PerfilAcesso · OrganizacaoRaiz · SuperAdministrador · TipoExecucao
+                                # + TruncarBanco (destrutivo, só com --class)
 ```
 
 ### Stack de middleware (rotas protegidas)
 
 ```
-auth:sanctum → jetstream.auth_session → verified → CheckPasswordChange
+auth:sanctum → jetstream.auth_session → verified → ExigePerfilDeAcesso
 ```
 
-O middleware `CheckPasswordChange` redireciona o usuário para a troca de senha obrigatória quando o campo `trocarsenha = true` está ativado no perfil.
+- `ExigePerfilDeAcesso` manda para `/acesso-pendente` quem entrou mas ainda não tem perfil em nenhuma unidade.
+- `CheckPasswordChange` (anexado ao grupo `web`) redireciona para a troca de senha obrigatória quando `trocarsenha = true`.
+- `TransparenciaPublica` protege as rotas públicas (Mapa, Objetivos, Indicadores e Planos): só `GET`/`HEAD`, com limite de taxa — o cidadão consulta sem login, mas nada pode ser escrito.
 
 ### Rotas principais
 
+**Públicas (sem login, somente leitura):**
+
 | URL | Componente | Descrição |
 |---|---|---|
-| `/` | `LandingPage` | Página inicial / Mapa Estratégico |
-| `/dashboard` | `Dashboard\Index` | Dashboard executivo |
-| `/pei` | `MissaoVisao` | Identidade estratégica |
-| `/pei/ciclos` | `ListarPeis` | Ciclos PEI |
+| `/` | `LandingPage` | Página inicial |
 | `/pei/mapa` | `MapaEstrategico` | Mapa estratégico visual |
+| `/objetivos` · `/objetivos/{id}/detalhes` | `ListarObjetivos` · `DetalharObjetivo` | Objetivos estratégicos |
+| `/indicadores` · `/indicadores/{id}/detalhes` | `ListarIndicadores` · `DetalharIndicador` | Indicadores / KPIs |
+| `/planos` · `/planos/{id}/detalhes` | `ListarPlanos` · `DetalharPlano` | Planos de Ação |
+
+**Autenticadas** (lista completa: `php artisan route:list --except-vendor`):
+
+| URL | Componente | Descrição |
+|---|---|---|
+| `/dashboard` | `Dashboard\Index` | Dashboard executivo |
+| `/pei/ciclos` | `ListarPeis` | Ciclos PEI (inclui "Salvar como") |
+| `/pei/inaugurar` | `InaugurarIntegrar` | Inaugurar e Integrar |
+| `/pei` | `MissaoVisao` | Identidade estratégica |
+| `/pei/valores` | `ListarValores` | Valores |
+| `/temas-norteadores` | `GerenciarTemasNorteadores` | Temas norteadores |
 | `/pei/perspectivas` | `ListarPerspectivas` | Perspectivas BSC |
-| `/pei/swot` | `AnaliseSWOT` | Análise SWOT |
-| `/pei/pestel` | `AnalisePESTEL` | Análise PESTEL |
-| `/objetivos` | `ListarObjetivos` | Objetivos estratégicos |
-| `/indicadores` | `ListarIndicadores` | Indicadores / KPIs |
-| `/planos` | `ListarPlanos` | Planos de Ação |
-| `/riscos` | `GestaoRiscos` | Gestão de Riscos |
-| `/agenda2030` | `Agenda2030` | Painel ODS |
-| `/relatorios` | `ListarRelatorios` | Relatórios |
+| `/pei/swot` · `/pei/pestel` | `AnaliseSWOT` · `AnalisePESTEL` | Análises de ambiente |
+| `/pei/cadeia-valor` | `CadeiaDeValor` | Cadeia de valor |
+| `/objetivos/{id}/futuro` | `GerenciarFuturoAlmejado` | Futuro almejado do objetivo |
+| `/graus-satisfacao` | `ListarGrausSatisfacao` | Graus de satisfação |
+| `/indicadores/{id}/evolucao` | `LancarEvolucao` | Lançamento de evolução |
+| `/entregas` · `/minhas-entregas` | `DeliverablesBoard` · `MinhasEntregas` | Entregas |
+| `/riscos` · `/riscos/matriz` | `ListarRiscos` · `MatrizRiscos` | Gestão de Riscos |
+| `/monitoramento/rae` | `GerenciarRae` | Relatório de Avaliação da Estratégia |
+| `/licoes-aprendidas` | `LicoesAprendidas` | Lições aprendidas |
+| `/agenda2030` | `Agenda2030\PainelODS` | Painel ODS |
+| `/relatorios` · `/relatorios/historico` | `ListarRelatorios` · `HistoricoRelatorios` | Relatórios |
+| `/acervo-documentos` | `Documentos\ListarDocumentos` | Acervo de documentos em PDF |
+| `/organizacoes` · `/usuarios` | `ListarOrganizacoes` · `ListarUsuarios` | Organizações e usuários |
+| `/admin/perfis` | `GestaoPerfis` | Perfis de acesso e impersonação |
 | `/auditoria` | `ListarLogs` | Trilha de auditoria |
-| `/organizacoes` | `ListarOrganizacoes` | Organizações |
-| `/configuracoes` | `ConfiguracaoSistema` | Configurações do sistema |
+| `/configuracoes` | `ConfiguracaoSistema` | Configurações do sistema e agente de IA |
 
 ---
 
@@ -845,35 +943,35 @@ A autorização do sistema combina **RBAC** (Role-Based Access Control — *o qu
 
 > **Princípio inquebrável:** a `Session` não é fonte de permissão. Ela guarda apenas uma preferência de navegação (qual organização/PEI o usuário está vendo agora). Toda decisão de acesso deriva do perfil vinculado ao usuário no banco (`perfisAcesso()`), resolvido através de `CapacidadeResolver` e validado contra o escopo real de organizações do usuário.
 
-### RBAC — 4 perfis fixos traduzidos em capacidades por módulo
+### RBAC — 5 perfis fixos, que valem na unidade do vínculo
 
-Os perfis (`App\Models\PerfilAcesso`) são registros fixos vinculados ao usuário via a tabela `organization.rel_users_tab_organizacoes_tab_perfil_acesso` (usuário × organização × perfil × plano de ação, quando aplicável):
+Os perfis (`App\Models\PerfilAcesso`) são registros fixos vinculados ao usuário via a tabela `organization.rel_users_tab_organizacoes_tab_perfil_acesso` (usuário × organização × perfil × plano de ação, quando aplicável). **O perfil vale na unidade em que foi dado** — permissões de unidades diferentes não se somam:
 
-| Perfil | Papel |
-|---|---|
-| **Super Admin** | Acesso irrestrito a todos os módulos e organizações |
-| **Admin de Unidade** | Gerencia dados estratégicos e planos da sua organização; cria e exclui |
-| **Gestor Responsável** | Edita planos/entregas/indicadores sob sua responsabilidade direta; não exclui |
-| **Gestor Substituto** | Substitui o Gestor Responsável na edição; mesmas permissões de escrita |
+| Perfil | Papel | Onde vale |
+|---|---|---|
+| **Super Admin** | Acesso irrestrito a todos os módulos e organizações | Todas as unidades |
+| **Administrador da Unidade** | Gerencia dados e planos da unidade; cria, edita e exclui; designa gestores das iniciativas | A unidade e as subordinadas |
+| **Gestor(a) Responsável** | Lê o planejamento e atualiza as iniciativas (planos, entregas, evolução) a que está vinculado; não cria iniciativa nem exclui | Só a própria unidade |
+| **Gestor(a) Substituto(a)** | Mesmo papel do Responsável, nas iniciativas em que é substituto | Só a própria unidade |
+| **Consulta** | Somente leitura e exportação de relatórios; não cadastra, não altera, não exclui | A unidade e as subordinadas |
 
-`App\Services\Authorization\CapacidadeResolver` traduz perfil → capacidade por módulo através de uma matriz estática (`nomPath` do módulo × perfil × habilidade), sem depender de tabelas novas:
-
-```php
-CapacidadeResolver::podeNoModulo(User $user, string $nomPath, string $ability): bool
-```
-
-Seis Gates nomeados são registrados em `AppServiceProvider::boot()` e delegam a essa matriz:
+`App\Services\Authorization\CapacidadeResolver` traduz perfil → capacidade por módulo através de uma matriz estática (módulo × perfil × habilidade), que **nega por padrão**:
 
 ```php
-Gate::define('modulo.acessar',     fn (User $u, string $nomPath) => CapacidadeResolver::podeNoModulo($u, $nomPath, 'acessar'));
-Gate::define('modulo.ver-sensivel', ...);
-Gate::define('modulo.criar',       ...);
-Gate::define('modulo.editar',      ...);
-Gate::define('modulo.excluir',     ...);
-Gate::define('modulo.exportar',    ...);
+CapacidadeResolver::podeNoModulo(User $user, string $modulo, string $ability, ?string $codOrganizacao = null): bool
 ```
 
-Módulos cobertos hoje: `planejamento-estrategico`, `planos-de-acao`, `indicadores`, `riscos`, `entregas`, `organizacoes`, `usuarios`, `relatorios`, além dos restritos exclusivamente a Super Admin (`auditoria`, `admin.perfis`, `admin.configuracoes`, `graus-satisfacao`).
+Sem `$codOrganizacao`, vale a organização selecionada no topo. Os Gates são registrados em `AppServiceProvider` — um por habilidade de `CapacidadeResolver::ABILITIES` (`acessar`, `criar`, `editar`, `excluir`, `exportar`) — e aceitam a organização da ação:
+
+```php
+Gate::allows('modulo.editar', 'riscos');               // na organização selecionada
+Gate::allows('modulo.editar', ['riscos', $codOrg]);    // na organização do registro
+Gate::allows('editar-institucional');                  // Super Admin ou Admin da unidade raiz
+```
+
+O Gate `editar-institucional` protege o que é da instituição inteira e não tem `cod_organizacao`: perspectivas, objetivos, graus de satisfação, cadeia de valor, Inaugurar e Integrar e futuro almejado.
+
+Módulos da matriz: `planejamento-estrategico`, `planos-de-acao`, `entregas`, `indicadores`, `riscos`, `organizacoes`, `usuarios`, `relatorios`, `graus-satisfacao`, `documentos`, além dos restritos a Super Admin (`auditoria`, `admin.perfis`, `admin.configuracoes`). Rota ou módulo novo entra na matriz no mesmo commit.
 
 ### ABAC — escopo de organização centralizado
 
@@ -881,9 +979,9 @@ Módulos cobertos hoje: `planejamento-estrategico`, `planos-de-acao`, `indicador
 
 | Método | Função |
 |---|---|
-| `organizacaoIdsPermitidas()` | Todas as organizações (Super Admin) ou apenas as vinculadas ao usuário |
-| `podeAcessarOrganizacao($codOrganizacao)` | Verifica se uma organização específica está no escopo do usuário |
-| `organizacaoSelecionadaId()` | Organização atualmente selecionada na sessão, **já validada** contra o escopo real — retorna `null` se a seleção estiver fora do escopo (sessão desatualizada nunca é aceita como está) |
+| `organizacaoIdsPermitidas()` | Todas as organizações (Super Admin) ou as dos **vínculos de perfil** do usuário (e subordinadas, para Administrador e Consulta) |
+| `podeAcessarOrganizacao($codOrganizacao)` | Verifica se uma organização específica está no escopo do usuário — para o Super Admin, se ela ainda existe |
+| `organizacaoSelecionadaId()` | Organização selecionada na sessão, **já validada** contra o escopo real. Seleção fora do escopo ou de unidade excluída nunca é aceita: quem não é Super Admin cai na primeira unidade do seu escopo |
 | `aplicarEscopoOrganizacional($query, $coluna)` | Aplica `whereIn` a uma query respeitando o escopo (Super Admin não sofre filtro) |
 
 ### Hooks globais — estado do usuário e auditoria de negações
@@ -903,6 +1001,8 @@ Registrados em `AppServiceProvider::registrarGatesDeAutorizacao()`:
 | `IndicadorPolicy` | `PerformanceIndicators\Indicador` | RBAC + ABAC (organização vinculada, sem depender de sessão bruta) |
 | `RiscoPolicy` | `RiskManagement\Risco` | RBAC + ABAC (organização do risco **e** responsável pelo monitoramento) |
 | `EntregaPolicy` | `ActionPlan\Entrega` | RBAC + ABAC (organização do plano de ação vinculado) |
+| `DocumentoPolicy` | `Documento` | RBAC + ABAC — envio e exclusão por Super Admin e Administrador da Unidade; o arquivo só é entregue a quem pode ver o registro |
+| `RelatorioGeradoPolicy` | `Reports\RelatorioGerado` | Download de relatório gerado só por quem tem acesso a ele |
 
 Módulos sem Model 1:1 (Planejamento Estratégico, Relatórios, Auditoria, Admin) são protegidos diretamente nos componentes Livewire via `$this->authorize('modulo.<ability>', '<nomPath>')`, sem Policy artificial.
 
@@ -915,17 +1015,20 @@ Módulos sem Model 1:1 (Planejamento Estratégico, Relatórios, Auditoria, Admin
 | **Auditoria de mutações** | `owen-it/laravel-auditing` | Trilha completa (quem, o quê, quando, valor antes/depois) em todas as entidades de negócio, consultável em `/auditoria` (restrito a Super Admin) |
 | **Auditoria de negações de acesso** | Canal de log `auditoria` (`Gate::after`) | Complementar à auditoria de mutações — registra tentativas negadas pelo Gate, não apenas alterações persistidas |
 | **Credenciais de IA cifradas em repouso** | `pei.system_settings` | API Keys e Service Account JSON armazenados com `Crypt::encryptString` |
-| **Impersonação controlada** | `App\Http\Controllers\ImpersonateController` | Restrita a Super Admin; bloqueia impersonação aninhada e autoimpersonação |
+| **Impersonação controlada** | `App\Http\Controllers\ImpersonateController` | Restrita a Super Admin; bloqueia impersonação aninhada e autoimpersonação; troca de usuário pelo guard `web` sem derrubar a sessão |
+| **Transparência somente leitura** | `App\Http\Middleware\TransparenciaPublica` | Rotas públicas aceitam só `GET`/`HEAD`, com limite de taxa |
+| **Arquivos privados** | Discos `local` e `relatorios` | Documentos do acervo e relatórios gerados não ficam em `public/`; o download passa pela Policy |
 | **Hardening de sessão** | `.env` / `config/session.php` | `SESSION_DOMAIN` restrito ao host, `SESSION_SECURE_COOKIE` em produção — ver [Configuração do ambiente](#-configuração-do-ambiente-env) |
 
-### 📖 Evolução recente (julho de 2026)
+### 📖 Evolução recente (setembro e outubro de 2026)
 
-O modelo RBAC + ABAC descrito acima, o escopo de organização centralizado e os hooks globais de auditoria foram implementados e endurecidos nesta janela, incluindo:
-
-- Validação de escopo de organização no seletor do menu superior e nas Policies de Indicadores, garantindo que a organização real do registro — não apenas a selecionada na sessão — determina a permissão.
-- Cobertura de autorização em módulos que ainda não tinham (Revisão/RAE, Futuro Almejado, Missão/Visão, Lições Aprendidas, Cadeia de Valor, Inaugurar/Integrar, upload de anexos de Entregas), sempre preservando a leitura livre e restringindo apenas a escrita.
-- Confirmação, por teste automatizado, de que o perfil Super Admin mantém acesso irrestrito em todos os módulos.
-- Estabilização da suíte de testes automatizados, hoje com **68 testes passando, 0 falhas**.
+- **Permissão por unidade (03/10/2026):** o perfil passou a valer só na unidade do vínculo (e nas subordinadas, para Administrador e Consulta); fecharam-se vazamentos entre perfis (soma de perfis de unidades diferentes, Substituto se promovendo, diretório de usuários aberto). Novo perfil **Consulta** e Gate `editar-institucional`.
+- **Sessão resiliente:** unidade ou ciclo PEI excluído que ainda esteja selecionado na sessão não gera mais erro 500 — a seleção é descartada e o usuário cai num estado válido. Testado em todas as telas, para os 5 perfis.
+- **Documentos e "Salvar como" do PEI:** acervo de PDFs por unidade e cópia integral de um ciclo PEI.
+- **Relatórios em PDF:** sem páginas em branco nem quebras forçadas desnecessárias, texto da IA formatado (Markdown), números no padrão brasileiro e cores com contraste mínimo de 4,5:1.
+- **Telas:** seções educativas em todas as telas de trabalho, contraste revisado nos temas claro e escuro, ODS 18 incluído.
+- **Rodapé de versão** em todas as telas, com commit e data do último deploy.
+- **Compatibilidade:** piso do PHP em 8.2 e SQL compatível com PostgreSQL antigo.
 
 Detalhes técnicos de cada mudança estão nos commits e em `documentacao/`.
 
@@ -952,10 +1055,10 @@ composer dev                             # Ambiente de dev completo (server + qu
 npm run build                            # Compilar assets para produção
 
 # Banco de dados
-php artisan migrate                      # Executar novas migrations
-php artisan migrate --path=database/migrations/Dominio/arquivo.php  # Migration específica
-php artisan db:seed                      # Acesso inicial — APAGA todos os dados antes de recriar
-php artisan db:seed --class=PerfilAcessoSeeder  # Etapa isolada, sem truncar o banco
+php artisan migrate --path=database/migrations/Dominio/arquivo.php  # Migration específica (preferível em dev)
+php artisan migrate                      # Todas as pendentes (instalação nova / deploy)
+php artisan db:seed --class=PerfilAcessoSeeder  # Uma etapa da seed, isolada
+php artisan db:seed                      # Acesso inicial completo — idempotente, não apaga dados
 
 # Cache e otimização
 php artisan optimize:clear               # Limpar todos os caches (obrigatório após alterações de config)
@@ -966,7 +1069,7 @@ vendor/bin/pint --dirty                  # Lint apenas dos arquivos modificados
 php -l app/Livewire/MeuComponente.php    # Validar sintaxe de um arquivo PHP
 
 # Testes
-php artisan test                         # Suítes Unit e Feature (banco de laboratório do phpunit.xml)
+php -d memory_limit=1G artisan test      # Suítes Unit e Feature (banco de laboratório do phpunit.xml)
 php artisan test --filter=NomeTeste      # Teste filtrado por nome
 php artisan test --testsuite=Seeders     # Valida a seed no banco do .env — DESTRUTIVO, veja a seção Seeders
 ```
@@ -975,7 +1078,7 @@ php artisan test --testsuite=Seeders     # Valida a seed no banco do .env — DE
 
 ### Livewire 4 — notas de compatibilidade
 
-O projeto roda **Livewire 4.0.0**. As principais diferenças em relação à série 3.x que afetam desenvolvedores:
+O projeto roda **Livewire 4.4**. As principais diferenças em relação à série 3.x que afetam desenvolvedores:
 
 | Aspecto | Livewire 3.x | Livewire 4.0 |
 |---|---|---|
@@ -1009,7 +1112,10 @@ php artisan view:clear
 - **Idioma**: variáveis, comentários e mensagens de usuário em **Português do Brasil**
 - **Componentes Livewire**: PHP em `app/Livewire/<Domínio>/`, view em `resources/views/livewire/`, nome kebab-case no Blade
 - **Models**: sempre declarar `$table` com prefixo de schema (`strategic_planning.tab_pei`)
-- **Chaves primárias**: UUID com `gen_random_uuid()` como default, `$incrementing = false`, `$keyType = 'string'`
+- **Chaves primárias**: UUID `cod_<entidade>` com `gen_random_uuid()` como default, `HasUuids`, `$incrementing = false`, `$keyType = 'string'`
+- **SQL compatível com PostgreSQL antigo**: proibidos em runtime `ON CONFLICT` (inclusive `upsert()`/`insertOrIgnore()`), `jsonb`, `FILTER (WHERE …)`, `GENERATED AS IDENTITY` e `IF NOT EXISTS` em índice ou coluna
+- **Autorização**: todo método `public` de componente Livewire autoriza por dentro — ele é um endpoint HTTP
+- **Regras completas**: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - **Soft delete**: usar `deleted_at` nas tabelas de negócio
 - **UI**: Bootstrap 5 + Bootstrap Icons, seguindo o padrão visual do sistema (tema claro + dark mode)
 - **Commits**: PT-BR, com prefixo `feat | fix | refactor | chore | docs`
@@ -1028,7 +1134,8 @@ php artisan view:clear
 
 ```bash
 # Executar as suítes Unit e Feature (banco de laboratório definido em phpunit.xml)
-php artisan test
+# O memory_limit maior é necessário: os testes de exportação geram Excel/Word em memória
+php -d memory_limit=1G artisan test
 
 # Executar apenas um teste específico
 php artisan test --filter=NomeTeste
@@ -1046,6 +1153,10 @@ vendor/bin/pint
 # Apenas arquivos modificados (mais rápido durante o desenvolvimento)
 vendor/bin/pint --dirty
 ```
+
+O banco de laboratório é o `projeto_base_test`, na porta definida em `phpunit.xml`. Se o PostgreSQL local escutar em outra porta, defina a variável antes de rodar (ela prevalece sobre o `phpunit.xml`): `DB_PORT=5434 php artisan test` (no PowerShell: `$env:DB_PORT='5434'; php artisan test`).
+
+Além dos testes de cada funcionalidade, há testes que travam classes de erro inteiras: todas as telas abertas pelos 5 perfis com unidade ou ciclo excluído na sessão (`TelasComRegistroExcluidoNaSessaoTest`), classes citadas nas views que precisam existir (`ClassesCitadasNasViewsExistemTest`) e dependências de runtime que precisam aceitar PHP 8.2 (`DependenciasDeRuntimeAceitamPhp82Test`).
 
 ---
 
@@ -1091,6 +1202,21 @@ Após corrigir o `.env`, execute: `php artisan optimize:clear`.
 
 **Causa:** Scripts inline com `const` em partials de layout (ex.: sidebar) são re-executados no scope global a cada navegação SPA do Livewire — `const` não pode ser redeclarado.
 **Solução:** Envolva o conteúdo do `<script>` em um IIFE `(function() { ... })()` e proteja os `addEventListener` com uma flag de guarda (ex.: `window._sidebarListenersInit`) para evitar duplicação.
+
+### Rodapé mostra "deploy não identificado"
+
+**Causa:** a pasta `.git` não existe no servidor (instalação por cópia de arquivos) ou o usuário do servidor web não consegue lê-la.
+**Solução:** instale e atualize por `git clone` / `git pull` e dê permissão de leitura em `.git` ao usuário do Apache/PHP-FPM. Ver [Versão em execução](#versão-em-execução-e-data-do-último-deploy).
+
+### Envio de PDF no menu Documentos falha
+
+**Causa:** o `php.ini` do servidor web ainda está no padrão (2 MB por arquivo, 8 MB por requisição).
+**Solução:** `upload_max_filesize = 20M` e `post_max_size = 25M` (e `client_max_body_size 25m` no nginx); reinicie o PHP-FPM ou o Apache.
+
+### Testes param com "Allowed memory size … exhausted"
+
+**Causa:** o limite padrão de 128 MB do PHP não comporta os testes de exportação.
+**Solução:** `php -d memory_limit=1G artisan test`.
 
 ### `pg_dump` / `psql` não encontrado no Windows
 
@@ -1154,20 +1280,19 @@ php artisan migracao:v1-para-v2 --descartar-legado
 
 ## 📚 Documentação relacionada
 
-Todo sistema de gestão estratégica carrega, por trás do código, uma quantidade grande de conhecimento acumulado — decisões de arquitetura, o motivo real de cada correção, como o administrador deve operar o dia a dia. Guardamos esse conhecimento em documentos vivos, e não deixamos que envelheçam escondidos: sempre que uma mudança relevante acontece no sistema, os documentos abaixo são revisados na mesma rodada de trabalho. **Os quatro primeiros itens desta lista** foram atualizados logo depois da implementação do RBAC + ABAC e da correção do vazamento de responsabilidade organizacional, narrada na seção de [Segurança e Controle de Acesso](#-segurança-e-controle-de-acesso-rbac--abac) acima:
-
-- A **documentação técnica** ganhou uma seção inteira dedicada ao novo modelo de autorização (`CapacidadeResolver`, Gates, Policies), à correção do vazamento e ao estado atual da suíte de testes (0 falhas, 64 passando).
-- Os **dois manuais operacionais** (Markdown e Word, o mesmo conteúdo em dois formatos para uso diferente) passaram a explicar, em linguagem de usuário final, a nova regra de "quem pode editar o quê", por que o seletor de organização no menu superior ficou mais rigoroso, e o controle de acesso reforçado no módulo de Revisão (RAE).
-- O **dicionário de dados** foi conferido campo a campo contra o banco real, para confirmar (e deixar registrado) que nenhuma tabela nova foi criada — a lógica de permissões vive inteiramente em código, não no schema do banco.
+Sempre que uma mudança relevante acontece no sistema, os documentos abaixo são revisados na mesma rodada de trabalho.
 
 | Documento | Localização |
 |---|---|
+| Manual de uso (com imagens; também em PDF) | [MANUAL-DE-USO.md](documentacao/manual/MANUAL-DE-USO.md) |
+| Regras de código e contribuição | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Documentação técnica completa (v2) | [documentacao-tecnica-planejamento-estrategico-v2.md](documentacao/harness/documentacao-tecnica-planejamento-estrategico-v2.md) |
-| Manual operacional (Markdown) | [manual-operacional-planejamento-estrategico-v1.md](documentacao/harness/manual-operacional-planejamento-estrategico-v1.md) |
-| Manual operacional (Word/.docx) | [manual-operacional-pei-v4_20260607_15h34.docx](documentacao/harness/manual-operacional-pei-v4_20260607_15h34.docx) |
-| Dicionário de dados PostgreSQL | [dicionario-dados-postgresql-planejamento-estrategico.md](documentacao/harness/dicionario-dados-postgresql-planejamento-estrategico.md) |
-| Documento mestre e roadmap do sistema | [documento-mestre-evolucao-sistema-pei.md](documentacao/documento-mestre-evolucao-sistema-pei.md) |
-| Agenda 2030 / ODS — integração | [agenda_2030_ods_agregado_ao_planejamento_estrategico.md](documentacao/agenda_2030_ods_agregado_ao_planejamento_estrategico.md) |
+| Manual operacional (versão anterior, Markdown) | [manual-operacional-planejamento-estrategico-v1.md](documentacao/harness/manual-operacional-planejamento-estrategico-v1.md) |
+| Dicionário de dados PostgreSQL | [dicionario-dados-postgresql-planejamento-estrategico.md](documentacao/harness/dicionario-dados-postgresql-planejamento-estrategico.md) — ⚠️ desatualizado: descreve 56 tabelas e o banco tem 72; para colunas, consulte o banco |
+| Documento mestre: GPPEI, gap analysis e roadmap | [artefatos/README.md](artefatos/README.md) |
+| Estudos de melhoria (índice) | [00-INDICE-AGREGACAO-POR-TEMAS.md](documentacao/melhorias/00-INDICE-AGREGACAO-POR-TEMAS.md) |
+| Agenda 2030 / ODS — vínculo no objetivo | [05-vinculo-ods-no-objetivo.md](documentacao/melhorias/05-vinculo-ods-no-objetivo.md) |
+| Gerador do chamado de implantação (.docx) | [documentacao/chamados/gerador/](documentacao/chamados/gerador/LEIA-ME.md) |
 | Guia de transição completa v1 → v2 | [guia-transicao-completa-v1-para-v2.md](documentacao/guia-transicao-completa-v1-para-v2.md) |
 | Guia GPPEI — MGI 2025 (PDF) | [Guia_PEI_VF.pdf](documentacao/pdf/Guia_PEI_VF.pdf) |
 | Guia de Projetos — MGI (PDF) | [guia-pratico-de-projetos.pdf](documentacao/pdf/guia-pratico-de-projetos.pdf) |
