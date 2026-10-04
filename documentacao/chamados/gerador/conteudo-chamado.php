@@ -1,7 +1,10 @@
 <?php
 
 /**
- * CONTEÚDO DO CHAMADO — implantação da versão 2.1.0 (04/10/2026).
+ * CONTEÚDO DO CHAMADO — deploy da versão 2.1.0 (04/10/2026).
+ *
+ * "Implantação" só na primeira instalação num cliente; atualização de versão
+ * é "deploy" (decisão do gestor, 04/10/2026).
  *
  * Substitui o chamado de 03/10/2026 (versão 2.0.0). Não se sabe daqui se aquele
  * foi executado no cliente; por isso este roteiro é CUMULATIVO e todos os passos
@@ -56,7 +59,7 @@ return function (array $f): array {
 
     $b = [];
 
-    $b[] = $titulo('CHAMADO DE IMPLANTAÇÃO — SISTEMA PEI v2.1.0');
+    $b[] = $titulo('CHAMADO DE DEPLOY — SISTEMA PEI v2.1.0');
     $b[] = $subtitulo('Atualização de código, dependências e banco de dados · 04/10/2026 · 3 passos');
 
     $b[] = $tabela([
