@@ -50,6 +50,36 @@ test('progresso geral 0 é gravado como 0, não como vazio', function () {
         ->and((float) $c['rae']->fresh()->num_progresso_geral)->toBe(0.0);
 });
 
+test('participantes separados por ponto e vírgula ou linha viram nomes separados', function () {
+    $c = cenarioRaeRevisao();
+
+    Livewire::actingAs($c['user'])->test(GerenciarRae::class)
+        ->call('editarRae', $c['rae']->cod_rae)
+        ->set('form.participantes_raw', "Ana; Bruno, Carla\nDaniel")
+        ->call('salvarRae')
+        ->assertHasNoErrors();
+
+    expect($c['rae']->fresh()->json_participantes)->toBe(['Ana', 'Bruno', 'Carla', 'Daniel']);
+});
+
+test('o encaminhamento grava com cada tipo que a tela oferece', function () {
+    // 🔴 A tela oferecia "Nova Iniciativa" (renomeado de "Novo Plano" em
+    // 05/09/2026) e o CHECK do banco ainda exigia "Novo Plano": erro 500.
+    $c = cenarioRaeRevisao();
+    $tela = Livewire::actingAs($c['user'])->test(GerenciarRae::class);
+
+    foreach (RaeEncaminhamento::TIPOS as $tipo) {
+        $tela->call('novoEncaminhamento', $c['rae']->cod_rae)
+            ->set('encForm.txt_descricao', "Encaminhamento {$tipo}")
+            ->set('encForm.dsc_tipo', $tipo)
+            ->call('salvarEncaminhamento')
+            ->assertHasNoErrors();
+    }
+
+    expect(RaeEncaminhamento::where('cod_rae', $c['rae']->cod_rae)->pluck('dsc_tipo')->sort()->values()->all())
+        ->toBe(collect(RaeEncaminhamento::TIPOS)->sort()->values()->all());
+});
+
 test('progresso geral em branco continua gravando vazio', function () {
     $c = cenarioRaeRevisao();
     $c['rae']->update(['num_progresso_geral' => 40]);

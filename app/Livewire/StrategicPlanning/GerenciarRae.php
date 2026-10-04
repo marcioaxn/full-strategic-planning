@@ -209,7 +209,9 @@ class GerenciarRae extends Component
             'form.dte_referencia.required' => 'Informe o período de referência.',
         ]);
 
-        $participantes = array_filter(array_map('trim', explode(',', $this->form['participantes_raw'])));
+        // Vírgula, ponto e vírgula ou quebra de linha: é comum colar a lista
+        // de presença com ";" e ela virava um participante só.
+        $participantes = array_values(array_filter(array_map('trim', preg_split('/[,;\r\n]+/', (string) $this->form['participantes_raw']))));
 
         $data = [
             'cod_pei' => $this->peiAtivo->cod_pei,

@@ -445,7 +445,7 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-uppercase text-muted">Participantes</label>
                                 <input type="text" wire:model="form.participantes_raw" class="form-control" placeholder="Nome1, Nome2, Cargo...">
-                                <small class="text-muted">Separe por vírgula</small>
+                                <small class="text-muted">Separe por vírgula ou ponto e vírgula</small>
                             </div>
                             <div class="col-12">
                                 <label class="form-label fw-bold small text-uppercase text-muted">

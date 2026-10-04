@@ -117,15 +117,19 @@ class AtribuirResponsaveis extends Component
             return;
         }
 
-        // Verificar duplicata
-        $existe = DB::table('organization.rel_users_tab_organizacoes_tab_perfil_acesso')
+        // Uma pessoa tem UM papel de gestão na iniciativa: Responsável e
+        // Substituto ao mesmo tempo anula o substituto, que existe para cobrir
+        // a ausência do titular (achado no teste pelo navegador de 04/10/2026).
+        $papelAtual = DB::table('organization.rel_users_tab_organizacoes_tab_perfil_acesso')
             ->where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)
             ->where('user_id', $this->novo_usuario_id)
-            ->where('cod_perfil', $this->novo_perfil_id)
-            ->exists();
+            ->whereIn('cod_perfil', [PerfilAcesso::GESTOR_RESPONSAVEL, PerfilAcesso::GESTOR_SUBSTITUTO])
+            ->whereNull('deleted_at')
+            ->value('cod_perfil');
 
-        if ($existe) {
-            session()->flash('error', 'Este usuário já possui este perfil atribuído a este plano.');
+        if ($papelAtual) {
+            $papel = $papelAtual === PerfilAcesso::GESTOR_RESPONSAVEL ? 'Gestor(a) Responsável' : 'Gestor(a) Substituto(a)';
+            $this->addError('novo_usuario_id', "Esta pessoa já é {$papel} desta iniciativa. Para trocar o papel, remova o atual primeiro.");
 
             return;
         }

@@ -22,6 +22,9 @@
  *    exclusão LÓGICA (deleted_at) do que pertence a ciclos PEI já excluídos.
  *  - PerformanceIndicators/2026_10_04_000001_amplia_precisao_valores_indicador —
  *    numeric(15,2) → numeric(19,4) em 4 colunas (ALTER TYPE, PG 9.3).
+ *  - StrategicPlanning/2026_10_04_120000_tipo_de_encaminhamento_nova_iniciativa —
+ *    UPDATE 'Novo Plano' → 'Nova Iniciativa' e troca do CHECK de dsc_tipo
+ *    (DROP CONSTRAINT IF EXISTS + ADD CONSTRAINT, PG 9.3).
  * Da 2.0.0 (se o chamado de 03/10 não foi executado): 2026_10_03_120000,
  * 2026_10_03_180000, 2026_10_03_200000, 2026_10_03_220000 (e 2026_09_05_223000
  * em cópia anterior a 05/09); PerfilAcessoSeeder (perfil Consulta);
@@ -57,7 +60,7 @@ return function (array $f): array {
         ['Repositório Git', 'https://github.com/marcioaxn/full-strategic-planning'],
         ['Branch', 'main'],
         ['Prioridade', 'Alta'],
-        ['Banco de dados', 'Até 7 migrations (php artisan migrate --force aplica só as pendentes) e 2 seeders. Nenhum registro é apagado'],
+        ['Banco de dados', 'Até 8 migrations (php artisan migrate --force aplica só as pendentes) e 2 seeders. Nenhum registro é apagado'],
         ['Pré-requisito', 'O servidor precisa conseguir enviar e-mail (variáveis MAIL_* do .env, já usadas pela aplicação)'],
     ]);
 
@@ -110,8 +113,9 @@ return function (array $f): array {
         .'2026_10_03_200000_create_tab_documentos_table, '
         .'2026_10_03_220000_marca_email_verificado_de_contas_com_perfil, '
         .'2026_10_03_230000_entrega_exige_iniciativa, '
-        .'2026_10_03_233000_exclui_dependentes_de_ciclos_ja_excluidos e '
-        .'2026_10_04_000001_amplia_precisao_valores_indicador.');
+        .'2026_10_03_233000_exclui_dependentes_de_ciclos_ja_excluidos, '
+        .'2026_10_04_000001_amplia_precisao_valores_indicador e '
+        .'2026_10_04_120000_tipo_de_encaminhamento_nova_iniciativa.');
     $b[] = $comando('php artisan entregas:proteger-anexos --simular');
     $b[] = $texto('Deve informar "Seriam movidos: 0 arquivo(s)".');
     $b[] = $comando('php artisan about --only=environment');

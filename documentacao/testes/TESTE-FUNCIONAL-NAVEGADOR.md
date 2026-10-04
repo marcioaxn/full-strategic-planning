@@ -147,6 +147,27 @@ Em paralelo: quatro revisões de código por módulo (Indicadores; Iniciativas/E
 | 121 | quadro de entregas | Editar entrega: prazo 2035 (fora da iniciativa 2026–2028) | Recusa | ✅ "O prazo precisa estar dentro do período da iniciativa (01/01/2026 a 31/12/2028)." |
 | 122 | quadro de entregas | Editar: título, prazo válido e os 7 campos do 5W2H → Salvar; depois limpar os 7 → Salvar | Grava; limpar apaga | ✅ banco: 5W2H gravado; após limpar, `json_propriedades` NULL |
 | 123 | **pedido do gestor** | Desligar o autocadastro | Só quem tem permissão cria contas | 🔧 `config/fortify.php` sem `Features::registration()`; `SemAutocadastroTest` (falhava antes). Conferido como visitante: login sem "Criar conta", `/register` redireciona, página inicial sem link. Ajuda e chamado atualizados |
+| 124 | quadro | Etiquetas: criar "[TESTE] Urgente" → aplicar na entrega | Cria e vincula | ✅ banco: 1 vínculo |
+| 125 | quadro | Comentário → resposta → excluir | Resposta não some; exclusão pede confirmação | ✅ comentário com resposta não oferece "Excluir"; os demais pedem "Excluir este comentário?" |
+| 126 | quadro | Arquivar → ver arquivados → desarquivar | Some, aparece em arquivados, volta | ✅ |
+| 127 | quadro | Excluir → lixeira → abrir detalhe → restaurar | Lixeira honesta; detalhe só com Restaurar/Excluir definitivo; volta | ✅ aviso "ficam aqui até serem restauradas ou excluídas definitivamente"; histórico com created/arquivar×2/deleted/restored |
+| 128 | calendário | Clicar no dia 20 → criar | Entrega com prazo 20/10 | ✅ banco: 2026-10-20 |
+| 129 | calendário | Próximo / Hoje | Navega | ✅ mês 10 → 11 → 10 |
+| 130 | linha do tempo | Anterior, próximo, zoom +/−, hoje | Sem erro | ✅ |
+| 131 | visão Lista | Status, prioridade e prazo 2035 pelos seletores | Grava; prazo fora da iniciativa recusado | ✅ Suspenso/alta gravados; prazo recusado com a mensagem do período |
+| 132 | `/planos/{id}/responsaveis` | Adicionar Gestora como Responsável | Grava | ✅ |
+| 133 | responsáveis | Adicionar a mesma pessoa como Substituta | Recusar | 🔧 Era aceita (Responsável e Substituta ao mesmo tempo). Agora: "Esta pessoa já é Gestor(a) Responsável desta iniciativa…"; `GestorComUmPapelPorIniciativaTest` validado por mutação |
+| 134 | responsáveis | Remover gestor | Pede confirmação | ✅ "Remover … da gestão desta iniciativa?" |
+| 135 | responsáveis | RACI: novo (R) → editar para A → excluir pede confirmação | CRUD | ✅ banco: papel A; "Excluir este papel RACI?" |
+| 136 | responsáveis | Comunicação: responsável com 120 caracteres | Mensagem, não 500 | ✅ "O nome do responsável aceita até 100 caracteres." (resposta 200) |
+| 137 | responsáveis | Comunicação: criar, editar, excluir com confirmação | CRUD | ✅ |
+| 138 | `/monitoramento/rae` | Nova RAE (tipo RAE, progresso 0, participantes) → Salvar | Grava na TST; 0 fica 0; mês em português | ✅ "Set/2026"; progresso 0.00 |
+| 139 | RAE | Participantes "Fulana; Beltrano" | Dois nomes | 🔧 Virava um nome só (a tela pede vírgula). Agora aceita vírgula, ponto e vírgula ou linha; teste novo |
+| 140 | RAE | Novo encaminhamento tipo **"Nova Iniciativa"** → Salvar | Grava | 🔧 **Erro 500**: o código renomeou "Novo Plano" → "Nova Iniciativa" em 05/09 e a regra CHECK do banco não acompanhou. Migration `2026_10_04_120000_tipo_de_encaminhamento_nova_iniciativa` (rodada no dev) + teste pela tela com todos os tipos + `ListasDoCodigoBatemComOBancoTest` (confere toda lista do código contra os CHECK do banco) |
+| 141 | RAE | Encaminhamento: mudar status, editar | Grava | ✅ "Em Execução"; descrição (rev) |
+| 142 | RAE | Causa raiz: problema, Ishikawa, 5 porquês, causa, vínculo ao encaminhamento | Grava e reabre preenchido | ✅; excluir pede confirmação |
+| 143 | RAE | Excluir o encaminhamento vinculado → editar a causa | Sem 403; vínculo vira "nenhum" | ✅ |
+| 144 | RAE | Editar a RAE | Grava | ✅ |
 | 78 | suíte completa | 1ª rodada | — | ⚠️ 11 falhas "tabela não existe": colisão — rodei outro teste no mesmo banco de teste durante a suíte. Refazer sozinha |
 
 ## Pedidos do gestor durante o teste (obrigatórios)
