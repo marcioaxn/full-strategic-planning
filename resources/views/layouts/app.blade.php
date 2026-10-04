@@ -12,8 +12,8 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
-        <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('img/_0403eb0b-de95-4131-87cd-5c705ae95535.png') }}" />
-        <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('img/_0403eb0b-de95-4131-87cd-5c705ae95535.png') }}" />
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('img/brasao_azaul.png') }}" />
+        <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('img/brasao_azaul.png') }}" />
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
