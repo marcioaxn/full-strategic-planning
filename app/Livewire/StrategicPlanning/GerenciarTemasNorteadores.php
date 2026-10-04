@@ -2,6 +2,7 @@
 
 namespace App\Livewire\StrategicPlanning;
 
+use App\Concerns\RevalidaUnidadeNaRequisicao;
 use App\Models\Organization;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\TemaNorteador;
@@ -21,6 +22,7 @@ use Livewire\WithPagination;
 class GerenciarTemasNorteadores extends Component
 {
     use AuthorizesRequests;
+    use RevalidaUnidadeNaRequisicao;
     use WithPagination;
 
     public $search = '';
@@ -43,6 +45,7 @@ class GerenciarTemasNorteadores extends Component
 
     public $cod_organizacao;
 
+    #[Locked]
     public bool $aiEnabled = false;
 
     public $aiSuggestion = '';

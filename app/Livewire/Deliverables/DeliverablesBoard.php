@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
@@ -1108,8 +1109,11 @@ class DeliverablesBoard extends Component
     {
         $this->authorize('update', $this->plano);
 
+        // Só comentário próprio E de entrega deste plano: a autorização acima é
+        // deste plano, não da iniciativa do comentário.
         EntregaComentario::where('cod_comentario', $comentarioId)
             ->where('cod_usuario', Auth::id())
+            ->whereIn('cod_entrega', $this->entregasDoPlano()->withTrashed()->select('cod_entrega'))
             ->delete();
     }
 
@@ -1122,8 +1126,8 @@ class DeliverablesBoard extends Component
         $this->authorize('update', $this->plano);
 
         $this->validate([
-            // Só formatos de documento e imagem: o arquivo é servido pelo disco
-            // público, e um .html/.svg enviado ali rodaria script na origem do sistema.
+            // Só formatos de documento e imagem: um .html/.svg rodaria script se o
+            // navegador o abrisse na origem do sistema.
             'anexosUpload.*' => 'required|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,odt,ods,odp,png,jpg,jpeg,gif,txt,csv,zip', // Max 10MB por arquivo
         ]);
 
@@ -1133,7 +1137,7 @@ class DeliverablesBoard extends Component
 
         foreach ($this->anexosUpload as $file) {
             $nomeOriginal = $file->getClientOriginalName();
-            $path = $file->store('entregas/anexos', 'public');
+            $path = $file->store(EntregaAnexo::PASTA, EntregaAnexo::DISCO);
 
             EntregaAnexo::create([
                 'cod_entrega' => $this->entregaDetalheId,
@@ -1161,10 +1165,13 @@ class DeliverablesBoard extends Component
         $anexo = EntregaAnexo::whereIn('cod_entrega', $this->entregasDoPlano()->withTrashed()->select('cod_entrega'))
             ->findOrFail($anexoId);
 
-        // Remove arquivo físico se desejar (opcional dependendo da política de backup)
-        // Storage::disk('public')->delete($anexo->dsc_caminho);
+        // A tela promete "excluir permanentemente": sai o arquivo físico (de onde
+        // estiver — anexo antigo ainda pode estar no disco público) e o registro.
+        foreach ([EntregaAnexo::DISCO, 'public'] as $disco) {
+            Storage::disk($disco)->delete($anexo->dsc_caminho);
+        }
 
-        $anexo->delete();
+        $anexo->forceDelete();
 
         $this->dispatch('notify', [
             'type' => 'info',

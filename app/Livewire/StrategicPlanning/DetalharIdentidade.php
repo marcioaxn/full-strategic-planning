@@ -16,8 +16,6 @@ class DetalharIdentidade extends Component
 
     public $valores;
 
-    public bool $podeVerHistorico = false;
-
     public function mount($id)
     {
         // 🔴 Abria para qualquer pessoa logada, de qualquer unidade, e exibia a
@@ -34,8 +32,6 @@ class DetalharIdentidade extends Component
 
         abort_unless(Auth::user()->podeAcessarOrganizacao($this->identidade->cod_organizacao), 403);
 
-        $this->podeVerHistorico = Gate::allows('modulo.acessar', 'auditoria');
-
         // Carregar valores associados ao mesmo PEI e Organização
         $this->valores = Valor::where('cod_organizacao', $this->identidade->cod_organizacao)
             ->where('cod_pei', $this->identidade->cod_pei)
@@ -44,11 +40,16 @@ class DetalharIdentidade extends Component
 
     public function render()
     {
+        // Trilha só para quem tem o módulo Auditoria — conferido a cada render, não
+        // guardado em propriedade pública que o navegador altera.
+        $podeVerHistorico = Gate::allows('modulo.acessar', 'auditoria');
+
         return view('livewire.p-e-i.detalhar-identidade', [
-            'historico' => $this->podeVerHistorico
+            'podeVerHistorico' => $podeVerHistorico,
+            'historico' => $podeVerHistorico
                 ? $this->identidade->audits()->with('user')->latest()->take(5)->get()
                 : collect(),
-            'totalHistorico' => $this->podeVerHistorico ? $this->identidade->audits()->count() : 0,
+            'totalHistorico' => $podeVerHistorico ? $this->identidade->audits()->count() : 0,
         ]);
     }
 }

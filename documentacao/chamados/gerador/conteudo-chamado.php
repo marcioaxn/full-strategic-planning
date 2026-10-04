@@ -40,6 +40,18 @@
  * config/versao.php é novo (número 2.0.0; APP_VERSAO no .env é opcional) e é
  * lido após o optimize:clear do passo 3.
  *
+ * Correções da auditoria de segurança (03/10/2026):
+ *  - migration 2026_10_03_220000_marca_email_verificado_de_contas_com_perfil
+ *    (UPDATE simples, PG 9.3): o autocadastro passa a exigir confirmação de
+ *    e-mail (Fortify emailVerification); contas que JÁ têm perfil são marcadas
+ *    como verificadas para ninguém ficar preso no próximo login. A partir daqui
+ *    o servidor PRECISA enviar e-mail (MAIL_* do .env já usado pelo "Esqueci
+ *    minha senha") — sem isso, quem se autocadastrar não consegue confirmar.
+ *  - comando NOVO `php artisan entregas:proteger-anexos`: move anexos de entrega
+ *    e evidências de evolução do disco público (storage/app/public, servido em
+ *    /storage) para o privado. Idempotente; o código novo lê dos dois discos.
+ *  - config/fortify.php mudou → optimize:clear (já no passo 3).
+ *
  * TipoExecucaoSeeder e storage:link: idempotentes, repetidos porque não há como
  * confirmar daqui que o complemento de 22/09 foi executado no cliente. Worker e
  * cron são configuração permanente do servidor e não voltam ao roteiro.
@@ -56,14 +68,15 @@ return function (array $f): array {
     $b = [];
 
     $b[] = $titulo('CHAMADO DE IMPLANTAÇÃO — SISTEMA PEI');
-    $b[] = $subtitulo('Planejamento Estratégico Integrado · correções, Documentos, Salvar como e rodapé de versão ·03/10/2026 · 3 passos');
+    $b[] = $subtitulo('Planejamento Estratégico Integrado · correções, Documentos, Salvar como, rodapé de versão e correções de segurança · 03/10/2026 · 3 passos');
 
     $b[] = $tabela([
         ['Sistema', 'Sistema PEI — Planejamento Estratégico Integrado'],
         ['Repositório Git', 'https://github.com/marcioaxn/full-strategic-planning'],
         ['Branch', 'main'],
         ['Prioridade', 'Alta'],
-        ['Banco de dados', '3 migrations novas (php artisan migrate --force) e 1 perfil de acesso novo (seeder). Nenhum dado é apagado'],
+        ['Banco de dados', '4 migrations novas (php artisan migrate --force) e 1 perfil de acesso novo (seeder). Nenhum dado é apagado'],
+        ['Pré-requisito', 'O servidor precisa enviar e-mail (configuração MAIL_* do .env, a mesma do "Esqueci minha senha")'],
     ]);
 
     $b[] = $alerta('Antes de começar: fazer o backup do banco de dados pelo procedimento usual da equipe.');
@@ -87,6 +100,9 @@ return function (array $f): array {
     $b[] = $comando('php artisan db:seed --class=PerfilAcessoSeeder --force');
     $b[] = $comando('php artisan db:seed --class=TipoExecucaoSeeder --force');
     $b[] = $comando('php artisan storage:link');
+    $b[] = $comando('php artisan entregas:proteger-anexos');
+    $b[] = $texto('O "entregas:proteger-anexos" move os anexos de entrega e as evidências de indicadores da pasta pública para a pasta privada do sistema '
+        .'(de storage/app/public para storage/app/private), onde só são entregues a quem tem permissão. Pode ser repetido: o que já foi movido não é tocado.');
     $b[] = $texto('O "--force" é obrigatório em produção: sem ele o comando pede confirmação e, sem terminal interativo, é cancelado. '
         .'O PerfilAcessoSeeder cadastra o novo perfil "Consulta" (somente leitura). '
         .'Os dois seeders e o storage:link podem ser repetidos com segurança: não duplicam nem apagam dados, e o link, se já existir, é mantido.');
@@ -107,7 +123,9 @@ return function (array $f): array {
     // ── CONFERÊNCIA ─────────────────────────────────────────────────────────
     $b[] = $secao('Conferência final');
     $b[] = $comando('php artisan migrate:status');
-    $b[] = $texto('As linhas "2026_10_03_120000_alinhar_colunas_mitigacao_e_ocorrencia_de_risco", "2026_10_03_180000_exclui_dependentes_de_iniciativas_ja_excluidas" e "2026_10_03_200000_create_tab_documentos_table" devem aparecer como "Ran", e nenhuma linha como "Pending".');
+    $b[] = $texto('As linhas "2026_10_03_120000_alinhar_colunas_mitigacao_e_ocorrencia_de_risco", "2026_10_03_180000_exclui_dependentes_de_iniciativas_ja_excluidas", "2026_10_03_200000_create_tab_documentos_table" e "2026_10_03_220000_marca_email_verificado_de_contas_com_perfil" devem aparecer como "Ran", e nenhuma linha como "Pending".');
+    $b[] = $comando('php artisan entregas:proteger-anexos --simular');
+    $b[] = $texto('Deve informar "Seriam movidos: 0 arquivo(s)" — sinal de que nenhum anexo ficou na pasta pública.');
     $b[] = $texto('No sistema: Gestão de Riscos → abrir um risco → Planos de Mitigação → Novo Plano. O plano deve ser salvo sem erro.');
     $b[] = $texto('No sistema: menu Documentos → Enviar documento → escolher um PDF entre 5 MB e 20 MB, preencher nome e tipo e enviar. O documento deve aparecer na lista e abrir pelo botão "Abrir PDF em nova aba".');
     $b[] = $texto('No sistema: Administração → Usuários → Novo Usuário. O campo de perfil deve oferecer a opção "Consulta".');

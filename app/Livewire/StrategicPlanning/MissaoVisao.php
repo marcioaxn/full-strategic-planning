@@ -2,6 +2,7 @@
 
 namespace App\Livewire\StrategicPlanning;
 
+use App\Concerns\RevalidaUnidadeNaRequisicao;
 use App\Models\Organization;
 use App\Models\StrategicPlanning\IdentidadeEstrategica;
 use App\Models\StrategicPlanning\PEI;
@@ -21,6 +22,7 @@ use Livewire\Component;
 class MissaoVisao extends Component
 {
     use AuthorizesRequests;
+    use RevalidaUnidadeNaRequisicao;
 
     public $negocio = '';
 
@@ -41,6 +43,7 @@ class MissaoVisao extends Component
 
     public bool $isEditing = false;
 
+    #[Locked]
     public bool $aiEnabled = false;
 
     public $aiSuggestion = '';

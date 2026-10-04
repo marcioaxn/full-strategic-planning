@@ -15,6 +15,7 @@ use App\Models\StrategicPlanning\TemaNorteador;
 use App\Models\StrategicPlanning\Valor;
 use App\Models\SystemSetting;
 use App\Support\UnidadeMedida;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
@@ -376,7 +377,8 @@ class EstruturaRelatorioGestao
                 ->orderBy('dsc_plano_de_acao')
                 ->get();
 
-            $indicadores = Indicador::where('cod_objetivo', $objetivo->cod_objetivo)->get();
+            // Só os indicadores ligados à unidade do relatório (e às subordinadas).
+            $indicadores = $this->indicadoresDaUnidade(Indicador::where('cod_objetivo', $objetivo->cod_objetivo), $org)->get();
 
             $resultados = $indicadores->map(function (Indicador $ind) use ($ano) {
                 $atingimento = $ind->calcularAtingimento($ano);
@@ -404,6 +406,25 @@ class EstruturaRelatorioGestao
     }
 
     /** Seções 2.3 a 2.5 do modelo: os números de destaque do exercício. */
+    /**
+     * Recorta indicadores pela unidade do relatório (e subordinadas), pelo vínculo
+     * rel_indicador_objetivo_organizacao — a mesma regra do Mapa Estratégico.
+     * Sem unidade, a instituição toda.
+     */
+    private function indicadoresDaUnidade(Builder $query, ?Organization $org): Builder
+    {
+        if (! $org) {
+            return $query;
+        }
+
+        $orgs = Organization::descendentesEProprio($org->cod_organizacao);
+
+        return $query->whereIn('performance_indicators.tab_indicador.cod_indicador', fn ($sub) => $sub
+            ->select('cod_indicador')
+            ->from('performance_indicators.rel_indicador_objetivo_organizacao')
+            ->whereIn('cod_organizacao', $orgs));
+    }
+
     private function grandesNumeros(?PEI $pei, ?Organization $org, int $ano): array
     {
         if (! $pei) {
@@ -421,7 +442,7 @@ class EstruturaRelatorioGestao
         $numeros = [
             ['rotulo' => 'Objetivos estratégicos', 'valor' => (string) $objetivos->count()],
             ['rotulo' => 'Iniciativas no ciclo', 'valor' => (string) $iniciativas->count()],
-            ['rotulo' => 'Indicadores monitorados', 'valor' => (string) Indicador::whereIn('cod_objetivo', $objetivos->pluck('cod_objetivo'))->count()],
+            ['rotulo' => 'Indicadores monitorados', 'valor' => (string) $this->indicadoresDaUnidade(Indicador::whereIn('cod_objetivo', $objetivos->pluck('cod_objetivo')), $org)->count()],
         ];
 
         if ($orcamento > 0) {

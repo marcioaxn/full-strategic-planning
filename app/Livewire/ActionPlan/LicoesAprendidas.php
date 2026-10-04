@@ -2,6 +2,7 @@
 
 namespace App\Livewire\ActionPlan;
 
+use App\Concerns\RevalidaUnidadeNaRequisicao;
 use App\Models\ActionPlan\LicaoAprendida;
 use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\Organization;
@@ -15,6 +16,8 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class LicoesAprendidas extends Component
 {
+    use RevalidaUnidadeNaRequisicao;
+
     public $peiAtivo;
 
     // Só o servidor define (atualizarOrganizacao confere o escopo): um $set

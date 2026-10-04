@@ -384,7 +384,7 @@
                             </div>
                         @else
                             <div class="markdown-content">
-                                {!! Str::markdown($aiSuggestion, ['html_input' => 'strip']) !!}
+                                {!! Str::markdown($aiSuggestion, ['html_input' => 'strip', 'allow_unsafe_links' => false]) !!}
                             </div>
                         @endif
                         <div class="mt-3 pt-3 border-top d-flex align-items-center gap-2 text-muted small italic">

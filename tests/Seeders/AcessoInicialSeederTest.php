@@ -111,9 +111,11 @@ it('cria o Super Administrador com os atributos de conta corretos', function () 
         ->and($user->email)->toBe(SuperAdministradorSeeder::EMAIL);
 
     $this->assertTrue($user->isAtivo(), 'A conta foi criada inativa e não conseguiria operar o sistema.');
-    $this->assertFalse(
+    // Auditoria de segurança (SEC-06): a senha inicial passou pela variável de
+    // ambiente ou pelo console — a troca no primeiro acesso é obrigatória.
+    $this->assertTrue(
         $user->deveTrocarSenha(),
-        'A conta nasceu com troca de senha obrigatória, o que desvia o primeiro acesso para /trocar-senha.'
+        'A conta do administrador inicial precisa nascer com troca de senha obrigatória.'
     );
 });
 
@@ -268,12 +270,15 @@ it('recusa o login com senha incorreta', function () {
     $this->assertGuest();
 });
 
-it('permite abrir o Dashboard logo após o login, sem desvio para troca de senha', function () {
+it('leva à troca de senha no primeiro acesso, e ao Dashboard depois dela', function () {
     $this->post('/login', [
         'email' => SuperAdministradorSeeder::EMAIL,
         'password' => SuperAdministradorSeeder::senhaInicial(),
     ]);
 
+    $this->get('/dashboard')->assertRedirect(route('auth.trocar-senha', absolute: false));
+
+    superAdmin()->forceFill(['trocarsenha' => 0])->save();
     $this->get('/dashboard')->assertOk();
 });
 

@@ -4,6 +4,7 @@ namespace App\Livewire\Audit;
 
 use App\Models\User;
 use App\Support\RotuloAuditoria;
+use App\Support\TextoSeguro;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -136,7 +137,8 @@ class ListarLogs extends Component
 
             $query->chunk(200, function ($logs) use ($file) {
                 foreach ($logs as $log) {
-                    fputcsv($file, [
+                    // Nome do usuário vem do autocadastro: sem isto, "=..." vira fórmula no Excel.
+                    fputcsv($file, array_map([TextoSeguro::class, 'celula'], [
                         $log->id,
                         $log->created_at->format('d/m/Y H:i:s'),
                         $log->user->name ?? 'Sistema',
@@ -144,7 +146,7 @@ class ListarLogs extends Component
                         RotuloAuditoria::registro($log->auditable_type),
                         $log->auditable_id,
                         $log->ip_address,
-                    ], ';');
+                    ]), ';');
                 }
             });
 

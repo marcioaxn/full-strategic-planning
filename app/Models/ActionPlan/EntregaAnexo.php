@@ -60,6 +60,11 @@ class EntregaAnexo extends Model
     /**
      * Tipos MIME de imagem suportados
      */
+    /** Disco privado: o arquivo só sai pela rota autorizada (ArquivoAnexoEntregaController). */
+    public const DISCO = 'local';
+
+    public const PASTA = 'entregas/anexos';
+
     public const MIME_IMAGENS = [
         'image/jpeg',
         'image/png',
@@ -128,7 +133,8 @@ class EntregaAnexo extends Model
      */
     public function getUrl(): string
     {
-        return asset('storage/'.$this->dsc_caminho);
+        // Nunca o caminho público do arquivo: a rota confere a EntregaPolicy.
+        return route('entregas.anexo', $this->cod_anexo);
     }
 
     /**

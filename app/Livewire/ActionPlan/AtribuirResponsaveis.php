@@ -257,6 +257,14 @@ class AtribuirResponsaveis extends Component
             'formRaci.user_id.required' => 'Selecione o usuário.',
         ]);
 
+        // O usuário vem do navegador: só vale quem está na lista que a tela oferece
+        // (pessoas da unidade da iniciativa). exists:users aceitava qualquer conta.
+        if (! $this->consultaUsuariosDisponiveis()->where('users.id', $this->formRaci['user_id'])->exists()) {
+            $this->addError('formRaci.user_id', 'Escolha uma pessoa da unidade da iniciativa.');
+
+            return;
+        }
+
         // A entrega escolhida também vem do navegador: tem de ser deste plano.
         if ($this->formRaci['cod_entrega']
             && ! $this->plano->entregas()->where('cod_entrega', $this->formRaci['cod_entrega'])->exists()) {

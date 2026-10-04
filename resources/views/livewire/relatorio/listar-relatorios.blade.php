@@ -54,7 +54,7 @@
                         </div>
                         <h5 class="fw-bold text-primary mb-3"><i class="bi bi-stars me-2"></i>Insight Estratégico</h5>
                         <div class="markdown-content text-dark opacity-75" style="line-height: 1.6;">
-                            {!! Str::markdown($aiInsight, ['html_input' => 'strip']) !!}
+                            {!! Str::markdown($aiInsight, ['html_input' => 'strip', 'allow_unsafe_links' => false]) !!}
                         </div>
                         <div class="text-end mt-2">
                             <button class="btn btn-sm btn-link text-muted text-decoration-none" wire:click="$set('aiInsight', '')">Fechar Insight</button>

@@ -17,9 +17,6 @@ class DetalharOrganizacao extends Component
 
     public $estatisticas = [];
 
-    /** A aba de usuários (nome e e-mail) só para quem administra usuários desta unidade. */
-    public bool $podeVerUsuarios = false;
-
     public function mount($id)
     {
         $this->organizacao = Organization::with([
@@ -35,8 +32,6 @@ class DetalharOrganizacao extends Component
         // lista de nome e e-mail dos usuários da unidade consultada.
         $this->authorize('view', $this->organizacao);
 
-        $this->podeVerUsuarios = auth()->user()->can('modulo.acessar', ['usuarios', $this->organizacao->cod_organizacao]);
-
         $qtdIndicadores = Indicador::whereHas('organizacoes', function ($q) use ($id) {
             $q->where('tab_organizacoes.cod_organizacao', $id);
         })->count();
@@ -51,6 +46,11 @@ class DetalharOrganizacao extends Component
 
     public function render()
     {
-        return view('livewire.organization.detalhar-organizacao');
+        // A aba de usuários (nome e e-mail) só para quem administra usuários desta
+        // unidade. Calculado a cada render: em propriedade pública, o navegador
+        // trocava para true com $wire.set e a aba abria para Consulta e Gestores.
+        return view('livewire.organization.detalhar-organizacao', [
+            'podeVerUsuarios' => auth()->user()->can('modulo.acessar', ['usuarios', $this->organizacao->cod_organizacao]),
+        ]);
     }
 }

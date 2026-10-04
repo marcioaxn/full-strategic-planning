@@ -12,6 +12,7 @@ use App\Models\StrategicPlanning\TemaNorteador;
 use App\Models\StrategicPlanning\Valor;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class MapaEstrategico extends Component
@@ -20,6 +21,8 @@ class MapaEstrategico extends Component
 
     public $peiAtivo;
 
+    // Trocada só por atualizarOrganizacao(), que confere o escopo do usuário logado.
+    #[Locked]
     public $organizacaoId;
 
     public $organizacaoNome;

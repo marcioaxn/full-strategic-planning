@@ -44,7 +44,7 @@ final class CopiarPeiService
             return DB::transaction(fn () => $this->executar($origem, $descricao, $anoInicio, $anoFim));
         } catch (\Throwable $e) {
             foreach ($this->arquivosNovos as $arquivo) {
-                Storage::disk('public')->delete($arquivo);
+                Storage::disk('local')->delete($arquivo);
             }
             throw $e;
         }
@@ -278,14 +278,16 @@ final class CopiarPeiService
     /** O arquivo é duplicado: apagar o anexo de um PEI não pode levar o do outro. */
     private function duplicarArquivo(string $caminho): string
     {
-        $disco = Storage::disk('public');
-        if (! $disco->exists($caminho)) {
+        // Evidências e anexos vão para o disco privado; os antigos podem estar
+        // ainda no público. Lê de onde estiver, grava a cópia sempre no privado.
+        $origem = collect(['local', 'public'])->first(fn (string $d) => Storage::disk($d)->exists($caminho));
+        if (! $origem) {
             return $caminho;
         }
 
         $diretorio = trim(dirname($caminho), './\\');
         $destino = ($diretorio !== '' ? $diretorio.'/' : '').Str::uuid().'_'.basename($caminho);
-        $disco->copy($caminho, $destino);
+        Storage::disk('local')->put($destino, Storage::disk($origem)->get($caminho));
         $this->arquivosNovos[] = $destino;
 
         return $destino;

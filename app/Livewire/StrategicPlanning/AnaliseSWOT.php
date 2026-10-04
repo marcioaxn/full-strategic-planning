@@ -2,6 +2,7 @@
 
 namespace App\Livewire\StrategicPlanning;
 
+use App\Concerns\RevalidaUnidadeNaRequisicao;
 use App\Models\Organization;
 use App\Models\StrategicPlanning\AnaliseAmbiental;
 use App\Models\StrategicPlanning\CenarioProspectivo;
@@ -15,6 +16,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -23,6 +25,7 @@ use Livewire\Component;
 class AnaliseSWOT extends Component
 {
     use AuthorizesRequests;
+    use RevalidaUnidadeNaRequisicao;
 
     #[Locked]
     public $peiAtivo;
@@ -112,6 +115,7 @@ class AnaliseSWOT extends Component
 
     public array $objetivosOptions = [];
 
+    #[Locked]
     public bool $aiEnabled = false;
 
     public $aiSuggestion = '';
@@ -203,6 +207,10 @@ class AnaliseSWOT extends Component
         if (! $this->peiAtivo) {
             return;
         }
+
+        // Categoria e texto vêm do navegador (botão da sugestão da IA).
+        abort_unless(in_array($categoria, self::CATEGORIAS, true), 422);
+        $item = mb_substr(trim((string) $item), 0, 500);
 
         AnaliseAmbiental::create([
             'cod_pei' => $this->peiAtivo->cod_pei,
@@ -326,7 +334,17 @@ class AnaliseSWOT extends Component
         $this->validate([
             'formTows.dsc_tipo' => 'required|in:SO,ST,WO,WT',
             'formTows.dsc_estrategia' => 'required|string|max:1000',
+            'formTows.cod_objetivo_vinculado' => 'nullable|uuid',
         ], ['formTows.dsc_estrategia.required' => 'Descreva a estratégia TOWS.']);
+
+        // O objetivo vinculado vem do navegador: precisa ser do ciclo desta análise.
+        $codObjetivo = $this->formTows['cod_objetivo_vinculado'] ?: null;
+        if ($codObjetivo && ! Objetivo::whereKey($codObjetivo)
+            ->whereHas('perspectiva', fn ($q) => $q->where('cod_pei', $this->peiAtivo->cod_pei))->exists()) {
+            $this->addError('formTows.cod_objetivo_vinculado', 'Escolha um objetivo deste ciclo.');
+
+            return;
+        }
 
         $data = [
             'cod_pei' => $this->peiAtivo->cod_pei,
@@ -373,11 +391,29 @@ class AnaliseSWOT extends Component
         $this->showModal = true;
     }
 
+    /** As quatro categorias da SWOT — lista fechada no servidor. */
+    private const CATEGORIAS = [
+        AnaliseAmbiental::SWOT_FORCA, AnaliseAmbiental::SWOT_FRAQUEZA,
+        AnaliseAmbiental::SWOT_OPORTUNIDADE, AnaliseAmbiental::SWOT_AMEACA,
+    ];
+
+    /**
+     * Item SWOT desta unidade E deste ciclo. Conferir só a unidade deixava
+     * editar (e converter em SWOT) um item PESTEL ou de outro ciclo.
+     */
+    private function itemDaAnalise(string $id): AnaliseAmbiental
+    {
+        return AnaliseAmbiental::whereKey($id)
+            ->where('cod_organizacao', $this->organizacaoId)
+            ->where('cod_pei', $this->peiAtivo?->cod_pei)
+            ->where('dsc_tipo_analise', AnaliseAmbiental::TIPO_SWOT)
+            ->firstOrFail();
+    }
+
     public function edit($id)
     {
         $this->autorizarNaUnidade('editar');
-        $item = AnaliseAmbiental::findOrFail($id);
-        abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
+        $item = $this->itemDaAnalise($id);
         $this->itemId = $id;
         $this->dsc_categoria = $item->dsc_categoria;
         $this->dsc_item = $item->dsc_item;
@@ -405,6 +441,7 @@ class AnaliseSWOT extends Component
             'num_urgencia' => 'required|integer|min:1|max:5',
             'num_tendencia' => 'required|integer|min:1|max:5',
             'txt_observacao' => 'nullable|string|max:1000',
+            'dsc_categoria' => ['required', Rule::in(self::CATEGORIAS)],
         ]);
 
         $data = [
@@ -421,8 +458,7 @@ class AnaliseSWOT extends Component
         ];
 
         if ($this->itemId) {
-            $item = AnaliseAmbiental::findOrFail($this->itemId);
-            abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
+            $item = $this->itemDaAnalise($this->itemId);
             $item->update($data);
             $message = 'Item atualizado com sucesso!';
         } else {
@@ -564,8 +600,7 @@ class AnaliseSWOT extends Component
     public function delete($id)
     {
         $this->autorizarNaUnidade('excluir');
-        $item = AnaliseAmbiental::findOrFail($id);
-        abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
+        $item = $this->itemDaAnalise($id);
         $item->delete();
         $this->carregarDados();
         $this->dispatch('notify', message: 'Item removido com sucesso!', style: 'warning');

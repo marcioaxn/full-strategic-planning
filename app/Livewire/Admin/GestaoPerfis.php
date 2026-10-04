@@ -123,6 +123,10 @@ class GestaoPerfis extends Component
 
     public function render()
     {
+        // Reautoriza a cada requisição: busca e paginação disparam updates, e quem
+        // perdeu o Super Admin com a aba aberta continuava listando os usuários.
+        $this->authorize('modulo.acessar', 'admin.perfis');
+
         // Pessoas DISTINTAS com vínculo ativo: um Gestor de duas iniciativas tem
         // dois vínculos, mas é uma pessoa — e vínculo excluído não conta.
         $perfis = PerfilAcesso::withCount([

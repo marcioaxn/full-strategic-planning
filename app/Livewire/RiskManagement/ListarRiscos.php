@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\AI\AiServiceFactory;
 use App\Services\NotificationService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -55,6 +56,7 @@ class ListarRiscos extends Component
     #[Locked]
     public $riscoId;
 
+    #[Locked]
     public bool $aiEnabled = false;
 
     public $aiSuggestion = '';
@@ -262,7 +264,10 @@ class ListarRiscos extends Component
     {
         $this->validate([
             'form.dsc_titulo' => 'required|string|max:255',
-            'form.dsc_categoria' => 'required',
+            // Lista fechada no servidor (as listas da tela são propriedades públicas).
+            // "Jurídico" e "Monitorado" são valores legados ainda gravados no banco.
+            'form.dsc_categoria' => 'required|in:Estratégico,Operacional,Financeiro,Reputacional,Legal/Conformidade,Jurídico',
+            'form.dsc_status' => 'required|in:Identificado,Em Monitoramento,Monitorado,Mitigado,Encerrado',
             'form.num_probabilidade' => 'required|integer|min:1|max:5',
             'form.num_impacto' => 'required|integer|min:1|max:5',
             // ATENÇÃO: nunca prefixar o schema aqui. O Laravel lê o ponto na regra
@@ -304,8 +309,14 @@ class ListarRiscos extends Component
         }
 
         try {
-            $data = $this->form;
-            unset($data['objetivos_vinculados']);
+            // Só os campos do formulário. 🔴 $this->form inteiro ia para o update():
+            // o array público aceita chave nova vinda do navegador, e o fillable tem
+            // cod_organizacao/cod_pei — o risco era transferido para outra unidade.
+            $data = Arr::only($this->form, [
+                'dsc_titulo', 'txt_descricao', 'dsc_categoria', 'num_probabilidade', 'num_impacto',
+                'txt_causas', 'txt_consequencias', 'cod_responsavel_monitoramento', 'dsc_status',
+                'dsc_estrategia_resposta', 'txt_justificativa_estrategia', 'dte_proxima_revisao',
+            ]);
 
             // Campo de data não preenchido chega do formulário como string
             // vazia, e o PostgreSQL recusa "" em coluna date

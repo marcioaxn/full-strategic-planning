@@ -2,6 +2,7 @@
 
 namespace App\Livewire\StrategicPlanning;
 
+use App\Concerns\RevalidaUnidadeNaRequisicao;
 use App\Models\Organization;
 use App\Models\StrategicPlanning\AnaliseAmbiental;
 use App\Models\StrategicPlanning\PEI;
@@ -11,6 +12,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -19,6 +21,7 @@ use Livewire\Component;
 class AnalisePESTEL extends Component
 {
     use AuthorizesRequests;
+    use RevalidaUnidadeNaRequisicao;
 
     #[Locked]
     public $peiAtivo;
@@ -55,6 +58,7 @@ class AnalisePESTEL extends Component
 
     public $txt_observacao = '';
 
+    #[Locked]
     public bool $aiEnabled = false;
 
     public $aiSuggestion = '';
@@ -123,6 +127,10 @@ class AnalisePESTEL extends Component
     {
         $this->autorizarNaUnidade('criar');
         abort_unless($this->peiAtivo !== null, 403);
+
+        // Categoria e texto vêm do navegador (botão da sugestão da IA).
+        abort_unless(in_array($categoria, self::CATEGORIAS, true), 422);
+        $item = mb_substr(trim((string) $item), 0, 500);
 
         AnaliseAmbiental::create([
             'cod_pei' => $this->peiAtivo->cod_pei,
@@ -216,12 +224,30 @@ class AnalisePESTEL extends Component
         $this->showModal = true;
     }
 
+    /** As seis dimensões da PESTEL — lista fechada no servidor. */
+    private const CATEGORIAS = [
+        AnaliseAmbiental::PESTEL_POLITICO, AnaliseAmbiental::PESTEL_ECONOMICO, AnaliseAmbiental::PESTEL_SOCIAL,
+        AnaliseAmbiental::PESTEL_TECNOLOGICO, AnaliseAmbiental::PESTEL_AMBIENTAL, AnaliseAmbiental::PESTEL_LEGAL,
+    ];
+
+    /**
+     * Item PESTEL desta unidade E deste ciclo. Conferir só a unidade deixava
+     * editar (e converter em PESTEL) um item SWOT ou de outro ciclo.
+     */
+    private function itemDaAnalise(string $id): AnaliseAmbiental
+    {
+        return AnaliseAmbiental::whereKey($id)
+            ->where('cod_organizacao', $this->organizacaoId)
+            ->where('cod_pei', $this->peiAtivo?->cod_pei)
+            ->where('dsc_tipo_analise', AnaliseAmbiental::TIPO_PESTEL)
+            ->firstOrFail();
+    }
+
     public function edit($id)
     {
         $this->autorizarNaUnidade('editar');
 
-        $item = AnaliseAmbiental::findOrFail($id);
-        abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
+        $item = $this->itemDaAnalise($id);
         $this->itemId = $id;
         $this->dsc_categoria = $item->dsc_categoria;
         $this->dsc_item = $item->dsc_item;
@@ -244,6 +270,7 @@ class AnalisePESTEL extends Component
             'dsc_item' => 'required|string|max:500',
             'num_impacto' => 'required|integer|min:1|max:5',
             'txt_observacao' => 'nullable|string|max:1000',
+            'dsc_categoria' => ['required', Rule::in(self::CATEGORIAS)],
         ]);
 
         $data = [
@@ -257,8 +284,7 @@ class AnalisePESTEL extends Component
         ];
 
         if ($this->itemId) {
-            $item = AnaliseAmbiental::findOrFail($this->itemId);
-            abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
+            $item = $this->itemDaAnalise($this->itemId);
             $item->update($data);
             $message = 'Item atualizado com sucesso!';
         } else {
@@ -275,8 +301,7 @@ class AnalisePESTEL extends Component
     {
         $this->autorizarNaUnidade('excluir');
 
-        $item = AnaliseAmbiental::findOrFail($id);
-        abort_unless($item->cod_organizacao === $this->organizacaoId, 403);
+        $item = $this->itemDaAnalise($id);
         $item->delete();
         $this->carregarDados();
         session()->flash('status', 'Item removido com sucesso!');

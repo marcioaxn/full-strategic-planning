@@ -26,7 +26,7 @@
                         </div>
                         <div class="flex-grow-1 min-width-0">
                             <div class="fw-bold text-body small text-truncate">{{ $alert->title }}</div>
-                            <p class="small text-body-secondary mb-1 lh-sm" style="font-size: 0.75rem;">{!! $alert->message !!}</p>
+                            <p class="small text-body-secondary mb-1 lh-sm" style="font-size: 0.75rem;">{{ strip_tags((string) $alert->message) }}</p>
                             <div class="text-body-secondary opacity-75" style="font-size: 0.65rem;">
                                 <i class="bi bi-clock me-1"></i>{{ $alert->created_at->diffForHumans() }}
                             </div>

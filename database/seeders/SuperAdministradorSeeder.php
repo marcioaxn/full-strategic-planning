@@ -202,7 +202,9 @@ class SuperAdministradorSeeder extends Seeder
             'password' => Hash::make(self::senhaInicial()),
             'ativo' => 1,        // conta habilitada
             'adm' => 1,          // flag legada, mantida em sincronia com o perfil
-            'trocarsenha' => 0,  // não força a troca no primeiro login
+            // Troca obrigatória no primeiro acesso: a senha inicial veio da variável
+            // SEED_ADMIN_PASSWORD ou foi sorteada e impressa no console.
+            'trocarsenha' => 1,
             'email_verified_at' => now(),
             'updated_at' => now(),
         ];

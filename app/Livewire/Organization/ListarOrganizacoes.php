@@ -9,9 +9,11 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -39,6 +41,7 @@ class ListarOrganizacoes extends Component
 
     public string $flashStyle = 'success';
 
+    #[Locked]
     public bool $aiEnabled = false;
 
     public $aiSuggestion = '';
@@ -70,6 +73,10 @@ class ListarOrganizacoes extends Component
 
     public function pedirAjudaIA()
     {
+        // Só quem cadastra ou edita unidades: o botão fica no modal, mas o método
+        // é chamável direto do navegador por qualquer perfil.
+        abort_unless(Gate::any(['modulo.criar', 'modulo.editar'], 'organizacoes'), 403);
+
         if (! $this->aiEnabled) {
             return;
         }
@@ -335,7 +342,10 @@ class ListarOrganizacoes extends Component
             ]);
         }
 
-        if (($escopo = $this->escopo()) !== null && ! in_array($novaSuperior, $escopo, true)) {
+        // A regra é "uma unidade que você ADMINISTRA" — o escopo de leitura incluía
+        // unidades de Consulta e de Gestor, e a subárvore mudava de dono.
+        $usuario = auth()->user();
+        if (! $usuario->isSuperAdmin() && ! $usuario->ehAdministradorEm($novaSuperior)) {
             throw ValidationException::withMessages([
                 'form.rel_cod_organizacao' => 'Escolha como superior uma unidade que você administra.',
             ]);

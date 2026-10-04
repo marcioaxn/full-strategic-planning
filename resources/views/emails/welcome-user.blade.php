@@ -1,7 +1,7 @@
 <x-mail::message>
 # Bem-vindo ao SPS!
 
-Olá **{{ $user->name }}**,
+Olá **{{ \App\Support\TextoSeguro::markdownLiteral($user->name) }}**,
 
 Sua conta foi criada no Strategic Planning System.
 

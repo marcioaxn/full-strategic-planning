@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Concerns\CelulasSemFormula;
 use App\Models\ActionPlan\PlanoDeAcao;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -9,6 +10,8 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class PlanosExport implements FromCollection, WithHeadings, WithMapping
 {
+    use CelulasSemFormula;
+
     protected $organizacaoId;
 
     protected $ano;
@@ -51,7 +54,7 @@ class PlanosExport implements FromCollection, WithHeadings, WithMapping
         ];
     }
 
-    public function map($plano): array
+    protected function linha($plano): array
     {
         $responsaveis = $plano->responsaveis->pluck('name')->implode(', ');
         $entregas = $plano->entregas->count();

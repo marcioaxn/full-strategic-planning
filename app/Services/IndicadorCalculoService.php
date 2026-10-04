@@ -11,6 +11,7 @@ use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\Perspectiva;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -785,7 +786,8 @@ class IndicadorCalculoService
 
         StrategicAlert::create([
             'user_id' => $userId,
-            'cod_organizacao' => session('organizacao_selecionada_id'),
+            // Unidade validada contra o escopo, nunca a sessão crua.
+            'cod_organizacao' => Auth::user()?->organizacaoSelecionadaId(),
             'title' => 'Tendência Desfavorável: '.$indicador->nom_indicador,
             'message' => 'O indicador apresenta tendência '.strtolower($tendencia['direcao'])
                 .' ('.($tendencia['variacao_pct'] >= 0 ? '+' : '').$tendencia['variacao_pct'].'% por período), '

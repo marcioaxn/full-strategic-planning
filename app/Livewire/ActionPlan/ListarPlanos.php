@@ -80,6 +80,7 @@ class ListarPlanos extends Component
 
     public $organizacoesOptions = []; // Lista em árvore
 
+    #[Locked]
     public bool $aiEnabled = false;
 
     public $aiSuggestion = '';
@@ -357,7 +358,16 @@ class ListarPlanos extends Component
             // O Gestor edita a SUA iniciativa, mas não a transfere de unidade:
             // cada unidade acrescentada exige ser Administrador dela.
             $atuais = $planoExistente->organizacoes->pluck('cod_organizacao')->all();
-            foreach (array_diff($orgsInformadas, $atuais) as $codOrg) {
+            // Unidade acrescentada OU retirada, e troca da unidade principal (a 1ª,
+            // que vira cod_organizacao e decide a Policy): só quem administra.
+            // 🔴 Antes só a acrescentada era conferida — o Gestor reordenava ou
+            // reduzia a lista e tirava a iniciativa do Administrador original.
+            $alteradas = array_merge(array_diff($orgsInformadas, $atuais), array_diff($atuais, $orgsInformadas));
+            if (($orgsInformadas[0] ?? null) !== $planoExistente->cod_organizacao) {
+                $alteradas[] = $planoExistente->cod_organizacao;
+                $alteradas[] = $orgsInformadas[0] ?? null;
+            }
+            foreach (array_unique(array_filter($alteradas)) as $codOrg) {
                 abort_unless($usuario->isSuperAdmin() || $usuario->ehAdministradorEm($codOrg), 403);
             }
         } else {
@@ -511,9 +521,13 @@ class ListarPlanos extends Component
             ->with(['objetivo', 'tipoExecucao', 'organizacoes', 'indicadoresVinculados'])
             ->where('cod_tipo_execucao', '!=', 'ecef6a50-c010-4cda-afc3-cbda245b55b0');
 
+        // O filtro de objetivo SE SOMA ao de unidade (antes o substituía e listava
+        // as iniciativas de todas as unidades daquele objetivo).
         if ($this->filtroObjetivo) {
             $query->where('cod_objetivo', $this->filtroObjetivo);
-        } elseif ($this->organizacaoId) {
+        }
+
+        if ($this->organizacaoId) {
             // A unidade selecionada e as subordinadas — limitadas ao que o
             // usuário de fato alcança (o Administrador e a Consulta alcançam as
             // subordinadas; o Gestor, só a própria unidade).

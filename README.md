@@ -388,7 +388,7 @@ As variáveis mais importantes e seus impactos:
 | `APP_URL` | `https://pei.org.gov.br` | URL completa de acesso, incluindo subdiretório se houver |
 | `APP_KEY` | gerada por `key:generate` | Nunca compartilhe ou versione esta chave |
 | `APP_VERSAO` | `2.0.0` | Opcional. Número exibido no rodapé; sem ele vale o de `config/versao.php` |
-| `SEED_ADMIN_PASSWORD` | `"SuaSenhaForte#2026"` | Opcional. Senha do administrador inicial; sem ela a seed sorteia uma (ver [Credenciais iniciais](#credenciais-iniciais)) |
+| `SEED_ADMIN_PASSWORD` | *(uma senha sua)* | Opcional. Senha do administrador inicial; sem ela a seed sorteia uma (ver [Credenciais iniciais](#credenciais-iniciais)) |
 
 ### Banco de dados
 
@@ -488,22 +488,24 @@ A lista de tabelas é descoberta em tempo de execução no `information_schema`,
 
 1. **Você define a senha** — coloque no `.env` (que está no `.gitignore`) antes de rodar a seed:
    ```dotenv
-   SEED_ADMIN_PASSWORD="SuaSenhaForte#2026"
+   SEED_ADMIN_PASSWORD="<escreva aqui uma senha sua — nunca copie um exemplo>"
    ```
    A senha precisa atender à política do sistema: mínimo de 8 caracteres, com maiúscula,
-   minúscula, número e caractere especial.
+   minúscula, número e caractere especial. Depois do primeiro acesso, **apague a variável do
+   `.env`**: ela não é mais necessária e ficaria em texto claro no servidor.
 
 2. **Você não define nada** — a seed **sorteia** uma senha forte de 20 caracteres e a imprime no
    console, uma única vez:
    ```
    SENHA SORTEADA PARA O PRIMEIRO ACESSO — anote agora, não será exibida de novo:
-     7kQ#4mZpR2xV!nB9tLwE
+     (aqui aparece a senha sorteada — 20 caracteres)
    ```
    Só o hash vai para o banco. **Perdeu a linha do console?** Defina `SEED_ADMIN_PASSWORD` no
    `.env` e rode `php artisan db:seed` de novo — a senha do administrador é regravada.
 
-> ⚠️ **Troque a senha após o primeiro acesso** em qualquer ambiente que não seja sua máquina local
-> de desenvolvimento. Acesse **Perfil → Alterar Senha**.
+> 🔒 **O primeiro acesso exige trocar a senha.** A conta do administrador inicial nasce com troca
+> obrigatória: logo após o login o sistema abre a tela de nova senha. Rodar a seed de novo regrava a
+> senha e volta a exigir a troca.
 
 ### Por que o e-mail precisa de um domínio válido
 
@@ -541,7 +543,7 @@ O projeto traz uma suíte dedicada que roda **contra o banco configurado no seu 
 php artisan test --testsuite=Seeders
 ```
 
-Ela verifica, entre outras coisas: que o truncate zera todas as tabelas e preserva `migrations`; que os 5 perfis têm os UUIDs exigidos pelas Policies; que a organização é auto-referenciada; que a senha do README confere com o hash do banco; que o e-mail passa no validador do Laravel; que `isSuperAdmin()` é verdadeiro; que o **login pela rota `/login` funciona** e abre o Dashboard sem desvio para troca de senha; e que rodar a seed duas vezes não duplica registro nenhum.
+Ela verifica, entre outras coisas: que o truncate zera todas as tabelas e preserva `migrations`; que os 5 perfis têm os UUIDs exigidos pelas Policies; que a organização é auto-referenciada; que a senha inicial da seed confere com o hash do banco; que o e-mail passa no validador do Laravel; que `isSuperAdmin()` é verdadeiro; que o **login pela rota `/login` funciona** e leva à troca de senha obrigatória, e depois dela ao Dashboard; e que rodar a seed duas vezes não duplica registro nenhum.
 
 Ao terminar, a suíte **recompõe o acesso inicial**: o banco fica no mesmo estado que `php artisan db:seed` produz, com o administrador pronto para entrar. Não é preciso rodar nada depois dela.
 
