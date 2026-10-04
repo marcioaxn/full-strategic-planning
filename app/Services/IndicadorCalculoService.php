@@ -10,6 +10,7 @@ use App\Models\StrategicAlert;
 use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\Perspectiva;
+use App\Support\CalculoPolaridade;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -298,7 +299,8 @@ class IndicadorCalculoService
             [
                 'vlr_realizado' => $progresso,
                 'vlr_previsto' => 100, // Meta padrão: 100% de conclusão
-                'txt_observacao' => 'Valor calculado automaticamente com base no progresso das entregas ponderadas da iniciativa.',
+                // (Havia aqui 'txt_observacao', coluna que tab_evolucao_indicador
+                // não tem e que não está no $fillable: era descartada em silêncio.)
             ]
         );
 
@@ -560,28 +562,32 @@ class IndicadorCalculoService
      * Calcula o atingimento global de uma perspectiva para um determinado ano.
      * Segue EXATAMENTE a lógica do Mapa Estratégico para garantir Single Source of Truth.
      *
-     * @return float Percentual (0-100)
+     * NULL = sem medição: nenhum indicador medido e nenhuma iniciativa com
+     * entrega no ano (ou só o componente que a perspectiva pesa com 0).
+     *
+     * @return float|null Percentual (0-100+), ou NULL sem medição
      */
-    public function calcularAtingimentoPerspectiva(Perspectiva $perspectiva, int $ano): float
+    public function calcularAtingimentoPerspectiva(Perspectiva $perspectiva, int $ano): ?float
     {
         $pesoInd = $perspectiva->num_peso_indicadores ?? 100;
         $pesoPlan = $perspectiva->num_peso_planos ?? 0;
 
-        // 1. Calcular Média Indicadores
+        // 1. Média dos indicadores MEDIDOS (sem medição e informativo ficam fora)
         $somaAtingInd = 0;
         $totalInd = 0;
 
         foreach ($perspectiva->objetivos as $obj) {
             foreach ($obj->indicadores as $ind) {
-                // Assume que o model Indicador tem este método.
-                // Se não tiver, o Mapa Estratégico quebraria, então DEVE ter.
-                $ating = $ind->calcularAtingimento($ano);
+                $ating = $ind->atingimentoParaMedia($ano);
+                if ($ating === null) {
+                    continue;
+                }
                 $somaAtingInd += $ating;
                 $totalInd++;
             }
         }
 
-        $mediaIndicadores = $totalInd > 0 ? ($somaAtingInd / $totalInd) : 0;
+        $mediaIndicadores = $totalInd > 0 ? ($somaAtingInd / $totalInd) : null;
 
         // 2. Calcular Média Planos (Ponderada Globalmente)
         $somaProgressoPlan = 0;
@@ -616,43 +622,69 @@ class IndicadorCalculoService
             }
         }
 
-        $mediaPlanos = $somaPesoPlan > 0 ? ($somaProgressoPlan / $somaPesoPlan) * 100 : 0;
+        $mediaPlanos = $somaPesoPlan > 0 ? ($somaProgressoPlan / $somaPesoPlan) * 100 : null;
 
-        // 3. Cálculo Final Híbrido
-        $atingimentoFinal = 0;
-        $somaPesosConfig = $pesoInd + $pesoPlan;
+        // 3. Cálculo Final Híbrido (componente sem dado sai; pesos se renormalizam)
+        $atingimentoFinal = self::combinarComponentes($mediaIndicadores, $pesoInd, $mediaPlanos, $pesoPlan);
 
-        if ($somaPesosConfig > 0) {
-            $atingimentoFinal = (($mediaIndicadores * $pesoInd) + ($mediaPlanos * $pesoPlan)) / $somaPesosConfig;
+        return $atingimentoFinal === null ? null : round($atingimentoFinal, 1);
+    }
+
+    /**
+     * O cálculo híbrido indicadores × iniciativas, honesto com o que falta.
+     *
+     * 🔴 Componente SEM DADO não é componente em 0%. Antes, uma perspectiva
+     * 50/50 com a iniciativa toda entregue e o indicador ainda sem medição
+     * saía com 50% — a metade "indicadores" entrava como zero. Agora o
+     * componente ausente (NULL) fica de fora e os pesos dos presentes se
+     * renormalizam. Nenhum presente — ou só presentes com peso 0 — devolve
+     * NULL: "sem medição", nunca 0% pintado de crítico.
+     *
+     * Uma regra só, usada pelo Mapa Estratégico e por este serviço.
+     */
+    public static function combinarComponentes(?float $mediaIndicadores, float|int $pesoIndicadores, ?float $mediaPlanos, float|int $pesoPlanos): ?float
+    {
+        $soma = 0.0;
+        $pesos = 0.0;
+
+        foreach ([[$mediaIndicadores, $pesoIndicadores], [$mediaPlanos, $pesoPlanos]] as [$media, $peso]) {
+            if ($media === null || $peso <= 0) {
+                continue;
+            }
+            $soma += $media * $peso;
+            $pesos += $peso;
         }
 
-        return round($atingimentoFinal, 1);
+        return $pesos > 0 ? $soma / $pesos : null;
     }
 
     /**
      * Calcula o atingimento de um Objetivo específico para um determinado ano.
      * Segue a mesma lógica híbrida da Perspectiva (Indicadores + Planos), usando os pesos da Perspectiva pai.
      *
-     * @return float Percentual (0-100)
+     * @return float|null Percentual (0-100+), ou NULL sem medição
      */
-    public function calcularAtingimentoObjetivo(Objetivo $objetivo, int $ano): float
+    public function calcularAtingimentoObjetivo(Objetivo $objetivo, int $ano): ?float
     {
         // Pesos vêm da Perspectiva Pai
         $perspectiva = $objetivo->perspectiva;
         $pesoInd = $perspectiva->num_peso_indicadores ?? 100;
         $pesoPlan = $perspectiva->num_peso_planos ?? 0;
 
-        // 1. Calcular Média Indicadores do Objetivo
+        // 1. Média dos indicadores MEDIDOS do objetivo
         $somaAtingInd = 0;
         $totalInd = 0;
 
         foreach ($objetivo->indicadores as $ind) {
-            $ating = $ind->calcularAtingimento($ano);
+            $ating = $ind->atingimentoParaMedia($ano);
+            if ($ating === null) {
+                continue;
+            }
             $somaAtingInd += $ating;
             $totalInd++;
         }
 
-        $mediaIndicadores = $totalInd > 0 ? ($somaAtingInd / $totalInd) : 0;
+        $mediaIndicadores = $totalInd > 0 ? ($somaAtingInd / $totalInd) : null;
 
         // 2. Calcular Média Planos do Objetivo (Ponderada)
         $somaProgressoPlan = 0;
@@ -685,24 +717,19 @@ class IndicadorCalculoService
             }
         }
 
-        $mediaPlanos = $somaPesoPlan > 0 ? ($somaProgressoPlan / $somaPesoPlan) * 100 : 0;
+        $mediaPlanos = $somaPesoPlan > 0 ? ($somaProgressoPlan / $somaPesoPlan) * 100 : null;
 
-        // 3. Cálculo Final Híbrido
-        $atingimentoFinal = 0;
-        $somaPesosConfig = $pesoInd + $pesoPlan;
+        // 3. Cálculo Final Híbrido (componente sem dado sai; pesos se renormalizam)
+        $atingimentoFinal = self::combinarComponentes($mediaIndicadores, $pesoInd, $mediaPlanos, $pesoPlan);
 
-        if ($somaPesosConfig > 0) {
-            $atingimentoFinal = (($mediaIndicadores * $pesoInd) + ($mediaPlanos * $pesoPlan)) / $somaPesosConfig;
-        }
-
-        return round($atingimentoFinal, 1);
+        return $atingimentoFinal === null ? null : round($atingimentoFinal, 1);
     }
 
     /**
      * Calcula o Índice de Qualidade de Gestão (IQG) do PEI — índice único de desempenho.
      *
-     * Média ponderada dos atingimentos de todas as perspectivas que possuem
-     * ao menos um indicador com evolução registrada no período.
+     * Média ponderada dos atingimentos das perspectivas que têm medição no
+     * período (calcularAtingimentoPerspectiva() diferente de NULL).
      *
      * @return array{valor: float, tendencia: string, perspectivas: array, grau: mixed}
      */
@@ -720,17 +747,15 @@ class IndicadorCalculoService
         $detalhes = [];
 
         foreach ($perspectivas as $perspectiva) {
-            // Só inclui perspectivas que têm ao menos 1 evolução registrada
-            $temEvolucao = $perspectiva->objetivos->flatMap->indicadores
-                ->flatMap->evolucoes
-                ->where('num_ano', $ano)
-                ->isNotEmpty();
+            // Só entra a perspectiva COM MEDIÇÃO. O filtro antigo ("tem alguma
+            // evolução no ano") deixava entrar a que só tinha previsto lançado
+            // — e ela pesava no índice como 0%.
+            $atingimento = $this->calcularAtingimentoPerspectiva($perspectiva, $ano);
 
-            if (! $temEvolucao) {
+            if ($atingimento === null) {
                 continue;
             }
 
-            $atingimento = $this->calcularAtingimentoPerspectiva($perspectiva, $ano);
             $peso = max(1, $perspectiva->num_nivel_hierarquico_apresentacao ?? 1);
 
             $somaAtingimento += $atingimento * $peso;
@@ -848,11 +873,12 @@ class IndicadorCalculoService
         $variacaoPct = $meanY != 0 ? round(($slope / abs($meanY)) * 100, 1) : 0.0;
 
         // Favorável depende da polaridade
-        $polaridade = $indicador->dsc_polaridade ?? 'Positiva';
-        $favoravel = match ($polaridade) {
-            'Positiva' => $direcao === 'Crescente',
-            'Negativa' => $direcao === 'Decrescente',
-            'Estabilidade' => $direcao === 'Estável',
+        // Normalizada: o rótulo longo ("Negativa (Quanto menor, melhor)"), que
+        // vem do legado e de importação, caía no default e ficava sem juízo.
+        $favoravel = match (CalculoPolaridade::normalizar($indicador->dsc_polaridade)) {
+            CalculoPolaridade::POSITIVA => $direcao === 'Crescente',
+            CalculoPolaridade::NEGATIVA => $direcao === 'Decrescente',
+            CalculoPolaridade::ESTABILIDADE => $direcao === 'Estável',
             default => null,
         };
 

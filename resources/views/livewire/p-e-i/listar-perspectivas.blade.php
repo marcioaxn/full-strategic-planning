@@ -748,7 +748,7 @@
                 </p>
                 <div class="alert alert-warning bg-warning-subtle border-0">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <strong>Atenção:</strong> Todos os objetivos, indicadores e planos associados a esta perspectiva também serão removidos.
+                    <strong>Atenção:</strong> Os objetivos desta perspectiva também serão excluídos, junto com as iniciativas (e suas entregas), os indicadores, o futuro almejado e os comentários de cada objetivo. Atividades da cadeia de valor ligadas a ela ficam sem perspectiva.
                 </div>
             </div>
         </x-slot>

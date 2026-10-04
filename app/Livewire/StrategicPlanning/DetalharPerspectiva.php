@@ -17,7 +17,7 @@ class DetalharPerspectiva extends Component
 
     public $estatisticas = [];
 
-    /** @var array<string, array{atingimento: float|null, faixa: string|null, cor: string|null}> */
+    /** @var array<string, array{atingimento: float|null, faixa: string|null, cor: string|null, tem_indicador: bool}> */
     public array $desempenhoObjetivos = [];
 
     public int $ano;
@@ -40,27 +40,34 @@ class DetalharPerspectiva extends Component
             $temIndicador = $objetivo->indicadores->isNotEmpty()
                 || Indicador::whereHas('planoDeAcao', fn ($q) => $q->where('cod_objetivo', $objetivo->cod_objetivo))->exists();
 
-            if (! $temIndicador) {
-                $this->desempenhoObjetivos[$objetivo->cod_objetivo] = ['atingimento' => null, 'faixa' => null, 'cor' => null];
+            // Com indicador, mas nenhum medido no ano: NULL — "Sem medição",
+            // não 0% pintado de crítico.
+            $atingimento = $temIndicador ? $objetivo->calcularAtingimentoConsolidado($this->ano) : null;
+
+            if ($atingimento === null) {
+                $this->desempenhoObjetivos[$objetivo->cod_objetivo] = ['atingimento' => null, 'faixa' => null, 'cor' => null, 'tem_indicador' => $temIndicador];
 
                 continue;
             }
 
-            $atingimento = round($objetivo->calcularAtingimentoConsolidado($this->ano), 1);
+            $atingimento = round($atingimento, 1);
             $faixa = GrauSatisfacao::faixaDe($atingimento, $codPei, $this->ano);
             $this->desempenhoObjetivos[$objetivo->cod_objetivo] = [
                 'atingimento' => $atingimento,
                 'faixa' => $faixa?->dsc_grau_satisfacao,
                 'cor' => GrauSatisfacao::corDe($atingimento, $codPei, $this->ano),
+                'tem_indicador' => true,
             ];
         }
+
+        // O mesmo cálculo do Mapa: NULL quando nada foi medido (nem indicador
+        // nem iniciativa com entrega no ano).
+        $progresso = app(IndicadorCalculoService::class)->calcularAtingimentoPerspectiva($this->perspectiva, $this->ano);
 
         $this->estatisticas = [
             'qtd_objetivos' => $qtdObjetivos,
             'qtd_indicadores' => $qtdIndicadores,
-            'progresso_medio' => $qtdIndicadores > 0
-                ? round(app(IndicadorCalculoService::class)->calcularAtingimentoPerspectiva($this->perspectiva, $this->ano), 1)
-                : null,
+            'progresso_medio' => $progresso === null ? null : round($progresso, 1),
         ];
     }
 

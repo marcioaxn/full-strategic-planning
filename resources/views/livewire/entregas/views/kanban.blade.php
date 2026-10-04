@@ -6,7 +6,9 @@
 {{-- View Kanban --}}
 <div
     class="notion-kanban"
+    data-pode-editar="{{ $podeEditar ? '1' : '0' }}"
     x-data="{
+        podeEditar: @js($podeEditar),
         retryCount: 0,
         maxRetries: 100, // até 10 s: 2 s não bastavam com a CDN lenta
         init() {
@@ -24,6 +26,10 @@
             });
         },
         waitForSortableAndInit() {
+            // Quem só consulta não arrasta: o servidor recusaria (403).
+            if (!this.podeEditar) {
+                return;
+            }
             if (typeof Sortable !== 'undefined') {
                 this.setupSortable();
             } else if (this.retryCount < this.maxRetries) {
@@ -34,6 +40,9 @@
             }
         },
         setupSortable() {
+            if (!this.podeEditar) {
+                return;
+            }
             if (typeof Sortable === 'undefined') {
                 console.error('SortableJS not loaded');
                 return;
@@ -62,10 +71,14 @@
 
                         const entregaId = evt.item.getAttribute('data-entrega-id');
                         const novoStatus = evt.to.getAttribute('data-status');
-                        const novaPosicao = evt.newIndex + 1;
+                        // A ordem da coluna de destino, de cima para baixo: o
+                        // servidor grava essa ordem (antes, só o índice, que
+                        // colidia com a ordenação global e o card pulava).
+                        const ordemColuna = [...evt.to.querySelectorAll('.notion-card[data-entrega-id]')]
+                            .map(el => el.getAttribute('data-entrega-id'));
 
                         if (entregaId && novoStatus) {
-                            $wire.moverParaStatus(entregaId, novoStatus, novaPosicao);
+                            $wire.moverParaStatus(entregaId, novoStatus, ordemColuna);
                         }
                     }
                 });

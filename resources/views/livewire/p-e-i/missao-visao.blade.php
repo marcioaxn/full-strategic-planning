@@ -68,7 +68,7 @@
                             <i class="bi bi-mortarboard me-2"></i>{{ __('O que é Identidade Estratégica?') }}
                         </h5>
                         <p class="mb-0 text-white-50 small">
-                            {{ __('Aprenda os conceitos fundamentais de Missão, Visão e Valores') }}
+                            {{ __('Por que o órgão existe e aonde quer chegar') }}
                         </p>
                     </div>
                 </div>
@@ -104,14 +104,14 @@
                             <div>
                                 <h6 class="fw-bold mb-2">{{ __('Por que a Identidade Estratégica é importante?') }}</h6>
                                 <p class="mb-0 small">
-                                    {{ __('A Identidade Estratégica é a base do planejamento estratégico. Ela define quem somos (Missão), onde queremos chegar (Visão) e como nos comportamos no caminho (Valores). Sem uma identidade clara, a organização perde direção e coesão.') }}
+                                    {{ __('A Identidade Estratégica é a base do planejamento estratégico. A Missão diz por que o órgão existe e a Visão diz aonde ele quer chegar no fim do ciclo. Sem essas duas respostas claras, cada área puxa para um lado e os objetivos perdem a direção comum.') }}
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     {{-- Cards dos Conceitos --}}
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <div class="card h-100 border border-primary border-opacity-25 shadow-sm">
                             <div class="card-body p-4">
                                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -142,7 +142,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <div class="card h-100 border border-success border-opacity-25 shadow-sm">
                             <div class="card-body p-4">
                                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -167,37 +167,6 @@
                                     <i class="bi bi-chat-quote-fill flex-shrink-0"></i>
                                     <p class="small mb-0 fst-italic">
                                         {{ __('"Ser referência nacional em educação até 2030"') }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="card h-100 border border-warning border-opacity-25 shadow-sm">
-                            <div class="card-body p-4">
-                                <div class="d-flex align-items-center gap-3 mb-3">
-                                    <div class="icon-circle bg-warning bg-opacity-10 text-warning">
-                                        <i class="bi bi-star-fill fs-5"></i>
-                                    </div>
-                                    <h6 class="fw-bold mb-0 text-warning">{{ __('Valores') }}</h6>
-                                </div>
-                                <p class="small text-muted mb-3">
-                                    <strong>{{ __('Definição:') }}</strong> {{ __('Princípios que guiam o comportamento. Respondem à pergunta "Como agimos?"') }}
-                                </p>
-                                <div class="bg-light p-3 rounded-3 border mb-3">
-                                    <p class="small mb-2 fw-semibold text-dark">{{ __('Características:') }}</p>
-                                    <ul class="small mb-0 ps-3">
-                                        <li>{{ __('Não negociáveis') }}</li>
-                                        <li>{{ __('Guiam decisões') }}</li>
-                                        <li>{{ __('Definem a cultura') }}</li>
-                                        <li>{{ __('Aplicáveis no dia a dia') }}</li>
-                                    </ul>
-                                </div>
-                                <div class="alert alert-warning alert-sm py-2 px-3 mb-0 d-flex align-items-start gap-2">
-                                    <i class="bi bi-chat-quote-fill flex-shrink-0"></i>
-                                    <p class="small mb-0 fst-italic">
-                                        {{ __('"Ética, Excelência, Inovação"') }}
                                     </p>
                                 </div>
                             </div>

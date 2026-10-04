@@ -5,7 +5,6 @@ namespace App\Models\StrategicPlanning;
 use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\Agenda2030\ODS;
 use App\Models\PerformanceIndicators\Indicador;
-use App\Support\CalculoPolaridade;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -161,9 +160,10 @@ class Objetivo extends Model implements Auditable
      *
      * @param  int|null  $ano  Ano para cálculo (padrão: ano atual)
      * @param  int|null  $mes  Mês limite para cálculo
-     * @return float Percentual de atingimento consolidado (0-100+)
+     * @return float|null Percentual de atingimento consolidado (0-100+); NULL
+     *                    quando nenhum indicador foi medido (sem medição ≠ 0%)
      */
-    public function calcularAtingimentoConsolidado(?int $ano = null, ?int $mes = null): float
+    public function calcularAtingimentoConsolidado(?int $ano = null, ?int $mes = null): ?float
     {
         $ano = $ano ?? session('ano_selecionado', now()->year);
 
@@ -191,7 +191,7 @@ class Objetivo extends Model implements Auditable
         $todosIndicadores = $indicadoresDiretos->merge($indicadoresPlanos)->unique('cod_indicador');
 
         if ($todosIndicadores->isEmpty()) {
-            return 0;
+            return null;
         }
 
         // Calcular média ponderada pelo peso
@@ -205,19 +205,23 @@ class Objetivo extends Model implements Auditable
             // com o rótulo longo ("Não Aplicável (Informativo)") — como vem de
             // importação e do legado — NÃO era ignorado: entrava na média
             // pesando 0%, e derrubava o atingimento do objetivo inteiro.
-            if (CalculoPolaridade::ehInformativo($indicador->dsc_polaridade)) {
+            //
+            // Indicador SEM MEDIÇÃO também fica fora: entrava como 0% e pintava
+            // de crítico o objetivo que ninguém mediu (atingimentoParaMedia()
+            // devolve NULL para os dois casos).
+            $atingimento = $indicador->atingimentoParaMedia((int) $ano, $mes);
+            if ($atingimento === null) {
                 continue;
             }
 
             $peso = $indicador->num_peso ?? 1;
-            $atingimento = $indicador->calcularAtingimento($ano, $mes);
 
             $somaAtingimentoPonderado += $atingimento * $peso;
             $somaPesos += $peso;
         }
 
         if ($somaPesos == 0) {
-            return 0;
+            return null;
         }
 
         return $somaAtingimentoPonderado / $somaPesos;
@@ -233,6 +237,11 @@ class Objetivo extends Model implements Auditable
     public function getCorFarolConsolidado(?int $ano = null, ?int $mes = null): ?string
     {
         $percentual = $this->calcularAtingimentoConsolidado($ano, $mes);
+
+        // Sem medição: cinza neutro, nunca a cor da pior faixa.
+        if ($percentual === null) {
+            return GrauSatisfacao::COR_SEM_REGUA;
+        }
 
         // A régua é a do ciclo a que este objetivo pertence. A consulta anterior
         // não filtrava por PEI: com dois ciclos cadastrados, o farol do mapa
@@ -284,7 +293,7 @@ class Objetivo extends Model implements Auditable
             'planos_concluidos' => $planosConcluidos,
             'planos_em_andamento' => $planosEmAndamento,
             'planos_atrasados' => $planosAtrasados,
-            'percentual_atingimento' => round($atingimento, 1),
+            'percentual_atingimento' => $atingimento === null ? null : round($atingimento, 1),
             'cor_farol' => $this->getCorFarolConsolidado($ano),
         ];
     }
@@ -293,7 +302,7 @@ class Objetivo extends Model implements Auditable
      * Atingimento considerando objetivos filhos (média simples entre próprio e filhos).
      * Usado no Mapa Estratégico para objetivos que têm desdobramento.
      */
-    public function calcularAtingimentoCascata(?int $ano = null, ?int $mes = null): float
+    public function calcularAtingimentoCascata(?int $ano = null, ?int $mes = null): ?float
     {
         $proprio = $this->calcularAtingimentoConsolidado($ano, $mes);
 
@@ -307,7 +316,10 @@ class Objetivo extends Model implements Auditable
             $valores->push($filho->calcularAtingimentoConsolidado($ano, $mes));
         }
 
-        return $valores->avg();
+        // Sem medição fica fora da média; nenhum medido → NULL.
+        $medidos = $valores->reject(fn ($v) => $v === null);
+
+        return $medidos->isEmpty() ? null : $medidos->avg();
     }
 
     /**

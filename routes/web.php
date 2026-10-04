@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ArquivoAnexoEntregaController;
 use App\Http\Controllers\ArquivoDocumentoController;
+use App\Http\Controllers\ArquivoEvidenciaIndicadorController;
 use App\Http\Controllers\DocumentosController;
 use App\Http\Controllers\ImpersonateController;
 use App\Http\Controllers\Reports\RelatorioController;
@@ -191,6 +192,10 @@ Route::middleware([
     // Indicators (KPIs)
 
     Route::get('/indicadores/{indicadorId}/evolucao', LancarEvolucao::class)->name('indicadores.evolucao');
+    // Evidência do lançamento: disco privado, entregue só a quem pode ver o indicador.
+    Route::get('/indicadores/evidencias/{arquivo}', ArquivoEvidenciaIndicadorController::class)
+        ->whereUuid('arquivo')
+        ->name('indicadores.evidencia');
 
     // Risk Management
     Route::get('/riscos', ListarRiscos::class)->name('riscos.index');

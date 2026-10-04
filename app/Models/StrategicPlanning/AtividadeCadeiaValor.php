@@ -14,6 +14,20 @@ class AtividadeCadeiaValor extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     /**
+     * Excluir a atividade exclui (logicamente) os processos dela. Antes os
+     * processos ficavam vivos, sem dono (achado no teste pelo navegador de
+     * 04/10/2026) — mesma regra do PEI e da Perspectiva.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (self $atividade) {
+            if (! $atividade->isForceDeleting()) {
+                $atividade->processos()->get()->each->delete();
+            }
+        });
+    }
+
+    /**
      * Tabela do banco de dados
      */
     protected $table = 'strategic_planning.tab_atividade_cadeia_valor';

@@ -10,6 +10,7 @@ use App\Support\UnidadeMedida;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -36,7 +37,15 @@ class LancarEvolucao extends Component
 
     public $txt_avaliacao;
 
-    public $bln_atualizado = 'Sim';
+    /**
+     * Booleano na tela, "Sim"/"Não" no banco.
+     *
+     * 🔴 O switch usava true-value="Sim" false-value="Não", que o wire:model do
+     * Livewire 4 ignora: enviava true/false, a regra in:Sim,Não recusava e,
+     * sem @error na tela, nada era gravado nem dito. E o mês gravado com "Não"
+     * abria com o switch LIGADO (!!'Não' é verdadeiro).
+     */
+    public bool $bln_atualizado = true;
 
     // Upload de Arquivos
     public $arquivosTemporarios = [];
@@ -49,7 +58,7 @@ class LancarEvolucao extends Component
         'vlr_previsto' => 'nullable|string|max:30',
         'vlr_realizado' => 'nullable|string|max:30',
         'txt_avaliacao' => 'nullable|string|max:2000',
-        'bln_atualizado' => 'required|in:Sim,Não',
+        'bln_atualizado' => 'boolean',
         // Só documento e imagem (um .html/.svg rodaria script se aberto na
         // origem do sistema). Até 10 MB. Fica no disco privado.
         'arquivosTemporarios' => 'nullable|array',
@@ -71,6 +80,7 @@ class LancarEvolucao extends Component
     {
         $this->indicador = Indicador::findOrFail($indicadorId);
         $this->authorize('update', $this->indicador);
+        $this->barrarCalculoAutomatico();
 
         $this->ano = (int) session('ano_selecionado', now()->year);
         $this->mes = now()->month;
@@ -84,6 +94,23 @@ class LancarEvolucao extends Component
 
         $this->carregarPeriodo();
         $this->carregarHistorico();
+    }
+
+    /**
+     * Indicador de cálculo automático (pela iniciativa) não recebe lançamento
+     * manual: o atingimento vem do progresso das entregas, e qualquer mudança
+     * numa entrega sobrescreve o mês corrente (EntregaObserver). O valor
+     * digitado não entrava no cálculo e sumia sem aviso.
+     */
+    private function barrarCalculoAutomatico(): void
+    {
+        // Mesmo critério de Indicador::atingimentoMedido(): sem iniciativa, o
+        // "automático" não tem de onde tirar valor e é medido pelos lançamentos.
+        abort_if(
+            $this->indicador->dsc_calculation_type === 'action_plan' && $this->indicador->cod_plano_de_acao,
+            403,
+            'Este indicador é calculado automaticamente pelo progresso das entregas da iniciativa e não recebe lançamento manual.'
+        );
     }
 
     /**
@@ -126,13 +153,13 @@ class LancarEvolucao extends Component
             $this->vlr_previsto = UnidadeMedida::formatar($evolucao->vlr_previsto, $unidade, false);
             $this->vlr_realizado = UnidadeMedida::formatar($evolucao->vlr_realizado, $unidade, false);
             $this->txt_avaliacao = $evolucao->txt_avaliacao;
-            $this->bln_atualizado = $evolucao->bln_atualizado;
+            $this->bln_atualizado = $evolucao->bln_atualizado === 'Sim';
             $this->arquivosExistentes = $evolucao->arquivos;
         } else {
             $this->vlr_previsto = '';
             $this->vlr_realizado = '';
             $this->txt_avaliacao = '';
-            $this->bln_atualizado = 'Sim';
+            $this->bln_atualizado = true;
             $this->arquivosExistentes = [];
         }
 
@@ -152,8 +179,34 @@ class LancarEvolucao extends Component
     {
         // Método público = endpoint: a autorização do mount não vale para as chamadas seguintes.
         $this->authorize('update', $this->indicador);
+        $this->barrarCalculoAutomatico();
 
         $this->validate();
+
+        // Nada a registrar: sem valor, sem análise e sem evidência o mês viraria
+        // uma linha "Sem medição" vazia no histórico. Um mês que já existe pode
+        // ser salvo (para tirar valores ou mudar o "Atualizado").
+        $vazio = trim((string) $this->vlr_previsto) === '' && trim((string) $this->vlr_realizado) === ''
+            && trim((string) $this->txt_avaliacao) === '' && empty($this->arquivosTemporarios);
+        $mesJaExiste = EvolucaoIndicador::where('cod_indicador', $this->indicador->cod_indicador)
+            ->where('num_ano', $this->ano)->where('num_mes', $this->mes)->exists();
+        if ($vazio && ! $mesJaExiste) {
+            throw ValidationException::withMessages([
+                'vlr_realizado' => 'Informe o previsto, o realizado, a análise ou uma evidência antes de salvar o mês.',
+            ]);
+        }
+
+        // Texto em formato brasileiro: aqui se confere se é número, se cabe na
+        // coluna (acima disso o banco recusava e a tela caía em 500) e se a
+        // unidade admite fração.
+        $unidade = $this->indicador->dsc_unidade_medida;
+        $erros = array_filter([
+            'vlr_previsto' => UnidadeMedida::erroDeValor($this->vlr_previsto, $unidade),
+            'vlr_realizado' => UnidadeMedida::erroDeValor($this->vlr_realizado, $unidade),
+        ]);
+        if ($erros) {
+            throw ValidationException::withMessages($erros);
+        }
 
         // Ano e mês vêm do navegador: o seletor limita ao ciclo, o servidor também.
         // Sem isto, mês 13 ou ano fora do ciclo eram gravados, e texto virava erro 500.
@@ -172,13 +225,13 @@ class LancarEvolucao extends Component
                 'num_mes' => $this->mes,
             ],
             [
-                // null e zero são coisas diferentes: zero entra na média,
-                // "não informado" não deveria. Mantido o ?: 0 do
-                // comportamento atual para não mudar cálculo neste passo.
-                'vlr_previsto' => UnidadeMedida::paraFloat($this->vlr_previsto) ?: 0,
-                'vlr_realizado' => UnidadeMedida::paraFloat($this->vlr_realizado) ?: 0,
+                // Em branco é NULL ("não medido"), nunca zero: o zero do
+                // Realizado em polaridade negativa dava 100% e farol verde a um
+                // mês que ninguém mediu.
+                'vlr_previsto' => UnidadeMedida::paraFloat($this->vlr_previsto),
+                'vlr_realizado' => UnidadeMedida::paraFloat($this->vlr_realizado),
                 'txt_avaliacao' => $this->txt_avaliacao,
-                'bln_atualizado' => $this->bln_atualizado,
+                'bln_atualizado' => $this->bln_atualizado ? 'Sim' : 'Não',
             ]
         );
 
@@ -208,6 +261,7 @@ class LancarEvolucao extends Component
     public function excluirArquivo($id)
     {
         $this->authorize('update', $this->indicador);
+        $this->barrarCalculoAutomatico();
 
         // Só evidência de evolução DESTE indicador: o id vem do navegador.
         $arquivo = Arquivo::whereIn('cod_evolucao_indicador', EvolucaoIndicador::where('cod_indicador', $this->indicador->cod_indicador)

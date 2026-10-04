@@ -78,9 +78,9 @@ class AtribuirResponsaveis extends Component
     {
         // 1. Carregar Responsáveis Atuais
         // Buscamos na pivot table
-        $this->responsaveis = DB::table('rel_users_tab_organizacoes_tab_perfil_acesso as pivot')
-            ->join('users', 'users.id', '=', 'pivot.user_id')
-            ->join('tab_perfil_acesso as perfil', 'perfil.cod_perfil', '=', 'pivot.cod_perfil')
+        $this->responsaveis = DB::table('organization.rel_users_tab_organizacoes_tab_perfil_acesso as pivot')
+            ->join('pei.users as users', 'users.id', '=', 'pivot.user_id')
+            ->join('organization.tab_perfil_acesso as perfil', 'perfil.cod_perfil', '=', 'pivot.cod_perfil')
             ->where('pivot.cod_plano_de_acao', $this->plano->cod_plano_de_acao)
             ->whereNull('pivot.deleted_at')
             ->select('users.name', 'users.email', 'perfil.dsc_perfil', 'pivot.id', 'pivot.user_id', 'pivot.cod_perfil')
@@ -117,21 +117,25 @@ class AtribuirResponsaveis extends Component
             return;
         }
 
-        // Verificar duplicata
-        $existe = DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')
+        // Uma pessoa tem UM papel de gestão na iniciativa: Responsável e
+        // Substituto ao mesmo tempo anula o substituto, que existe para cobrir
+        // a ausência do titular (achado no teste pelo navegador de 04/10/2026).
+        $papelAtual = DB::table('organization.rel_users_tab_organizacoes_tab_perfil_acesso')
             ->where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)
             ->where('user_id', $this->novo_usuario_id)
-            ->where('cod_perfil', $this->novo_perfil_id)
-            ->exists();
+            ->whereIn('cod_perfil', [PerfilAcesso::GESTOR_RESPONSAVEL, PerfilAcesso::GESTOR_SUBSTITUTO])
+            ->whereNull('deleted_at')
+            ->value('cod_perfil');
 
-        if ($existe) {
-            session()->flash('error', 'Este usuário já possui este perfil atribuído a este plano.');
+        if ($papelAtual) {
+            $papel = $papelAtual === PerfilAcesso::GESTOR_RESPONSAVEL ? 'Gestor(a) Responsável' : 'Gestor(a) Substituto(a)';
+            $this->addError('novo_usuario_id', "Esta pessoa já é {$papel} desta iniciativa. Para trocar o papel, remova o atual primeiro.");
 
             return;
         }
 
         // Inserir na pivot
-        DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')->insert([
+        DB::table('organization.rel_users_tab_organizacoes_tab_perfil_acesso')->insert([
             'id' => Str::uuid(),
             'user_id' => $this->novo_usuario_id,
             'cod_organizacao' => $this->plano->cod_organizacao,
@@ -154,7 +158,7 @@ class AtribuirResponsaveis extends Component
         // O id vem do navegador: só sai o vínculo de gestor DESTE plano, nesta organização.
         // Sem o recorte, qualquer linha da pivot de perfis (inclusive Admin de outra
         // organização) poderia ser apagada por quem edita um único plano.
-        DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')
+        DB::table('organization.rel_users_tab_organizacoes_tab_perfil_acesso')
             ->where('id', $pivotId)
             ->where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)
             ->where('cod_organizacao', $this->plano->cod_organizacao)
@@ -169,6 +173,8 @@ class AtribuirResponsaveis extends Component
 
     public function novaComunicacao(): void
     {
+        $this->authorize('update', $this->plano);
+
         $this->comunEditId = null;
         $this->formComun = ['nom_publico_alvo' => '', 'dsc_mensagem_chave' => '', 'dsc_canal' => 'E-mail', 'dsc_frequencia' => 'Mensal', 'nom_responsavel' => ''];
         $this->showModalComun = true;
@@ -194,17 +200,34 @@ class AtribuirResponsaveis extends Component
     {
         $this->authorize('update', $this->plano);
 
+        // Limites = tamanho das colunas varchar (texto maior era erro 500).
         $this->validate([
             'formComun.nom_publico_alvo' => 'required|string|max:150',
             'formComun.dsc_mensagem_chave' => 'required|string|max:500',
-            'formComun.dsc_canal' => 'required|string',
-            'formComun.dsc_frequencia' => 'required|string',
+            // Sem "in:" da lista: a base tem canais gravados fora dela ("Reunião",
+            // "Portal/Imprensa") e a edição desses itens não pode travar.
+            'formComun.dsc_canal' => 'required|string|max:100',
+            'formComun.dsc_frequencia' => 'required|string|max:50',
+            'formComun.nom_responsavel' => 'nullable|string|max:100',
         ], [
             'formComun.nom_publico_alvo.required' => 'Informe o público-alvo.',
+            'formComun.nom_publico_alvo.max' => 'O público-alvo aceita até 150 caracteres.',
             'formComun.dsc_mensagem_chave.required' => 'Informe a mensagem-chave.',
+            'formComun.dsc_mensagem_chave.max' => 'A mensagem-chave aceita até 500 caracteres.',
+            'formComun.dsc_canal.max' => 'O canal aceita até 100 caracteres.',
+            'formComun.dsc_frequencia.max' => 'A frequência aceita até 50 caracteres.',
+            'formComun.nom_responsavel.max' => 'O nome do responsável aceita até 100 caracteres.',
         ]);
 
-        $data = array_merge($this->formComun, ['cod_plano_de_acao' => $this->plano->cod_plano_de_acao]);
+        // Só os campos do formulário (o array vem do navegador).
+        $data = [
+            'nom_publico_alvo' => $this->formComun['nom_publico_alvo'],
+            'dsc_mensagem_chave' => $this->formComun['dsc_mensagem_chave'],
+            'dsc_canal' => $this->formComun['dsc_canal'],
+            'dsc_frequencia' => $this->formComun['dsc_frequencia'],
+            'nom_responsavel' => ($this->formComun['nom_responsavel'] ?? '') ?: null,
+            'cod_plano_de_acao' => $this->plano->cod_plano_de_acao,
+        ];
 
         $this->comunEditId
             ? $this->comunicacaoDoPlano($this->comunEditId)->update($data)
@@ -227,6 +250,8 @@ class AtribuirResponsaveis extends Component
 
     public function novoRaci(): void
     {
+        $this->authorize('update', $this->plano);
+
         $this->raciEditId = null;
         $this->formRaci = ['user_id' => '', 'cod_entrega' => '', 'dsc_papel' => 'R'];
         $this->showModalRaci = true;
@@ -313,21 +338,15 @@ class AtribuirResponsaveis extends Component
 
     public function render()
     {
-        try {
-            $comunicacoes = PlanoComunicacao::where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)
-                ->orderBy('num_ordem')->get();
-        } catch (\Exception) {
-            $comunicacoes = collect();
-        }
+        // Sem try/catch: as tabelas existem (migrations aplicadas) e uma falha
+        // de verdade não pode virar "lista vazia" em silêncio.
+        $comunicacoes = PlanoComunicacao::where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)
+            ->orderBy('num_ordem')->get();
 
-        try {
-            $racis = Raci::with(['usuario', 'entrega'])
-                ->where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)
-                ->get()
-                ->groupBy('dsc_papel');
-        } catch (\Exception) {
-            $racis = collect();
-        }
+        $racis = Raci::with(['usuario', 'entrega'])
+            ->where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)
+            ->get()
+            ->groupBy('dsc_papel');
 
         $entregas = $this->plano->entregas()->whereNull('cod_entrega_pai')->orderBy('num_ordem')->get();
 

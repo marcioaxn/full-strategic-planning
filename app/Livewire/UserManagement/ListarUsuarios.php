@@ -6,6 +6,7 @@ use App\Models\Organization;
 use App\Models\PerfilAcesso;
 use App\Models\User;
 use App\Notifications\WelcomeSetPasswordNotification;
+use App\Support\HistoricoDoUsuario;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -55,6 +56,9 @@ class ListarUsuarios extends Component
     public bool $showFormModal = false;
 
     public bool $showDeleteModal = false;
+
+    /** @var array<string, int> O que impede a exclusão física (rótulo => quantidade). */
+    public array $historicoDoExcluido = [];
 
     public ?User $editing = null;
 
@@ -106,7 +110,10 @@ class ListarUsuarios extends Component
             'form.email' => ['required', 'email', 'max:255', 'unique:users,email'.($this->editing ? ','.$this->editing->id : '')],
             'form.ativo' => ['boolean'],
             'form.trocarsenha' => ['integer', 'in:0,1,2'],
-            'form.vinculos' => ['required', 'array', 'min:1'],
+            // Conta INATIVA dispensa vínculo: sem isto, a conta de autocadastro
+            // com e-mail não confirmado (que não pode receber perfil) não tinha
+            // como ser desativada — só excluída.
+            'form.vinculos' => ! empty($this->form['ativo']) ? ['required', 'array', 'min:1'] : ['array'],
             'form.vinculos.*.org_id' => ['required'],
             'form.vinculos.*.perfil_id' => ['required'],
             'modoSenhaInicial' => ['required', 'in:enviar_link,senha_manual'],
@@ -444,6 +451,22 @@ class ListarUsuarios extends Component
                 return;
             }
 
+            // O último Super Admin ativo não pode deixar o sistema sem Super Admin
+            // (nem tirando o próprio perfil, nem se desativando): ninguém mais
+            // conseguiria devolver o acesso a Perfis, Configurações e Auditoria.
+            if ($this->editing) {
+                $continuaSuperAdmin = collect($this->form['vinculos'])
+                    ->contains(fn ($v) => ($v['perfil_id'] ?? null) === PerfilAcesso::SUPER_ADMIN);
+
+                if ($this->deixariaSemSuperAdminAtivo($this->editing, (bool) $this->form['ativo'], $continuaSuperAdmin)) {
+                    $campo = $this->form['ativo'] ? 'form.vinculos' : 'form.ativo';
+                    $this->addError($campo, 'Esta é a única conta ativa de Super Administrador. Antes de retirar o perfil ou desativá-la, dê o perfil de Super Administrador a outra conta ativa.');
+                    $this->notify('Não é possível deixar o sistema sem nenhum Super Administrador ativo.', 'warning', 'Último Super Administrador');
+
+                    return;
+                }
+            }
+
             $isNovoUsuario = ! $this->editing;
 
             DB::transaction(function () use ($isNovoUsuario) {
@@ -553,30 +576,103 @@ class ListarUsuarios extends Component
     {
         $this->editing = User::findOrFail($id);
         $this->authorize('delete', $this->editing);
+        $this->historicoDoExcluido = HistoricoDoUsuario::de($this->editing);
         $this->showDeleteModal = true;
     }
 
     public function cancelDelete(): void
     {
         $this->showDeleteModal = false;
+        $this->historicoDoExcluido = [];
         $this->editing = null;
     }
 
+    /**
+     * Exclusão FÍSICA — só para conta sem nenhum histórico.
+     *
+     * 🔴 O User não tem SoftDeletes e as FKs para pei.users são ON DELETE
+     * CASCADE: excluir um ex-servidor apagava a trilha de auditoria, o RACI e
+     * os comentários dele. Quem tem histórico é desativado (desativar()).
+     * Teste: ExcluirEDesativarUsuarioTest.
+     */
     public function delete(): void
     {
-        if ($this->editing) {
-            $this->authorize('delete', $this->editing);
-            $this->editing->delete(); // Soft delete se configurado, ou delete normal
-            // User não tem SoftDeletes por padrão no Laravel, mas vamos checar o model.
-            // O model User não tem `use SoftDeletes` no arquivo que li anteriormente.
-            // Então é delete permanente.
+        if (! $this->editing) {
+            $this->cancelDelete();
 
-            $this->notify(__('Usuário excluído com sucesso.'), 'warning');
+            return;
         }
+
+        $this->authorize('delete', $this->editing);
+
+        // Reconferido aqui: o método é um endpoint e o histórico pode ter
+        // mudado desde que o modal abriu.
+        $this->historicoDoExcluido = HistoricoDoUsuario::de($this->editing);
+
+        if ($this->historicoDoExcluido !== []) {
+            $this->notify(
+                'Este usuário tem registros no sistema e não pode ser excluído sem apagá-los. Use "Desativar": o acesso é bloqueado e o histórico fica preservado.',
+                'warning',
+                'Exclusão não permitida'
+            );
+
+            return;
+        }
+
+        $this->editing->delete();
+        $this->notify(__('Usuário excluído definitivamente.'), 'warning');
 
         $this->cancelDelete();
         $this->resetForm();
         $this->resetPage();
+    }
+
+    /**
+     * Desativa a conta (bloqueia o acesso) e preserva vínculos e histórico.
+     * É a saída oferecida pelo modal de exclusão para quem tem histórico.
+     */
+    public function desativar(): void
+    {
+        if (! $this->editing) {
+            return;
+        }
+
+        $this->authorize('update', $this->editing);
+
+        if ($this->deixariaSemSuperAdminAtivo($this->editing, false, $this->editing->isSuperAdmin())) {
+            $this->notify('Esta é a única conta ativa de Super Administrador e não pode ser desativada.', 'warning', 'Último Super Administrador');
+
+            return;
+        }
+
+        $this->editing->forceFill(['ativo' => false])->save();
+        $this->notify('Usuário desativado. Ele não consegue mais entrar no sistema, e todo o histórico dele foi preservado.');
+
+        $this->cancelDelete();
+        $this->resetForm();
+        $this->resetPage();
+    }
+
+    /**
+     * A alteração deixaria o sistema sem nenhum Super Administrador ativo?
+     */
+    protected function deixariaSemSuperAdminAtivo(User $alvo, bool $continuaAtivo, bool $continuaSuperAdmin): bool
+    {
+        $alvo->unsetRelation('perfisAcesso');
+
+        if (! $alvo->isAtivo() || ! $alvo->isSuperAdmin()) {
+            return false;
+        }
+
+        if ($continuaAtivo && $continuaSuperAdmin) {
+            return false;
+        }
+
+        return ! User::query()
+            ->where('id', '!=', $alvo->id)
+            ->where('ativo', true)
+            ->administradores()
+            ->exists();
     }
 
     public function render()

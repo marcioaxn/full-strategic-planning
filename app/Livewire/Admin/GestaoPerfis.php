@@ -133,7 +133,10 @@ class GestaoPerfis extends Component
             'usuarios as usuarios_count' => fn ($q) => $q->select(DB::raw('count(distinct users.id)')),
         ])->get();
 
+        // Perfis carregados: o selo e o botão "Assumir" seguem o PERFIL (Super
+        // Admin não é assumível), não a coluna legada `adm`.
         $usuarios = User::query()
+            ->with('perfisAcesso')
             ->when($this->buscaUsuario, fn ($q) => $q->where(function ($sub) {
                 $sub->where('name', 'ilike', '%'.$this->buscaUsuario.'%')
                     ->orWhere('email', 'ilike', '%'.$this->buscaUsuario.'%');

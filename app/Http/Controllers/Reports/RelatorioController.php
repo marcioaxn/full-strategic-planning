@@ -22,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class RelatorioController extends Controller
 {
@@ -97,6 +98,60 @@ class RelatorioController extends Controller
     }
 
     /**
+     * Planilha: registra no histórico (como os PDFs) e entrega a mesma resposta.
+     *
+     * 🔴 Os Excel saíam por Excel::download direto: o "Gerados Recentemente" e o
+     * Histórico nunca mostravam planilha, embora a view tivesse ícone para xlsx.
+     * O registro lê o arquivo que o pacote já gerou; a resposta não muda.
+     */
+    private function entregarPlanilha(BinaryFileResponse $resposta, string $nomeArquivo, string $tipo)
+    {
+        try {
+            $caminho = $resposta->getFile()->getPathname();
+
+            RelatorioGerado::registrar(
+                ['content' => (string) file_get_contents($caminho), 'filename' => $nomeArquivo],
+                $tipo.' (Excel)',
+                Auth::id(),
+                request()->query(),
+                request()->route()?->getName(),
+                'xlsx',
+            );
+        } catch (\Throwable $e) {
+            // O histórico é registro, não o produto: não impede o download.
+            report($e);
+        }
+
+        return $resposta;
+    }
+
+    /** Volta à tela com a explicação no banner do layout (flash.banner). */
+    private function voltarComAviso(string $mensagem)
+    {
+        return back()
+            ->with('flash.banner', $mensagem)
+            ->with('flash.bannerStyle', 'warning');
+    }
+
+    /**
+     * O Relatório de Gestão sai do ciclo selecionado no topo. Exercício fora
+     * dele é recusado: antes, "Relatório de Gestão 2032" saía com os dados do
+     * ciclo atual na capa e no conteúdo.
+     */
+    private function gestaoForaDoCiclo(int $ano): ?string
+    {
+        $pei = PEI::doContexto();
+
+        if (! $pei || ($ano >= (int) $pei->num_ano_inicio_pei && $ano <= (int) $pei->num_ano_fim_pei)) {
+            return null;
+        }
+
+        return "O exercício {$ano} não pertence ao ciclo selecionado ({$pei->dsc_pei}, "
+            ."{$pei->num_ano_inicio_pei}–{$pei->num_ano_fim_pei}). Selecione no topo o ciclo desse exercício "
+            .'ou um ano dentro do ciclo atual.';
+    }
+
+    /**
      * Quem pode baixar este relatório.
      *
      * As rotas de relatório exigiam só login: qualquer usuário autenticado,
@@ -147,11 +202,13 @@ class RelatorioController extends Controller
 
         $ano = $request->query('ano') ?? session('ano_selecionado') ?? date('Y');
         $periodo = $request->query('periodo') ?? 'anual';
-        $perspectivaId = $request->query('perspectiva');
+        $perspectivaId = $request->query('perspectiva') ?: null;
+        // Mesmo switch do Integrado: sem "Incluir IA", nenhuma chamada ao provedor.
+        $includeAi = $request->query('include_ai') === '1';
 
         $organizacaoId = $this->garantirExportacao($organizacaoId);
 
-        $result = $this->reportService->generateExecutivo($organizacaoId, $ano, $periodo, $perspectivaId);
+        $result = $this->reportService->generateExecutivo($organizacaoId, $ano, $periodo, $perspectivaId, $includeAi);
 
         return $this->entregar($result, 'Relatório Executivo', $request->query());
     }
@@ -168,12 +225,17 @@ class RelatorioController extends Controller
 
     public function objetivosPdf(Request $request)
     {
-        $organizacaoId = $request->query('organizacao_id');
-        $perspectivaId = $request->query('perspectiva');
+        $organizacaoId = $request->query('organizacao_id') ?: null;
+        $perspectivaId = $request->query('perspectiva') ?: null;
         $ano = $request->query('ano') ?? session('ano_selecionado') ?? date('Y');
 
         // Objetivos são do ciclo, não de uma unidade: "todas" é legítimo aqui.
         $this->garantirExportacao($organizacaoId, false);
+
+        // Sem ciclo, o service lançava exceção e a tela caía em 500.
+        if (! PEI::doContexto()) {
+            return $this->voltarComAviso('Não há ciclo do Planejamento Estratégico Integrado cadastrado: cadastre um ciclo antes de gerar o relatório de Objetivos.');
+        }
 
         $result = $this->reportService->generateObjetivos($organizacaoId, $ano, $perspectivaId);
 
@@ -186,10 +248,14 @@ class RelatorioController extends Controller
 
         $pei = PEI::doContexto();
         if (! $pei) {
-            return back();
+            return $this->voltarComAviso('Não há ciclo do Planejamento Estratégico Integrado cadastrado: cadastre um ciclo antes de gerar a planilha de Objetivos.');
         }
 
-        return Excel::download(new ObjetivosExport($pei->cod_pei), 'Objetivos_Estrategicos.xlsx');
+        return $this->entregarPlanilha(
+            Excel::download(new ObjetivosExport($pei->cod_pei), 'Objetivos_Estrategicos.xlsx'),
+            'Objetivos_Estrategicos.xlsx',
+            'Objetivos Estratégicos'
+        );
     }
 
     public function indicadoresPdf(Request $request, $organizacaoId = null)
@@ -211,7 +277,11 @@ class RelatorioController extends Controller
 
         $organizacaoId = $this->garantirExportacao($organizacaoId);
 
-        return Excel::download(new IndicadoresExport($organizacaoId), 'Indicadores_Desempenho.xlsx');
+        return $this->entregarPlanilha(
+            Excel::download(new IndicadoresExport($organizacaoId), 'Indicadores_Desempenho.xlsx'),
+            'Indicadores_Desempenho.xlsx',
+            'Indicadores'
+        );
     }
 
     public function planosPdf(Request $request)
@@ -236,7 +306,13 @@ class RelatorioController extends Controller
         $organizacao = $organizacaoId ? Organization::find($organizacaoId) : null;
         $nomeArquivo = $organizacao ? "Planos_Acao_{$organizacao->sgl_organizacao}_{$ano}.xlsx" : "Planos_Acao_{$ano}.xlsx";
 
-        return Excel::download(new PlanosExport($organizacaoId, $ano), $nomeArquivo);
+        // O ciclo vai junto: o Excel usa o mesmo recorte do PDF (vigentes no
+        // ano, do ciclo selecionado).
+        return $this->entregarPlanilha(
+            Excel::download(new PlanosExport($organizacaoId, $ano, PEI::doContexto()?->cod_pei), $nomeArquivo),
+            $nomeArquivo,
+            'Iniciativas'
+        );
     }
 
     public function riscosPdf(Request $request)
@@ -259,7 +335,11 @@ class RelatorioController extends Controller
         $organizacao = $organizacaoId ? Organization::find($organizacaoId) : null;
         $nomeArquivo = $organizacao ? "Riscos_{$organizacao->sgl_organizacao}.xlsx" : 'Riscos_Geral.xlsx';
 
-        return Excel::download(new RiscosExport($organizacaoId), $nomeArquivo);
+        return $this->entregarPlanilha(
+            Excel::download(new RiscosExport($organizacaoId), $nomeArquivo),
+            $nomeArquivo,
+            'Gestão de Riscos'
+        );
     }
 
     public function integrado(Request $request, $organizacaoId = null)
@@ -345,9 +425,11 @@ class RelatorioController extends Controller
      *             registra. Seção vazia não aparece. É o documento que se
      *             publica sem completar nada.
      *
-     * 🔴 O ANO É PARÂMETRO, e o ciclo é buscado pelo ano — não pelo "PEI
-     * ativo". Relatório de Gestão de 2025 emitido em 2026 tem de trazer o
-     * ciclo vigente em 2025, ou mente sobre o exercício que relata.
+     * 🔴 O ANO É PARÂMETRO e o CICLO é o selecionado no topo, como em todos os
+     * relatórios (decisão de 04/10/2026). Relatório de 2025 emitido em 2026:
+     * seleciona-se o ciclo de 2025. Exercício fora do ciclo selecionado é
+     * recusado com explicação (gestaoForaDoCiclo), em vez de sair com a capa
+     * de um ano e os dados de outro ciclo.
      */
     public function gestaoPdf(Request $request)
     {
@@ -356,6 +438,10 @@ class RelatorioController extends Controller
         [$organizacaoId, $ano, $variante] = $this->parametrosGestao($request);
         // Gestão traz riscos, SWOT, PESTEL e iniciativas da unidade: não é do ciclo.
         $organizacaoId = $this->garantirExportacao($organizacaoId);
+
+        if ($aviso = $this->gestaoForaDoCiclo($ano)) {
+            return $this->voltarComAviso($aviso);
+        }
 
         $dados = (new EstruturaRelatorioGestao($variante))->montar($organizacaoId, $ano);
 
@@ -409,6 +495,10 @@ class RelatorioController extends Controller
         [$organizacaoId, $ano, $variante] = $this->parametrosGestao($request);
         // Gestão traz riscos, SWOT, PESTEL e iniciativas da unidade: não é do ciclo.
         $organizacaoId = $this->garantirExportacao($organizacaoId);
+
+        if ($aviso = $this->gestaoForaDoCiclo($ano)) {
+            return $this->voltarComAviso($aviso);
+        }
 
         $dados = (new EstruturaRelatorioGestao($variante))->montar($organizacaoId, $ano);
 

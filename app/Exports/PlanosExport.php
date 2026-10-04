@@ -4,6 +4,8 @@ namespace App\Exports;
 
 use App\Exports\Concerns\CelulasSemFormula;
 use App\Models\ActionPlan\PlanoDeAcao;
+use App\Models\StrategicPlanning\PEI;
+use App\Support\VigenciaNoAno;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -16,10 +18,13 @@ class PlanosExport implements FromCollection, WithHeadings, WithMapping
 
     protected $ano;
 
-    public function __construct($organizacaoId, $ano = null)
+    protected ?string $codPei;
+
+    public function __construct($organizacaoId, $ano = null, ?string $codPei = null)
     {
         $this->organizacaoId = $organizacaoId;
         $this->ano = $ano ?? date('Y');
+        $this->codPei = $codPei;
     }
 
     public function collection()
@@ -29,13 +34,23 @@ class PlanosExport implements FromCollection, WithHeadings, WithMapping
         $query = PlanoDeAcao::query()->with(['objetivo', 'entregas.responsaveis']);
 
         if ($this->organizacaoId) {
-            $query->where('cod_organizacao', $this->organizacaoId);
+            $query->where('action_plan.tab_plano_de_acao.cod_organizacao', $this->organizacaoId);
         }
 
-        $query->where(function ($q) {
-            $q->whereYear('dte_inicio', $this->ano)
-                ->orWhereYear('dte_fim', $this->ano);
-        });
+        // Mesmo recorte do PDF: do ciclo selecionado e VIGENTES no ano.
+        // 🔴 Usava "começa OU termina no ano": a iniciativa de 2024 a 2028
+        // saía no PDF de 2026 e sumia desta planilha.
+        $codPei = $this->codPei ?? PEI::doContexto()?->cod_pei;
+        if ($codPei) {
+            $query->whereHas('objetivo.perspectiva', fn ($q) => $q->where('cod_pei', $codPei));
+        }
+
+        VigenciaNoAno::aplicar(
+            $query,
+            (int) $this->ano,
+            'action_plan.tab_plano_de_acao.dte_inicio',
+            'action_plan.tab_plano_de_acao.dte_fim'
+        );
 
         return $query->orderBy('dte_fim')->get();
     }

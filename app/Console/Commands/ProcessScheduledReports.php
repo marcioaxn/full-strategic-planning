@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Reports\RelatorioAgendado;
 use App\Models\Reports\RelatorioGerado;
+use App\Models\StrategicPlanning\PEI;
 use App\Models\SystemSetting;
 use App\Models\User;
 use App\Services\Reports\ReportGenerationService;
@@ -85,21 +86,27 @@ class ProcessScheduledReports extends Command
                 }
                 $ano = $filtros['ano'] ?? date('Y');
                 $periodo = $filtros['periodo'] ?? 'anual';
-                $perspectivaId = $filtros['perspectiva'] ?? null;
-                $includeAi = $filtros['include_ai'] ?? true; // Padrão true se não existir
+                $perspectivaId = ($filtros['perspectiva'] ?? null) ?: null;
+                // IA só quando quem agendou ligou "Incluir IA" (antes: ligada por padrão).
+                $includeAi = filter_var($filtros['include_ai'] ?? false, FILTER_VALIDATE_BOOL);
+
+                // 🔴 O ciclo gravado no agendamento. Sem ele (agendamentos antigos),
+                // o do contexto — no cron, o ciclo vigente.
+                $reportService->usarCiclo($filtros['cod_pei'] ?? null);
 
                 switch ($agendamento->dsc_tipo_relatorio) {
                     case 'integrado':
                         $result = $reportService->generateIntegrado($organizacaoId, $ano, $periodo, $includeAi);
                         break;
                     case 'executivo':
-                        $result = $reportService->generateExecutivo($organizacaoId, $ano, $periodo, $perspectivaId);
+                        $result = $reportService->generateExecutivo($organizacaoId, $ano, $periodo, $perspectivaId, $includeAi);
                         break;
                     case 'identidade':
                         if (! $organizacaoId) {
                             throw new \Exception('Organização obrigatória para este relatório.');
                         }
-                        $result = $reportService->generateIdentidade($organizacaoId);
+                        // O ano escolhido: sem ele, o Mapa saía sempre no ano corrente.
+                        $result = $reportService->generateIdentidade($organizacaoId, $ano);
                         break;
                     case 'objetivos':
                         $result = $reportService->generateObjetivos($organizacaoId, $ano, $perspectivaId);
@@ -114,7 +121,11 @@ class ProcessScheduledReports extends Command
                         $result = $reportService->generateRiscos($organizacaoId);
                         break;
                     default:
-                        $this->error("Tipo de relatório desconhecido: {$agendamento->dsc_tipo_relatorio}");
+                        // Desativa: reprocessar um tipo que nunca vai existir só
+                        // enche o log de hora em hora.
+                        $agendamento->bln_ativo = false;
+                        $agendamento->save();
+                        $this->error("Tipo de relatório desconhecido: {$agendamento->dsc_tipo_relatorio}. Agendamento desativado.");
 
                         continue 2; // Pula para o próximo agendamento
                 }
@@ -138,9 +149,21 @@ class ProcessScheduledReports extends Command
                     $this->atualizarProximaExecucao($agendamento);
                 }
 
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
+                // \Throwable: um TypeError derrubava o laço inteiro e os demais
+                // agendamentos da hora não rodavam.
                 $this->error("Erro ao processar agendamento {$agendamento->cod_agendamento}: ".$e->getMessage());
-                \Log::error('Erro Report Scheduler: '.$e->getMessage());
+                \Log::error('Erro Report Scheduler: '.$e->getMessage(), ['cod_agendamento' => $agendamento->cod_agendamento]);
+
+                // Empurra para a próxima ocorrência da frequência: sem isto, o
+                // agendamento com erro era reprocessado (e logado) de hora em hora.
+                try {
+                    $this->atualizarProximaExecucao($agendamento);
+                } catch (\Throwable $e2) {
+                    report($e2);
+                }
+            } finally {
+                $reportService->usarCiclo(null);
             }
         }
 
@@ -168,6 +191,12 @@ class ProcessScheduledReports extends Command
 
         if (! $usuario->temPerfilDeAcesso()) {
             return 'usuário sem perfil de acesso';
+        }
+
+        // Ciclo gravado e depois excluído: gerar de outro ciclo seria mentir.
+        $codPei = $agendamento->txt_filtros['cod_pei'] ?? null;
+        if ($codPei && ! PEI::find($codPei)) {
+            return 'o ciclo do agendamento não existe mais';
         }
 
         if ($organizacaoId) {

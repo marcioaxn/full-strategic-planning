@@ -46,7 +46,11 @@ class ImpersonateController extends Controller
 
         $this->entrarComo($alvo);
 
-        return redirect()->route('dashboard')->with('status', 'Você está agora visualizando o sistema como '.$alvo->name.'.');
+        // flash.banner é o que o layout exibe; 'status' sozinho não aparecia.
+        return redirect()->route('dashboard')
+            ->with('status', 'Você está agora visualizando o sistema como '.$alvo->name.'.')
+            ->with('flash.banner', 'Você está agora visualizando o sistema como '.$alvo->name.'.')
+            ->with('flash.bannerStyle', 'warning');
     }
 
     /**

@@ -54,7 +54,7 @@
                                     </button>
                                     <button wire:click="delete('{{ $futuro->cod_futuro_almejado }}')" 
                                             class="btn btn-sm btn-outline-danger border-0"
-                                            onclick="return confirm('Tem certeza?')">
+                                            wire:confirm="Tem certeza?">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </td>

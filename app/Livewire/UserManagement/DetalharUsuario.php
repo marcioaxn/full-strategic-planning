@@ -44,12 +44,22 @@ class DetalharUsuario extends Component
         // $this->user->perfisAcesso() retorna os perfis. O pivot tem cod_plano_de_acao.
         // Vamos pegar os planos através disso.
 
-        $planosIds = DB::table('rel_users_tab_organizacoes_tab_perfil_acesso')
+        $planosIds = DB::table('organization.rel_users_tab_organizacoes_tab_perfil_acesso')
             ->where('user_id', $id)
             ->whereNotNull('cod_plano_de_acao')
+            ->whereNull('deleted_at')
             ->pluck('cod_plano_de_acao');
 
-        $this->planosResponsavel = PlanoDeAcao::whereIn('cod_plano_de_acao', $planosIds)->get();
+        // 🔴 Só as iniciativas das unidades que QUEM CONSULTA administra (a
+        // mesma régua da UserPolicy::view). O Administrador da unidade A via os
+        // títulos das iniciativas que a pessoa gere na unidade B.
+        $eu = auth()->user();
+        $this->planosResponsavel = PlanoDeAcao::whereIn('cod_plano_de_acao', $planosIds)
+            ->get()
+            ->filter(fn (PlanoDeAcao $plano) => $eu->isSuperAdmin()
+                || $eu->id === $this->user->id
+                || $eu->ehAdministradorEm($plano->cod_organizacao))
+            ->values();
 
         $this->estatisticas = [
             'qtd_organizacoes' => $this->user->organizacoes->count(),

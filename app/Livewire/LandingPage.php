@@ -86,8 +86,10 @@ class LandingPage extends Component
                         // Pré-calcula o atingimento de cada objetivo UMA vez e anexa ao objeto
                         // (evita N+1 na renderização do Mapa Estratégico e do Panorama).
                         $p->objetivos->each(function ($o) use ($anoAtual, $calcularCor, $calculo) {
-                            $o->lp_atingimento = round($calculo->calcularAtingimentoObjetivo($o, $anoAtual), 1);
-                            $o->lp_cor = $calcularCor($o->lp_atingimento);
+                            // NULL = sem medição (cinza), nunca 0% de crítico.
+                            $at = $calculo->calcularAtingimentoObjetivo($o, $anoAtual);
+                            $o->lp_atingimento = $at === null ? null : round($at, 1);
+                            $o->lp_cor = $at === null ? GrauSatisfacao::COR_SEM_REGUA : $calcularCor($o->lp_atingimento);
                         });
 
                         /*
@@ -103,20 +105,21 @@ class LandingPage extends Component
                          * que medir e fica fora da média (entrar como 0 inventaria
                          * um resultado ruim que ninguém apurou). Objetivo com o que
                          * medir entra, valha 0 ou 125.
+                         *
+                         * "Medido" é medido de fato: objetivo com indicador ainda
+                         * sem lançamento tem lp_atingimento NULL e fica fora.
                          */
-                        $mensuraveis = $p->objetivos->filter(
-                            fn ($o) => $o->indicadores_count > 0 || $o->planos_acao_count > 0
-                        );
+                        $mensuraveis = $p->objetivos->filter(fn ($o) => $o->lp_atingimento !== null);
 
                         $p->qtd_mensuravel = $mensuraveis->count();
-                        $p->tem_medicao = $p->qtd_mensuravel > 0;
                         // Mesmo cálculo do Dashboard, do Mapa e dos relatórios
                         // (indicadores e iniciativas, com os pesos da perspectiva):
                         // o portal não pode publicar um número que a área interna desmente.
-                        $p->atingimento_medio = $p->tem_medicao
-                            ? round($calculo->calcularAtingimentoPerspectiva($p, $anoAtual), 1)
-                            : 0;
-                        $p->cor_atingimento = $p->tem_medicao ? $calcularCor($p->atingimento_medio) : '#6b7280';
+                        // NULL = sem medição: "Sem medição" em cinza, fora da média global.
+                        $atPerspectiva = $calculo->calcularAtingimentoPerspectiva($p, $anoAtual);
+                        $p->tem_medicao = $atPerspectiva !== null;
+                        $p->atingimento_medio = $p->tem_medicao ? round($atPerspectiva, 1) : null;
+                        $p->cor_atingimento = $p->tem_medicao ? $calcularCor($p->atingimento_medio) : GrauSatisfacao::COR_SEM_REGUA;
                         $p->objetivos_abaixo = $mensuraveis->filter(fn ($o) => $o->lp_atingimento < 50)->count();
 
                         return $p;
@@ -163,7 +166,9 @@ class LandingPage extends Component
                 // durante todo o preenchimento. O número é verdadeiro e a leitura
                 // que ele induz é falsa: num Portal da Transparência, 0% não diz
                 // "ciclo em preenchimento" — diz "este órgão não executou nada".
-                $temMedicao = EvolucaoIndicador::whereHas(
+                // E alguma perspectiva tem MEDIÇÃO? Evolução só com previsto não
+                // mede nada — sem esta conta o anel mostrava 0% de "média".
+                $temMedicao = $comMedicao->count() > 0 && EvolucaoIndicador::whereHas(
                     'indicador.objetivo.perspectiva', fn ($q) => $q->where('cod_pei', $pei->cod_pei)
                 )->exists();
 

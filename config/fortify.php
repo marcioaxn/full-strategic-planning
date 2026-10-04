@@ -144,9 +144,13 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Autocadastro DESLIGADO (decisão do gestor, 04/10/2026): só quem tem
+        // permissão cria contas, pela tela de Usuários. Sem esta linha, as rotas
+        // /register (GET e POST) deixam de existir e o "Criar conta" some do login.
+        // Features::registration(),
         Features::resetPasswords(),
-        // Autocadastro exige confirmar o e-mail (auditoria de segurança, PRM-05).
+        // Confirmação de e-mail: continua valendo para contas antigas do
+        // autocadastro (auditoria de segurança, PRM-05).
         Features::emailVerification(),
         Features::updateProfileInformation(),
         Features::updatePasswords(),

@@ -5,6 +5,7 @@ namespace App\Livewire\RiskManagement;
 use App\Models\RiskManagement\Risco;
 use App\Models\RiskManagement\RiscoOcorrencia;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Arr;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -80,9 +81,20 @@ class RegistrarOcorrencias extends Component
             'form.dte_ocorrencia' => 'required|date',
             'form.txt_descricao' => 'required|string|max:1000',
             'form.num_impacto_real' => 'required|integer|min:1|max:5',
+            'form.txt_acoes_tomadas' => 'nullable|string|max:5000',
+            'form.txt_licoes_aprendidas' => 'nullable|string|max:5000',
+        ], [
+            'form.dte_ocorrencia.required' => 'Informe a data da ocorrência.',
+            'form.dte_ocorrencia.date' => 'Informe uma data válida.',
+            'form.txt_descricao.required' => 'Descreva o que aconteceu.',
+            'form.txt_descricao.max' => 'A descrição pode ter até 1.000 caracteres.',
+            'form.num_impacto_real.*' => 'Escolha o impacto real, de Muito Baixo a Muito Alto.',
+            'form.txt_acoes_tomadas.max' => 'O texto pode ter até 5.000 caracteres.',
+            'form.txt_licoes_aprendidas.max' => 'O texto pode ter até 5.000 caracteres.',
         ]);
 
-        $data = $this->form;
+        // Só os campos do formulário (o array público aceita chave nova vinda do navegador).
+        $data = Arr::only($this->form, ['dte_ocorrencia', 'txt_descricao', 'num_impacto_real', 'txt_acoes_tomadas', 'txt_licoes_aprendidas']);
         $data['cod_risco'] = $this->risco->cod_risco;
 
         // Edição: o registro tem de ser deste risco — senão o updateOrCreate abaixo

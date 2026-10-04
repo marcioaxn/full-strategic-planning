@@ -164,7 +164,7 @@
                                 <div class="d-flex align-items-center gap-2">
                                     <img src="{{ $u->profile_photo_url }}" alt="" class="rounded-circle" style="width:32px;height:32px;object-fit:cover;">
                                     <span class="fw-semibold">{{ $u->name }}</span>
-                                    @if($u->adm)<span class="badge bg-danger-subtle text-danger ms-1">Admin</span>@endif
+                                    @if($u->isSuperAdmin())<span class="badge bg-danger-subtle text-danger ms-1">Super Admin</span>@endif
                                 </div>
                             </td>
                             <td class="text-muted small">{{ $u->email }}</td>
@@ -176,6 +176,13 @@
                                 @endif
                             </td>
                             <td class="text-end pe-4">
+                                {{-- Só oferece o que funciona: Super Admin e conta inativa
+                                     não podem ser assumidos (o controller recusa). --}}
+                                @if($u->isSuperAdmin())
+                                    <span class="small text-muted" title="A identidade de outro Super Administrador não pode ser assumida.">Não assumível</span>
+                                @elseif(! $u->ativo)
+                                    <span class="small text-muted" title="Conta inativa não entra no sistema.">Conta inativa</span>
+                                @else
                                 {{-- POST com CSRF (em GET, um link de outra página bastava). --}}
                                 <form method="POST" action="{{ route('impersonate.start', $u->id) }}" class="d-inline"
                                       onsubmit="return confirm({{ \Illuminate\Support\Js::from('Assumir a identidade de '.$u->name.'?') }});">
@@ -184,6 +191,7 @@
                                         <i class="bi bi-person-bounding-box me-1"></i>Assumir
                                     </button>
                                 </form>
+                                @endif
                             </td>
                         </tr>
                         @empty

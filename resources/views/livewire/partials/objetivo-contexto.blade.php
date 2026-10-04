@@ -44,7 +44,10 @@
         $somaPesos = 0;
         foreach ($todosIndicadores as $ind) {
             $peso = $ind->num_peso ?? 1;
-            $atingimento = $ind->calcularAtingimento();
+            // NULL = sem medição ou informativo: fora da média (como em
+            // Objetivo::calcularAtingimentoConsolidado), sem peso nem contribuição.
+            $atingimento = $ind->atingimentoParaMedia();
+            $informativo = \App\Support\CalculoPolaridade::ehInformativo($ind->dsc_polaridade);
 
             // Buscar valores do ano atual
             $evolucoes = $ind->evolucoes->where('num_ano', now()->year);
@@ -63,11 +66,14 @@
                 'peso' => $peso,
                 'previsto' => $totalPrevisto,
                 'realizado' => $totalRealizado,
-                'atingimento' => round($atingimento, 1),
-                'contribuicao' => round($atingimento * $peso, 1),
+                'atingimento' => $atingimento === null ? null : round($atingimento, 1),
+                'sem_valor' => $informativo ? 'Informativo' : 'Sem medição',
+                'contribuicao' => $atingimento === null ? null : round($atingimento * $peso, 1),
                 'vinculo' => $ind->cod_objetivo ? 'Objetivo' : 'Iniciativa',
             ];
-            $somaPesos += $peso;
+            if ($atingimento !== null) {
+                $somaPesos += $peso;
+            }
         }
 
         // Cores da perspectiva
@@ -155,7 +161,11 @@
                          title="<strong>Média Ponderada</strong><br>Soma(Atingimento x Peso) / Soma(Pesos)<br><small class='text-muted'>Clique em 'Ver cálculo' para detalhes</small>">
                         <div class="card-body py-2 px-3 text-center">
                             <div class="d-flex align-items-center justify-content-center gap-1">
-                                <div class="fs-4 fw-bold cor-texto-legivel" style="--cor-texto: {{ $corFarolHex ?? '#6c757d' }};">@brazil_percent($mediaAtingimento, 1)</div>
+                                @if($mediaAtingimento === null)
+                                    <div class="fs-6 fw-bold text-muted">Sem medição</div>
+                                @else
+                                    <div class="fs-4 fw-bold cor-texto-legivel" style="--cor-texto: {{ $corFarolHex ?? '#6c757d' }};">@brazil_percent($mediaAtingimento, 1)</div>
+                                @endif
                                 <i class="bi bi-info-circle text-muted small" style="cursor: help;"></i>
                             </div>
                             <small class="text-muted">
@@ -290,6 +300,7 @@
                                             @foreach($detalhesIndicadores as $det)
                                                 @php
                                                     $corLinha = match(true) {
+                                                        $det['atingimento'] === null => '',
                                                         $det['atingimento'] >= 100 => 'table-primary',
                                                         $det['atingimento'] >= 70 => 'table-success',
                                                         $det['atingimento'] >= 50 => 'table-warning',
@@ -322,10 +333,14 @@
                                                         <span class="badge bg-dark bg-opacity-10 text-dark">{{ $det['peso'] }}</span>
                                                     </td>
                                                     <td class="text-end fw-bold">
-                                                        @brazil_percent($det['atingimento'], 1)
+                                                        @if($det['atingimento'] === null)
+                                                            <small class="text-muted fw-normal">{{ $det['sem_valor'] }}</small>
+                                                        @else
+                                                            @brazil_percent($det['atingimento'], 1)
+                                                        @endif
                                                     </td>
                                                     <td class="text-end">
-                                                        <small class="text-muted">{{ $det['contribuicao'] }}</small>
+                                                        <small class="text-muted">{{ $det['contribuicao'] ?? '—' }}</small>
                                                     </td>
                                                 </tr>
                                             @endforeach
@@ -335,10 +350,14 @@
                                                 <td colspan="4" class="text-end">Total:</td>
                                                 <td class="text-center">{{ $somaPesos }}</td>
                                                 <td colspan="2" class="text-end">
-                                                    <span class="cor-texto-legivel" style="--cor-texto: {{ $corFarolHex ?? '#6c757d' }};">@brazil_percent($mediaAtingimento, 1)</span>
-                                                    <small class="text-muted fw-normal d-block">
-                                                        ({{ array_sum(array_column($detalhesIndicadores, 'contribuicao')) }} / {{ $somaPesos }})
-                                                    </small>
+                                                    @if($mediaAtingimento === null)
+                                                        <span class="text-muted">Sem medição</span>
+                                                    @else
+                                                        <span class="cor-texto-legivel" style="--cor-texto: {{ $corFarolHex ?? '#6c757d' }};">@brazil_percent($mediaAtingimento, 1)</span>
+                                                        <small class="text-muted fw-normal d-block">
+                                                            ({{ array_sum(array_filter(array_column($detalhesIndicadores, 'contribuicao'), fn ($v) => $v !== null)) }} / {{ $somaPesos }})
+                                                        </small>
+                                                    @endif
                                                 </td>
                                             </tr>
                                         </tfoot>

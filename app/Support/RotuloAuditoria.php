@@ -2,6 +2,9 @@
 
 namespace App\Support;
 
+use App\Models\User;
+use App\Support\Auditoria\MarcaDeImpersonacao;
+
 /**
  * Como um registro auditado e um evento de auditoria se leem para o usuário.
  *
@@ -23,6 +26,11 @@ class RotuloAuditoria
         'TemaNorteador' => 'Tema norteador',
         'Valor' => 'Valor',
         'Documento' => 'Documento',
+        'Entrega' => 'Entrega',
+        'EvolucaoIndicador' => 'Evolução do indicador',
+        'MetaPorAno' => 'Meta anual',
+        'LinhaBaseIndicador' => 'Linha de base',
+        'User' => 'Usuário',
     ];
 
     /** @var array<string, string> */
@@ -43,5 +51,20 @@ class RotuloAuditoria
     public static function evento(?string $evento): string
     {
         return self::EVENTOS[(string) $evento] ?? ucfirst((string) $evento);
+    }
+
+    /**
+     * Nome do usuário cuja identidade o autor assumia quando gravou o registro
+     * (marca "impersonando:<id>"), ou null se não havia impersonação.
+     */
+    public static function assumido(?string $tags): ?string
+    {
+        $id = MarcaDeImpersonacao::idAssumido($tags);
+
+        if (! $id) {
+            return null;
+        }
+
+        return User::find($id)?->name ?? 'usuário excluído';
     }
 }

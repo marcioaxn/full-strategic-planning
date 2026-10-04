@@ -3,6 +3,7 @@
 namespace App\Models\StrategicPlanning;
 
 use App\Models\ActionPlan\Entrega;
+use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\PerformanceIndicators\Indicador;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class Perspectiva extends Model
 {
@@ -37,6 +39,45 @@ class Perspectiva extends Model
         'num_peso_indicadores' => 'integer',
         'num_peso_planos' => 'integer',
     ];
+
+    /**
+     * Excluir a perspectiva leva junto (exclusão lógica) os objetivos dela e o
+     * que pende deles — o mesmo padrão de PEI::booted(). Antes só a perspectiva
+     * era marcada: objetivos, indicadores e iniciativas ficavam vivos e órfãos,
+     * e o modal da tela prometia o contrário.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (Perspectiva $perspectiva) {
+            if ($perspectiva->isForceDeleting()) {
+                return;
+            }
+
+            $agora = now();
+            $marcar = fn (string $tabela, string $coluna, $valores) => DB::table($tabela)
+                ->whereIn($coluna, collect($valores)->all())
+                ->whereNull('deleted_at')
+                ->update(['deleted_at' => $agora, 'updated_at' => $agora]);
+
+            $objetivos = DB::table('strategic_planning.tab_objetivo')
+                ->where('cod_perspectiva', $perspectiva->cod_perspectiva)
+                ->whereNull('deleted_at')
+                ->pluck('cod_objetivo');
+
+            if ($objetivos->isEmpty()) {
+                return;
+            }
+
+            // Iniciativas e indicadores pelo modelo: a exclusão deles já leva
+            // entregas, indicadores da iniciativa e vínculos de Gestor.
+            PlanoDeAcao::whereIn('cod_objetivo', $objetivos)->get()->each->delete();
+            Indicador::whereIn('cod_objetivo', $objetivos)->get()->each->delete();
+
+            $marcar('strategic_planning.tab_futuro_almejado_objetivo', 'cod_objetivo', $objetivos);
+            $marcar('strategic_planning.tab_objetivo_comentarios', 'cod_objetivo', $objetivos);
+            $marcar('strategic_planning.tab_objetivo', 'cod_objetivo', $objetivos);
+        });
+    }
 
     /**
      * Relacionamento: PEI

@@ -45,7 +45,7 @@ class LinhaBaseIndicador extends Model
      * Casts
      */
     protected $casts = [
-        'num_linha_base' => 'decimal:2',
+        'num_linha_base' => 'decimal:4',
         'num_ano' => 'integer',
     ];
 

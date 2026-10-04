@@ -171,6 +171,12 @@ class AuditoriaLegivel
         };
     }
 
+    /** O valor desta coluna nunca é mostrado (senha, token, chave). */
+    public static function ehSigilosa(string $coluna): bool
+    {
+        return in_array($coluna, self::SIGILOSAS, true);
+    }
+
     /**
      * O valor como o leitor o entende.
      *

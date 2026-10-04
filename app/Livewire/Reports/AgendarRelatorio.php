@@ -3,6 +3,7 @@
 namespace App\Livewire\Reports;
 
 use App\Models\Reports\RelatorioAgendado;
+use App\Models\StrategicPlanning\PEI;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -11,6 +12,9 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class AgendarRelatorio extends Component
 {
+    /** Os tipos que o agendador sabe gerar (ProcessScheduledReports). */
+    public const TIPOS = ['integrado', 'executivo', 'identidade', 'objetivos', 'indicadores', 'planos', 'riscos'];
+
     public $tipoRelatorio;
 
     public $frequencia = 'mensal';
@@ -39,16 +43,28 @@ class AgendarRelatorio extends Component
         // usuário logado: a checagem de escopo tem de acontecer aqui, na gravação.
         $this->garantirAcesso(is_array($this->filtros) ? $this->filtros : []);
 
+        // O tipo vem do navegador: tipo desconhecido era gravado e o cron o
+        // reprocessava (e logava erro) de hora em hora, para sempre.
         $this->validate([
+            'tipoRelatorio' => 'required|in:'.implode(',', self::TIPOS),
             'frequencia' => 'required|in:diario,semanal,mensal',
             'dataInicio' => 'required|date|after:now',
+        ], [
+            'tipoRelatorio.in' => 'Este relatório não pode ser agendado.',
         ]);
+
+        $filtros = is_array($this->filtros) ? $this->filtros : [];
+
+        // 🔴 O ciclo é o selecionado AGORA, lido no servidor (nunca do navegador),
+        // e fica gravado: o cron roda sem sessão e caía no ciclo "ativo" — o
+        // relatório agendado no ciclo A saía do ciclo B.
+        $filtros['cod_pei'] = PEI::doContexto()?->cod_pei;
 
         RelatorioAgendado::create([
             'user_id' => Auth::id(),
             'dsc_tipo_relatorio' => $this->tipoRelatorio,
             'dsc_frequencia' => $this->frequencia,
-            'txt_filtros' => $this->filtros,
+            'txt_filtros' => $filtros,
             'dte_proxima_execucao' => $this->dataInicio,
             'bln_ativo' => true,
         ]);

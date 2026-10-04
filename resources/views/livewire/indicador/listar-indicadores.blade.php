@@ -479,7 +479,8 @@
                                 ->where('num_ano', $data->year)
                                 ->where('num_mes', $data->month)
                                 ->first();
-                            $valores[] = $evolucao ? round(($evolucao->vlr_realizado / max($evolucao->vlr_previsto, 1)) * 100, 1) : null;
+                            // Mês sem Realizado (NULL) é lacuna no gráfico, não zero.
+                            $valores[] = ($evolucao && $evolucao->vlr_realizado !== null) ? round(((float) $evolucao->vlr_realizado / max((float) $evolucao->vlr_previsto, 1)) * 100, 1) : null;
                         }
                         $dadosGrafico[] = [
                             'label' => Str::limit($ind->nom_indicador, 25),
@@ -650,8 +651,9 @@
                                 </td>
                                 <td>
                                     @php
-                                        $atingimento = $ind->calcularAtingimento();
-                                        $corFarol    = $ind->getCorFarol();
+                                        // Régua e percentual do MESMO ano: o de referência do topo.
+                                        $atingimento = $ind->atingimentoMedido($anoReferencia);
+                                        $corFarol    = $ind->getCorFarol($anoReferencia);
                                         $tendencia   = $ind->tendenciaAtual(3);
                                         $tendIcn     = match($tendencia['direcao']) {
                                             'Crescente'   => 'bi-arrow-up-right',
@@ -667,7 +669,12 @@
                                     @endphp
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="farol-dot" style="background-color: {{ $corFarol ?: '#dee2e6' }};"></div>
-                                        <span class="fw-bold fs-6">@brazil_percent($atingimento, 1)</span>
+                                        @if($atingimento === null)
+                                            {{-- Nenhum mês com Realizado: não é 0% nem 100%. --}}
+                                            <span class="small text-muted" title="Nenhum valor realizado lançado no período">Sem medição</span>
+                                        @else
+                                            <span class="fw-bold fs-6">@brazil_percent($atingimento, 1)</span>
+                                        @endif
                                         @if(count($tendencia['pontos']) >= 2)
                                             <i class="bi {{ $tendIcn }} {{ $tendCor }} fs-6"
                                                data-bs-toggle="tooltip" title="{{ $tendTip }}"></i>
@@ -712,7 +719,10 @@
                                                 <li><h6 class="dropdown-header small text-uppercase">Lançamentos</h6></li>
                                                 <li><a class="dropdown-item" href="{{ route('indicadores.detalhes', $ind->cod_indicador) }}" wire:navigate><i class="bi bi-eye me-2 text-primary"></i> Ficha Técnica</a></li>
                                                 @if($podeEditarInd)
+                                                {{-- Automático: o atingimento vem das entregas da iniciativa; lançamento manual seria sobrescrito. --}}
+                                                @if($ind->dsc_calculation_type !== 'action_plan')
                                                 <li><a class="dropdown-item" href="{{ route('indicadores.evolucao', $ind->cod_indicador) }}" wire:navigate><i class="bi bi-graph-up-arrow me-2 text-success"></i> Lançar Evolução</a></li>
+                                                @endif
                                                 <li><button class="dropdown-item" wire:click="abrirMetas('{{ $ind->cod_indicador }}')"><i class="bi bi-bullseye me-2 text-primary"></i> Gerenciar Metas</button></li>
                                                 <li><button class="dropdown-item" wire:click="abrirLinhaBase('{{ $ind->cod_indicador }}')"><i class="bi bi-bar-chart-steps me-2 text-warning"></i> Linha de Base</button></li>
 
@@ -730,7 +740,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">
+                                <td colspan="7" class="text-center py-5 text-muted">
                                     <i class="bi bi-bar-chart fs-1 opacity-25 mb-3 d-block"></i>
                                     Nenhum indicador encontrado.
                                 </td>
@@ -814,6 +824,7 @@
                                                     @endforeach
                                                 </div>
                                                 @error('form.organizacoes_ids') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                                                @error('form.organizacoes_ids.*') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
                                                 <small class="text-muted mt-2 d-block lh-sm"><i class="bi bi-info-circle me-1"></i>O indicador aparecerá no mapa estratégico de todas as unidades selecionadas.</small>
                                             </div>
 
@@ -844,6 +855,7 @@
                                                         <i class="bi bi-list-task me-1"></i> Iniciativa
                                                     </label>
                                                 </div>
+                                                @error('form.dsc_tipo') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
                                             </div>
 
                                             @if($form['dsc_tipo'] === 'Objetivo')
@@ -960,10 +972,15 @@
                                                 <div class="col-md-3">
                                                     <label class="form-label text-muted small text-uppercase fw-bold">Unidade de Medida <span class="text-danger">*</span></label>
                                                     <select wire:model="form.dsc_unidade_medida" class="form-select bg-white border-0 shadow-sm fw-bold">
+                                                        {{-- Unidade legada (fora da lista atual, ex.: "Índice"): aparece como está gravada. --}}
+                                                        @if($unidadeLegada)
+                                                            <option value="{{ $unidadeLegada }}">{{ $unidadeLegada }} (atual)</option>
+                                                        @endif
                                                         @foreach($unidadesMedida as $unidade)
                                                             <option value="{{ $unidade }}">{{ $unidade }}</option>
                                                         @endforeach
                                                     </select>
+                                                    @error('form.dsc_unidade_medida') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
                                                 </div>
                                                 <div class="col-md-3">
                                                     <label class="form-label text-muted small text-uppercase fw-bold">Periodicidade</label>
@@ -1096,7 +1113,7 @@
                 </div>
                 <div>
                     <h5 class="mb-1 fw-bold text-dark">{{ __('Excluir Indicador (KPI)') }}</h5>
-                    <p class="text-muted small mb-0">{{ __('Esta ação é irreversível') }}</p>
+                    <p class="text-muted small mb-0">{{ __('O indicador sai das listas, painéis e relatórios') }}</p>
                 </div>
             </div>
         </x-slot>
@@ -1106,9 +1123,11 @@
                 <p class="mb-2 text-dark">
                     {{ __('Tem certeza que deseja excluir este indicador de desempenho?') }}
                 </p>
+                {{-- Exclusão LÓGICA (SoftDeletes, sem cascata): o texto não promete apagar o que fica guardado. --}}
                 <div class="alert alert-warning bg-warning-subtle border-0">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <strong>Atenção:</strong> Todos os lançamentos de evolução e metas associadas serão perdidos permanentemente.
+                    <strong>Atenção:</strong> o indicador deixa de aparecer no sistema. Os lançamentos de evolução, as metas e a linha de base
+                    não são apagados: ficam preservados no histórico do banco de dados (exclusão lógica).
                 </div>
             </div>
         </x-slot>
@@ -1142,14 +1161,30 @@
                 <div class="modal-body p-4">
                     <p class="small text-muted mb-4">Indicador: <strong>{{ $indicadorSelecionado?->nom_indicador }}</strong></p>
                     
+                    {{-- Mesma máscara por unidade do Lançar Evolução (App\Support\UnidadeMedida). Nada de
+                         type="number": em pt-BR ele recusa "20.000.000.000,00" sem mensagem. --}}
+                    @php
+                        $unidadeSel = $indicadorSelecionado?->dsc_unidade_medida;
+                        $regraSel = \App\Support\UnidadeMedida::regra($unidadeSel);
+                        $placeholderSel = $regraSel['casas'] > 0 ? '0,' . str_repeat('0', $regraSel['casas']) : '0';
+                    @endphp
                     <form wire:submit.prevent="salvarMeta" class="row g-2 mb-4 p-3 bg-light rounded-3 border">
                         <div class="col-md-4">
                             <label class="small fw-bold text-muted">Ano</label>
                             <input type="number" wire:model="metaAno" class="form-control form-control-sm">
+                            @error('metaAno') <div class="text-danger x-small">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-md-5">
-                            <label class="small fw-bold text-muted">Meta ({{ $indicadorSelecionado?->dsc_unidade_medida }})</label>
-                            <input type="number" step="0.01" wire:model="metaValor" class="form-control form-control-sm">
+                            <label class="small fw-bold text-muted">Meta ({{ $unidadeSel }})</label>
+                            <div class="input-group input-group-sm">
+                                @if($regraSel['prefixo'])
+                                    <span class="input-group-text bg-white text-muted">{{ $regraSel['prefixo'] }}</span>
+                                @endif
+                                <input type="text" inputmode="decimal" wire:model="metaValor"
+                                       x-mask:dynamic="$money($input, ',', '.', {{ $regraSel['casas'] }})"
+                                       class="form-control form-control-sm text-end" placeholder="{{ $placeholderSel }}">
+                            </div>
+                            @error('metaValor') <div class="text-danger x-small">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-md-3 d-flex align-items-end">
                             <button type="submit" class="btn btn-sm btn-primary w-100">Adicionar</button>
@@ -1169,9 +1204,11 @@
                                 @forelse($indicadorSelecionado?->metasPorAno ?? [] as $meta)
                                     <tr>
                                         <td>{{ $meta->num_ano }}</td>
-                                        <td>@brazil_number($meta->meta, 2)</td>
+                                        <td>{{ \App\Support\UnidadeMedida::formatar($meta->meta, $unidadeSel) ?: '—' }}</td>
                                         <td class="text-end">
-                                            <button wire:click="excluirMeta('{{ $meta->cod_meta_por_ano }}')" class="btn btn-sm text-danger p-0"><i class="bi bi-trash"></i></button>
+                                            <button wire:click="excluirMeta('{{ $meta->cod_meta_por_ano }}')"
+                                                    wire:confirm="Excluir a meta de {{ $meta->num_ano }}? A exclusão não pode ser desfeita pela tela."
+                                                    class="btn btn-sm text-danger p-0" title="Excluir meta"><i class="bi bi-trash"></i></button>
                                         </td>
                                     </tr>
                                 @empty
@@ -1200,10 +1237,19 @@
                         <div class="col-md-4">
                             <label class="small fw-bold text-muted">Ano</label>
                             <input type="number" wire:model="linhaBaseAno" class="form-control form-control-sm">
+                            @error('linhaBaseAno') <div class="text-danger x-small">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-md-5">
-                            <label class="small fw-bold text-muted">Valor Base</label>
-                            <input type="number" step="0.01" wire:model="linhaBaseValor" class="form-control form-control-sm">
+                            <label class="small fw-bold text-muted">Valor Base ({{ $unidadeSel }})</label>
+                            <div class="input-group input-group-sm">
+                                @if($regraSel['prefixo'])
+                                    <span class="input-group-text bg-white text-muted">{{ $regraSel['prefixo'] }}</span>
+                                @endif
+                                <input type="text" inputmode="decimal" wire:model="linhaBaseValor"
+                                       x-mask:dynamic="$money($input, ',', '.', {{ $regraSel['casas'] }})"
+                                       class="form-control form-control-sm text-end" placeholder="{{ $placeholderSel }}">
+                            </div>
+                            @error('linhaBaseValor') <div class="text-danger x-small">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-md-3 d-flex align-items-end">
                             <button type="submit" class="btn btn-sm btn-primary w-100">Salvar</button>
@@ -1223,9 +1269,11 @@
                                 @forelse($indicadorSelecionado?->linhaBase ?? [] as $lb)
                                     <tr>
                                         <td>{{ $lb->num_ano }}</td>
-                                        <td>@brazil_number($lb->num_linha_base, 2)</td>
+                                        <td>{{ \App\Support\UnidadeMedida::formatar($lb->num_linha_base, $unidadeSel) ?: '—' }}</td>
                                         <td class="text-end">
-                                            <button wire:click="excluirLinhaBase('{{ $lb->cod_linha_base }}')" class="btn btn-sm text-danger p-0"><i class="bi bi-trash"></i></button>
+                                            <button wire:click="excluirLinhaBase('{{ $lb->cod_linha_base }}')"
+                                                    wire:confirm="Excluir a linha de base de {{ $lb->num_ano }}? A exclusão não pode ser desfeita pela tela."
+                                                    class="btn btn-sm text-danger p-0" title="Excluir linha de base"><i class="bi bi-trash"></i></button>
                                         </td>
                                     </tr>
                                 @empty

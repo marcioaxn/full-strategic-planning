@@ -219,7 +219,10 @@
                                         @endif
                                     </div>
                                     <div class="text-center flex-shrink-0" style="width:90px;">
-                                        @if($obj['atingimento'] === null)
+                                        @if($obj['atingimento'] === null && ($obj['tem_indicador'] ?? false))
+                                            <div class="fw-semibold text-muted small" title="Nenhum indicador deste objetivo foi medido no ano.">Sem medição</div>
+                                            <div class="text-muted" style="font-size:.62rem;">em {{ $ano }}</div>
+                                        @elseif($obj['atingimento'] === null)
                                             <div class="fw-semibold text-muted small" title="O objetivo não tem indicador direto nem de iniciativa: não há o que medir.">Sem indicador</div>
                                             <div class="text-muted" style="font-size:.62rem;">sem medição em {{ $ano }}</div>
                                         @else

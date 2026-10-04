@@ -604,7 +604,7 @@
                                                 </div>
                                                 <div class="col-md-5">
                                                     <label class="form-label text-muted small text-uppercase fw-bold">Ano Específico</label>
-                                                    <select wire:model="num_ano" class="form-select bg-white border-0 shadow-sm fw-bold">
+                                                    <select wire:model="num_ano" class="form-select bg-white border-0 shadow-sm fw-bold @error('num_ano') is-invalid @enderror">
                                                         <option value="">Todo o Ciclo</option>
                                                         @if($cod_pei)
                                                             @php $selectedPei = $availablePeis->firstWhere('cod_pei', $cod_pei); @endphp
@@ -615,6 +615,7 @@
                                                             @endif
                                                         @endif
                                                     </select>
+                                                    @error('num_ano') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                                 </div>
                                             </div>
                                         </div>

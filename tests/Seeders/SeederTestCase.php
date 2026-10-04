@@ -77,10 +77,35 @@ abstract class SeederTestCase extends TestCase
     {
         parent::setUp();
 
+        $this->exigirAutorizacaoExplicita();
+
         $env = $this->lerEnvDoProjeto();
 
         $this->exigirAutorizacaoEmProducao($env);
         $this->apontarConexaoParaBancoDoProjeto($env);
+    }
+
+    /**
+     * Esta suíte só roda quando quem executa pede, com SEED_TEST_ALLOW=true.
+     *
+     * 🔴 Em 04/10/2026 um arquivo desta pasta entrou numa lista de testes
+     * "relacionados" e a seed rodou contra o banco de desenvolvimento, que tem
+     * dado real: renomeou a organização raiz e criou uma conta de Super Admin
+     * com senha desconhecida. Rodar contra o banco do .env precisa ser decisão,
+     * nunca efeito colateral de um glob.
+     */
+    private function exigirAutorizacaoExplicita(): void
+    {
+        $autorizado = $_SERVER['SEED_TEST_ALLOW'] ?? $_ENV['SEED_TEST_ALLOW'] ?? getenv('SEED_TEST_ALLOW');
+
+        if (filter_var($autorizado, FILTER_VALIDATE_BOOLEAN)) {
+            return;
+        }
+
+        $this->markTestSkipped(
+            'A suíte Seeders grava no banco do .env (não no banco de teste). '
+            .'Para rodá-la de propósito: $env:SEED_TEST_ALLOW=\'true\'; php artisan test --testsuite=Seeders'
+        );
     }
 
     /**

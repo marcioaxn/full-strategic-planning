@@ -34,10 +34,14 @@
         $atingimentos = [];
         foreach($perspectivas as $p) {
             foreach($p->objetivos as $obj) {
-                $atingimentos[] = $obj->calcularAtingimentoConsolidado($ano, $mesLimite);
+                // Objetivo sem medição (NULL) fica fora da média — não entra como 0%.
+                $atObj = $obj->calcularAtingimentoConsolidado($ano, $mesLimite);
+                if ($atObj !== null) {
+                    $atingimentos[] = $atObj;
+                }
             }
         }
-        $mediaAtingimento = count($atingimentos) > 0 ? array_sum($atingimentos) / count($atingimentos) : 0;
+        $mediaAtingimento = count($atingimentos) > 0 ? array_sum($atingimentos) / count($atingimentos) : null;
 
         $totalPlanos     = $planos->count();
         $planosConcluidos  = $planos->where('status_anual', 'Concluído')->count();
@@ -74,8 +78,13 @@
             </td>
             <td class="kpi-card accent" style="width:25%;">
                 <p class="kpi-label">Atingimento Médio</p>
-                <p class="kpi-value">{{ number_format($mediaAtingimento, 0, ',', '.') }}<span style="font-size:14px;">%</span></p>
-                <p class="kpi-sub" style="color:{{ \App\Support\CorLegivel::paraTextoSobreBranco($getCorSatisfacao($mediaAtingimento)) }};">desempenho geral</p>
+                @if($mediaAtingimento === null)
+                    <p class="kpi-value" style="font-size:14px;">Sem medição</p>
+                    <p class="kpi-sub">nenhum objetivo medido no período</p>
+                @else
+                    <p class="kpi-value">{{ number_format($mediaAtingimento, 0, ',', '.') }}<span style="font-size:14px;">%</span></p>
+                    <p class="kpi-sub" style="color:{{ \App\Support\CorLegivel::paraTextoSobreBranco($getCorSatisfacao($mediaAtingimento)) }};">desempenho geral</p>
+                @endif
             </td>
             <td class="kpi-card {{ $planosAtrasados > 0 ? 'warning' : 'success' }}" style="width:25%;">
                 <p class="kpi-label">Iniciativas</p>
@@ -161,7 +170,7 @@
                     @forelse($persp->objetivos as $obj)
                         @php
                             $at  = $obj->calcularAtingimentoConsolidado($ano, $mesLimite);
-                            $cor = $getCorSatisfacao($at);
+                            $cor = $at === null ? \App\Models\StrategicPlanning\GrauSatisfacao::COR_SEM_REGUA : $getCorSatisfacao($at);
                         @endphp
                         <tr>
                             <td class="row-titulo">
@@ -179,11 +188,11 @@
                                 <table style="width:100%; border:none;"><tr style="border:none;">
                                     <td style="border:none; width:72%; vertical-align:middle; padding:0 4px 0 0;">
                                         <div class="progress-track">
-                                            <div class="progress-fill" style="width:{{ min(100, max(0, $at)) }}%; background:{{ $cor }};"></div>
+                                            <div class="progress-fill" style="width:{{ min(100, max(0, $at ?? 0)) }}%; background:{{ $cor }};"></div>
                                         </div>
                                     </td>
                                     <td style="border:none; width:28%; text-align:right; vertical-align:middle; font-weight:bold; font-size:9px; color:{{ \App\Support\CorLegivel::paraTextoSobreBranco($cor) }}; padding:0;">
-                                        {{ number_format($at, 1, ',', '.') }}%
+                                        {{ $at === null ? 'Sem medição' : number_format($at, 1, ',', '.').'%' }}
                                     </td>
                                 </tr></table>
                             </td>

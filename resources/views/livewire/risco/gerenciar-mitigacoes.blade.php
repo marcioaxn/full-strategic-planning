@@ -58,7 +58,7 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm bg-light bg-opacity-50">
                 <div class="card-body p-4 d-flex align-items-center">
-                    <div class="icon-shape {{ $risco->getNivelRiscoBadgeClass() }} text-white rounded-3 p-3 me-4 shadow">
+                    <div class="icon-shape rounded-3 p-3 me-4 shadow" style="{{ $risco->estiloDoSeloDeNivel() }}">
                         <i class="bi bi-exclamation-triangle fs-3"></i>
                     </div>
                     <div>
@@ -112,8 +112,8 @@
                                     <td class="text-end pe-4">
                                         @can('update', $risco)
                                         <button wire:click="edit('{{ $m->cod_mitigacao }}')" class="btn btn-sm btn-outline-secondary border-0"><i class="bi bi-pencil"></i></button>
-                                        {{-- "return": sem ele o Cancelar da confirmação não impedia a exclusão. --}}
-                                        <button wire:click="delete('{{ $m->cod_mitigacao }}')" class="btn btn-sm btn-outline-danger border-0" onclick="return confirm('Remover mitigação?')"><i class="bi bi-trash"></i></button>
+                                        {{-- wire:confirm: com onclick="return confirm()" o Cancelar não impedia a exclusão. --}}
+                                        <button type="button" wire:click="delete('{{ $m->cod_mitigacao }}')" wire:confirm="Remover este plano de mitigação?" class="btn btn-sm btn-outline-danger border-0" title="Excluir"><i class="bi bi-trash"></i></button>
                                         @endcan
                                     </td>
                                 </tr>
@@ -145,38 +145,44 @@
                                 <input type="radio" class="btn-check" wire:model="form.dsc_tipo" value="Contingência" id="t_cont" autocomplete="off">
                                 <label class="btn btn-outline-info" for="t_cont">Contingência</label>
                             </div>
+                            @error('form.dsc_tipo') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                         </div>
                         <div class="mb-3">
                             <label class="form-label text-muted small text-uppercase fw-bold">Descrição da Ação</label>
-                            <textarea wire:model="form.txt_descricao" class="form-control" rows="3" placeholder="O que será feito para mitigar o risco?"></textarea>
+                            <textarea wire:model="form.txt_descricao" class="form-control @error('form.txt_descricao') is-invalid @enderror" rows="3" placeholder="O que será feito para mitigar o risco?"></textarea>
+                            @error('form.txt_descricao') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label text-muted small text-uppercase fw-bold">Responsável</label>
-                                <select wire:model="form.cod_responsavel" class="form-select">
+                                <select wire:model="form.cod_responsavel" class="form-select @error('form.cod_responsavel') is-invalid @enderror">
                                     <option value="">Selecione...</option>
                                     @foreach($usuarios as $user)
                                         <option value="{{ $user->id }}">{{ $user->name }}</option>
                                     @endforeach
                                 </select>
+                                @error('form.cod_responsavel') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-muted small text-uppercase fw-bold">Prazo</label>
-                                <input type="date" wire:model="form.dte_prazo" class="form-control">
+                                <input type="date" wire:model="form.dte_prazo" class="form-control @error('form.dte_prazo') is-invalid @enderror">
+                                @error('form.dte_prazo') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label text-muted small text-uppercase fw-bold">Status</label>
-                                <select wire:model="form.dsc_status" class="form-select">
+                                <select wire:model="form.dsc_status" class="form-select @error('form.dsc_status') is-invalid @enderror">
                                     <option value="A Fazer">A Fazer</option>
                                     <option value="Em Andamento">Em Andamento</option>
                                     <option value="Concluído">Concluído</option>
                                 </select>
+                                @error('form.dsc_status') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-muted small text-uppercase fw-bold">Custo Estimado (R$)</label>
-                                <input type="number" step="0.01" wire:model="form.vlr_custo_estimado" class="form-control">
+                                <input type="number" step="0.01" min="0" wire:model="form.vlr_custo_estimado" class="form-control @error('form.vlr_custo_estimado') is-invalid @enderror" placeholder="Opcional">
+                                @error('form.vlr_custo_estimado') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
                     </div>

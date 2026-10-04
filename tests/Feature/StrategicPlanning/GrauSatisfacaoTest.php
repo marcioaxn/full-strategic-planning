@@ -17,6 +17,8 @@
 use App\Livewire\StrategicPlanning\ListarGrausSatisfacao;
 use App\Models\Organization;
 use App\Models\PerfilAcesso;
+use App\Models\PerformanceIndicators\EvolucaoIndicador;
+use App\Models\PerformanceIndicators\Indicador;
 use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\PEI;
@@ -162,6 +164,28 @@ test('o farol do indicador usa a régua do ciclo do próprio indicador', functio
         'num_nivel_hierarquico_apresentacao' => 1,
     ]);
 
+    // Um indicador MEDIDO (50%): objetivo sem medição sai cinza por regra
+    // (AgregadoSemMedicaoTest) e não serviria para conferir a régua.
+    $indicador = Indicador::create([
+        'cod_objetivo' => $objetivoA->cod_objetivo,
+        'nom_indicador' => 'Indicador do ciclo A',
+        'dsc_indicador' => 'Indicador medido para conferir a régua.',
+        'dsc_tipo' => 'Objetivo',
+        'dsc_unidade_medida' => 'Percentual (%)',
+        'bln_acumulado' => 'Não',
+        'dsc_periodo_medicao' => 'Mensal',
+        'dsc_polaridade' => 'Positiva',
+        'dsc_calculation_type' => 'manual',
+    ]);
+    EvolucaoIndicador::create([
+        'cod_indicador' => $indicador->cod_indicador,
+        'num_ano' => (int) date('Y'),
+        'num_mes' => 1,
+        'vlr_previsto' => 100,
+        'vlr_realizado' => 50,
+        'bln_atualizado' => 'Sim',
+    ]);
+
     // A cor tem de vir do ciclo A, ainda que o ciclo B também tenha faixa
     // cobrindo o mesmo intervalo.
     expect($objetivoA->getCorFarolConsolidado((int) date('Y')))->toBe('#28a745');
@@ -190,6 +214,35 @@ test('faixa específica do ano tem precedência sobre a geral do ciclo', functio
     ]);
 
     expect(GrauSatisfacao::corDe(80, $pei->cod_pei, $ano))->toBe('#ffc107');
+});
+
+test('a régua do ano substitui a geral mesmo com mínimos diferentes', function () {
+    $pei = ciclo('Ciclo com régua do ano diferente');
+    $ano = (int) date('Y');
+
+    faixa($pei, 'Neutro geral', 0, 100, '#999999');
+    foreach ([['Crítico do ano', 0, 59.99, '#aa0000'], ['Bom do ano', 60, 100, '#00aa00']] as [$rotulo, $min, $max, $cor]) {
+        GrauSatisfacao::create(['cod_pei' => $pei->cod_pei, 'num_ano' => $ano, 'dsc_grau_satisfacao' => $rotulo, 'cor' => $cor, 'vlr_minimo' => $min, 'vlr_maximo' => $max]);
+    }
+
+    // Antes: a geral (mínimo 0) vinha primeiro na ordenação e pintava 80% de "Neutro".
+    expect(GrauSatisfacao::corDe(80, $pei->cod_pei, $ano))->toBe('#00aa00')
+        ->and(GrauSatisfacao::corDe(30, $pei->cod_pei, $ano))->toBe('#aa0000')
+        // Ano sem régua própria usa a geral.
+        ->and(GrauSatisfacao::corDe(80, $pei->cod_pei, $ano + 1))->toBe('#999999');
+});
+
+test('valor no intervalo vazio entre faixas recebe a faixa de baixo, nunca a melhor', function () {
+    $pei = ciclo('Ciclo com buracos');
+    faixa($pei, 'Crítico', 0, 70, '#aa0000');
+    faixa($pei, 'Atenção', 71, 89, '#ccaa00');
+    faixa($pei, 'Bom', 90, 100, '#00aa00');
+
+    expect(GrauSatisfacao::corDe(70.5, $pei->cod_pei))->toBe('#aa0000')
+        ->and(GrauSatisfacao::corDe(89.5, $pei->cod_pei))->toBe('#ccaa00')
+        ->and(GrauSatisfacao::rotuloDe(89.5, $pei->cod_pei))->toBe('Atenção')
+        ->and(GrauSatisfacao::corDe(125, $pei->cod_pei))->toBe('#00aa00')
+        ->and(GrauSatisfacao::corDe(-5, $pei->cod_pei))->toBe('#aa0000');
 });
 
 test('nenhuma consulta às faixas ignora o ciclo', function () {
@@ -234,6 +287,11 @@ test('nenhuma consulta às faixas ignora o ciclo', function () {
             preg_match_all('/GrauSatisfacao::(\w+)/', file_get_contents($caminho), $m);
 
             foreach ($m[1] as $metodo) {
+                // Constante (ex.: COR_SEM_REGUA) não é consulta às faixas.
+                if (preg_match('/^[A-Z][A-Z0-9_]*$/', $metodo)) {
+                    continue;
+                }
+
                 if (! in_array($metodo, $permitidos, true)) {
                     $suspeitos[] = str_replace(base_path().DIRECTORY_SEPARATOR, '', $caminho).": ::{$metodo}";
                 }

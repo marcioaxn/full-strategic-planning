@@ -160,7 +160,7 @@
         @foreach($entregasAgrupadas as $planoId => $entregas)
         @php
             $plano       = $entregas->first()?->planoDeAcao;
-            $atrasadasNo = $entregas->filter(fn($e) => $e->dte_prazo && $e->dte_prazo->isPast())->count();
+            $atrasadasNo = $entregas->filter(fn($e) => $e->isAtrasada())->count();
         @endphp
         <div class="card border-0 shadow-sm mb-4 me-plano-card">
             {{-- Cabeçalho do plano --}}
@@ -194,7 +194,7 @@
             <div class="card-body p-0">
                 @foreach($entregas as $entrega)
                 @php
-                    $atrasada = $entrega->dte_prazo && $entrega->dte_prazo->isPast();
+                    $atrasada = $entrega->isAtrasada();
                     $prio     = $prioColors[$entrega->cod_prioridade] ?? $prioColors['media'];
                     $stColor  = $statusColors[$entrega->bln_status] ?? '#e3e2e0';
                 @endphp

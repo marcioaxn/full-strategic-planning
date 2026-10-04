@@ -283,7 +283,7 @@ test('o Gestor Substituto edita a entrega, mas não a exclui (nem em definitivo)
 
     Livewire::actingAs($substituto)
         ->test(DeliverablesBoard::class, ['planoId' => $c['plano']->cod_plano_de_acao])
-        ->call('excluirPermanente', $entrega->cod_entrega)
+        ->call('confirmDeleteEntrega', $entrega->cod_entrega, true)
         ->assertForbidden();
 
     expect(Entrega::withTrashed()->find($entrega->cod_entrega))->not->toBeNull()
@@ -359,7 +359,9 @@ test('o Administrador da unidade A não cria indicador vinculado à unidade B', 
         ->set('form.cod_objetivo', $c['objetivo']->cod_objetivo)
         ->set('form.organizacoes_ids', [$c['orgB']->cod_organizacao])
         ->call('save')
-        ->assertForbidden();
+        // Desde 04/10/2026 a unidade fora do escopo é recusada com mensagem no
+        // formulário (e nem aparece na lista), em vez da página de erro 403.
+        ->assertHasErrors('form.organizacoes_ids.0');
 
     expect(Indicador::count())->toBe(0);
 

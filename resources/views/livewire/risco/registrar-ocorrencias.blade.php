@@ -70,8 +70,8 @@
                                 @can('update', $risco)
                                 <div class="mt-2">
                                     <button wire:click="edit('{{ $oc->cod_ocorrencia }}')" class="btn btn-sm btn-link text-muted"><i class="bi bi-pencil"></i></button>
-                                    {{-- "return": sem ele o Cancelar da confirmação não impedia a exclusão. --}}
-                                    <button wire:click="delete('{{ $oc->cod_ocorrencia }}')" class="btn btn-sm btn-link text-danger" onclick="return confirm('Excluir registro?')"><i class="bi bi-trash"></i></button>
+                                    {{-- wire:confirm: com onclick="return confirm()" o Cancelar não impedia a exclusão. --}}
+                                    <button type="button" wire:click="delete('{{ $oc->cod_ocorrencia }}')" wire:confirm="Excluir este registro de ocorrência?" class="btn btn-sm btn-link text-danger" title="Excluir"><i class="bi bi-trash"></i></button>
                                 </div>
                                 @endcan
                             </div>
@@ -111,30 +111,35 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label text-muted small text-uppercase fw-bold">Data da Ocorrência</label>
-                                <input type="date" wire:model="form.dte_ocorrencia" class="form-control">
+                                <input type="date" wire:model="form.dte_ocorrencia" class="form-control @error('form.dte_ocorrencia') is-invalid @enderror">
+                                @error('form.dte_ocorrencia') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-muted small text-uppercase fw-bold">Impacto Real Observado</label>
-                                <select wire:model="form.num_impacto_real" class="form-select">
+                                <select wire:model="form.num_impacto_real" class="form-select @error('form.num_impacto_real') is-invalid @enderror">
                                     <option value="1">Muito Baixo</option>
                                     <option value="2">Baixo</option>
                                     <option value="3">Médio</option>
                                     <option value="4">Alto</option>
                                     <option value="5">Muito Alto</option>
                                 </select>
+                                @error('form.num_impacto_real') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label text-muted small text-uppercase fw-bold">Descrição do Evento</label>
-                            <textarea wire:model="form.txt_descricao" class="form-control" rows="2" placeholder="O que aconteceu?"></textarea>
+                            <textarea wire:model="form.txt_descricao" class="form-control @error('form.txt_descricao') is-invalid @enderror" rows="2" placeholder="O que aconteceu?"></textarea>
+                            @error('form.txt_descricao') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="mb-3">
                             <label class="form-label text-muted small text-uppercase fw-bold">Ações Tomadas Imediatamente</label>
-                            <textarea wire:model="form.txt_acoes_tomadas" class="form-control" rows="3"></textarea>
+                            <textarea wire:model="form.txt_acoes_tomadas" class="form-control @error('form.txt_acoes_tomadas') is-invalid @enderror" rows="3"></textarea>
+                            @error('form.txt_acoes_tomadas') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="mb-0">
                             <label class="form-label text-muted small text-uppercase fw-bold">Lições Aprendidas</label>
-                            <textarea wire:model="form.txt_licoes_aprendidas" class="form-control" rows="3"></textarea>
+                            <textarea wire:model="form.txt_licoes_aprendidas" class="form-control @error('form.txt_licoes_aprendidas') is-invalid @enderror" rows="3"></textarea>
+                            @error('form.txt_licoes_aprendidas') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                     </div>
                     <div class="modal-footer border-0 p-4 pt-0">

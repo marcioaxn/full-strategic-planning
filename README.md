@@ -361,12 +361,12 @@ php artisan up
 O rodapé de **todas as telas — inclusive a de login e as páginas públicas** — mostra:
 
 ```
-v2.0.0 · 4468184 · último deploy 03/10/2026 17:25
+v2.1.0 · 4468184 · último deploy 04/10/2026 17:25
 ```
 
 | Parte | De onde vem |
 |---|---|
-| `v2.0.0` | `config/versao.php` (pode ser trocado por `APP_VERSAO` no `.env`) |
+| `v2.1.0` | `config/versao.php` (pode ser trocado por `APP_VERSAO` no `.env`) |
 | `4468184` | O commit em execução, lido de `.git/HEAD` (ou `packed-refs`) |
 | `último deploy …` | O momento em que o `git pull` moveu o código, lido da última linha de `.git/logs/HEAD` |
 
@@ -387,7 +387,7 @@ As variáveis mais importantes e seus impactos:
 | `APP_DEBUG` | `false` | Em produção, **sempre `false`** — evita expor stack traces |
 | `APP_URL` | `https://pei.org.gov.br` | URL completa de acesso, incluindo subdiretório se houver |
 | `APP_KEY` | gerada por `key:generate` | Nunca compartilhe ou versione esta chave |
-| `APP_VERSAO` | `2.0.0` | Opcional. Número exibido no rodapé; sem ele vale o de `config/versao.php` |
+| `APP_VERSAO` | `2.1.0` | Opcional. Número exibido no rodapé; sem ele vale o de `config/versao.php` |
 | `SEED_ADMIN_PASSWORD` | *(uma senha sua)* | Opcional. Senha do administrador inicial; sem ela a seed sorteia uma (ver [Credenciais iniciais](#credenciais-iniciais)) |
 
 ### Banco de dados

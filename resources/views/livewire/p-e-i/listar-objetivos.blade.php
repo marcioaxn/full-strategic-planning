@@ -42,10 +42,10 @@
                     </div>
                     <div>
                         <h5 class="fw-bold mb-1 text-white">
-                            <i class="bi bi-mortarboard me-2"></i>{{ __('O que são Objetivos BSC?') }}
+                            <i class="bi bi-mortarboard me-2"></i>{{ __('O que são Objetivos Estratégicos?') }}
                         </h5>
                         <p class="mb-0 text-white small">
-                            {{ __('Aprenda sobre o Balanced Scorecard e as 4 perspectivas estratégicas') }}
+                            {{ __('Como escrever o que o órgão precisa alcançar no ciclo') }}
                         </p>
                     </div>
                 </div>
@@ -79,106 +79,13 @@
                                 <i class="bi bi-lightbulb-fill"></i>
                             </div>
                             <div>
-                                <h6 class="fw-bold mb-2">{{ __('O que é Balanced Scorecard (BSC)?') }}</h6>
+                                <h6 class="fw-bold mb-2">{{ __('O que é um Objetivo Estratégico?') }}</h6>
                                 <p class="mb-2 small">
-                                    {{ __('O BSC é uma metodologia de gestão estratégica que organiza objetivos em 4 perspectivas interligadas, criando um mapa de causa e efeito. Ao invés de focar apenas em resultados financeiros, o BSC equilibra a visão estratégica considerando:') }}
+                                    {{ __('É aquilo que o órgão precisa alcançar durante o ciclo para cumprir a missão e chegar à visão. Cada objetivo fica dentro de uma perspectiva e começa com um verbo no infinitivo (ampliar, reduzir, garantir...).') }}
                                 </p>
-                                <ul class="small mb-0">
-                                    <li><strong>Como aprendemos e crescemos?</strong> {{ __('(Base - Aprendizado e Crescimento)') }}</li>
-                                    <li><strong>Como otimizamos processos?</strong> {{ __('(Processos Internos)') }}</li>
-                                    <li><strong>Como entregamos valor?</strong> {{ __('(Clientes/Sociedade)') }}</li>
-                                    <li><strong>Qual o resultado final?</strong> {{ __('(Financeira/Resultados)') }}</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Diagrama Visual das 4 Perspectivas --}}
-                    <div class="col-12">
-                        <div class="card border-2 border-primary">
-                            <div class="card-header bg-primary bg-opacity-10">
-                                <h6 class="fw-bold mb-0 text-dark text-center">
-                                    <i class="bi bi-diagram-3 me-2 text-primary"></i>{{ __('As 4 Perspectivas do BSC (Cadeia de Causa e Efeito)') }}
-                                </h6>
-                            </div>
-                            <div class="card-body p-3">
-                                <div class="row g-3">
-                                    {{-- Perspectiva 1: Financeira/Resultados --}}
-                                    <div class="col-12">
-                                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 border border-success bg-success">
-                                            <div class="icon-circle-mini bg-white bg-opacity-20 text-white flex-shrink-0">
-                                                <i class="bi bi-graph-up-arrow text-dark"></i>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <div class="d-flex align-items-center justify-content-between">
-                                                    <h6 class="fw-bold mb-0 text-white">{{ __('1. Perspectiva Financeira / Resultados') }}</h6>
-                                                    <span class="badge bg-white text-success fw-bold">{{ __('TOPO') }}</span>
-                                                </div>
-                                                <p class="small text-white mb-0 mt-1 opacity-90">{{ __('Resultado final - Sucesso econômico ou impacto social') }}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {{-- Seta Descendente --}}
-                                    <div class="col-12 text-center">
-                                        <i class="bi bi-arrow-down-circle-fill text-dark fs-4"></i>
-                                        <p class="small text-dark mb-0">{{ __('é resultado de') }}</p>
-                                    </div>
-
-                                    {{-- Perspectiva 2: Clientes/Sociedade --}}
-                                    <div class="col-12">
-                                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 border border-info bg-info">
-                                            <div class="icon-circle-mini bg-white bg-opacity-20 text-dark flex-shrink-0">
-                                                <i class="bi bi-people-fill"></i>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="fw-bold mb-0 text-dark">{{ __('2. Perspectiva de Clientes / Sociedade') }}</h6>
-                                                <p class="small text-dark mb-0 mt-1 opacity-90">{{ __('Valor entregue ao público-alvo - Satisfação e impacto') }}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {{-- Seta Descendente --}}
-                                    <div class="col-12 text-center">
-                                        <i class="bi bi-arrow-down-circle-fill text-dark fs-4"></i>
-                                        <p class="small text-dark mb-0">{{ __('é resultado de') }}</p>
-                                    </div>
-
-                                    {{-- Perspectiva 3: Processos Internos --}}
-                                    <div class="col-12">
-                                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 border border-warning bg-warning">
-                                            <div class="icon-circle-mini bg-white bg-opacity-20 text-dark flex-shrink-0">
-                                                <i class="bi bi-gear-fill"></i>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="fw-bold mb-0 text-dark">{{ __('3. Perspectiva de Processos Internos') }}</h6>
-                                                <p class="small text-dark mb-0 mt-1 opacity-90">{{ __('Eficiência operacional - Como fazemos nosso trabalho') }}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {{-- Seta Descendente --}}
-                                    <div class="col-12 text-center">
-                                        <i class="bi bi-arrow-down-circle-fill text-dark fs-4"></i>
-                                        <p class="small text-dark mb-0">{{ __('é resultado de') }}</p>
-                                    </div>
-
-                                    {{-- Perspectiva 4: Aprendizado e Crescimento --}}
-                                    <div class="col-12">
-                                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 border border-primary bg-primary">
-                                            <div class="icon-circle-mini bg-white bg-opacity-20 text-white flex-shrink-0">
-                                                <i class="bi bi-mortarboard-fill text-dark"></i>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <div class="d-flex align-items-center justify-content-between">
-                                                    <h6 class="fw-bold mb-0 text-white">{{ __('4. Perspectiva de Aprendizado e Crescimento') }}</h6>
-                                                    <span class="badge bg-white text-primary fw-bold">{{ __('BASE') }}</span>
-                                                </div>
-                                                <p class="small text-white mb-0 mt-1 opacity-90">{{ __('Capacitação e inovação - Pessoas, tecnologia e cultura') }}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <p class="mb-0 small">
+                                    {{ __('Um bom objetivo é curto, diz o que muda e para quem, e pode ser acompanhado por pelo menos um indicador. Veja abaixo exemplos de objetivos em cada tipo de perspectiva.') }}
+                                </p>
                             </div>
                         </div>
                     </div>

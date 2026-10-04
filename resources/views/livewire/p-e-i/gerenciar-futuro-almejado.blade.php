@@ -120,7 +120,7 @@
                                     @endif
                                     @if($podeExcluir)
                                     <button wire:click="delete('{{ $futuro->cod_futuro_almejado }}')" class="btn btn-sm btn-outline-danger border-0" title="Excluir"
-                                            onclick="return confirm('Confirma a exclusão deste item?')">
+                                            wire:confirm="Confirma a exclusão deste item?">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                     @endif

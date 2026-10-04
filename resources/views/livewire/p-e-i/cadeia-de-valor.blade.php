@@ -118,16 +118,18 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-uppercase text-muted">Perspectiva BSC (opcional)</label>
-                                <select wire:model="formAtividade.cod_perspectiva" class="form-select">
+                                <select wire:model="formAtividade.cod_perspectiva" class="form-select @error('formAtividade.cod_perspectiva') is-invalid @enderror">
                                     <option value="">Nenhuma</option>
                                     @foreach($perspectivas as $p)
                                         <option value="{{ $p->cod_perspectiva }}">{{ $p->dsc_perspectiva }}</option>
                                     @endforeach
                                 </select>
+                                @error('formAtividade.cod_perspectiva') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold small text-uppercase text-muted">Ordem</label>
-                                <input type="number" wire:model="formAtividade.num_ordem" class="form-control" min="0">
+                                <input type="number" wire:model="formAtividade.num_ordem" class="form-control @error('formAtividade.num_ordem') is-invalid @enderror" min="0" max="9999">
+                                @error('formAtividade.num_ordem') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
                     </div>

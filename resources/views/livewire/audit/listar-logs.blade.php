@@ -113,6 +113,9 @@
                                         {{ mb_strtoupper(mb_substr($log->user->name ?? 'S', 0, 1)) }}
                                     </div>
                                     <span class="fw-semibold">{{ $log->user->name ?? 'Sistema' }}</span>
+                                    @if($assumidoLog = \App\Support\RotuloAuditoria::assumido($log->tags))
+                                        <small class="ms-2 badge bg-warning-subtle text-warning-emphasis" title="Gravado durante a impersonação">como {{ $assumidoLog }}</small>
+                                    @endif
                                 </div>
                             </td>
                             <td>
@@ -176,6 +179,9 @@
                                 <div class="col-md-4">
                                     <label class="small text-muted text-uppercase fw-bold d-block">Usuário</label>
                                     <span>{{ $auditSelecionada->user->name ?? 'Sistema' }}</span>
+                                    @if($assumidoSel = \App\Support\RotuloAuditoria::assumido($auditSelecionada->tags))
+                                        <small class="d-block text-warning-emphasis">assumindo a identidade de {{ $assumidoSel }}</small>
+                                    @endif
                                 </div>
                                 <div class="col-md-4">
                                     <label class="small text-muted text-uppercase fw-bold d-block">Endereço IP</label>

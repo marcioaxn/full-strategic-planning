@@ -180,7 +180,7 @@
         @if($mostrarLixeira)
             <div class="alert alert-warning d-flex align-items-center gap-2 mb-0 mt-3 py-2 notion-trash-banner">
                 <i class="bi bi-trash"></i>
-                <span>Visualizando lixeira (itens serão excluídos permanentemente após 24 horas)</span>
+                <span>Visualizando lixeira: as entregas ficam aqui até serem restauradas ou excluídas definitivamente</span>
                 <button class="btn btn-sm btn-link ms-auto p-0" wire:click="toggleLixeira">Voltar</button>
             </div>
         @elseif($mostrarArquivados)

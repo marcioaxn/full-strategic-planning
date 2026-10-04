@@ -105,7 +105,7 @@ class EstruturaRelatorioGestao
     public function montar(?string $organizacaoId, int $ano): array
     {
         $organizacao = $organizacaoId ? Organization::find($organizacaoId) : null;
-        $pei = $this->cicloDoAno($ano);
+        $pei = $this->cicloDoRelatorio();
 
         $capitulos = [
             $this->capitulo1($pei, $organizacao),
@@ -381,17 +381,20 @@ class EstruturaRelatorioGestao
             $indicadores = $this->indicadoresDaUnidade(Indicador::where('cod_objetivo', $objetivo->cod_objetivo), $org)->get();
 
             $resultados = $indicadores->map(function (Indicador $ind) use ($ano) {
-                $atingimento = $ind->calcularAtingimento($ano);
+                // NULL = sem medição no exercício: o relatório diz isso, não "0,0%".
+                $atingimento = $ind->atingimentoMedido($ano);
 
                 return [
                     'indicador' => $ind->nom_indicador,
                     'unidade' => $ind->dsc_unidade_medida,
-                    'atingimento' => round($atingimento, 1),
-                    'texto' => sprintf(
-                        '%s: %s de atingimento',
-                        $ind->nom_indicador,
-                        UnidadeMedida::formatar($atingimento, 'Percentual (%)')
-                    ),
+                    'atingimento' => $atingimento === null ? null : round($atingimento, 1),
+                    'texto' => $atingimento === null
+                        ? sprintf('%s: sem medição no exercício', $ind->nom_indicador)
+                        : sprintf(
+                            '%s: %s de atingimento',
+                            $ind->nom_indicador,
+                            UnidadeMedida::formatar($atingimento, 'Percentual (%)')
+                        ),
                 ];
             })->all();
 
@@ -518,13 +521,17 @@ class EstruturaRelatorioGestao
             ->flatMap(fn ($p) => $p->objetivos);
     }
 
-    /** O ciclo vigente no ano relatado — não simplesmente "o ativo". */
-    private function cicloDoAno(int $ano): ?PEI
+    /**
+     * O ciclo do relatório: o selecionado no topo (decisão de 04/10/2026).
+     *
+     * 🔴 Buscava "um ciclo vigente no ano" com first() sem ORDER BY: com dois
+     * ciclos sobrepostos, o Relatório de Gestão saía de um e todos os outros
+     * relatórios do outro. Exercício fora do ciclo selecionado é recusado no
+     * controller (RelatorioController::gestaoForaDoCiclo).
+     */
+    private function cicloDoRelatorio(): ?PEI
     {
-        return PEI::where('num_ano_inicio_pei', '<=', $ano)
-            ->where('num_ano_fim_pei', '>=', $ano)
-            ->first()
-            ?? PEI::ativos()->first();
+        return PEI::doContexto();
     }
 
     private function secao(string $numero, string $titulo, string $tipo, array $dados): array

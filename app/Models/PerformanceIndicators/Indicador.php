@@ -218,6 +218,21 @@ class Indicador extends Model implements Auditable
      */
     public function calcularAtingimento(?int $ano = null, ?int $mes = null): float
     {
+        // "Sem medição" continua valendo 0 para quem soma e tira média (as
+        // telas que precisam distinguir usam atingimentoMedido()).
+        return $this->atingimentoMedido($ano, $mes) ?? 0.0;
+    }
+
+    /**
+     * O atingimento, ou NULL quando não há o que medir no período.
+     *
+     * 🔴 Realizado em branco era gravado como 0 — e 0 em polaridade negativa
+     * dá 100%: o mês que ninguém mediu acendia verde. Agora o branco é NULL e
+     * o mês sem Realizado não conta; sem nenhum mês medido (ou sem previsto
+     * nem meta para comparar), a resposta é "sem medição", não 0% nem 100%.
+     */
+    public function atingimentoMedido(?int $ano = null, ?int $mes = null): ?float
+    {
         // Se for cálculo automático baseado em iniciativa, usar o service
         if ($this->dsc_calculation_type === 'action_plan' && $this->cod_plano_de_acao) {
             $service = app(IndicadorCalculoService::class);
@@ -226,7 +241,7 @@ class Indicador extends Model implements Auditable
         }
 
         // Pega o ano da sessão se não for passado
-        $ano = $ano ?? session('ano_selecionado', now()->year);
+        $ano = (int) ($ano ?? session('ano_selecionado', now()->year));
 
         // Determina o mês limite de forma inteligente
         if ($mes === null) {
@@ -243,57 +258,91 @@ class Indicador extends Model implements Auditable
             }
         }
 
-        // Buscar evoluções do ano até o mês especificado
+        // Só os meses MEDIDOS do ano até o mês especificado: mês com Realizado
+        // em branco (NULL) não é "zero realizado".
         $evolucoes = $this->evolucoes()
             ->where('num_ano', $ano)
             ->where('num_mes', '<=', $mes)
+            ->whereNotNull('vlr_realizado')
             ->orderBy('num_mes')
             ->get();
 
         if ($evolucoes->isEmpty()) {
-            return 0;
+            return null;
         }
-
-        // Calcular valores baseado no tipo de acumulação
-        $totalPrevisto = 0;
-        $totalRealizado = 0;
 
         if ($this->bln_acumulado === 'Sim') {
             // Indicador ACUMULADO: soma todos os valores do período
-            $totalPrevisto = $evolucoes->sum('vlr_previsto');
-            $totalRealizado = $evolucoes->sum('vlr_realizado');
+            $totalPrevisto = (float) $evolucoes->sum('vlr_previsto');
+            $totalRealizado = (float) $evolucoes->sum('vlr_realizado');
         } else {
-            // Indicador NÃO ACUMULADO: usa o último valor disponível
+            // Indicador NÃO ACUMULADO: usa o último valor medido
             $ultimaEvolucao = $evolucoes->last();
-            if ($ultimaEvolucao) {
-                $totalPrevisto = $ultimaEvolucao->vlr_previsto ?? 0;
-                $totalRealizado = $ultimaEvolucao->vlr_realizado ?? 0;
-            }
+            $totalPrevisto = (float) ($ultimaEvolucao->vlr_previsto ?? 0);
+            $totalRealizado = (float) $ultimaEvolucao->vlr_realizado;
         }
 
-        // Se não houver valor previsto, tentar usar meta anual como fallback
+        // Sem previsto (em branco, ou 0 dos lançamentos antigos que gravavam o
+        // branco como zero): compara com a meta anual.
         if ($totalPrevisto == 0) {
-            $meta = $this->metasPorAno()->where('num_ano', $ano)->first();
-            if (! $meta || $meta->meta == 0) {
-                return 0;
-            }
-
-            if ($this->bln_acumulado === 'Sim') {
-                // Meta anual proporcional aos meses com evolução
-                $mesesComEvolucao = $evolucoes->count();
-                $totalPrevisto = ($meta->meta / 12) * $mesesComEvolucao;
-            } else {
-                // Meta mensal (meta anual / 12)
-                $totalPrevisto = $meta->meta / 12;
-            }
+            $totalPrevisto = $this->previstoPelaMeta($ano, $evolucoes->count());
         }
 
-        if ($totalPrevisto == 0) {
-            return 0;
+        if (! $totalPrevisto) {
+            return null;
         }
 
         // Calcular percentual baseado no tipo de polaridade
         return $this->calcularPercentualPorTipo($totalRealizado, $totalPrevisto);
+    }
+
+    /**
+     * O atingimento que entra numa MÉDIA (objetivo, perspectiva, IQG, portal).
+     *
+     * NULL quando o indicador não tem medição no período ou é informativo
+     * (polaridade "Não Aplicável"): nos dois casos ele fica FORA da média — não
+     * entra como 0%. Entrar como zero pintava de crítico o objetivo e a
+     * perspectiva que ninguém mediu.
+     */
+    public function atingimentoParaMedia(?int $ano = null, ?int $mes = null): ?float
+    {
+        if (CalculoPolaridade::ehInformativo($this->dsc_polaridade)) {
+            return null;
+        }
+
+        return $this->atingimentoMedido($ano, $mes);
+    }
+
+    /**
+     * O previsto que a meta anual implica, quando o lançamento não o traz.
+     *
+     * - ACUMULADO: a meta é a soma do ano — proporcional aos meses medidos
+     *   (meta/12 × meses).
+     * - NÃO ACUMULADO: o valor é pontual e a meta anual é o próprio alvo.
+     *   Dividir por 12 (como era) fazia 85 contra meta 90 virar 1.133%.
+     */
+    public function previstoPelaMeta(int $ano, int $mesesMedidos = 1): ?float
+    {
+        $meta = $this->metasPorAno()->where('num_ano', $ano)->first();
+
+        if (! $meta || $meta->meta === null || (float) $meta->meta == 0) {
+            return null;
+        }
+
+        return $this->bln_acumulado === 'Sim'
+            ? ((float) $meta->meta / 12) * $mesesMedidos
+            : (float) $meta->meta;
+    }
+
+    /**
+     * O ciclo PEI do indicador: pelo objetivo direto ou, no indicador de
+     * iniciativa, pelo objetivo da iniciativa. Sem o segundo caminho o
+     * indicador de iniciativa ficava sempre sem régua (farol cinza).
+     */
+    public function codPeiDoCiclo(): ?string
+    {
+        return $this->objetivo?->perspectiva?->cod_pei
+            ?? $this->planoDeAcao?->objetivo?->perspectiva?->cod_pei;
     }
 
     /**
@@ -340,7 +389,17 @@ class Indicador extends Model implements Auditable
      */
     public function getCorFarol(?int $ano = null): string
     {
-        $percentual = $this->calcularAtingimento($ano);
+        // O mesmo ano do atingimento: sem isto o percentual era do ano de
+        // referência e a régua de qualquer ano (a de ano específico vencia).
+        $ano = (int) ($ano ?? session('ano_selecionado', now()->year));
+
+        $percentual = $this->atingimentoMedido($ano);
+
+        // Sem medição ou informativo: não há o que julgar — cinza, nunca a cor
+        // da pior faixa.
+        if ($percentual === null || CalculoPolaridade::ehInformativo($this->dsc_polaridade)) {
+            return GrauSatisfacao::COR_SEM_REGUA;
+        }
 
         // A régua é a do ciclo a que este indicador pertence, via
         // objetivo → perspectiva → PEI. A consulta anterior não filtrava por
@@ -352,11 +411,7 @@ class Indicador extends Model implements Auditable
         // null — que cada tela traduzia num cinza ou num vermelho diferente.
         // corDe() trata as pontas e devolve o cinza neutro quando não há régua
         // configurada, que é a única resposta honesta nesse caso.
-        return GrauSatisfacao::corDe(
-            (float) $percentual,
-            $this->objetivo?->perspectiva?->cod_pei,
-            $ano
-        );
+        return GrauSatisfacao::corDe((float) $percentual, $this->codPeiDoCiclo(), $ano);
     }
 
     public function tendenciaAtual(int $meses = 3): array

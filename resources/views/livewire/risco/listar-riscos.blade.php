@@ -562,7 +562,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge {{ $risco->getNivelRiscoBadgeClass() }} px-3 py-2 rounded-pill shadow-sm" style="min-width: 80px;">
+                                    <span class="badge px-3 py-2 rounded-pill shadow-sm" style="min-width: 80px; {{ $risco->estiloDoSeloDeNivel() }}">
                                         {{ $risco->getNivelRiscoLabel() }}
                                     </span>
                                 </td>
@@ -768,13 +768,18 @@
                                                 </div>
                                             </div>
 
-                                            @php $nivelCalculado = $form['num_probabilidade'] * $form['num_impacto']; @endphp
+                                            @php
+                                                // A mesma régua da matriz, da lista e do Excel (Risco::corDoNivel).
+                                                $nivelCalculado = (int) $form['num_probabilidade'] * (int) $form['num_impacto'];
+                                                $corNivel = \App\Models\RiskManagement\Risco::corDoNivel($nivelCalculado);
+                                            @endphp
                                             <div class="p-3 rounded-4 text-center border shadow-sm" 
-                                                 style="background-color: {{ $nivelCalculado >= 16 ? '#fff5f5' : ($nivelCalculado >= 8 ? '#fffcf0' : '#f0fff4') }};">
+                                                 style="background-color: {{ $corNivel }}15; border-color: {{ $corNivel }}55 !important;">
                                                 <small class="text-muted d-block text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Exposição ao Risco</small>
-                                                <h2 class="fw-800 mb-0 {{ $nivelCalculado >= 16 ? 'text-danger' : ($nivelCalculado >= 8 ? 'text-warning' : 'text-success') }}">
+                                                <h2 class="fw-800 mb-0" style="color: {{ $corNivel }};">
                                                     {{ $nivelCalculado }}
                                                 </h2>
+                                                <small class="fw-bold" style="color: {{ $corNivel }};">{{ \App\Models\RiskManagement\Risco::rotuloDoNivel($nivelCalculado) }}</small>
                                             </div>
                                         </div>
                                     </div>

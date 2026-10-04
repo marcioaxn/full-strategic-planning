@@ -10,6 +10,7 @@ use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Perspectiva;
 use App\Models\StrategicPlanning\TemaNorteador;
 use App\Models\StrategicPlanning\Valor;
+use App\Services\IndicadorCalculoService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Locked;
@@ -175,31 +176,38 @@ class MapaEstrategico extends Component
                 foreach ($p->objetivos as $obj) {
                     $objSomaInd = 0;
                     $objTotalInd = 0;
+                    $objMedidos = 0;
 
                     // --- INDICADORES ---
+                    // Sem medição e informativo ficam FORA da média (não entram
+                    // como 0%); aparecem na memória como "Sem medição".
                     foreach ($obj->indicadores as $ind) {
-                        $ating = $ind->calcularAtingimento($anoSelecionado);
-                        $somaAtingInd += $ating;
-                        $totalInd++;
-
-                        $objSomaInd += $ating;
                         $objTotalInd++;
+                        $ating = $ind->atingimentoParaMedia((int) $anoSelecionado);
+
+                        if ($ating !== null) {
+                            $somaAtingInd += $ating;
+                            $totalInd++;
+                            $objSomaInd += $ating;
+                            $objMedidos++;
+                        }
 
                         $listaIndicadoresMemoria[] = [
                             'objetivo' => $obj->nom_objetivo,
                             'indicador' => $ind->nom_indicador,
-                            'atingimento' => round($ating, 1),
+                            'atingimento' => $ating === null ? null : round($ating, 1),
                             'cor' => $this->getCorPorPercentual($ating),
                             'polaridade' => $ind->dsc_polaridade ?? 'Positiva',
                             'tipo' => 'Indicador',
                         ];
                     }
 
-                    // Resumo Indicadores (Objetivo)
-                    $objMediaInd = $objTotalInd > 0 ? ($objSomaInd / $objTotalInd) : 0;
+                    // Resumo Indicadores (Objetivo): NULL quando nenhum foi medido
+                    $objMediaInd = $objMedidos > 0 ? ($objSomaInd / $objMedidos) : null;
                     $obj->resumo_indicadores = [
                         'quantidade' => $objTotalInd,
-                        'percentual' => round($objMediaInd, 1),
+                        'medidos' => $objMedidos,
+                        'percentual' => $objMediaInd === null ? null : round($objMediaInd, 1),
                         'cor' => $this->getCorPorPercentual($objMediaInd),
                     ];
 
@@ -256,7 +264,8 @@ class MapaEstrategico extends Component
                         }
 
                         // Calcular atingimento deste plano específico no ano
-                        $planoAtingimento = $planoSomaPeso > 0 ? ($planoSomaProgresso / $planoSomaPeso) * 100 : 0;
+                        // Só entregas canceladas no ano: não há o que medir (não é 0%).
+                        $planoAtingimento = $planoSomaPeso > 0 ? ($planoSomaProgresso / $planoSomaPeso) * 100 : null;
 
                         // Adicionar ao acumulador global da perspectiva
                         $somaProgressoPlan += $planoSomaProgresso;
@@ -271,14 +280,14 @@ class MapaEstrategico extends Component
                             'objetivo' => $obj->nom_objetivo,
                             'plano' => $plano->dsc_plano_de_acao,
                             'entregas' => $entregasMemoria,
-                            'atingimento' => round($planoAtingimento, 1),
+                            'atingimento' => $planoAtingimento === null ? null : round($planoAtingimento, 1),
                             'cor' => $this->getCorPorPercentual($planoAtingimento),
                             'tipo' => 'Iniciativa',
                         ];
                     }
 
                     // Calcular média ponderada de progresso do OBJETIVO (para exibição no card)
-                    $objMediaProgresso = $objSomaPesoPlan > 0 ? ($objSomaProgressoPlan / $objSomaPesoPlan) * 100 : 0;
+                    $objMediaProgresso = $objSomaPesoPlan > 0 ? ($objSomaProgressoPlan / $objSomaPesoPlan) * 100 : null;
 
                     // Resumo Planos (Calculado com base filterada)
                     $corPlano = '#475569';
@@ -296,40 +305,32 @@ class MapaEstrategico extends Component
                         'quantidade' => $objTotalPlanosAno,
                         'concluidos' => $objConcluidosAno,
                         'percentual' => $objTotalPlanosAno > 0 ? round(($objConcluidosAno / $objTotalPlanosAno) * 100, 1) : 0,
-                        'media_progresso' => round($objMediaProgresso, 1), // NOVA CHAVE: Progresso Ponderado
+                        'media_progresso' => $objMediaProgresso === null ? null : round($objMediaProgresso, 1), // Progresso ponderado; NULL = nada a medir
                         'cor' => $corPlano,
                     ];
                 }
 
-                // Média Indicadores
-                $mediaIndicadores = $totalInd > 0 ? ($somaAtingInd / $totalInd) : 0;
+                // Média dos indicadores MEDIDOS; NULL = nenhum medido
+                $mediaIndicadores = $totalInd > 0 ? ($somaAtingInd / $totalInd) : null;
 
-                // Média Planos (Ponderada)
-                $mediaPlanos = $somaPesoPlan > 0 ? ($somaProgressoPlan / $somaPesoPlan) * 100 : 0;
+                // Média Planos (Ponderada); NULL = nenhuma entrega do ano a medir
+                $mediaPlanos = $somaPesoPlan > 0 ? ($somaProgressoPlan / $somaPesoPlan) * 100 : null;
 
-                // Adicionar info de planos na memória de cálculo se tiver peso
-                // (Nota: Agora mostramos a lista detalhada em vez de apenas a média, mas mantemos a média se quiser)
-                // Vamos manter a linha de média como um resumo global se a lista estiver vazia?
-                // Não, se tem pesoPlan > 0, mostramos.
+                // CÁLCULO FINAL HÍBRIDO — a mesma regra do IndicadorCalculoService:
+                // componente sem dado sai e os pesos se renormalizam; nada medido
+                // é NULL ("Sem medição", cinza), nunca 0% pintado de crítico.
+                $atingimentoFinal = IndicadorCalculoService::combinarComponentes($mediaIndicadores, $pesoInd, $mediaPlanos, $pesoPlan);
 
-                // CÁLCULO FINAL HÍBRIDO
-                $atingimentoFinal = 0;
-                $somaPesosConfig = $pesoInd + $pesoPlan;
-
-                if ($somaPesosConfig > 0) {
-                    $atingimentoFinal = (($mediaIndicadores * $pesoInd) + ($mediaPlanos * $pesoPlan)) / $somaPesosConfig;
-                }
-
-                $p->atingimento_medio = round($atingimentoFinal, 1);
+                $p->atingimento_medio = $atingimentoFinal === null ? null : round($atingimentoFinal, 1);
                 $p->cor_satisfacao = $this->getCorPorPercentual($atingimentoFinal);
                 $p->memoria_indicadores = $listaIndicadoresMemoria;
                 $p->memoria_planos = $listaPlanosMemoria;
 
                 // Detalhes extras para tooltip
                 $p->detalhes_calculo = [
-                    'nota_indicadores' => round($mediaIndicadores, 1),
+                    'nota_indicadores' => $mediaIndicadores === null ? null : round($mediaIndicadores, 1),
                     'peso_indicadores' => $pesoInd,
-                    'nota_planos' => round($mediaPlanos, 1),
+                    'nota_planos' => $mediaPlanos === null ? null : round($mediaPlanos, 1),
                     'peso_planos' => $pesoPlan,
                 ];
 
@@ -358,6 +359,11 @@ class MapaEstrategico extends Component
      */
     public function getCorPorPercentual($percentual): string
     {
+        // Sem medição: cinza neutro, nunca a cor da pior faixa.
+        if ($percentual === null) {
+            return GrauSatisfacao::COR_SEM_REGUA;
+        }
+
         return GrauSatisfacao::corDe(
             (float) $percentual,
             $this->peiAtivo?->cod_pei,
@@ -372,7 +378,12 @@ class MapaEstrategico extends Component
 
     public function abrirMemoriaCalculo($index)
     {
-        $p = $this->perspectivas[$index];
+        // O índice vem do navegador: fora da lista, não há o que mostrar (era 500).
+        if (! is_numeric($index) || ! isset($this->perspectivas[(int) $index])) {
+            return;
+        }
+
+        $p = $this->perspectivas[(int) $index];
         $this->detalhesCalculo = [
             'titulo' => $p['dsc_perspectiva'], 'media' => $p['atingimento_medio'],
             'cor' => $p['cor_satisfacao'], 'indicadores' => $p['memoria_indicadores'],

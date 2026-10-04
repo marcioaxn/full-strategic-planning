@@ -950,7 +950,7 @@
                                             <button wire:click="editarParte('{{ $parte->cod_parte }}')" class="btn btn-xs btn-outline-primary me-1"><i class="bi bi-pencil"></i></button>
                                             @endif
                                             @if($podeExcluirParte)
-                                            <button wire:click="excluirParte('{{ $parte->cod_parte }}')" class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                            <button wire:click="excluirParte('{{ $parte->cod_parte }}')" wire:confirm="Tem certeza que deseja excluir esta parte interessada?" title="Excluir" class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button>
                                             @endif
                                         </td>
                                     </tr>
@@ -996,7 +996,7 @@
                                             <button wire:click="editarCenario('{{ $cen->cod_cenario }}')" class="btn btn-xs btn-link p-0 text-muted"><i class="bi bi-pencil" style="font-size:.7rem;"></i></button>
                                             @endif
                                             @if($podeExcluir)
-                                            <button wire:click="excluirCenario('{{ $cen->cod_cenario }}')" class="btn btn-xs btn-link p-0 text-danger"><i class="bi bi-x" style="font-size:.8rem;"></i></button>
+                                            <button wire:click="excluirCenario('{{ $cen->cod_cenario }}')" wire:confirm="Tem certeza que deseja excluir este cenário?" title="Excluir" class="btn btn-xs btn-link p-0 text-danger"><i class="bi bi-x" style="font-size:.8rem;"></i></button>
                                             @endif
                                         </div>
                                     </div>
@@ -1173,7 +1173,7 @@
                                         <button wire:click="editarEstrategiaTows('{{ $est->cod_estrategia }}')" class="btn btn-xs btn-light border"><i class="bi bi-pencil"></i></button>
                                         @endif
                                         @if($podeExcluir)
-                                        <button wire:click="excluirEstrategiaTows('{{ $est->cod_estrategia }}')" class="btn btn-xs btn-light border text-danger"><i class="bi bi-trash"></i></button>
+                                        <button wire:click="excluirEstrategiaTows('{{ $est->cod_estrategia }}')" wire:confirm="Tem certeza que deseja excluir esta estratégia?" title="Excluir" class="btn btn-xs btn-light border text-danger"><i class="bi bi-trash"></i></button>
                                         @endif
                                     </div>
                                 </div>

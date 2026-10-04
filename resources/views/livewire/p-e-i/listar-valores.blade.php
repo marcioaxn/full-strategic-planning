@@ -47,113 +47,25 @@
         </div>
     @endif
 
-    {{-- Seção educativa --}}
-    <div class="card border-0 shadow-sm mb-4 educational-card-gradient" x-data="{ expanded: false }">
-        <div class="card-header bg-transparent border-0 p-4">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="icon-circle bg-white bg-opacity-25">
-                        <i class="bi bi-book-fill fs-4 text-white"></i>
-                    </div>
-                    <div>
-                        <h5 class="fw-bold mb-1 text-white">
-                            <i class="bi bi-mortarboard me-2"></i>Entendendo os três conceitos da Identidade Estratégica
-                        </h5>
-                        <p class="mb-0 text-white-50 small">Valores, Temas Norteadores e Missão/Visão — cada um tem papel distinto</p>
-                    </div>
-                </div>
-                <button @click="expanded = !expanded" class="btn btn-link text-white text-decoration-none p-0" type="button">
-                    <i class="bi fs-4" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
-                </button>
-            </div>
-        </div>
-        <div x-show="expanded" x-transition style="display:none;">
-            <div class="card-body p-4 bg-white border-top">
-
-                <div class="row g-4 mb-4">
-                    {{-- Valores --}}
-                    <div class="col-md-4">
-                        <div class="card h-100 border-2 border-primary">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center gap-2 mb-3">
-                                    <div class="icon-circle-mini bg-primary bg-opacity-10 text-primary"><i class="bi bi-heart-fill"></i></div>
-                                    <h6 class="fw-bold mb-0 text-primary">Valores Institucionais</h6>
-                                </div>
-                                <p class="small text-muted mb-2">
-                                    <strong>O que são:</strong> Princípios éticos e comportamentais inegociáveis que definem <em>como</em> a organização age — independentemente do ciclo ou do governo de plantão.
-                                </p>
-                                <p class="small text-muted mb-2">
-                                    <strong>Natureza:</strong> Permanentes e transversais. Não mudam a cada ciclo PEI.
-                                </p>
-                                <p class="small text-muted mb-0">
-                                    <strong>Exemplos:</strong> "Integridade", "Transparência", "Inovação", "Respeito ao cidadão".
-                                </p>
-                            </div>
-                            <div class="card-footer bg-primary bg-opacity-10 border-0">
-                                <small class="text-primary fw-semibold"><i class="bi bi-check-circle me-1"></i>Esta tela — você está aqui</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Temas Norteadores --}}
-                    <div class="col-md-4">
-                        <div class="card h-100 border-2 border-warning">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center gap-2 mb-3">
-                                    <div class="icon-circle-mini bg-warning bg-opacity-10 text-warning"><i class="bi bi-compass-fill"></i></div>
-                                    <h6 class="fw-bold mb-0 text-warning">Temas Norteadores</h6>
-                                </div>
-                                <p class="small text-muted mb-2">
-                                    <strong>O que são:</strong> Prioridades estratégicas transversais do <em>ciclo</em> PEI — definem <em>onde</em> concentrar esforços neste período.
-                                </p>
-                                <p class="small text-muted mb-2">
-                                    <strong>Natureza:</strong> Temporários (duram o ciclo). Derivam do diagnóstico ambiental (SWOT/PESTEL).
-                                </p>
-                                <p class="small text-muted mb-0">
-                                    <strong>Exemplos:</strong> "Transformação Digital", "Atendimento ao Cidadão", "Sustentabilidade Fiscal".
-                                </p>
-                            </div>
-                            <div class="card-footer bg-warning bg-opacity-10 border-0">
-                                <small class="text-warning fw-semibold"><i class="bi bi-arrow-right-circle me-1"></i>Menu PEI → Temas Norteadores</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Missão / Visão --}}
-                    <div class="col-md-4">
-                        <div class="card h-100 border-2 border-success">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center gap-2 mb-3">
-                                    <div class="icon-circle-mini bg-success bg-opacity-10 text-success"><i class="bi bi-fingerprint"></i></div>
-                                    <h6 class="fw-bold mb-0 text-success">Missão e Visão</h6>
-                                </div>
-                                <p class="small text-muted mb-2">
-                                    <strong>O que são:</strong> A razão de existir da organização (Missão) e o estado futuro que ela aspira alcançar (Visão). Junto com os Valores, formam os três pilares da Identidade Estratégica.
-                                </p>
-                                <p class="small text-muted mb-2">
-                                    <strong>Natureza:</strong> Semi-permanentes. Revisados a cada ciclo, mas raramente mudam radicalmente.
-                                </p>
-                                <p class="small text-muted mb-0">
-                                    <strong>Referência:</strong> BSC (Kaplan & Norton) e GPPEI/MGI 2025, p. 44.
-                                </p>
-                            </div>
-                            <div class="card-footer bg-success bg-opacity-10 border-0">
-                                <small class="text-success fw-semibold"><i class="bi bi-arrow-right-circle me-1"></i>Menu PEI → Identidade Estratégica</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="alert alert-primary border-0 small mb-0">
-                    <i class="bi bi-lightbulb-fill me-2"></i>
-                    <strong>Regra prática para não confundir:</strong>
-                    Valores respondem "Como agimos?", Temas Norteadores respondem "Onde focamos agora?", Missão responde "Por que existimos?" e Visão responde "Onde queremos chegar?".
-                    São quatro perguntas completamente diferentes — por isso existem como conceitos separados no sistema.
-                </div>
-
-            </div>
-        </div>
-    </div>
+    <x-secao-educativa
+        titulo="O que são os Valores Institucionais?"
+        subtitulo="Os princípios que dizem como o órgão age, em qualquer situação."
+        icone="heart"
+        por-que="Valores orientam decisões quando não há regra escrita: quem atende, quem decide e quem executa sabe o que se espera do seu comportamento. Valor que não aparece na prática vira só frase na parede."
+        :passos="[
+            'Clique em Novo Valor.',
+            'Dê ao valor um nome curto (uma ou duas palavras), como Transparência ou Integridade.',
+            'Na descrição, explique o que o valor significa no dia a dia do órgão — de preferência com um comportamento que se possa observar.',
+            'Prefira poucos valores (em geral de 3 a 7): uma lista longa não é lembrada por ninguém.',
+            'Revise a lista com a alta gestão antes de divulgar.',
+        ]"
+        exemplo="O Instituto Nacional de Pesquisas Hídricas (fictício) adota Transparência: “publicamos dados, decisões e resultados de forma aberta e em linguagem simples, salvo o que a lei protege”."
+        dica="evite valores genéricos que qualquer órgão assinaria sem pensar; o bom valor muda uma decisão concreta."
+        referencia="GPPEI/MGI 2025 — Passo 03, Referencial Estratégico">
+        Valores são como as regras de convivência de uma família: não dizem aonde ir, mas como cada um se comporta no caminho.
+        São princípios <strong>éticos e de conduta</strong> que valem para todas as unidades e pessoas do órgão e
+        costumam <strong>permanecer de um ciclo para outro</strong>, porque expressam a cultura que se quer preservar.
+    </x-secao-educativa>
 
     {{-- Conteúdo --}}
     @if(!$peiAtivo)

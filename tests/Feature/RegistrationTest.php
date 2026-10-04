@@ -14,7 +14,8 @@ test('registration screen can be rendered', function () {
 test('registration screen cannot be rendered if support is disabled', function () {
     $response = $this->get('/register');
 
-    $response->assertStatus(404);
+    // O 404 de visitante volta à página inicial com aviso (bootstrap/app.php).
+    $response->assertRedirect(route('welcome'));
 })->skip(function () {
     return Features::enabled(Features::registration());
 }, 'Registration support is enabled.');

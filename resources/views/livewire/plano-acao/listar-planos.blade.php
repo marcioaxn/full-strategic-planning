@@ -1027,16 +1027,18 @@
                                         <span class="small fw-bold text-uppercase"><i class="bi bi-bank me-2"></i>Códigos Orçamentários (PPA/LOA)</span>
                                         <i class="bi bi-chevron-down"></i>
                                     </button>
-                                    <div class="collapse {{ $cod_ppa || $cod_loa ? 'show' : '' }}" id="govFields">
+                                    <div class="collapse {{ $cod_ppa || $cod_loa || $errors->hasAny(['cod_ppa', 'cod_loa']) ? 'show' : '' }}" id="govFields">
                                         <div class="card-body px-4 pb-4 pt-0">
                                             <div class="row g-3">
                                                 <div class="col-md-6">
                                                     <label class="form-label small text-muted">Cód. PPA</label>
-                                                    <input type="text" wire:model="cod_ppa" class="form-control border-0 shadow-sm bg-white" placeholder="Opcional">
+                                                    <input type="text" wire:model="cod_ppa" maxlength="191" class="form-control border-0 shadow-sm bg-white @error('cod_ppa') is-invalid @enderror" placeholder="Opcional">
+                                                    @error('cod_ppa') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="form-label small text-muted">Cód. LOA</label>
-                                                    <input type="text" wire:model="cod_loa" class="form-control border-0 shadow-sm bg-white" placeholder="Opcional">
+                                                    <input type="text" wire:model="cod_loa" maxlength="191" class="form-control border-0 shadow-sm bg-white @error('cod_loa') is-invalid @enderror" placeholder="Opcional">
+                                                    @error('cod_loa') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                                 </div>
                                             </div>
                                         </div>
@@ -1066,11 +1068,13 @@
                 </div>
                 <div>
                     <h5 class="mb-1 fw-bold text-dark">{{ __('Excluir Iniciativa') }}</h5>
-                    <p class="text-muted small mb-0">{{ __('Esta ação é irreversível') }}</p>
+                    <p class="text-muted small mb-0">{{ __('Não há como desfazer pela tela') }}</p>
                 </div>
             </div>
         </x-slot>
 
+        {{-- Texto fiel ao que PlanoDeAcao::booted faz: exclusão lógica da
+             iniciativa, das entregas, dos indicadores e dos vínculos de Gestor. --}}
         <x-slot name="content">
             <div class="delete-confirmation text-start">
                 <p class="mb-2 text-dark">
@@ -1078,7 +1082,13 @@
                 </p>
                 <div class="alert alert-warning bg-warning-subtle border-0">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <strong>Atenção:</strong> Todas as entregas, comentários e históricos vinculados a este plano serão removidos permanentemente.
+                    <strong>Vão junto com a iniciativa:</strong>
+                    <ul class="mb-2 mt-1">
+                        <li>{{ $impactoExclusao['entregas'] ?? 0 }} entrega(s), com os comentários e anexos delas;</li>
+                        <li>{{ $impactoExclusao['indicadores'] ?? 0 }} indicador(es) da iniciativa;</li>
+                        <li>{{ $impactoExclusao['gestores'] ?? 0 }} vínculo(s) de Gestor — as pessoas deixam de ser gestoras desta iniciativa.</li>
+                    </ul>
+                    <span class="small">Tudo sai das telas, mas os registros ficam guardados no banco (exclusão lógica): só o suporte técnico consegue recuperá-los.</span>
                 </div>
             </div>
         </x-slot>

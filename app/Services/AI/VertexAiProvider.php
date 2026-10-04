@@ -2,14 +2,18 @@
 
 namespace App\Services\AI;
 
+use App\Models\SystemSetting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class VertexAiProvider implements AiProviderInterface
 {
     protected ?string $projectId;
+
     protected ?string $location;
+
     protected ?string $modelId;
+
     protected ?array $credentials;
 
     public function __construct(
@@ -18,11 +22,11 @@ class VertexAiProvider implements AiProviderInterface
         ?string $modelId = null,
         ?string $json = null
     ) {
-        $this->projectId = $projectId ?? \App\Models\SystemSetting::getValue('vertex_project_id');
-        $this->location = $location ?? \App\Models\SystemSetting::getValue('vertex_location', 'us-central1');
-        $this->modelId = $modelId ?? \App\Models\SystemSetting::getValue('ai_model', 'gemini-2.5-flash');
+        $this->projectId = $projectId ?? SystemSetting::getValue('vertex_project_id');
+        $this->location = $location ?? SystemSetting::getValue('vertex_location', 'us-central1');
+        $this->modelId = $modelId ?? SystemSetting::getValue('ai_model', 'gemini-2.5-flash');
 
-        $json = $json ?? \App\Models\SystemSetting::getValue('vertex_service_account_json');
+        $json = $json ?? SystemSetting::getValue('vertex_service_account_json');
 
         if ($json) {
             $this->credentials = json_decode(trim($json), true);
@@ -33,15 +37,16 @@ class VertexAiProvider implements AiProviderInterface
 
     /**
      * Gera token OAuth2 via JWT assinado com a chave privada da Service Account (sem google/auth).
+     *
      * @throws \Exception
      */
     protected function getAccessToken(): string
     {
-        if (!$this->credentials) {
+        if (! $this->credentials) {
             throw new \Exception('Credenciais da Service Account não foram carregadas (JSON vazio ou inválido).');
         }
 
-        if (!isset($this->credentials['private_key']) || !isset($this->credentials['client_email'])) {
+        if (! isset($this->credentials['private_key']) || ! isset($this->credentials['client_email'])) {
             throw new \Exception('O JSON fornecido é inválido: chaves "private_key" ou "client_email" estão ausentes.');
         }
 
@@ -56,17 +61,17 @@ class VertexAiProvider implements AiProviderInterface
         ]));
 
         $header = rtrim(strtr($header, '+/', '-_'), '=');
-        $claim  = rtrim(strtr($claim, '+/', '-_'), '=');
+        $claim = rtrim(strtr($claim, '+/', '-_'), '=');
 
         $sigInput = "{$header}.{$claim}";
         $privateKey = openssl_pkey_get_private($this->credentials['private_key']);
 
-        if (!$privateKey) {
+        if (! $privateKey) {
             throw new \Exception('Não foi possível carregar a chave privada da Service Account.');
         }
 
         $signature = '';
-        if (!openssl_sign($sigInput, $signature, $privateKey, 'SHA256')) {
+        if (! openssl_sign($sigInput, $signature, $privateKey, 'SHA256')) {
             throw new \Exception('Falha ao assinar o JWT com a chave privada.');
         }
 
@@ -77,17 +82,17 @@ class VertexAiProvider implements AiProviderInterface
             ->asForm()
             ->post('https://oauth2.googleapis.com/token', [
                 'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-                'assertion'  => $jwt,
+                'assertion' => $jwt,
             ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             $error = $response->json();
             $msg = $error['error_description'] ?? $error['error'] ?? 'Erro desconhecido ao gerar token.';
-            throw new \Exception('Falha na autenticação Google: ' . $msg);
+            throw new \Exception('Falha na autenticação Google: '.$msg);
         }
 
         $token = $response->json('access_token');
-        if (!$token) {
+        if (! $token) {
             throw new \Exception('Token de acesso ausente na resposta do Google.');
         }
 
@@ -104,27 +109,27 @@ class VertexAiProvider implements AiProviderInterface
         try {
             $token = $this->getAccessToken();
         } catch (\Exception $e) {
-            return 'Erro de Configuração: ' . $e->getMessage();
+            return 'Erro de Configuração: '.$e->getMessage();
         }
 
         try {
             $response = Http::timeout(60)
                 ->withToken($token)
                 ->post($this->getApiUrl(), [
-                'contents' => [
-                    [
-                        'role' => 'user',
-                        'parts' => [
-                            ['text' => $context . "\n\nSolicitação: " . $prompt]
-                        ]
-                    ]
-                ],
-                'generationConfig' => [
-                    'temperature' => 0.2,
-                    'topP' => 0.8,
-                    'topK' => 40
-                ]
-            ]);
+                    'contents' => [
+                        [
+                            'role' => 'user',
+                            'parts' => [
+                                ['text' => $context."\n\nSolicitação: ".$prompt],
+                            ],
+                        ],
+                    ],
+                    'generationConfig' => [
+                        'temperature' => 0.2,
+                        'topP' => 0.8,
+                        'topK' => 40,
+                    ],
+                ]);
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -136,13 +141,14 @@ class VertexAiProvider implements AiProviderInterface
                     }
                 }
 
-                if (!empty($fullText)) {
+                if (! empty($fullText)) {
                     if (str_contains($fullText, '\\u')) {
-                        $decoded = json_decode('"' . str_replace('"', '\\"', $fullText) . '"');
+                        $decoded = json_decode('"'.str_replace('"', '\\"', $fullText).'"');
                         if ($decoded) {
                             $fullText = $decoded;
                         }
                     }
+
                     return $fullText;
                 }
 
@@ -151,11 +157,13 @@ class VertexAiProvider implements AiProviderInterface
 
             $error = $response->json();
             $msg = $error['error']['message'] ?? 'Erro desconhecido na Vertex AI API.';
-            Log::error('VertexAI API Error: ' . $msg);
+            Log::error('VertexAI API Error: '.$msg);
+
             return "Erro na análise (Vertex): {$msg}";
 
         } catch (\Throwable $e) {
-            Log::error('VertexAI Exception: ' . $e->getMessage());
+            Log::error('VertexAI Exception: '.$e->getMessage());
+
             return 'Falha técnica na comunicação com o cérebro da IA (Vertex).';
         }
     }
@@ -172,8 +180,8 @@ class VertexAiProvider implements AiProviderInterface
             $response = Http::timeout(10)
                 ->withToken($token)
                 ->post($this->getApiUrl(), [
-                'contents' => [['role' => 'user', 'parts' => [['text' => 'Olá, responda apenas OK.']]]]
-            ]);
+                    'contents' => [['role' => 'user', 'parts' => [['text' => 'Olá, responda apenas OK.']]]],
+                ]);
 
             if ($response->successful()) {
                 return ['success' => true, 'message' => 'Conexão com Vertex AI estabelecida com sucesso!'];
@@ -181,10 +189,11 @@ class VertexAiProvider implements AiProviderInterface
 
             $error = $response->json();
             $msg = $error['error']['message'] ?? 'Erro desconhecido.';
+
             return ['success' => false, 'message' => "Falha na conexão Vertex: {$msg}"];
 
         } catch (\Exception $e) {
-            return ['success' => false, 'message' => 'Erro ao contatar Vertex AI: ' . $e->getMessage()];
+            return ['success' => false, 'message' => 'Erro ao contatar Vertex AI: '.$e->getMessage()];
         }
     }
 
@@ -199,13 +208,15 @@ class VertexAiProvider implements AiProviderInterface
 
     public function summarizeStrategy(array $stats, string $orgName): ?string
     {
-        $context = "Você é um CSO especialista em PEI. Analise os KPIs para {$orgName} e entregue insights diretos.";
-        return $this->suggest('Dados: ' . json_encode($stats), $context);
+        $context = InstrucoesDaIa::RESUMO_EXECUTIVO;
+
+        return $this->suggest("Unidade: {$orgName}. Dados: ".json_encode($stats).'. Escreva o resumo executivo.', $context);
     }
 
     public function analyzeTrends(array $indicatorData, string $orgName): ?string
     {
-        $context = "Você é um Analista Estratégico de PEI. Analise o histórico de indicadores de {$orgName} e preveja tendências.";
-        return $this->suggest('Dados de Evolução: ' . json_encode($indicatorData), $context);
+        $context = InstrucoesDaIa::ANALISE_DE_TENDENCIA;
+
+        return $this->suggest("Unidade: {$orgName}. Dados de evolução: ".json_encode($indicatorData).'. Faça a análise.', $context);
     }
 }

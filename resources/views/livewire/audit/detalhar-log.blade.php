@@ -153,6 +153,9 @@
                         <div class="text-break">
                             <div class="fw-semibold">{{ $log->user->name ?? 'Sistema / processo automático' }}</div>
                             @if($log->user)<div class="small text-body-secondary">{{ $log->user->email }}</div>@endif
+                            @if($assumidoLog = \App\Support\RotuloAuditoria::assumido($log->tags))
+                                <div class="small text-warning-emphasis">Gravado assumindo a identidade de {{ $assumidoLog }}</div>
+                            @endif
                         </div>
                     </div>
                     <dl class="row small mb-0">
