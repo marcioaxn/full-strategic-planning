@@ -16,6 +16,6 @@
 
 return [
 
-    'numero' => env('APP_VERSAO', '2.0.0'),
+    'numero' => env('APP_VERSAO', '2.1.0'),
 
 ];
