@@ -1,4 +1,10 @@
 <div class="container-fluid py-4">
+    {{-- Aviso de carregamento das ações rápidas: a troca de ciclo + abertura da
+         tela leva alguns segundos e, sem aviso, o clique parecia não funcionar. --}}
+    <div wire:loading.flex wire:target="abrirNoCiclo" class="position-fixed bottom-0 end-0 m-3 alert alert-info shadow align-items-center gap-2 mb-0" style="z-index: 1080;" role="status">
+        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Abrindo no ciclo selecionado…
+    </div>
+
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -157,7 +163,7 @@
                         <div class="text-center py-4">
                             <i class="bi bi-exclamation-circle text-muted fs-1 d-block mb-2"></i>
                             <p class="text-muted">Nenhuma identidade estratégica definida.</p>
-                            <a href="#" wire:click.prevent="abrirNoCiclo('pei.index')" class="btn btn-sm btn-outline-primary">Definir Missão e Visão</a>
+                            <a href="#" wire:click.prevent="abrirNoCiclo('pei.index')" wire:loading.class="opacity-50 pe-none" wire:target="abrirNoCiclo" class="btn btn-sm btn-outline-primary">Definir Missão e Visão</a>
                         </div>
                     @endforelse
                 </div>
@@ -192,7 +198,7 @@
                     @else
                         <div class="text-center py-4">
                             <p class="text-muted mb-0">Nenhum valor cadastrado.</p>
-                            <a href="#" wire:click.prevent="abrirNoCiclo('pei.valores')" class="btn btn-link btn-sm">Gerenciar Valores</a>
+                            <a href="#" wire:click.prevent="abrirNoCiclo('pei.valores')" wire:loading.class="opacity-50 pe-none" wire:target="abrirNoCiclo" class="btn btn-link btn-sm">Gerenciar Valores</a>
                         </div>
                     @endif
                 </div>
@@ -209,25 +215,25 @@
                     </h5>
                 </div>
                 <div class="list-group list-group-flush">
-                    <a href="#" wire:click.prevent="abrirNoCiclo('pei.perspectivas')" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
+                    <a href="#" wire:click.prevent="abrirNoCiclo('pei.perspectivas')" wire:loading.class="opacity-50 pe-none" wire:target="abrirNoCiclo" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
                         <div>
                             <i class="bi bi-layers me-2 text-primary"></i> Gerenciar Perspectivas
                         </div>
                         <i class="bi bi-chevron-right text-muted small"></i>
                     </a>
-                    <a href="#" wire:click.prevent="abrirNoCiclo('objetivos.index')" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
+                    <a href="#" wire:click.prevent="abrirNoCiclo('objetivos.index')" wire:loading.class="opacity-50 pe-none" wire:target="abrirNoCiclo" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
                         <div>
                             <i class="bi bi-crosshair me-2 text-danger"></i> Gerenciar Objetivos
                         </div>
                         <i class="bi bi-chevron-right text-muted small"></i>
                     </a>
-                    <a href="#" wire:click.prevent="abrirNoCiclo('indicadores.index')" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
+                    <a href="#" wire:click.prevent="abrirNoCiclo('indicadores.index')" wire:loading.class="opacity-50 pe-none" wire:target="abrirNoCiclo" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
                         <div>
                             <i class="bi bi-graph-up me-2 text-success"></i> Gerenciar Indicadores
                         </div>
                         <i class="bi bi-chevron-right text-muted small"></i>
                     </a>
-                    <a href="#" wire:click.prevent="abrirNoCiclo('pei.swot')" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
+                    <a href="#" wire:click.prevent="abrirNoCiclo('pei.swot')" wire:loading.class="opacity-50 pe-none" wire:target="abrirNoCiclo" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
                         <div>
                             <i class="bi bi-grid-1x2 me-2 text-warning"></i> Análise SWOT
                         </div>

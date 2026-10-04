@@ -182,19 +182,12 @@ class DeliverablesBoard extends Component
 
     public function mount(?string $planoId = null): void
     {
-        // Tenta obter o ID do plano da URL, ou do primeiro plano disponível da organização selecionada
-        $idParaCarregar = $planoId;
-
-        if (! $idParaCarregar) {
-            // Organização validada contra o escopo — nunca a sessão crua.
-            $orgId = Auth::user()?->organizacaoSelecionadaId();
-            if ($orgId) {
-                $idParaCarregar = PlanoDeAcao::where('cod_organizacao', $orgId)->orderBy('created_at', 'desc')->first()?->cod_plano_de_acao;
-            }
-        }
-
-        if ($idParaCarregar) {
-            $this->plano = PlanoDeAcao::with(['tipoExecucao', 'organizacao', 'objetivo.perspectiva'])->findOrFail($idParaCarregar);
+        // Entrega só existe dentro de uma iniciativa (regra do BSC). 🔴 Sem iniciativa
+        // na URL, o quadro escolhia SOZINHO a iniciativa mais recente da unidade: a
+        // pessoa cadastrava entrega numa iniciativa que não escolheu, sem perceber.
+        // Agora, sem iniciativa, a tela pede a escolha (render → seletor).
+        if ($planoId) {
+            $this->plano = PlanoDeAcao::with(['tipoExecucao', 'organizacao', 'objetivo.perspectiva'])->findOrFail($planoId);
             $this->authorize('view', $this->plano);
             $this->calcularProgresso();
 
@@ -206,19 +199,8 @@ class DeliverablesBoard extends Component
                 }
             }
         } else {
-            // Se nenhum plano for encontrado, tentamos pegar qualquer um que o usuário tenha acesso para não mostrar tela vazia
-            // Só cai num plano qualquer se o usuário puder vê-lo; senão, quadro vazio.
-            $usuario = Auth::user();
-            $primeiroDisponivel = PlanoDeAcao::query()
-                ->when($usuario && ! $usuario->isSuperAdmin(), fn ($q) => $q->whereIn('cod_organizacao', $usuario->organizacaoIdsPermitidas()))
-                ->orderBy('created_at', 'desc')
-                ->first();
-            if ($primeiroDisponivel && Gate::allows('view', $primeiroDisponivel)) {
-                $this->plano = $primeiroDisponivel;
-                $this->calcularProgresso();
-            } else {
-                $this->plano = new PlanoDeAcao;
-            }
+            $this->authorize('modulo.acessar', 'entregas');
+            $this->plano = new PlanoDeAcao;
         }
 
         // Inicializa calendário no mês atual
@@ -296,7 +278,26 @@ class DeliverablesBoard extends Component
     public function render()
     {
         if (! $this->plano || ! $this->plano->cod_plano_de_acao) {
-            return view('livewire.entregas.notion-board-vazio');
+            // Sem iniciativa escolhida: lista as iniciativas do ciclo e da unidade
+            // (e subordinadas) que a pessoa pode ver, para ela escolher onde trabalhar.
+            $usuario = Auth::user();
+            $orgId = $usuario?->organizacaoSelecionadaId();
+            $orgIds = $orgId ? Organization::descendentesEProprio($orgId) : [];
+            if ($usuario && ! $usuario->isSuperAdmin()) {
+                $orgIds = array_values(array_intersect($orgIds, $usuario->organizacaoIdsPermitidas()->all()));
+            }
+
+            $iniciativas = PlanoDeAcao::query()
+                ->with(['objetivo', 'organizacao'])
+                ->withCount('entregas')
+                ->when(! ($usuario?->isSuperAdmin() && ! $orgId), fn ($q) => $q->whereIn('cod_organizacao', $orgIds))
+                ->whereHas('objetivo.perspectiva', fn ($q) => $q->where('cod_pei', session('pei_selecionado_id')))
+                ->orderBy('dsc_plano_de_acao')
+                ->get()
+                ->filter(fn (PlanoDeAcao $p) => Gate::allows('view', $p))
+                ->groupBy(fn (PlanoDeAcao $p) => $p->objetivo?->nom_objetivo ?? 'Sem objetivo');
+
+            return view('livewire.entregas.notion-board-vazio', ['iniciativasPorObjetivo' => $iniciativas]);
         }
 
         return view('livewire.entregas.notion-board', [
@@ -640,8 +641,15 @@ class DeliverablesBoard extends Component
         $this->quickAddTitulo = '';
     }
 
+    /** Entrega só existe dentro de uma iniciativa: sem ela, nada é gravado. */
+    private function exigirIniciativa(): void
+    {
+        abort_unless($this->plano?->cod_plano_de_acao, 422, 'Escolha a iniciativa antes de cadastrar a entrega.');
+    }
+
     public function criarRapido(): void
     {
+        $this->exigirIniciativa();
         $this->authorize('create', [Entrega::class, $this->plano]);
 
         $this->validate([
@@ -721,6 +729,8 @@ class DeliverablesBoard extends Component
 
     public function salvarEntrega(): void
     {
+        $this->exigirIniciativa();
+
         $this->editEntregaId
             ? $this->authorize('update', $this->entregasDoPlano()->findOrFail($this->editEntregaId))
             : $this->authorize('create', [Entrega::class, $this->plano]);

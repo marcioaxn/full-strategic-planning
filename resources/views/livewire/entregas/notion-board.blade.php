@@ -14,7 +14,7 @@
             <div class="d-flex align-items-center gap-2">
                 <h2 class="h4 fw-bold mb-0 d-flex align-items-center gap-2">
                     <span class="notion-icon">📋</span>
-                    {{ $plano->dsc_plano_de_acao }}
+                    <span><span class="small text-body-secondary fw-normal d-block">Iniciativa</span>{{ $plano->dsc_plano_de_acao }}</span>
                 </h2>
             </div>
             <div class="d-flex align-items-center gap-2 mt-1">
@@ -26,8 +26,8 @@
 
         <div class="d-flex align-items-center gap-2">
             @can('create', [\App\Models\ActionPlan\Entrega::class, $plano])
-                <button wire:click="openEditModal" class="btn btn-primary gradient-theme-btn">
-                    <i class="bi bi-plus-lg me-2"></i>Nova Entrega
+                <button wire:click="openEditModal" class="btn btn-primary gradient-theme-btn" title="A entrega será cadastrada nesta iniciativa">
+                    <i class="bi bi-plus-lg me-2"></i>Nova Entrega nesta iniciativa
                 </button>
             @endcan
         </div>

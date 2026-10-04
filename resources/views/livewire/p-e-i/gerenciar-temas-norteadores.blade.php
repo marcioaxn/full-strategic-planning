@@ -61,49 +61,12 @@
                     <h6 class="fw-bold text-primary mb-3">
                         <i class="bi bi-info-circle me-2"></i>{{ __('O que são Temas Norteadores?') }}
                     </h6>
-                    <div class="alert alert-warning border-0 small mb-3">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <strong>Não confunda com Valores nem com Objetivos Estratégicos.</strong>
-                        Temas Norteadores são um conceito próprio — não são um "outro nome" para nenhum desses.
-                    </div>
                     <p class="text-muted mb-2">
                         <strong>Temas Norteadores</strong> são as <strong>grandes prioridades estratégicas transversais do ciclo PEI</strong> — eixos temáticos que atravessam perspectivas, objetivos e planos, concentrando os esforços da organização no que é mais crítico <em>neste período</em>.
                     </p>
                     <p class="text-muted mb-2">
                         Eles são derivados do <strong>diagnóstico ambiental</strong> (SWOT/PESTEL): as forças e oportunidades a explorar, as fraquezas e ameaças a mitigar — condensadas em poucos eixos orientadores.
                     </p>
-                    <div class="row g-3 mt-1 mb-3">
-                        <div class="col-md-4">
-                            <div class="card border-2 border-primary h-100">
-                                <div class="card-body py-3">
-                                    <h6 class="fw-bold text-primary small mb-2"><i class="bi bi-heart-fill me-1"></i>Valores Institucionais</h6>
-                                    <p class="x-small text-muted mb-1"><strong>O que são:</strong> Princípios éticos permanentes</p>
-                                    <p class="x-small text-muted mb-1"><strong>Respondem:</strong> "Como agimos?"</p>
-                                    <p class="x-small text-muted mb-0"><strong>Duração:</strong> Não mudam com o ciclo</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card border-2 border-warning h-100">
-                                <div class="card-body py-3">
-                                    <h6 class="fw-bold text-warning small mb-2"><i class="bi bi-compass-fill me-1"></i>Temas Norteadores</h6>
-                                    <p class="x-small text-muted mb-1"><strong>O que são:</strong> Prioridades estratégicas do ciclo</p>
-                                    <p class="x-small text-muted mb-1"><strong>Respondem:</strong> "Onde focamos agora?"</p>
-                                    <p class="x-small text-muted mb-0"><strong>Duração:</strong> Temporários (duram o ciclo)</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card border-2 border-success h-100">
-                                <div class="card-body py-3">
-                                    <h6 class="fw-bold text-success small mb-2"><i class="bi bi-bullseye me-1"></i>Objetivos Estratégicos</h6>
-                                    <p class="x-small text-muted mb-1"><strong>O que são:</strong> Metas concretas por perspectiva BSC</p>
-                                    <p class="x-small text-muted mb-1"><strong>Respondem:</strong> "O que queremos atingir?"</p>
-                                    <p class="x-small text-muted mb-0"><strong>Duração:</strong> Vinculados ao ciclo, mensuráveis</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     <p class="text-muted small mb-0">
                         <i class="bi bi-lightbulb text-warning me-2"></i>
                         <strong>Por que são importantes?</strong> Temas norteadores garantem que perspectivas, objetivos, indicadores e iniciativas falem "a mesma língua" — o diagnóstico do ciclo. São a bússola que orienta <em>todas</em> as outras peças do mapa estratégico.
@@ -111,7 +74,7 @@
                 </div>
 
                 {{-- Metodologia SMART --}}
-                <div class="mb-4 pb-4 border-bottom">
+                <div>
                     <h6 class="fw-bold text-primary mb-3">
                         <i class="bi bi-bullseye me-2"></i>{{ __('Critérios para Bons Temas') }}
                     </h6>
@@ -164,59 +127,6 @@
                     </div>
                 </div>
 
-                {{-- Hierarquia --}}
-                <div class="mb-4 pb-4 border-bottom">
-                    <h6 class="fw-bold text-primary mb-3">
-                        <i class="bi bi-diagram-3 me-2"></i>{{ __('Níveis de Planejamento') }}
-                    </h6>
-                    <p class="small text-muted mb-3">
-                        O planejamento se organiza em níveis:
-                    </p>
-
-                    <div class="d-flex flex-column gap-2">
-                        {{-- Estratégico (Topo) --}}
-                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 border border-danger bg-danger bg-opacity-5">
-                            <div class="icon-circle-mini bg-danger bg-opacity-10 text-danger">
-                                <i class="bi bi-trophy"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h6 class="fw-bold mb-0 text-danger">1. Estratégico (Temas Norteadores)</h6>
-                                <p class="x-small text-muted mb-0">
-                                    <strong>Foco:</strong> Visão de futuro, grandes diretrizes institucionais<br>
-                                    <strong>Ex:</strong> "Excelência na Gestão Pública e Transparência"
-                                </p>
-                            </div>
-                            <span class="badge bg-danger">TOPO</span>
-                        </div>
-
-                        {{-- Arrow --}}
-                        <div class="text-center text-muted">
-                            <i class="bi bi-arrow-down-short fs-3"></i>
-                            <p class="x-small mb-0">orienta os</p>
-                        </div>
-
-                        {{-- Tático (Meio) --}}
-                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 border border-warning bg-warning bg-opacity-5">
-                            <div class="icon-circle-mini bg-warning bg-opacity-10 text-warning">
-                                <i class="bi bi-flag"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h6 class="fw-bold mb-0 text-warning">2. Tático (Objetivos BSC)</h6>
-                                <p class="x-small text-muted mb-0">
-                                    <strong>Foco:</strong> Objetivos específicos nas perspectivas (Financeira, Clientes, etc.)<br>
-                                    <strong>Ex:</strong> "Aumentar a satisfação do cidadão com o atendimento digital"
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="alert alert-info mt-3 mb-0">
-                        <p class="small mb-0">
-                            <i class="bi bi-info-circle me-1"></i>
-                            <strong>Nesta página:</strong> Você gerencia <strong class="text-danger">Temas Norteadores</strong> (nível estratégico institucional).
-                        </p>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
