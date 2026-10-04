@@ -41,17 +41,21 @@
                         </div>
                         <div>
                             <h6 class="card-subtitle text-muted mb-1">Atingimento</h6>
-                            @if($estatisticas['tem_indicador'])
+                            @if($estatisticas['atingimento'] !== null)
                                 <h4 class="card-title mb-0">@brazil_percent($estatisticas['atingimento'], 1)</h4>
+                            @elseif($estatisticas['tem_indicador'])
+                                <h4 class="card-title mb-0 text-muted fs-6">Sem medição</h4>
                             @else
                                 <h4 class="card-title mb-0 text-muted fs-6">Sem indicador</h4>
                             @endif
                         </div>
                     </div>
-                    @if($estatisticas['tem_indicador'])
+                    @if($estatisticas['atingimento'] !== null)
                         <div class="progress" style="height: 6px;">
                             <div class="progress-bar" role="progressbar" style="width: {{ min(100, $estatisticas['atingimento']) }}%; background-color: {{ $estatisticas['cor_farol'] ?? '#0d6efd' }};"></div>
                         </div>
+                    @elseif($estatisticas['tem_indicador'])
+                        <small class="text-muted">Nenhum indicador deste objetivo tem medição no ano.</small>
                     @else
                         <small class="text-muted">Vincule um indicador para medir o objetivo.</small>
                     @endif
@@ -165,7 +169,7 @@
                         <tbody>
                             @forelse($objetivo->indicadores as $indicador)
                                 @php
-                                    $atingimento = $indicador->calcularAtingimento();
+                                    $atingimento = $indicador->atingimentoMedido(); // NULL = sem medição
                                     $corFarol = $indicador->getCorFarol();
                                     $ultimaEv = $indicador->getUltimaEvolucao();
                                     
@@ -191,8 +195,10 @@
                                         {{ $ultimaEv ? number_format($ultimaEv->vlr_realizado, 2, ',', '.') : '--' }}
                                     </td>
                                     <td class="text-end pe-4">
-                                        @if($indicador->dsc_polaridade === 'Não Aplicável')
+                                        @if(\App\Support\CalculoPolaridade::ehInformativo($indicador->dsc_polaridade))
                                             <span class="badge bg-light text-muted border">Informativo</span>
+                                        @elseif($atingimento === null)
+                                            <span class="text-muted small">Sem medição</span>
                                         @else
                                             <div class="d-flex align-items-center justify-content-end gap-2">
                                                 <span class="fw-bold cor-texto-legivel" style="--cor-texto: {{ $corFarol ?? '#6c757d' }};">@brazil_percent($atingimento, 1)</span>

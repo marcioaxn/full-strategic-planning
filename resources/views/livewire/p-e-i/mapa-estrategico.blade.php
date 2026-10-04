@@ -206,7 +206,11 @@
                                         <i class="bi bi-info-circle text-muted"></i>
                                     </button>
                                     <div class="performance-badge-modern shadow-sm" style="background-color: {{ $corSatisfacao }}; color: {{ \App\Support\CorLegivel::textoSobre($corSatisfacao) }};">
-                                        <i class="bi bi-graph-up-arrow me-1"></i> @brazil_percent($p['atingimento_medio'], 1)
+                                        @if($p['atingimento_medio'] === null)
+                                            <i class="bi bi-dash-circle me-1"></i> Sem medição
+                                        @else
+                                            <i class="bi bi-graph-up-arrow me-1"></i> @brazil_percent($p['atingimento_medio'], 1)
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -239,11 +243,11 @@
                                                                 <span class="stat-label-modern">KPIs</span>
                                                                 {{-- Sem indicador não há medição: "0,0%" em vermelho afirmava desempenho péssimo. --}}
                                                                 <span class="stat-value-modern text-body-emphasis">
-                                                                    @if($ind['quantidade'] > 0) @brazil_percent($ind['percentual'], 1) @else Sem indicador @endif
+                                                                    @if(empty($ind['quantidade'])) Sem indicador @elseif($ind['percentual'] === null) Sem medição @else @brazil_percent($ind['percentual'], 1) @endif
                                                                 </span>
                                                             </div>
                                                             <div class="stat-progress-container bg-light-custom">
-                                                                <div class="stat-progress-fill" style="width: {{ min($ind['percentual'], 100) }}%; background-color: {{ $ind['cor'] }};"></div>
+                                                                <div class="stat-progress-fill" style="width: {{ min($ind['percentual'] ?? 0, 100) }}%; background-color: {{ $ind['cor'] }};"></div>
                                                             </div>
                                                         </a>
                                                     </div>
@@ -258,7 +262,7 @@
                                                                 </span>
                                                                 {{-- Percentual em Destaque (sem iniciativa não há progresso a medir) --}}
                                                                 <span class="stat-value-modern text-body-emphasis" style="font-size: 0.8rem;">
-                                                                    @if($pln['quantidade'] > 0) @brazil_percent($pln['media_progresso'] ?? 0, 1) @else — @endif
+                                                                    @if($pln['quantidade'] > 0 && $pln['media_progresso'] !== null) @brazil_percent($pln['media_progresso'], 1) @else — @endif
                                                                 </span>
                                                             </div>
                                                             {{-- Barra de Progresso --}}
@@ -336,7 +340,9 @@
                             </div>
                             <div class="text-end">
                                 <span class="text-muted small fw-bold text-uppercase letter-spacing-1">Média de Atingimento</span>
-                                <h2 class="fw-800 mb-0" style="color: {{ $detalhesCalculo['cor'] }};">@brazil_percent($detalhesCalculo['media'], 1)</h2>
+                                <h2 class="fw-800 mb-0" style="color: {{ $detalhesCalculo['cor'] }};">
+                                    @if($detalhesCalculo['media'] === null) Sem medição @else @brazil_percent($detalhesCalculo['media'], 1) @endif
+                                </h2>
                             </div>
                         </div>
 
@@ -348,7 +354,9 @@
                                         
                                         <!-- Parte Indicadores -->
                                         <div class="text-center px-3 border-end">
-                                            <div class="h3 mb-0 text-primary fw-bold">@brazil_percent($detalhesCalculo['detalhes_calculo']['nota_indicadores'], 1)</div>
+                                            <div class="h3 mb-0 text-primary fw-bold">
+                                                @if($detalhesCalculo['detalhes_calculo']['nota_indicadores'] === null) <span class="text-muted fs-6">Sem medição</span> @else @brazil_percent($detalhesCalculo['detalhes_calculo']['nota_indicadores'], 1) @endif
+                                            </div>
                                             <div class="x-small text-muted fw-bold text-uppercase mt-1">
                                                 Indicadores <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 ms-1">{{ $detalhesCalculo['detalhes_calculo']['peso_indicadores'] }}%</span>
                                             </div>
@@ -358,7 +366,9 @@
 
                                         <!-- Parte de Iniciativas -->
                                         <div class="text-center px-3 border-end">
-                                            <div class="h3 mb-0 text-success fw-bold">@brazil_percent($detalhesCalculo['detalhes_calculo']['nota_planos'], 1)</div>
+                                            <div class="h3 mb-0 text-success fw-bold">
+                                                @if($detalhesCalculo['detalhes_calculo']['nota_planos'] === null) <span class="text-muted fs-6">Sem medição</span> @else @brazil_percent($detalhesCalculo['detalhes_calculo']['nota_planos'], 1) @endif
+                                            </div>
                                             <div class="x-small text-muted fw-bold text-uppercase mt-1">
                                                 Iniciativas (Ano) <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 ms-1">{{ $detalhesCalculo['detalhes_calculo']['peso_planos'] }}%</span>
                                             </div>
@@ -369,7 +379,7 @@
                                         <!-- Resultado -->
                                         <div class="text-center px-3">
                                             <div class="h2 mb-0 fw-800" style="color: {{ $detalhesCalculo['cor'] }}">
-                                                @brazil_percent($detalhesCalculo['media'], 1)
+                                                @if($detalhesCalculo['media'] === null) Sem medição @else @brazil_percent($detalhesCalculo['media'], 1) @endif
                                             </div>
                                             <div class="x-small text-muted fw-bold text-uppercase mt-1">Nota Final</div>
                                         </div>
@@ -405,7 +415,13 @@
                                                 @endphp
                                                 <i class="bi {{ $polIcon }}" title="{{ $item['polaridade'] }}"></i>
                                             </td>
-                                            <td class="text-end fw-800 px-3" style="color: {{ $item['cor'] }};">@brazil_percent($item['atingimento'], 1)</td>
+                                            <td class="text-end fw-800 px-3" style="color: {{ $item['cor'] }};">
+                                                @if($item['atingimento'] === null)
+                                                    <span class="fw-normal small">{{ \App\Support\CalculoPolaridade::ehInformativo($item['polaridade'] ?? null) ? 'Informativo' : 'Sem medição' }}</span>
+                                                @else
+                                                    @brazil_percent($item['atingimento'], 1)
+                                                @endif
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -464,7 +480,7 @@
                                                     </div>
                                                 </td>
                                                 <td class="text-end fw-800 px-3" style="font-size: 1.1rem; color: {{ $plano['cor'] }};">
-                                                    @brazil_percent($plano['atingimento'], 1)
+                                                    @if($plano['atingimento'] === null) <span class="fw-normal small">Sem medição</span> @else @brazil_percent($plano['atingimento'], 1) @endif
                                                 </td>
                                             </tr>
                                         @endforeach

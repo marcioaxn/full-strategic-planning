@@ -437,7 +437,7 @@
                             {{ $stats['perspectivasNaMedia'] == 1 ? 'Resultado da' : 'Média das' }}
                             {{ $stats['perspectivasNaMedia'] }}
                             {{ $stats['perspectivasNaMedia'] == 1 ? 'perspectiva' : 'perspectivas' }}
-                            com indicadores ou iniciativas
+                            com medição no ano
                             @if($stats['perspectivasNaMedia'] < $stats['perspectivas'])
                                 (de {{ $stats['perspectivas'] }} no ciclo)
                             @endif
@@ -472,11 +472,11 @@
                             <div class="lp-stack-title text-truncate">{{ $persp->dsc_perspectiva }}</div>
                             <div class="lp-stack-sub">
                                 {{ $persp->objetivos->count() }} {{ Str::plural('objetivo', $persp->objetivos->count()) }}
-                                &nbsp;·&nbsp; @brazil_percent($persp->atingimento_medio, 1)
+                                &nbsp;·&nbsp; @if($persp->atingimento_medio === null) Sem medição @else @brazil_percent($persp->atingimento_medio, 1) @endif
                             </div>
                         </div>
-                        <div class="cor-texto-legivel" style="flex-shrink:0;font-size:1.1rem;font-weight:800;--cor-texto:{{ $persp->cor_atingimento }};">
-                            @brazil_percent($persp->atingimento_medio, 1)
+                        <div class="cor-texto-legivel" style="flex-shrink:0;font-size:{{ $persp->atingimento_medio === null ? '.8rem' : '1.1rem' }};font-weight:800;--cor-texto:{{ $persp->cor_atingimento }};">
+                            @if($persp->atingimento_medio === null) Sem medição @else @brazil_percent($persp->atingimento_medio, 1) @endif
                         </div>
                     </div>
                     @endforeach

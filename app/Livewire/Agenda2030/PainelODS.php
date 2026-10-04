@@ -111,14 +111,16 @@ class PainelODS extends Component
                             $temIndicador = $obj->indicadores->isNotEmpty()
                                 || Indicador::whereHas('planoDeAcao', fn ($q) => $q->where('cod_objetivo', $obj->cod_objetivo))->exists();
 
+                            // Com indicador mas sem medição no ano: também NULL.
+                            $atingimento = $temIndicador ? $obj->calcularAtingimentoConsolidado($this->ano) : null;
+
                             return [
                                 'nome' => $obj->nom_objetivo,
                                 'cod' => $obj->cod_objetivo,
                                 'perspectiva' => $obj->perspectiva?->dsc_perspectiva ?? '—',
                                 'qtd_kpis' => $obj->indicadores->count(),
-                                'atingimento' => $temIndicador
-                                    ? round($obj->calcularAtingimentoConsolidado($this->ano), 1)
-                                    : null,
+                                'atingimento' => $atingimento === null ? null : round($atingimento, 1),
+                                'tem_indicador' => $temIndicador,
                                 'contribuicao' => $obj->pivot->txt_contribuicao ?? null,
                             ];
                         })->values()->all(),

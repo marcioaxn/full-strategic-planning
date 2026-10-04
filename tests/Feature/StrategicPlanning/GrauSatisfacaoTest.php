@@ -17,6 +17,8 @@
 use App\Livewire\StrategicPlanning\ListarGrausSatisfacao;
 use App\Models\Organization;
 use App\Models\PerfilAcesso;
+use App\Models\PerformanceIndicators\EvolucaoIndicador;
+use App\Models\PerformanceIndicators\Indicador;
 use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\PEI;
@@ -160,6 +162,28 @@ test('o farol do indicador usa a régua do ciclo do próprio indicador', functio
         'nom_objetivo' => 'Objetivo do ciclo A',
         'dsc_objetivo' => 'Objetivo usado para conferir a régua do farol.',
         'num_nivel_hierarquico_apresentacao' => 1,
+    ]);
+
+    // Um indicador MEDIDO (50%): objetivo sem medição sai cinza por regra
+    // (AgregadoSemMedicaoTest) e não serviria para conferir a régua.
+    $indicador = Indicador::create([
+        'cod_objetivo' => $objetivoA->cod_objetivo,
+        'nom_indicador' => 'Indicador do ciclo A',
+        'dsc_indicador' => 'Indicador medido para conferir a régua.',
+        'dsc_tipo' => 'Objetivo',
+        'dsc_unidade_medida' => 'Percentual (%)',
+        'bln_acumulado' => 'Não',
+        'dsc_periodo_medicao' => 'Mensal',
+        'dsc_polaridade' => 'Positiva',
+        'dsc_calculation_type' => 'manual',
+    ]);
+    EvolucaoIndicador::create([
+        'cod_indicador' => $indicador->cod_indicador,
+        'num_ano' => (int) date('Y'),
+        'num_mes' => 1,
+        'vlr_previsto' => 100,
+        'vlr_realizado' => 50,
+        'bln_atualizado' => 'Sim',
     ]);
 
     // A cor tem de vir do ciclo A, ainda que o ciclo B também tenha faixa

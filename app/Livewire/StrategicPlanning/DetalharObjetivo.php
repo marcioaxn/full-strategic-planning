@@ -76,6 +76,11 @@ class DetalharObjetivo extends Component
      */
     private function corDoFarol($valor): string
     {
+        // Sem medição: cinza neutro, nunca a cor da pior faixa.
+        if ($valor === null) {
+            return GrauSatisfacao::COR_SEM_REGUA;
+        }
+
         return GrauSatisfacao::corDe(
             (float) $valor,
             $this->objetivo->perspectiva?->cod_pei,

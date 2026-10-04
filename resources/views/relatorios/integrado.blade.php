@@ -322,11 +322,11 @@
                     @foreach($chunks as $chunk)
                     <tr>
                         @foreach($chunk as $obj)
-                        @php $at = $obj->calcularAtingimentoConsolidado($filtros['ano'], $filtros['mesLimite']); $cor = $getCorSatisfacao($at); @endphp
+                        @php $at = $obj->calcularAtingimentoConsolidado($filtros['ano'], $filtros['mesLimite']); $cor = $at === null ? \App\Models\StrategicPlanning\GrauSatisfacao::COR_SEM_REGUA : $getCorSatisfacao($at); @endphp
                         <td style="width:33.33%; vertical-align:top; background:#fff; border:1px solid #e2e8f0; border-left:3px solid {{ $cor }}; border-radius:6px; padding:8px;">
                             <span class="obj-title">{{ $obj->nom_objetivo }}</span>
                             <div style="font-size:8px; color:#5a6577; margin-top:3px;">
-                                <span class="farol" style="background:{{ $cor }};"></span> {{ number_format($at, 1, ',', '.') }}%
+                                <span class="farol" style="background:{{ $cor }};"></span> {{ $at === null ? 'Sem medição' : number_format($at, 1, ',', '.').'%' }}
                             </div>
                             @if(($obj->ods ?? collect())->isNotEmpty())
                                 <div style="margin-top:4px;">
@@ -370,8 +370,8 @@
                     @foreach($objsComInd as $obj)
                         @foreach($obj->indicadores as $ind)
                             @php
-                                $na = $ind->dsc_polaridade === 'Não Aplicável';
-                                $perc = $ind->calcularAtingimento();
+                                $na = \App\Support\CalculoPolaridade::ehInformativo($ind->dsc_polaridade);
+                                $perc = $ind->atingimentoMedido(); // NULL = sem medição
                                 $cor = $ind->getCorFarol();
                                 $ult = $ind->getUltimaEvolucao();
                                 $metaAno = optional($ind->metasPorAno->first())->meta;
@@ -384,7 +384,7 @@
                                 <td class="text-end" style="font-size:8.5px;">{{ $ult ? number_format($ult->vlr_realizado, 2, ',', '.') : '—' }}</td>
                                 <td class="text-center">
                                     @if($na)<span class="pill pill-neutral">N/A</span>
-                                    @else<span class="farol" style="background:{{ $cor }};"></span> <strong style="font-size:9px;">{{ number_format($perc, 1, ',', '.') }}%</strong>@endif
+                                    @else<span class="farol" style="background:{{ $cor }};"></span> <strong style="font-size:9px;">{{ $perc === null ? 'Sem medição' : number_format($perc, 1, ',', '.').'%' }}</strong>@endif
                                 </td>
                             </tr>
                         @endforeach

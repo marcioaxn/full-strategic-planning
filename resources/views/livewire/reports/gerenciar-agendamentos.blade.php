@@ -34,7 +34,12 @@
                     <div class="d-flex justify-content-between align-items-end">
                         <div>
                             <small class="text-muted d-block" style="font-size: 0.75rem;">
-                                <i class="bi bi-arrow-right-circle me-1"></i>Próx: {{ \Carbon\Carbon::parse($item->dte_proxima_execucao)->format('d/m H:i') }}
+                                @if($item->bln_ativo)
+                                    <i class="bi bi-arrow-right-circle me-1"></i>Próx: {{ \Carbon\Carbon::parse($item->dte_proxima_execucao)->format('d/m H:i') }}
+                                @else
+                                    {{-- Pausado não tem "próxima execução": mostrar a data prometia um envio que não sai. --}}
+                                    <i class="bi bi-pause-circle me-1"></i>Pausado
+                                @endif
                             </small>
                             @if(isset($item->txt_filtros['organizacao_id']))
                                 <small class="text-muted d-block text-truncate" style="max-width: 150px; font-size: 0.75rem;">

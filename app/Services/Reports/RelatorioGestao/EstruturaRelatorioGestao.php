@@ -381,17 +381,20 @@ class EstruturaRelatorioGestao
             $indicadores = $this->indicadoresDaUnidade(Indicador::where('cod_objetivo', $objetivo->cod_objetivo), $org)->get();
 
             $resultados = $indicadores->map(function (Indicador $ind) use ($ano) {
-                $atingimento = $ind->calcularAtingimento($ano);
+                // NULL = sem medição no exercício: o relatório diz isso, não "0,0%".
+                $atingimento = $ind->atingimentoMedido($ano);
 
                 return [
                     'indicador' => $ind->nom_indicador,
                     'unidade' => $ind->dsc_unidade_medida,
-                    'atingimento' => round($atingimento, 1),
-                    'texto' => sprintf(
-                        '%s: %s de atingimento',
-                        $ind->nom_indicador,
-                        UnidadeMedida::formatar($atingimento, 'Percentual (%)')
-                    ),
+                    'atingimento' => $atingimento === null ? null : round($atingimento, 1),
+                    'texto' => $atingimento === null
+                        ? sprintf('%s: sem medição no exercício', $ind->nom_indicador)
+                        : sprintf(
+                            '%s: %s de atingimento',
+                            $ind->nom_indicador,
+                            UnidadeMedida::formatar($atingimento, 'Percentual (%)')
+                        ),
                 ];
             })->all();
 

@@ -70,7 +70,7 @@
                             <h6 class="card-subtitle text-muted mb-1">Desempenho Geral</h6>
                             <h4 class="card-title mb-0">
                                 @if($estatisticas['progresso_medio'] === null)
-                                    <span class="text-muted fs-6">Sem indicador</span>
+                                    <span class="text-muted fs-6">{{ $estatisticas['qtd_indicadores'] > 0 ? 'Sem medição' : 'Sem indicador' }}</span>
                                 @else
                                     @brazil_percent($estatisticas['progresso_medio'], 1)
                                 @endif
@@ -78,7 +78,7 @@
                         </div>
                     </div>
                     <small class="text-muted">
-                        {{ $estatisticas['progresso_medio'] === null ? 'Nenhum objetivo desta perspectiva tem indicador para medir.' : 'Atingimento em '.$ano.', mesmo cálculo do Mapa Estratégico.' }}
+                        {{ $estatisticas['progresso_medio'] === null ? 'Nenhum indicador medido nem iniciativa com entrega em '.$ano.'.' : 'Atingimento em '.$ano.', mesmo cálculo do Mapa Estratégico.' }}
                     </small>
                 </div>
             </div>
@@ -115,8 +115,10 @@
                                 </span>
                             </td>
                             <td>
-                                @php $d = $desempenhoObjetivos[$objetivo->cod_objetivo] ?? ['atingimento' => null, 'faixa' => null, 'cor' => null]; @endphp
-                                @if($d['atingimento'] === null)
+                                @php $d = $desempenhoObjetivos[$objetivo->cod_objetivo] ?? ['atingimento' => null, 'faixa' => null, 'cor' => null, 'tem_indicador' => false]; @endphp
+                                @if($d['atingimento'] === null && ($d['tem_indicador'] ?? false))
+                                    <span class="badge bg-light text-muted border" title="Nenhum indicador deste objetivo foi medido no ano">Sem medição</span>
+                                @elseif($d['atingimento'] === null)
                                     <span class="badge bg-light text-muted border" title="Sem indicador direto nem de iniciativa">Sem indicador</span>
                                 @else
                                     <span class="badge rounded-pill" style="background: {{ $d['cor'] }};">@brazil_percent($d['atingimento'], 1)</span>

@@ -17,9 +17,11 @@
         @endif
 
         @php
-            $mensuraveis  = $indicadores->filter(fn($i) => ($i->dsc_polaridade ?? 'Positiva') !== 'Não Aplicável');
-            $atings       = $mensuraveis->map(fn($i) => $i->calcularAtingimento())->filter(fn($v) => $v !== null);
-            $mediaAting   = $atings->count() > 0 ? $atings->avg() : 0;
+            // Sem medição (NULL) fica fora da média: calcularAtingimento() devolvia
+            // 0 e o filtro "!== null" abaixo nunca descartava nada.
+            $mensuraveis  = $indicadores->filter(fn($i) => ! \App\Support\CalculoPolaridade::ehInformativo($i->dsc_polaridade));
+            $atings       = $mensuraveis->map(fn($i) => $i->atingimentoMedido())->filter(fn($v) => $v !== null);
+            $mediaAting   = $atings->count() > 0 ? $atings->avg() : null;
 
             /*
              * 🔴 OS CORTES SÃO DA ORGANIZAÇÃO, NÃO DO RELATÓRIO.
@@ -39,10 +41,10 @@
             $melhorFaixa  = $temRegua ? $regua->last() : null;
 
             $naMelhor = $temRegua
-                ? $mensuraveis->filter(fn($i) => $i->calcularAtingimento() >= (float) $melhorFaixa->vlr_minimo)->count()
+                ? $atings->filter(fn($v) => $v >= (float) $melhorFaixa->vlr_minimo)->count()
                 : 0;
 
-            $foraDaMelhor = $temRegua ? ($mensuraveis->count() - $naMelhor) : 0;
+            $foraDaMelhor = $temRegua ? ($atings->count() - $naMelhor) : 0;
 
             // Agrupar por perspectiva → objective
             $porPerspectiva = $indicadores->groupBy(function($i) {
@@ -60,8 +62,13 @@
                 </td>
                 <td class="kpi-card accent" style="width:25%;">
                     <p class="kpi-label">Atingimento Médio</p>
-                    <p class="kpi-value">{{ number_format($mediaAting, 0, ',', '.') }}<span style="font-size:13px;">%</span></p>
-                    <p class="kpi-sub">média do período</p>
+                    @if($mediaAting === null)
+                        <p class="kpi-value" style="font-size:13px;">Sem medição</p>
+                        <p class="kpi-sub">nenhum indicador medido no período</p>
+                    @else
+                        <p class="kpi-value">{{ number_format($mediaAting, 0, ',', '.') }}<span style="font-size:13px;">%</span></p>
+                        <p class="kpi-sub">média de {{ $atings->count() }} {{ $atings->count() === 1 ? 'indicador medido' : 'indicadores medidos' }}</p>
+                    @endif
                 </td>
                 @if($temRegua)
                 <td class="kpi-card success" style="width:25%;">
@@ -72,7 +79,7 @@
                 <td class="kpi-card warning" style="width:25%;">
                     <p class="kpi-label">Abaixo dessa faixa</p>
                     <p class="kpi-value">{{ $foraDaMelhor }}</p>
-                    <p class="kpi-sub">de {{ $mensuraveis->count() }} indicadores mensuráveis</p>
+                    <p class="kpi-sub">de {{ $atings->count() }} indicadores medidos</p>
                 </td>
                 @else
                 <td class="kpi-card neutro" style="width:50%;" colspan="2">
@@ -130,8 +137,8 @@
                 <tbody>
                     @foreach($indsPersp as $ind)
                     @php
-                        $na  = ($ind->dsc_polaridade ?? 'Positiva') === 'Não Aplicável';
-                        $at  = $na ? null : $ind->calcularAtingimento();
+                        $na  = \App\Support\CalculoPolaridade::ehInformativo($ind->dsc_polaridade);
+                        $at  = $na ? null : $ind->atingimentoMedido(); // NULL = sem medição
                         // getCorFarol() já trata as pontas e devolve o cinza neutro quando
                         // não há régua — o '?:' anterior sobrescrevia isso com outro cinza.
                         $cor = $na ? '#95969A' : $ind->getCorFarol((int) ($ano ?? date('Y')));
@@ -159,6 +166,8 @@
                         <td>
                             @if($na)
                                 <div class="text-center" style="color:#6b7280; font-size:8px;">N/A</div>
+                            @elseif($at === null)
+                                <div class="text-center" style="color:#6b7280; font-size:8px;">Sem medição</div>
                             @else
                                 <table style="width:100%; border:none;"><tr style="border:none;">
                                     <td style="border:none; width:12px; padding:0; vertical-align:middle;">

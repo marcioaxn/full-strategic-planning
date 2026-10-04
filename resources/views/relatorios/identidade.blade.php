@@ -130,14 +130,15 @@
             <div class="persp-body">
                 @foreach($persp->objetivos as $obj)
                     @php
-                        $at  = $obj->atingimento_calculado ?? 0;
-                        $cor = $getCorSatisfacao($at);
+                        // NULL = sem medição: cinza e o texto, nunca 0,0% de crítico.
+                        $at  = $obj->atingimento_calculado ?? null;
+                        $cor = $at === null ? \App\Models\StrategicPlanning\GrauSatisfacao::COR_SEM_REGUA : $getCorSatisfacao($at);
                     @endphp
                     <div class="obj-card" style="border-left:3px solid {{ $cor }};">
                         <span class="obj-title">{{ $obj->nom_objetivo }}</span>
                         <div style="font-size:7px; color:#5a6577;">
                             <span class="farol" style="background:{{ $cor }}; width:8px; height:8px;"></span>
-                            <strong style="color:{{ \App\Support\CorLegivel::paraTextoSobreBranco($cor) }};">{{ number_format($at, 1, ',', '.') }}%</strong>
+                            <strong style="color:{{ \App\Support\CorLegivel::paraTextoSobreBranco($cor) }};">{{ $at === null ? 'Sem medição' : number_format($at, 1, ',', '.').'%' }}</strong>
                         </div>
                     </div>
                 @endforeach

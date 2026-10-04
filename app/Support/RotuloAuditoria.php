@@ -26,6 +26,11 @@ class RotuloAuditoria
         'TemaNorteador' => 'Tema norteador',
         'Valor' => 'Valor',
         'Documento' => 'Documento',
+        'Entrega' => 'Entrega',
+        'EvolucaoIndicador' => 'Evolução do indicador',
+        'MetaPorAno' => 'Meta anual',
+        'LinhaBaseIndicador' => 'Linha de base',
+        'User' => 'Usuário',
     ];
 
     /** @var array<string, string> */

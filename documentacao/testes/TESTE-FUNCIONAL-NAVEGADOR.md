@@ -181,6 +181,28 @@ Em paralelo: quatro revisões de código por módulo (Indicadores; Iniciativas/E
 | 155 | documentos | Enviar PDF pela tela → abrir → editar → busca → limpar filtros | Funciona | ✅ PDF abre (200, application/pdf) |
 | 156 | Lançar Evolução | Anexar evidência (PDF) → salvar → abrir; sem login | Abre logado; sem login não | ✅ 200 application/pdf; sem login redireciona; "Excluir a evidência…? O arquivo será apagado do servidor." |
 | 157 | quadro de entregas | Anexar PDF à entrega → abrir; sem login | Idem | ✅ 200 application/pdf; sem login redireciona; excluir pede confirmação |
+| 158 | `/relatorios` | Agendar com a tarefa do servidor parada | Não promete envio | ✅ "Geração automática indisponível — a tarefa agendada do servidor não está em execução." |
+| 159 | relatórios | Rodar uma vez `reports:process-scheduled` (o que o cron faz) → Agendar geração (semanal) | Grava com ciclo e unidade | ✅ banco: filtros com `cod_pei` e `organizacao_id` |
+| 160 | relatórios | Pausar / reativar / excluir agendamento | Funciona; pausado não mostra "próxima execução" | 🔧 Pausado continuava mostrando "Próx: 10/10"; agora "Pausado". Excluir pede "Cancelar este agendamento?" |
+| 161 | `/dashboard` | Gerar análise (IA) | Resumo direto | 🔧 Começava com "Entendido. Como CSO especialista em PEI…" (eco do prompt). Instruções da IA unificadas em `InstrucoesDaIa` (Gemini, OpenAI, Vertex): sem preâmbulo, linguagem da administração pública. Conferido: resposta começa direto pelo conteúdo |
+| 162 | dashboard | Atualizar gráficos; sino "marcar todas como lidas" | Funciona | ✅ contador 7 → zerado |
+| 163 | `/pei/mapa` | Modo agrupado/individual; memória de cálculo | Abre | ✅ 🔧 índice inválido vindo do navegador dava 500; agora ignora |
+| 164 | mapa | Perspectiva sem indicador nenhum | "Sem medição", cinza | ❌ Mostra **0% vermelho (Crítico)** — indicador sem medição conta como 0 nos agregados. Correção entregue a um agente (Mapa, Dashboard, objetivo, página pública, relatórios) |
+| 165 | `/agenda2030` | Selecionar ODS 3, ODS inválido, ODS 1 | Lista objetivos; inválido sem erro; aviso de aderência sem objetivo | ✅ |
+| 166 | `/configuracoes` | Testar conexão da IA | Sucesso sem expor chave | ✅ "Conexão com Vertex AI estabelecida com sucesso!"; nenhuma chave no HTML |
+| 167 | `/organizacoes` | Editar TST (abre preenchido); nova unidade com sugestão de sigla da IA → aplicar → filha da TST → Salvar | Funciona | ✅ sigla sugerida "SEAC" aplicada; "[TESTE] Secretaria de Atendimento ao Cidadão" criada sob a TST |
+| 168 | **perfil Consulta** (impersonação) | 26 telas: o que abre e que ações de escrita aparecem | Lê tudo da unidade; nenhuma escrita; telas de administração fechadas | ✅ nenhuma ação de escrita; Usuários, Auditoria, Configurações, Perfis redirecionam; Ciclos 403; seletor de unidade só TST e a subordinada |
+| 169 | Consulta | Chamar direto `create` em Valores, Riscos, Indicadores e Iniciativas | Servidor recusa | ✅ 403 nos quatro |
+| 170 | **perfil Administrador da Unidade** (Gestora) | Mesmas telas | Escreve na própria unidade; sem telas do sistema | ✅ ações de escrita presentes; Usuários só com contas da TST; Auditoria, Configurações, Perfis fechados |
+| 171 | Administrador da Unidade | Trocar a unidade do topo para o MIDR (chamada direta) | Ignorado | ✅ continua na TST |
+| 172 | **perfil Gestor Substituto** | Telas da iniciativa e do restante | Escreve só na iniciativa; não designa gestores | ✅ entregas, RACI e comunicação; Indicadores/Objetivos/Valores/Riscos sem escrita; Usuários fechado |
+| 173 | Gestor Substituto | Criar entrega (tela) / criar indicador / designar gestor (chamadas diretas) | Entrega sim; resto 403 | ✅ entrega criada; 403 e 403 |
+| 174 | `/pei/mapa` (após correção) | Perspectiva sem indicador | Sem número, cinza | 🔧✅ "Aprendizado e Crescimento": atingimento nulo, #6b7280; a outra 102,9% verde. Mesma regra no Dashboard/IQG, detalhe de objetivo e perspectiva, portal público, ODS e relatórios (`AgregadoSemMedicaoTest`, 7 testes, mutação) |
+| 175 | migrations | `2026_10_04_150000_adiciona_unidade_em_pei_audits` e `2026_10_04_150100_create_pei_tab_atividade_leitura_table` no dev | Aplicadas | ✅ DONE |
+| 176 | **sino – aba Atividade** (melhoria pedida) | Admin altera risco da TST → Consulta da TST abre o sino | Vê a alteração com texto humano e nível | ✅ "Usuário Administrador alterou 3 campos do risco «…» (título, probabilidade, nível do risco) — há 43 segundos"; auditoria gravou a unidade TST. 🔧 mudança de probabilidade/nível de risco passou de "Informativo" para "Atenção" (teste ampliado) |
+| 177 | sino | Contador e "Marcar como lido" | Badge 1 → 0 | ✅ "0 alertas não lidos e 0 atividades novas" |
+| 178 | sino | Atualização automática | 1 poll de 60 s só com a aba visível | ✅ `wire:poll.60s.visible="atualizarContadores"` (o de 30 s é do painel, já existia) |
+| 179 | sino | Largura de 360 px | Cabe | ⏳ não conferido: a janela do navegador está maximizada e não redimensionou |
 | 78 | suíte completa | 1ª rodada | — | ⚠️ 11 falhas "tabela não existe": colisão — rodei outro teste no mesmo banco de teste durante a suíte. Refazer sozinha |
 
 ## Pedidos do gestor durante o teste (obrigatórios)

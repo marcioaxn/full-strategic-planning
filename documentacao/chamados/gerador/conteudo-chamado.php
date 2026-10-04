@@ -25,6 +25,11 @@
  *  - StrategicPlanning/2026_10_04_120000_tipo_de_encaminhamento_nova_iniciativa —
  *    UPDATE 'Novo Plano' → 'Nova Iniciativa' e troca do CHECK de dsc_tipo
  *    (DROP CONSTRAINT IF EXISTS + ADD CONSTRAINT, PG 9.3).
+ *  - 2026_10_04_150000_adiciona_unidade_em_pei_audits — ADD COLUMN anuláveis
+ *    (cod_organizacao, bln_institucional) + 2 índices em pei.audits. OBRIGATÓRIA
+ *    junto com o código: os resolvedores de config/audit.php gravam nessas
+ *    colunas a cada registro auditado (sem ela, todo salvamento auditado falha).
+ *  - 2026_10_04_150100_create_pei_tab_atividade_leitura_table — tabela nova.
  * Da 2.0.0 (se o chamado de 03/10 não foi executado): 2026_10_03_120000,
  * 2026_10_03_180000, 2026_10_03_200000, 2026_10_03_220000 (e 2026_09_05_223000
  * em cópia anterior a 05/09); PerfilAcessoSeeder (perfil Consulta);
@@ -60,7 +65,7 @@ return function (array $f): array {
         ['Repositório Git', 'https://github.com/marcioaxn/full-strategic-planning'],
         ['Branch', 'main'],
         ['Prioridade', 'Alta'],
-        ['Banco de dados', 'Até 8 migrations (php artisan migrate --force aplica só as pendentes) e 2 seeders. Nenhum registro é apagado'],
+        ['Banco de dados', 'Até 10 migrations (php artisan migrate --force aplica só as pendentes) e 2 seeders. Nenhum registro é apagado'],
         ['Pré-requisito', 'O servidor precisa conseguir enviar e-mail (variáveis MAIL_* do .env, já usadas pela aplicação)'],
     ]);
 
@@ -114,8 +119,10 @@ return function (array $f): array {
         .'2026_10_03_220000_marca_email_verificado_de_contas_com_perfil, '
         .'2026_10_03_230000_entrega_exige_iniciativa, '
         .'2026_10_03_233000_exclui_dependentes_de_ciclos_ja_excluidos, '
-        .'2026_10_04_000001_amplia_precisao_valores_indicador e '
-        .'2026_10_04_120000_tipo_de_encaminhamento_nova_iniciativa.');
+        .'2026_10_04_000001_amplia_precisao_valores_indicador, '
+        .'2026_10_04_120000_tipo_de_encaminhamento_nova_iniciativa, '
+        .'2026_10_04_150000_adiciona_unidade_em_pei_audits e '
+        .'2026_10_04_150100_create_pei_tab_atividade_leitura_table.');
     $b[] = $comando('php artisan entregas:proteger-anexos --simular');
     $b[] = $texto('Deve informar "Seriam movidos: 0 arquivo(s)".');
     $b[] = $comando('php artisan about --only=environment');

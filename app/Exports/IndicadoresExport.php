@@ -67,7 +67,8 @@ class IndicadoresExport implements FromCollection, WithHeadings, WithMapping
             $indicador->dsc_periodo_medicao,
             $vinculo,
             $indicador->dsc_meta,
-            number_format($indicador->calcularAtingimento(), 1),
+            // Sem medição é dito, não exportado como "0.0".
+            ($atingimento = $indicador->atingimentoMedido()) === null ? 'Sem medição' : number_format($atingimento, 1),
         ];
     }
 }

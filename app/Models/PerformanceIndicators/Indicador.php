@@ -297,6 +297,23 @@ class Indicador extends Model implements Auditable
     }
 
     /**
+     * O atingimento que entra numa MÉDIA (objetivo, perspectiva, IQG, portal).
+     *
+     * NULL quando o indicador não tem medição no período ou é informativo
+     * (polaridade "Não Aplicável"): nos dois casos ele fica FORA da média — não
+     * entra como 0%. Entrar como zero pintava de crítico o objetivo e a
+     * perspectiva que ninguém mediu.
+     */
+    public function atingimentoParaMedia(?int $ano = null, ?int $mes = null): ?float
+    {
+        if (CalculoPolaridade::ehInformativo($this->dsc_polaridade)) {
+            return null;
+        }
+
+        return $this->atingimentoMedido($ano, $mes);
+    }
+
+    /**
      * O previsto que a meta anual implica, quando o lançamento não o traz.
      *
      * - ACUMULADO: a meta é a soma do ano — proporcional aos meses medidos

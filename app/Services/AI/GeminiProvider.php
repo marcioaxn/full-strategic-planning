@@ -2,19 +2,22 @@
 
 namespace App\Services\AI;
 
+use App\Models\SystemSetting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class GeminiProvider implements AiProviderInterface
 {
     protected string $apiKey;
+
     protected string $model;
+
     protected string $baseUrlTemplate = 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent';
 
     public function __construct(?string $apiKey = null, ?string $model = null)
     {
-        $this->apiKey = $apiKey ?? \App\Models\SystemSetting::getValue('ai_api_key', '');
-        $this->model = $model ?? \App\Models\SystemSetting::getValue('ai_model', 'gemini-2.5-flash');
+        $this->apiKey = $apiKey ?? SystemSetting::getValue('ai_api_key', '');
+        $this->model = $model ?? SystemSetting::getValue('ai_model', 'gemini-2.5-flash');
     }
 
     protected function getApiUrl(): string
@@ -35,14 +38,14 @@ class GeminiProvider implements AiProviderInterface
                     'x-goog-api-key' => $this->apiKey,
                 ])
                 ->post($this->getApiUrl(), [
-                'contents' => [
-                    [
-                        'parts' => [
-                            ['text' => $context . "\n\nSolicitação: " . $prompt]
-                        ]
-                    ]
-                ]
-            ]);
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => $context."\n\nSolicitação: ".$prompt],
+                            ],
+                        ],
+                    ],
+                ]);
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -59,11 +62,13 @@ class GeminiProvider implements AiProviderInterface
 
             $error = $response->json();
             $msg = $error['error']['message'] ?? 'Erro desconhecido na API do Google.';
-            Log::error('Gemini API Error: ' . $msg);
+            Log::error('Gemini API Error: '.$msg);
+
             return "Erro na análise: {$msg}";
 
         } catch (\Throwable $e) {
-            Log::error('Gemini Exception: ' . $e->getMessage());
+            Log::error('Gemini Exception: '.$e->getMessage());
+
             return 'Falha técnica na comunicação com o cérebro da IA.';
         }
     }
@@ -81,8 +86,8 @@ class GeminiProvider implements AiProviderInterface
                     'x-goog-api-key' => $this->apiKey,
                 ])
                 ->post($this->getApiUrl(), [
-                'contents' => [['parts' => [['text' => 'Olá, responda apenas OK.']]]]
-            ]);
+                    'contents' => [['parts' => [['text' => 'Olá, responda apenas OK.']]]],
+                ]);
 
             if ($response->successful()) {
                 return ['success' => true, 'message' => 'Conexão estabelecida com sucesso! O Agente está respondendo.'];
@@ -90,10 +95,11 @@ class GeminiProvider implements AiProviderInterface
 
             $error = $response->json();
             $msg = $error['error']['message'] ?? 'Erro na autenticação.';
+
             return ['success' => false, 'message' => "Falha na conexão: {$msg} (Status: {$response->status()})"];
 
         } catch (\Exception $e) {
-            return ['success' => false, 'message' => 'Não foi possível contatar os servidores da Google: ' . $e->getMessage()];
+            return ['success' => false, 'message' => 'Não foi possível contatar os servidores da Google: '.$e->getMessage()];
         }
     }
 
@@ -111,10 +117,7 @@ class GeminiProvider implements AiProviderInterface
 
     public function summarizeStrategy(array $stats, string $orgName): ?string
     {
-        $context = "Você é um Chief Strategy Officer (CSO) especialista em Planejamento Estratégico Integrado (PEI).
-        Analise os KPIs do dashboard e escreva um resumo executivo de altíssimo nível para a liderança.
-        O texto deve ser curto (máximo 4 frases), direto e focado em INSIGHTS, não apenas repetindo números.
-        Destaque o que vai bem e onde há necessidade de atenção.";
+        $context = InstrucoesDaIa::RESUMO_EXECUTIVO;
 
         $statsJson = json_encode($stats);
         $prompt = "Organização: {$orgName}. Estatísticas Atuais: {$statsJson}. Escreva o resumo executivo.";
@@ -124,10 +127,7 @@ class GeminiProvider implements AiProviderInterface
 
     public function analyzeTrends(array $indicatorData, string $orgName): ?string
     {
-        $context = "Você é um Analista de Dados Estratégicos especializado em PEI.
-        Analise o histórico de evolução dos indicadores e preveja tendências.
-        Identifique riscos de não atingimento de metas e sugira ações corretivas.
-        Seja técnico, direto e use dados para justificar sua análise (máximo 5 frases).";
+        $context = InstrucoesDaIa::ANALISE_DE_TENDENCIA;
 
         $dataJson = json_encode($indicatorData);
         $prompt = "Organização: {$orgName}. Dados de Evolução: {$dataJson}. Realize a análise preditiva.";

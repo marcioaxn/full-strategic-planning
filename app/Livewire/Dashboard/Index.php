@@ -363,8 +363,9 @@ class Index extends Component
             // CÁLCULO CENTRALIZADO
             $atingimento = $service->calcularAtingimentoPerspectiva($p, $ano);
 
+            // Sem medição: barra nenhuma (null, não 0) e o rótulo diz por quê.
             return [
-                'label' => $p->dsc_perspectiva,
+                'label' => $p->dsc_perspectiva.($atingimento === null ? ' (sem medição)' : ''),
                 'count' => $atingimento,
                 'color' => $this->getCorAtingimento($atingimento),
             ];
@@ -494,7 +495,7 @@ class Index extends Component
         // Cada perspectiva com a cor da SUA faixa: a tela pintava todas com a
         // cor do índice geral, e uma perspectiva a 10% aparecia como "atenção".
         $iqg['perspectivas'] = collect($iqg['perspectivas'] ?? [])
-            ->map(fn ($p) => $p + ['cor' => $this->getCorAtingimento($p['atingimento'] ?? 0)])
+            ->map(fn ($p) => $p + ['cor' => $this->getCorAtingimento($p['atingimento'] ?? null)])
             ->all();
 
         return $iqg;
@@ -504,6 +505,11 @@ class Index extends Component
     {
         // A cor sai da régua DESTE ciclo. Sem o filtro, o dashboard podia
         // acender com a faixa de outro PEI — e o número parecia certo.
+        // Sem medição: cinza neutro, nunca a cor da pior faixa.
+        if ($percentual === null) {
+            return GrauSatisfacao::COR_SEM_REGUA;
+        }
+
         return GrauSatisfacao::corDe(
             (float) $percentual,
             $this->peiAtivo?->cod_pei,

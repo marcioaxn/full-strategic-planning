@@ -1,7 +1,9 @@
 <?php
 
 use App\Support\Auditoria\AutorDaAuditoria;
+use App\Support\Auditoria\InstitucionalDaAuditoria;
 use App\Support\Auditoria\MarcaDeImpersonacao;
+use App\Support\Auditoria\UnidadeDaAuditoria;
 use OwenIt\Auditing\Models\Audit;
 use OwenIt\Auditing\Resolvers\IpAddressResolver;
 use OwenIt\Auditing\Resolvers\UrlResolver;
@@ -55,6 +57,10 @@ return [
         'url' => UrlResolver::class,
         // Marca "impersonando:<id>" quando o Super Admin age como outro usuário.
         'tags' => MarcaDeImpersonacao::class,
+        // A unidade do registro auditado e se ele é do ciclo inteiro: recortam
+        // a aba "Atividade" do sino por unidade (FeedDeAtividade).
+        'cod_organizacao' => UnidadeDaAuditoria::class,
+        'bln_institucional' => InstitucionalDaAuditoria::class,
     ],
 
     /*
