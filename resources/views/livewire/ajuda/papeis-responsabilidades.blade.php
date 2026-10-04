@@ -82,7 +82,8 @@
                     e exporta relatórios, mas não cadastra, não altera e não exclui nada.
                 </li>
                 <li>
-                    <strong>Conta sem perfil</strong> (por exemplo, criada pelo autocadastro) não entra na área restrita
+                    <strong>Contas são criadas só por quem tem permissão</strong>, na tela de Usuários: não há autocadastro.
+                    <strong>Conta sem perfil</strong> não entra na área restrita
                     até um administrador vinculá-la a uma unidade com um perfil.
                 </li>
             </ul>

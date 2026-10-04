@@ -28,7 +28,8 @@
  * composer.lock (Symfony 7.4, PHP 8.2); JS (app.js, session-timer.js);
  * comando entregas:proteger-anexos; envio de e-mail obrigatório (autocadastro).
  * 2.1.0: sem composer/npm novos, sem comando, fila, cron ou variável de .env
- * novos. config/audit.php e config/versao.php mudaram → optimize:clear (passo 3).
+ * novos. config/audit.php, config/fortify.php (autocadastro desligado — rota
+ * /register some) e config/versao.php mudaram → optimize:clear (passo 3).
  * Rota nova indicadores.evidencia (dentro do grupo autenticado). Código novo com
  * worker no ar → queue:restart. Rodapé passa a mostrar v2.1.0.
  *
@@ -97,7 +98,7 @@ return function (array $f): array {
     $b[] = $comando('php artisan optimize:clear');
     $b[] = $comando('php artisan queue:restart');
     $b[] = $comando('php artisan up');
-    $b[] = $texto('O "optimize:clear" é obrigatório nesta versão: dois arquivos de configuração mudaram (config/audit.php e config/versao.php). '
+    $b[] = $texto('O "optimize:clear" é obrigatório nesta versão: três arquivos de configuração mudaram (config/audit.php, config/fortify.php e config/versao.php). '
         .'O "queue:restart" faz o worker da fila (já em execução pelo Supervisor/systemd) recarregar o código novo. Cron e worker não mudam.');
 
     // ── CONFERÊNCIA ─────────────────────────────────────────────────────────

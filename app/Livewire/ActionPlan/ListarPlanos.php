@@ -158,7 +158,11 @@ class ListarPlanos extends Component
         $this->tiposExecucao = TipoExecucao::where('cod_tipo_execucao', '!=', 'ecef6a50-c010-4cda-afc3-cbda245b55b0')
             ->orderBy('dsc_tipo_execucao')
             ->get();
-        $this->filtroAno = Session::get('ano_selecionado', now()->year);
+        // O ano que veio no endereço (link compartilhado, voltar do navegador)
+        // vale; só sem ele cai no ano de referência do topo.
+        if ($this->filtroAno === '' || $this->filtroAno === null) {
+            $this->filtroAno = Session::get('ano_selecionado', now()->year);
+        }
         $this->organizacoesOptions = Organization::getTreeForSelector();
     }
 

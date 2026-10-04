@@ -183,6 +183,19 @@ class LancarEvolucao extends Component
 
         $this->validate();
 
+        // Nada a registrar: sem valor, sem análise e sem evidência o mês viraria
+        // uma linha "Sem medição" vazia no histórico. Um mês que já existe pode
+        // ser salvo (para tirar valores ou mudar o "Atualizado").
+        $vazio = trim((string) $this->vlr_previsto) === '' && trim((string) $this->vlr_realizado) === ''
+            && trim((string) $this->txt_avaliacao) === '' && empty($this->arquivosTemporarios);
+        $mesJaExiste = EvolucaoIndicador::where('cod_indicador', $this->indicador->cod_indicador)
+            ->where('num_ano', $this->ano)->where('num_mes', $this->mes)->exists();
+        if ($vazio && ! $mesJaExiste) {
+            throw ValidationException::withMessages([
+                'vlr_realizado' => 'Informe o previsto, o realizado, a análise ou uma evidência antes de salvar o mês.',
+            ]);
+        }
+
         // Texto em formato brasileiro: aqui se confere se é número, se cabe na
         // coluna (acima disso o banco recusava e a tela caía em 500) e se a
         // unidade admite fração.
