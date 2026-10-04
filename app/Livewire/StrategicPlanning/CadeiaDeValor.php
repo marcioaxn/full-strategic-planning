@@ -9,6 +9,7 @@ use App\Models\StrategicPlanning\ProcessoAtividadeCadeiaValor;
 use App\Models\SystemSetting;
 use App\Services\Reports\AcabamentoPdf;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
@@ -147,9 +148,17 @@ class CadeiaDeValor extends Component
 
             return;
         }
-        $data = array_merge($this->formAtividade, ['cod_pei' => $this->peiAtivo->cod_pei]);
+        // Só os campos do formulário, e a perspectiva tem de ser deste ciclo (vem
+        // do navegador; aceitava perspectiva de outro PEI).
+        $data = Arr::only($this->formAtividade, ['dsc_atividade', 'dsc_tipo', 'cod_perspectiva', 'num_ordem']);
+        $data['cod_pei'] = $this->peiAtivo->cod_pei;
+        $data['num_ordem'] = (int) ($data['num_ordem'] ?? 0);
         if (empty($data['cod_perspectiva'])) {
             $data['cod_perspectiva'] = null;
+        } elseif (! Perspectiva::whereKey($data['cod_perspectiva'])->where('cod_pei', $this->peiAtivo->cod_pei)->exists()) {
+            $this->addError('formAtividade.cod_perspectiva', 'Escolha uma perspectiva deste ciclo.');
+
+            return;
         }
 
         $this->atividadeEditId

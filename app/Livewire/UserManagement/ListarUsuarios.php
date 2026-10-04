@@ -207,8 +207,8 @@ class ListarUsuarios extends Component
     // Propriedades Computadas para Selects
     public function getOrganizacoesOptionsProperty()
     {
-        // Só as unidades do escopo de quem consulta (Super Admin: todas).
-        return Organization::whereIn('cod_organizacao', auth()->user()->organizacaoIdsPermitidas())
+        // Só as unidades que quem consulta ADMINISTRA (Super Admin: todas).
+        return Organization::whereIn('cod_organizacao', $this->unidadesAdministradas())
             ->orderBy('sgl_organizacao')->get()->map(function ($o) {
                 return ['id' => $o->cod_organizacao, 'label' => $o->sgl_organizacao.' - '.$o->nom_organizacao];
             });
@@ -221,6 +221,22 @@ class ListarUsuarios extends Component
         });
     }
 
+    /**
+     * Unidades em que o usuário logado é Administrador (com as subordinadas),
+     * a mesma regra da UserPolicy::view. Super Admin: todas.
+     *
+     * @return list<string>
+     */
+    protected function unidadesAdministradas(): array
+    {
+        $eu = auth()->user();
+
+        return $eu->organizacaoIdsPermitidas()
+            ->filter(fn ($org) => $eu->isSuperAdmin() || $eu->ehAdministradorEm($org))
+            ->values()
+            ->all();
+    }
+
     protected function baseQuery(): Builder
     {
         $query = User::query()->with(['organizacoes', 'perfisAcesso']);
@@ -230,7 +246,9 @@ class ListarUsuarios extends Component
         // que ele administra (a sua e as subordinadas).
         $eu = auth()->user();
         if (! $eu->isSuperAdmin()) {
-            $permitidas = $eu->organizacaoIdsPermitidas()->all();
+            // 🔴 Usava o escopo de LEITURA (inclui Consulta e Gestor): o Administrador
+            // da unidade A que era Consulta na raiz listava nome e e-mail da árvore toda.
+            $permitidas = $this->unidadesAdministradas();
             $query->where(function ($q) use ($permitidas) {
                 $q->whereHas('organizacoes', fn ($o) => $o->whereIn('tab_organizacoes.cod_organizacao', $permitidas))
                     ->orWhereHas('perfisAcesso', fn ($p) => $p->whereIn('rel_users_tab_organizacoes_tab_perfil_acesso.cod_organizacao', $permitidas));
@@ -416,6 +434,16 @@ class ListarUsuarios extends Component
 
             $this->validate();
 
+            // Conta de autocadastro com e-mail não confirmado não recebe perfil:
+            // quem se cadastra pode usar o e-mail de outra pessoa, e o perfil
+            // iria para quem sabe a senha, não para o dono do endereço.
+            if ($this->editing && ! $this->editing->hasVerifiedEmail() && ! empty($this->form['vinculos'])) {
+                $this->addError('form.vinculos', 'O e-mail desta conta ainda não foi confirmado. Peça à pessoa que use o link de confirmação enviado ao e-mail dela; depois disso o perfil pode ser atribuído.');
+                $this->notify('O e-mail desta conta ainda não foi confirmado: o perfil só pode ser atribuído depois da confirmação.', 'warning', 'Confirmação de e-mail pendente');
+
+                return;
+            }
+
             $isNovoUsuario = ! $this->editing;
 
             DB::transaction(function () use ($isNovoUsuario) {
@@ -442,6 +470,8 @@ class ListarUsuarios extends Component
                 } else {
                     $this->authorize('create', User::class);
                     $user = User::create($data);
+                    // Conta criada pelo administrador: ele responde pela identidade.
+                    $user->forceFill(['email_verified_at' => now()])->save();
                     $message = __('Usuário criado com sucesso.');
 
                     if ($this->modoSenhaInicial === 'enviar_link') {

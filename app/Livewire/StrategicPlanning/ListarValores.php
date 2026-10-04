@@ -2,6 +2,7 @@
 
 namespace App\Livewire\StrategicPlanning;
 
+use App\Concerns\RevalidaUnidadeNaRequisicao;
 use App\Models\Organization;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Valor;
@@ -17,6 +18,7 @@ use Livewire\Component;
 class ListarValores extends Component
 {
     use AuthorizesRequests;
+    use RevalidaUnidadeNaRequisicao;
 
     #[Locked]
     public $organizacaoId;

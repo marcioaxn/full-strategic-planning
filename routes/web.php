@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ArquivoAnexoEntregaController;
 use App\Http\Controllers\ArquivoDocumentoController;
 use App\Http\Controllers\DocumentosController;
 use App\Http\Controllers\ImpersonateController;
@@ -131,6 +132,11 @@ Route::middleware([
     Route::get('/acervo-documentos/{documento}/arquivo', ArquivoDocumentoController::class)
         ->whereUuid('documento')
         ->name('acervo.arquivo');
+
+    // Anexo de entrega: disco privado, entregue só a quem pode ver a entrega.
+    Route::get('/entregas/anexos/{anexo}', ArquivoAnexoEntregaController::class)
+        ->whereUuid('anexo')
+        ->name('entregas.anexo');
     // Ajuda — "quem pode fazer o quê", derivada da MATRIZ de capacidades.
     // Aberta a todo perfil autenticado: é a resposta a uma dúvida, não um dado.
     Route::get('/ajuda/papeis', PapeisResponsabilidades::class)->name('ajuda.papeis');

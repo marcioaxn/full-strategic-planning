@@ -9,6 +9,7 @@ use App\Services\IndicadorCalculoService;
 use App\Support\UnidadeMedida;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -49,8 +50,8 @@ class LancarEvolucao extends Component
         'vlr_realizado' => 'nullable|string|max:30',
         'txt_avaliacao' => 'nullable|string|max:2000',
         'bln_atualizado' => 'required|in:Sim,Não',
-        // Evidência é servida pelo disco público: só documento e imagem — um
-        // .html/.svg ali rodaria script na origem do sistema. Até 10 MB.
+        // Só documento e imagem (um .html/.svg rodaria script se aberto na
+        // origem do sistema). Até 10 MB. Fica no disco privado.
         'arquivosTemporarios' => 'nullable|array',
         'arquivosTemporarios.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,odt,ods,odp,png,jpg,jpeg,gif,txt,csv,zip',
     ];
@@ -154,6 +155,16 @@ class LancarEvolucao extends Component
 
         $this->validate();
 
+        // Ano e mês vêm do navegador: o seletor limita ao ciclo, o servidor também.
+        // Sem isto, mês 13 ou ano fora do ciclo eram gravados, e texto virava erro 500.
+        $this->validate([
+            'ano' => ['required', 'integer', Rule::in($this->anosDisponiveis())],
+            'mes' => 'required|integer|between:1,12',
+        ], [
+            'ano.in' => 'O ano precisa estar dentro do ciclo do PEI.',
+            'mes.between' => 'Mês inválido.',
+        ]);
+
         $evolucao = EvolucaoIndicador::updateOrCreate(
             [
                 'cod_indicador' => $this->indicador->cod_indicador,
@@ -173,7 +184,9 @@ class LancarEvolucao extends Component
 
         // Processar Uploads
         foreach ($this->arquivosTemporarios as $arquivo) {
-            $path = $arquivo->store('pei/evidencias', 'public');
+            // Disco privado: a evidência não tem link público (antes ia para o disco
+            // público e era baixável por URL direta, sem login).
+            $path = $arquivo->store('pei/evidencias', 'local');
 
             Arquivo::create([
                 'cod_evolucao_indicador' => $evolucao->cod_evolucao_indicador,
@@ -200,7 +213,9 @@ class LancarEvolucao extends Component
         $arquivo = Arquivo::whereIn('cod_evolucao_indicador', EvolucaoIndicador::where('cod_indicador', $this->indicador->cod_indicador)
             ->select('cod_evolucao_indicador'))
             ->findOrFail($id);
-        Storage::disk('public')->delete($arquivo->dsc_nome_arquivo);
+        foreach (['local', 'public'] as $disco) {
+            Storage::disk($disco)->delete($arquivo->dsc_nome_arquivo);
+        }
         $arquivo->delete();
         $this->carregarPeriodo();
     }

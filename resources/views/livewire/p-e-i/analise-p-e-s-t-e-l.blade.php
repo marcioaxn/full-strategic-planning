@@ -375,7 +375,7 @@
                                         <div class="list-group list-group-flush border rounded">
                                             @foreach($aiSuggestion[$key] as $item)
                                                 @if($podeCriar)
-                                                <button type="button" wire:click="adicionarSugerido('{{ $label }}', '{{ $item }}')" class="list-group-item list-group-item-action py-2 px-2 x-small d-flex justify-content-between align-items-center">
+                                                <button type="button" wire:click="adicionarSugerido(@js($label), @js($item))" class="list-group-item list-group-item-action py-2 px-2 x-small d-flex justify-content-between align-items-center">
                                                     <span class="text-truncate me-1">{{ $item }}</span>
                                                     <i class="bi bi-plus-circle text-primary"></i>
                                                 </button>

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\RiskManagement;
 
+use App\Concerns\RevalidaUnidadeNaRequisicao;
 use App\Models\RiskManagement\Risco;
 use App\Models\StrategicPlanning\PEI;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -15,6 +16,7 @@ use Livewire\Component;
 class MatrizRiscos extends Component
 {
     use AuthorizesRequests;
+    use RevalidaUnidadeNaRequisicao;
 
     #[Locked]
     public $organizacaoId;

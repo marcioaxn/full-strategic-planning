@@ -75,6 +75,7 @@ class ListarObjetivos extends Component
 
     public const MAX_ODS = 3;
 
+    #[Locked]
     public bool $aiEnabled = false;
 
     public $aiSuggestion = '';
@@ -375,6 +376,12 @@ class ListarObjetivos extends Component
             'num_nivel_hierarquico_apresentacao' => 'required|integer|min:1',
             'cod_perspectiva' => 'required|exists:tab_perspectiva,cod_perspectiva',
             'cod_objetivo_pai' => 'nullable|exists:tab_objetivo,cod_objetivo',
+            // A tela limita os ODS em toggleOds(), mas a lista vem do navegador.
+            'odsSelecionados' => 'array|max:'.self::MAX_ODS,
+            'odsSelecionados.*' => 'integer|exists:tab_ods,num_ods',
+            'odsContribuicoes.*' => 'nullable|string|max:2000',
+        ], [
+            'odsSelecionados.max' => 'Vincule no máximo '.self::MAX_ODS.' ODS por objetivo.',
         ]);
 
         // Perspectiva, objetivo-pai e o próprio objetivo têm de ser do ciclo em

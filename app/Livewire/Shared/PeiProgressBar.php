@@ -10,6 +10,7 @@ use App\Models\StrategicPlanning\MissaoVisaoValores;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Perspectiva;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 
@@ -40,7 +41,7 @@ class PeiProgressBar extends Component
 
     private function calcular(): void
     {
-        $orgId = Session::get('organizacao_selecionada_id');
+        $orgId = (Auth::user()?->organizacaoSelecionadaId() ?? (Auth::check() ? null : Session::get('organizacao_selecionada_id')));
         $peiId = Session::get('pei_selecionado_id');
         $pei = $peiId ? PEI::find($peiId) : PEI::ativos()->first();
 

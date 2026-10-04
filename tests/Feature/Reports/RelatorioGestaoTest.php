@@ -127,6 +127,32 @@ test('o DOCX do Relatório de Gestão abre como documento do Word', function () 
         ->and($documento)->toContain('Relatório de Gestão');
 });
 
+test('texto com & e < vira texto no DOCX, não XML do Word', function () {
+    // Auditoria de segurança (XSS-03): o PhpWord vem com o escape desligado.
+    // "P&D" bastava para corromper o arquivo; "</w:t>" injetava WordprocessingML.
+    [$user, $pei, $org] = cenarioGestao();
+    objetivoDeTeste($pei, $org, 'P&D <x> </w:t></w:r><w:r><w:t>INJETADO');
+
+    $resposta = $this->actingAs($user)->get(route('relatorios.gestao.docx', [
+        'organizacao_id' => $org->cod_organizacao,
+        'ano' => 2026,
+        'variante' => EstruturaRelatorioGestao::VARIANTE_REPLICA,
+    ]))->assertOk();
+
+    $caminho = tempnam(sys_get_temp_dir(), 'rgtest_').'.docx';
+    file_put_contents($caminho, $resposta->streamedContent());
+    $zip = new ZipArchive;
+    $zip->open($caminho);
+    $documento = (string) $zip->getFromName('word/document.xml');
+    $zip->close();
+    @unlink($caminho);
+
+    libxml_use_internal_errors(true);
+    expect(simplexml_load_string($documento))->not->toBeFalse()
+        ->and($documento)->toContain('P&amp;D &lt;x&gt;')
+        ->and($documento)->not->toContain('<w:t>INJETADO');
+});
+
 // -------------------------------------------------- fidelidade ao modelo
 
 test('as tabelas 2.2.1 e 2.2.2 usam os cabeçalhos do modelo oficial', function () {

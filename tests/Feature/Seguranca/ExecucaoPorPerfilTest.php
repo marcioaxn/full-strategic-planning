@@ -306,8 +306,9 @@ test('o Gestor Responsável da iniciativa exclui a entrega', function () {
 
 // ── C15: anexo só de documento/imagem ───────────────────────────────────────
 
-test('anexo .html é recusado antes de chegar ao disco público', function () {
+test('anexo .html é recusado antes de chegar ao disco', function () {
     Storage::fake('public');
+    Storage::fake('local');
     $c = execCenario();
     $responsavel = execUsuario(PerfilAcesso::GESTOR_RESPONSAVEL, $c['orgA'], $c['plano']);
     $entrega = execEntrega($c['plano']);
@@ -318,7 +319,8 @@ test('anexo .html é recusado antes de chegar ao disco público', function () {
         ->set('anexosUpload', [UploadedFile::fake()->createWithContent('pagina.html', '<script>alert(1)</script>')])
         ->assertHasErrors(['anexosUpload.0']);
 
-    expect(Storage::disk('public')->allFiles('entregas/anexos'))->toBeEmpty();
+    expect(Storage::disk('public')->allFiles('entregas/anexos'))->toBeEmpty()
+        ->and(Storage::disk('local')->allFiles('entregas/anexos'))->toBeEmpty();
 });
 
 // ── C6: "sem organização" não é "todas as unidades" ─────────────────────────

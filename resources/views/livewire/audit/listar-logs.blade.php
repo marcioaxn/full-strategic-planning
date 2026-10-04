@@ -117,7 +117,8 @@
                             </td>
                             <td>
                                 <span class="badge bg-light text-dark border">{{ \App\Support\RotuloAuditoria::registro($log->auditable_type) }}</span>
-                                <small class="d-block text-muted" style="font-size: 0.65rem;">ID: ...{{ substr($log->auditable_id, -8) }}</small>
+                                @php $nomeLog = \App\Support\AuditoriaLegivel::nomeDoRegistro($log); @endphp
+                                <small class="d-block text-body-secondary text-truncate" style="max-width: 260px;" title="{{ $nomeLog }}">{{ $nomeLog ?? 'Registro sem nome' }}</small>
                             </td>
                             <td>
                                 @php
@@ -127,19 +128,14 @@
                                         'deleted' => 'danger',
                                         default => 'secondary'
                                     };
-                                    $eventLabel = match($log->event) {
-                                        'created' => 'Criação',
-                                        'updated' => 'Alteração',
-                                        'deleted' => 'Exclusão',
-                                        default => $log->event
-                                    };
+                                    $eventLabel = \App\Support\RotuloAuditoria::evento($log->event);
                                 @endphp
                                 <span class="badge bg-{{ $eventClass }} bg-opacity-10 text-{{ $eventClass }} border border-{{ $eventClass }} border-opacity-25 rounded-pill px-3">
                                     {{ $eventLabel }}
                                 </span>
                             </td>
                             <td>
-                                <small class="fw-mono text-muted">{{ $log->ip_address }}</small>
+                                <small class="text-body-secondary">{{ \App\Support\AuditoriaLegivel::origem($log->ip_address) }}</small>
                             </td>
                             <td class="text-end pe-4">
                                 <a href="{{ route('audit.detalhes', $log->id) }}" wire:navigate class="btn btn-sm btn-outline-secondary border-0">
@@ -209,12 +205,12 @@
                                         @foreach($allKeys as $key)
                                             @if($key !== 'updated_at' && $key !== 'created_at')
                                                 <tr>
-                                                    <td class="ps-3 fw-bold text-muted" style="width: 25%;">{{ $key }}</td>
+                                                    <td class="ps-3 fw-bold text-body-secondary" style="width: 25%;">{{ \App\Support\AuditoriaLegivel::rotuloCampo($key) }}</td>
                                                     <td class="text-danger bg-danger bg-opacity-5">
-                                                        <span class="text-break">{{ is_array($old[$key] ?? '') ? json_encode($old[$key]) : ($old[$key] ?? '-') }}</span>
+                                                        <span class="text-break">{{ \App\Support\AuditoriaLegivel::valor($key, $old[$key] ?? null)['texto'] }}</span>
                                                     </td>
                                                     <td class="text-success bg-success bg-opacity-5">
-                                                        <span class="text-break">{{ is_array($new[$key] ?? '') ? json_encode($new[$key]) : ($new[$key] ?? '-') }}</span>
+                                                        <span class="text-break">{{ \App\Support\AuditoriaLegivel::valor($key, $new[$key] ?? null)['texto'] }}</span>
                                                     </td>
                                                 </tr>
                                             @endif
@@ -228,7 +224,7 @@
                                 <div class="text-break fw-mono mt-1">{{ $auditSelecionada->url }}</div>
                                 
                                 <label class="fw-bold text-muted small text-uppercase mt-3 d-block">User Agent:</label>
-                                <div class="text-muted mt-1">{{ $auditSelecionada->user_agent }}</div>
+                                <div class="text-body-secondary mt-1">{{ \App\Support\AuditoriaLegivel::navegador($auditSelecionada->user_agent) }}</div>
                             </div>
                         </div>
                     @endif

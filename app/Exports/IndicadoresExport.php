@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Concerns\CelulasSemFormula;
 use App\Models\PerformanceIndicators\Indicador;
 use App\Models\StrategicPlanning\PEI;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -10,6 +11,8 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class IndicadoresExport implements FromCollection, WithHeadings, WithMapping
 {
+    use CelulasSemFormula;
+
     protected $organizacaoId;
 
     public function __construct($organizacaoId)
@@ -52,7 +55,7 @@ class IndicadoresExport implements FromCollection, WithHeadings, WithMapping
         ];
     }
 
-    public function map($indicador): array
+    protected function linha($indicador): array
     {
         $vinculo = $indicador->cod_objetivo
             ? 'Objetivo: '.$indicador->objetivo->nom_objetivo

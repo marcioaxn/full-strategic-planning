@@ -35,7 +35,7 @@
                         {{ substr($sglClean, 0, 2) }}
                     </div>
                     <div class="text-truncate">
-                        <span class="d-block fw-semibold text-truncate" style="max-width: 280px;">{!! $label !!}</span>
+                        <span class="d-block fw-semibold text-truncate" style="max-width: 280px;">{{ $label }}</span>
                     </div>
                     @if($selecionadaId === $id)
                         <i class="bi bi-check-lg ms-auto {{ $selecionadaId === $id ? 'text-white' : 'text-primary' }}"></i>

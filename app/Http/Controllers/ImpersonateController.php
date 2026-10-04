@@ -28,6 +28,12 @@ class ImpersonateController extends Controller
             return redirect()->route('admin.perfis')->with('error', 'Você não pode assumir a sua própria identidade.');
         }
 
+        // Outro Super Admin: as ações dele ficariam na auditoria com a autoria trocada.
+        // Conta inativa: não pode entrar no sistema, então ninguém entra por ela.
+        if ($alvo->isSuperAdmin() || ! $alvo->isAtivo()) {
+            return redirect()->route('admin.perfis')->with('error', 'Não é possível assumir a identidade de outro Super Administrador nem de uma conta inativa.');
+        }
+
         Log::warning('[IMPERSONATE] Início', [
             'admin_id' => $admin->id,
             'admin_email' => $admin->email,

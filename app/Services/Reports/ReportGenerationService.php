@@ -542,8 +542,18 @@ class ReportGenerationService
             ->get();
 
         // Estratégia (BSC) com Eager Loading profundo para evitar N+1
+        // Indicadores do objetivo: só os ligados à unidade do relatório (e às
+        // subordinadas), como no Mapa — antes entravam os de todas as unidades.
+        // Sem unidade (só o Super Admin chega aqui assim), o relatório é da instituição toda.
+        $orgsDoRelatorio = $organizacaoId ? Organization::descendentesEProprio($organizacaoId) : null;
         $perspectivas = Perspectiva::where('cod_pei', $pei?->cod_pei)
             ->with([
+                'objetivos.indicadores' => fn ($q) => $q->when($orgsDoRelatorio !== null, fn ($q) => $q->whereIn(
+                    'performance_indicators.tab_indicador.cod_indicador',
+                    fn ($sub) => $sub->select('cod_indicador')
+                        ->from('performance_indicators.rel_indicador_objetivo_organizacao')
+                        ->whereIn('cod_organizacao', $orgsDoRelatorio)
+                )),
                 'objetivos.indicadores.evolucoes' => function ($q) use ($ano) {
                     $q->where('num_ano', $ano)->orderBy('num_mes');
                 },
@@ -685,7 +695,9 @@ class ReportGenerationService
             ->where('cod_pei', $codPei)->where('cod_organizacao', $organizacaoId)->get()->groupBy('dsc_categoria'), collect());
         $partesInteressadas = $this->safe(fn () => ParteInteressada::where('cod_pei', $codPei)
             ->orderBy('num_influencia', 'desc')->orderBy('num_interesse', 'desc')->get(), collect());
+        // Cenários são da unidade (a tela da SWOT já filtrava; o PDF trazia os de todas).
         $cenarios = $this->safe(fn () => CenarioProspectivo::where('cod_pei', $codPei)
+            ->when($organizacaoId, fn ($q) => $q->where('cod_organizacao', $organizacaoId))
             ->orderBy('dsc_tipo')->get(), collect());
 
         // Partes Interessadas e Comunicação (Domínio 5)

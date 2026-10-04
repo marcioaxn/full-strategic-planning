@@ -310,11 +310,21 @@ class InaugurarIntegrar extends Component
             return;
         }
 
+        // As três listas vêm do navegador: ODS precisa existir, intensidade é
+        // vocabulário fechado e a contribuição tem tamanho limitado.
+        $odsValidos = ODS::pluck('num_ods')->map(fn ($n) => (int) $n)->all();
+
         $sync = [];
         foreach ($this->odsAderidos as $num) {
-            $sync[(int) $num] = [
-                'txt_contribuicao' => $this->odsContribuicoes[$num] ?? null,
-                'dsc_intensidade' => $this->odsIntensidades[$num] ?? 'Media',
+            $num = (int) $num;
+            if (! in_array($num, $odsValidos, true)) {
+                continue;
+            }
+
+            $intensidade = $this->odsIntensidades[$num] ?? 'Media';
+            $sync[$num] = [
+                'txt_contribuicao' => mb_substr(trim((string) ($this->odsContribuicoes[$num] ?? '')), 0, 2000) ?: null,
+                'dsc_intensidade' => in_array($intensidade, ['Alta', 'Media', 'Baixa'], true) ? $intensidade : 'Media',
             ];
         }
 

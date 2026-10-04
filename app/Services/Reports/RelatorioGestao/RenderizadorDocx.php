@@ -4,6 +4,7 @@ namespace App\Services\Reports\RelatorioGestao;
 
 use PhpOffice\PhpWord\Element\Section;
 use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\Settings;
 use PhpOffice\PhpWord\Shared\Converter;
 use PhpOffice\PhpWord\SimpleType\Jc;
 use PhpOffice\PhpWord\Style\Language;
@@ -45,6 +46,11 @@ class RenderizadorDocx
 
     public function gerar(array $dados): string
     {
+        // 🔴 O PhpWord vem com o escape de saída DESLIGADO: um objetivo chamado
+        // "P&D" corrompia o .docx e um texto com "</w:t>" injetava XML do Word
+        // (inclusive campos que buscam URL/caminho de rede ao abrir o arquivo).
+        Settings::setOutputEscapingEnabled(true);
+
         $doc = new PhpWord;
         $doc->getSettings()->setThemeFontLang(new Language(Language::PT_BR));
 

@@ -10,10 +10,10 @@ use Livewire\Component;
 class StrategicAlertsBell extends Component
 {
     public $unreadCount = 0;
-    
+
     protected $listeners = [
         'mentor-notification' => 'refreshCount', // Listen for new notifications
-        'organizacaoSelecionada' => 'refreshCount'
+        'organizacaoSelecionada' => 'refreshCount',
     ];
 
     public function mount()
@@ -23,13 +23,17 @@ class StrategicAlertsBell extends Component
 
     public function refreshCount()
     {
-        if (!Auth::check()) return;
+        if (! Auth::check()) {
+            return;
+        }
 
-        $orgId = Session::get('organizacao_selecionada_id');
-        
+        $orgId = (Auth::user()?->organizacaoSelecionadaId() ?? (Auth::check() ? null : Session::get('organizacao_selecionada_id')));
+
         $this->unreadCount = StrategicAlert::where('user_id', Auth::id())
-            ->where(function($q) use ($orgId) {
-                if ($orgId) $q->where('cod_organizacao', $orgId)->orWhereNull('cod_organizacao');
+            ->where(function ($q) use ($orgId) {
+                if ($orgId) {
+                    $q->where('cod_organizacao', $orgId)->orWhereNull('cod_organizacao');
+                }
             })
             ->unread()
             ->count();
@@ -43,11 +47,13 @@ class StrategicAlertsBell extends Component
 
     public function getRecentAlerts()
     {
-        $orgId = Session::get('organizacao_selecionada_id');
-        
+        $orgId = (Auth::user()?->organizacaoSelecionadaId() ?? (Auth::check() ? null : Session::get('organizacao_selecionada_id')));
+
         return StrategicAlert::where('user_id', Auth::id())
-            ->where(function($q) use ($orgId) {
-                if ($orgId) $q->where('cod_organizacao', $orgId)->orWhereNull('cod_organizacao');
+            ->where(function ($q) use ($orgId) {
+                if ($orgId) {
+                    $q->where('cod_organizacao', $orgId)->orWhereNull('cod_organizacao');
+                }
             })
             ->latest()
             ->take(5)
@@ -57,7 +63,7 @@ class StrategicAlertsBell extends Component
     public function render()
     {
         return view('livewire.shared.strategic-alerts-bell', [
-            'alerts' => $this->getRecentAlerts()
+            'alerts' => $this->getRecentAlerts(),
         ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Concerns\CelulasSemFormula;
 use App\Models\StrategicPlanning\Objetivo;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -9,6 +10,8 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class ObjetivosExport implements FromCollection, WithHeadings, WithMapping
 {
+    use CelulasSemFormula;
+
     protected $codPei;
 
     public function __construct($codPei)
@@ -18,7 +21,7 @@ class ObjetivosExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        return Objetivo::whereHas('perspectiva', function($q) {
+        return Objetivo::whereHas('perspectiva', function ($q) {
             $q->where('cod_pei', $this->codPei);
         })->with('perspectiva')->get();
     }
@@ -33,7 +36,7 @@ class ObjetivosExport implements FromCollection, WithHeadings, WithMapping
         ];
     }
 
-    public function map($objetivo): array
+    protected function linha($objetivo): array
     {
         return [
             $objetivo->num_nivel_hierarquico_apresentacao,

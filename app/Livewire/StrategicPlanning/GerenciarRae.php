@@ -2,6 +2,7 @@
 
 namespace App\Livewire\StrategicPlanning;
 
+use App\Concerns\RevalidaUnidadeNaRequisicao;
 use App\Models\Organization;
 use App\Models\StrategicPlanning\PEI;
 use App\Models\StrategicPlanning\Rae;
@@ -21,6 +22,8 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class GerenciarRae extends Component
 {
+    use RevalidaUnidadeNaRequisicao;
+
     public $peiAtivo;
 
     #[Locked]
@@ -362,6 +365,17 @@ class GerenciarRae extends Component
             'encForm.txt_descricao.required' => 'Descreva o encaminhamento.',
         ]);
 
+        // Responsável vem do navegador: só pessoas da unidade da RAE (a mesma lista
+        // que a tela oferece). exists:users aceitava qualquer conta do sistema.
+        $codResponsavel = $this->encForm['cod_responsavel'] ?: null;
+        $orgDaRae = Rae::whereKey($this->encRaeId)->value('cod_organizacao');
+        if ($codResponsavel && ! User::whereKey($codResponsavel)
+            ->whereHas('organizacoes', fn ($q) => $q->where('tab_organizacoes.cod_organizacao', $orgDaRae))->exists()) {
+            $this->addError('encForm.cod_responsavel', 'Escolha um responsável da unidade desta RAE.');
+
+            return;
+        }
+
         $data = [
             'cod_rae' => $this->encRaeId,
             'dsc_tipo' => $this->encForm['dsc_tipo'],
@@ -385,6 +399,8 @@ class GerenciarRae extends Component
     {
         $enc = RaeEncaminhamento::findOrFail($id);
         $this->garantirAcessoPorRae($enc->cod_rae, 'editar');
+        // Vocabulário fechado: o status vem do navegador.
+        abort_unless(in_array($status, RaeEncaminhamento::STATUS, true), 422);
 
         $enc->update(['dsc_status' => $status]);
         $this->dispatch('notify', message: 'Status atualizado.', style: 'success');

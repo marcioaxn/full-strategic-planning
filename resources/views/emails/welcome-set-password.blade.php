@@ -1,5 +1,5 @@
 <x-mail::message>
-# Boas-vindas ao Sistema PEI, {{ $nome }}!
+# Boas-vindas ao Sistema PEI, {{ \App\Support\TextoSeguro::markdownLiteral($nome) }}!
 
 É com satisfação que confirmamos a criação do seu acesso ao **Sistema de Planejamento Estratégico Integrado (PEI)** do Ministério da Integração e do Desenvolvimento Regional (MIDR).
 

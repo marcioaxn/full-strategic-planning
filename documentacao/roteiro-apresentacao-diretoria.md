@@ -294,7 +294,7 @@ Então rodar `php artisan demo:preparar` (limpa o banco) e fazer a demo ao vivo.
 - [ ] Testar o roteiro completo ao menos **2 vezes** antes do dia
 - [ ] Preparar arquivo de textos (missão, visão, nomes de objetivos) para copiar/colar
 - [ ] Criar os Graus de Satisfação com antecedência (`/graus-satisfacao`)
-- [ ] Confirmar login com `demo@planejamento.gov.br` / `Demo@2025!` (criado automaticamente pelo `demo:preparar`)
+- [ ] Confirmar login com a conta de demonstração (crie-a pela tela de Usuários com senha própria — senha nunca vai para documento versionado)
 - [ ] Testar o command `php artisan demo:preparar` (quando implementado)
 - [ ] Verificar que o storage está linkado: `php artisan storage:link`
 - [ ] Verificar que o servidor está rodando: `composer dev`
@@ -428,5 +428,5 @@ O `--force` pula a confirmação. Execução esperada: 15–30 segundos.
 | Command `demo:preparar` | ✅ Implementado | `php artisan demo:preparar --help` |
 | Seeder Nível 2 | ✅ Implementado | `database/seeders/Demo/DemoNivel2Seeder.php` |
 | Seeder Nível 3 | ✅ Implementado | `database/seeders/Demo/DemoNivel3Seeder.php` |
-| Usuário de demo | ✅ Implementado | Criado automaticamente pelo `demo:preparar` — `demo@planejamento.gov.br` / `Demo@2025!` |
+| Usuário de demo | ⏳ Fazer antes | Criar pela tela de Usuários, com senha própria (o comando `demo:preparar` foi removido) |
 | Treinos do roteiro | ⏳ Fazer antes | Mínimo 2 execuções completas do Nível 1 |

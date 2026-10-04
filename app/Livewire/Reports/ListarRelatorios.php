@@ -17,6 +17,7 @@ use App\Services\AI\AiServiceFactory;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
@@ -26,6 +27,7 @@ class ListarRelatorios extends Component
 
     public $organizacaoId;
 
+    #[Locked]
     public $organizacaoNome;
 
     public $organizacoes = [];
@@ -50,6 +52,7 @@ class ListarRelatorios extends Component
 
     public $peiAtivo;
 
+    #[Locked]
     public $aiEnabled = false;
 
     public $includeAi = false; // Opção do usuário - Padrão desmarcado
@@ -192,6 +195,7 @@ class ListarRelatorios extends Component
 
     public function gerarInsightIA()
     {
+        $this->authorize('modulo.acessar', 'relatorios');
         if (! $this->aiEnabled) {
             return;
         }
@@ -206,6 +210,11 @@ class ListarRelatorios extends Component
 
             return;
         }
+
+        // A unidade vem do cliente: confere o escopo e lê o nome do banco, nunca
+        // de propriedade que o navegador escreve (era um prompt livre ao provedor).
+        abort_unless(auth()->user()->podeAcessarOrganizacao($this->organizacaoId), 403);
+        $this->organizacaoNome = Organization::find($this->organizacaoId)?->nom_organizacao;
 
         try {
             $aiService = AiServiceFactory::make();

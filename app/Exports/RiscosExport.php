@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Concerns\CelulasSemFormula;
 use App\Models\RiskManagement\Risco;
 use App\Models\StrategicPlanning\PEI;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -10,6 +11,8 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class RiscosExport implements FromCollection, WithHeadings, WithMapping
 {
+    use CelulasSemFormula;
+
     protected $organizacaoId;
 
     public function __construct($organizacaoId)
@@ -47,7 +50,7 @@ class RiscosExport implements FromCollection, WithHeadings, WithMapping
         ];
     }
 
-    public function map($risco): array
+    protected function linha($risco): array
     {
         $nivel = $risco->num_probabilidade * $risco->num_impacto;
         $classificacao = $nivel >= 15 ? 'Crítico' : ($nivel >= 10 ? 'Alto' : ($nivel >= 5 ? 'Médio' : 'Baixo'));

@@ -60,6 +60,7 @@ class ListarGrausSatisfacao extends Component
     // Busca
     public $search = '';
 
+    #[Locked]
     public bool $aiEnabled = false;
 
     public $aiSuggestion = '';
@@ -179,7 +180,8 @@ class ListarGrausSatisfacao extends Component
                 },
             ],
             'dsc_grau_satisfacao' => 'required|string|max:100',
-            'cor' => 'required|string|max:50',
+            // Só #rrggbb: a cor vai para atributo style= em várias telas e relatórios.
+            'cor' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'vlr_minimo' => [
                 'required',
                 function ($attribute, $value, $fail) {
@@ -379,7 +381,7 @@ class ListarGrausSatisfacao extends Component
 
                 $alert = NotificationService::sendMentorAlert(
                     'Grau Removido',
-                    "A faixa <strong>{$nome}</strong> foi excluída com sucesso.",
+                    "A faixa “{$nome}” foi excluída com sucesso.",
                     'bi-trash',
                     'warning'
                 );

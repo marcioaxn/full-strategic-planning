@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Middleware\ExigePerfilDeAcesso;
 use App\Models\ActionPlan\Entrega;
 use App\Models\ActionPlan\PlanoDeAcao;
 use App\Models\Documento;
@@ -175,6 +176,13 @@ class AppServiceProvider extends ServiceProvider
                 ->middleware('web')
                 ->name('livewire.update');
         });
+
+        // O /livewire/update só passa pelo grupo 'web'. Sem isto, uma conta que
+        // perdeu todos os vínculos continuava operando as abas já abertas: o
+        // middleware 'perfil' só valia no carregamento da página.
+        Livewire::addPersistentMiddleware([
+            ExigePerfilDeAcesso::class,
+        ]);
 
         // Custom Blade Directives for Brazilian Formatting
         Blade::directive('brazil_number', function ($expression) {

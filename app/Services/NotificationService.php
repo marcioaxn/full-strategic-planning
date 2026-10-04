@@ -14,16 +14,18 @@ class NotificationService
     public static function sendMentorAlert(string $title, string $message, string $icon = 'bi-info-circle', string $type = 'success')
     {
         $user = Auth::user();
-        if (!$user) return;
+        if (! $user) {
+            return;
+        }
 
         // 1. Save to Database
         StrategicAlert::create([
             'user_id' => $user->id,
-            'cod_organizacao' => Session::get('organizacao_selecionada_id'),
+            'cod_organizacao' => (Auth::user()?->organizacaoSelecionadaId() ?? (Auth::check() ? null : Session::get('organizacao_selecionada_id'))),
             'title' => $title,
             'message' => $message,
             'icon' => $icon,
-            'type' => $type
+            'type' => $type,
         ]);
 
         // 2. Return data for Livewire Dispatch (calling component must dispatch it)
@@ -31,7 +33,7 @@ class NotificationService
             'title' => $title,
             'message' => $message,
             'icon' => $icon,
-            'type' => $type
+            'type' => $type,
         ];
     }
 }

@@ -429,7 +429,7 @@
                             </div>
                         @else
                             <div class="markdown-content">
-                                {!! Str::markdown($aiSuggestion, ['html_input' => 'strip']) !!}
+                                {!! Str::markdown($aiSuggestion, ['html_input' => 'strip', 'allow_unsafe_links' => false]) !!}
                             </div>
                         @endif
                     </div>
@@ -556,7 +556,7 @@
                         <select wire:model.live="filtroVinculo" class="form-select">
                             <option value="">Todos os Vínculos</option>
                             <option value="Objetivo">Vínculo com Objetivo</option>
-                            <option value="Plano">Vínculo com Iniciativa</option>
+                            <option value="Iniciativa">Vínculo com Iniciativa</option>
                         </select>
                     </div>
                     <div class="col-md-3 text-end">
@@ -839,7 +839,7 @@
                                                         <i class="bi bi-bullseye me-1"></i> Objetivo
                                                     </label>
 
-                                                    <input type="radio" class="btn-check" wire:model.live="form.dsc_tipo" value="Plano" id="v_plan" autocomplete="off">
+                                                    <input type="radio" class="btn-check" wire:model.live="form.dsc_tipo" value="Iniciativa" id="v_plan" autocomplete="off">
                                                     <label class="btn btn-outline-info border-0 rounded-pill flex-grow-1 py-2 fw-bold" for="v_plan">
                                                         <i class="bi bi-list-task me-1"></i> Iniciativa
                                                     </label>

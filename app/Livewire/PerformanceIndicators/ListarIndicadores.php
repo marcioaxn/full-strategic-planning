@@ -14,9 +14,11 @@ use App\Models\SystemSetting;
 use App\Services\AI\AiServiceFactory;
 use App\Services\PeiGuidanceService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -42,6 +44,7 @@ class ListarIndicadores extends Component
     public $peiAtivo;
 
     // IA e Mentor
+    #[Locked]
     public bool $aiEnabled = false;
 
     public $aiSuggestion = '';
@@ -207,9 +210,15 @@ class ListarIndicadores extends Component
             })->toArray();
 
             // Agrupar planos por objetivo
+            // Só as iniciativas das unidades do usuário: a lista oferecia as de todas.
             $planos = PlanoDeAcao::whereHas('objetivo.perspectiva', function ($q) {
                 $q->where('cod_pei', $this->peiAtivo->cod_pei);
-            })->with('objetivo')->get();
+            })
+                ->when(Auth::check() && ! Auth::user()->isSuperAdmin(), fn ($q) => $q->whereIn(
+                    'action_plan.tab_plano_de_acao.cod_organizacao',
+                    Auth::user()->organizacaoIdsPermitidas()->all()
+                ))
+                ->with('objetivo')->get();
 
             $this->planosAgrupados = $planos->groupBy(function ($plano) {
                 return $plano->objetivo->nom_objetivo ?? 'Sem Objetivo';
@@ -253,7 +262,8 @@ class ListarIndicadores extends Component
         $this->form = [
             'nom_indicador' => $indicador->nom_indicador,
             'dsc_indicador' => $indicador->dsc_indicador,
-            'dsc_tipo' => $indicador->dsc_tipo ?? ($indicador->cod_plano_de_acao ? 'Iniciativa' : 'Objetivo'),
+            // O vínculo decide o tipo; "Estratégico" (legado) e "Plano" viram os dois valores da tela.
+            'dsc_tipo' => $indicador->cod_plano_de_acao ? 'Iniciativa' : 'Objetivo',
             'dsc_calculation_type' => $indicador->dsc_calculation_type ?? 'manual',
             'cod_objetivo' => $indicador->cod_objetivo,
             'cod_plano_de_acao' => $indicador->cod_plano_de_acao,
@@ -276,12 +286,23 @@ class ListarIndicadores extends Component
 
     public function save()
     {
+        // 🔴 A tela enviava "Plano" e o servidor só conferia a iniciativa quando
+        // o tipo era "Iniciativa": com "Plano", nenhuma validação nem authorize
+        // rodava e o cod_plano_de_acao vindo do navegador era gravado. O tipo
+        // agora é uma lista fechada; "Plano" de snapshot antigo é normalizado.
+        if (($this->form['dsc_tipo'] ?? null) === 'Plano') {
+            $this->form['dsc_tipo'] = 'Iniciativa';
+        }
+
         // Regras de validação base
         $rules = [
             'form.nom_indicador' => 'required|string|max:255',
-            'form.dsc_tipo' => 'required',
-            'form.dsc_unidade_medida' => 'required',
+            'form.dsc_tipo' => ['required', Rule::in(['Objetivo', 'Iniciativa'])],
+            'form.dsc_calculation_type' => ['required', Rule::in(['manual', 'action_plan'])],
+            'form.dsc_polaridade' => ['nullable', Rule::in(array_keys(Indicador::POLARIDADES))],
+            'form.dsc_unidade_medida' => 'required|string|max:191',
             'form.organizacoes_ids' => 'required|array|min:1',
+            'form.organizacoes_ids.*' => 'uuid',
         ];
 
         // Validação condicional: Se tipo é Plano E cálculo é automático, plano é obrigatório
@@ -306,11 +327,19 @@ class ListarIndicadores extends Component
         $this->autorizarGravacao();
 
         try {
-            $data = $this->form;
-            $orgIds = $data['organizacoes_ids'] ?? [];
-            unset($data['organizacoes_ids']);
-            $data['json_smart'] = $data['smart'] ?? [];
-            unset($data['smart']);
+            // Só os campos do formulário: o array público aceita chave nova vinda
+            // do navegador, e $this->form inteiro iria para o update().
+            $data = Arr::only($this->form, [
+                'nom_indicador', 'dsc_indicador', 'dsc_tipo', 'dsc_calculation_type', 'cod_objetivo',
+                'cod_plano_de_acao', 'txt_observacao', 'dsc_meta', 'dsc_unidade_medida', 'dsc_polaridade',
+                'num_peso', 'bln_acumulado', 'dsc_formula', 'dsc_fonte', 'dsc_periodo_medicao',
+                'dsc_referencial_comparativo', 'dsc_atributos',
+            ]);
+            $orgIds = array_values((array) ($this->form['organizacoes_ids'] ?? []));
+            $data['json_smart'] = array_map('boolval', array_intersect_key(
+                (array) ($this->form['smart'] ?? []),
+                array_flip(['especifico', 'mensuravel', 'atingivel', 'relevante', 'temporal'])
+            ));
 
             if ($data['dsc_tipo'] === 'Objetivo') {
                 $data['cod_plano_de_acao'] = null;
@@ -363,8 +392,11 @@ class ListarIndicadores extends Component
         if ($existente) {
             $this->authorize('update', $existente);
             $atuais = $existente->organizacoes->pluck('cod_organizacao')->all();
-            // Unidade nova no vínculo: só quem a administra.
-            foreach (array_diff($orgs, $atuais) as $org) {
+            // Unidade acrescentada OU retirada do vínculo: só quem a administra.
+            // Antes só a acrescentada era conferida — o Gestor tirava o indicador
+            // da unidade do Administrador original.
+            $alteradas = array_merge(array_diff($orgs, $atuais), array_diff($atuais, $orgs));
+            foreach ($alteradas as $org) {
                 abort_unless($usuario->isSuperAdmin() || $usuario->ehAdministradorEm($org), 403);
             }
         } else {
@@ -375,6 +407,10 @@ class ListarIndicadores extends Component
         }
 
         $codPlano = ($this->form['dsc_tipo'] ?? '') === 'Iniciativa' ? ($this->form['cod_plano_de_acao'] ?? null) : null;
+        if (! $codPlano) {
+            // Fora de "Iniciativa", vínculo com iniciativa nunca é gravado.
+            $this->form['cod_plano_de_acao'] = null;
+        }
 
         if ($codPlano && $codPlano !== $existente?->cod_plano_de_acao) {
             // A iniciativa escolhida precisa ser uma que o usuário pode editar.
@@ -630,7 +666,10 @@ class ListarIndicadores extends Component
                         $sub->where('cod_objetivo', $this->filtroObjetivo);
                     });
             });
-        } elseif ($this->organizacaoId) {
+        }
+
+        // O filtro de objetivo SE SOMA ao de unidade (antes o substituía).
+        if ($this->organizacaoId) {
             // A unidade selecionada e as subordinadas, dentro do que o usuário
             // alcança. Visitante: só a unidade exata, como antes.
             $usuario = auth()->user();

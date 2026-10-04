@@ -14,9 +14,12 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * Este middleware garante a segunda metade:
  *
- *  1. Só GET e HEAD. Qualquer outro verbo é recusado antes de chegar ao
- *     componente. Não basta confiar na Policy: método público de componente
- *     Livewire é invocável direto pelo navegador.
+ *  1. Só GET e HEAD no carregamento da página. ⚠️ Isto NÃO cobre as ações do
+ *     componente: elas vão para POST /livewire/update, que passa só pelo grupo
+ *     'web' (este middleware não é persistente — se fosse, o visitante perderia
+ *     filtros e paginação). A barreira real contra escrita é a autorização
+ *     DENTRO de cada método público dos componentes desta área, e o teste
+ *     TransparenciaNaoEscreveTest prova que o visitante é recusado em todos.
  *  2. Limite de taxa. Estas telas calculam atingimento por objetivo; sem
  *     limite, uma página pública vira amplificador de negação de serviço.
  *  3. Cabeçalho de não-indexação de dado individual. A página em si pode ser

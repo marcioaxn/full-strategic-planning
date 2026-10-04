@@ -10,6 +10,7 @@ use App\Models\StrategicPlanning\Perspectiva;
 use App\Services\StrategicPlanning\CopiarPeiService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -38,6 +39,8 @@ class ListarPeis extends Component
 
     public string $createdPeiName = '';
 
+    // IDs usados em save/delete/salvarComo: só o servidor os define.
+    #[Locked]
     public $peiId;
 
     public $impactoExclusao = [];
@@ -52,6 +55,7 @@ class ListarPeis extends Component
     // "Salvar como"
     public bool $showSalvarComoModal = false;
 
+    #[Locked]
     public ?string $copiaOrigemId = null;
 
     public string $copiaOrigemNome = '';

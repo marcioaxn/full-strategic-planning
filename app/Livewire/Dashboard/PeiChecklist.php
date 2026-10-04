@@ -2,24 +2,29 @@
 
 namespace App\Livewire\Dashboard;
 
+use App\Models\SystemSetting;
 use App\Services\PeiGuidanceService;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class PeiChecklist extends Component
 {
     public $guidance;
+
+    #[Locked]
     public bool $aiEnabled = false;
+
     public bool $isDismissed = false;
 
     protected $listeners = [
-        'peiSelecionado' => 'refreshGuidance'
+        'peiSelecionado' => 'refreshGuidance',
     ];
 
     public function mount(PeiGuidanceService $service)
     {
-        $this->aiEnabled = \App\Models\SystemSetting::getValue('ai_enabled', true);
+        $this->aiEnabled = SystemSetting::getValue('ai_enabled', true);
         $this->guidance = $service->analyzeCompleteness();
-        
+
         // Verifica se o usuário já arquivou este mentor para o PEI atual
         $peiId = $this->guidance['pei_id'] ?? 'default';
         $this->isDismissed = session("mentor_dismissed_{$peiId}", false);
@@ -32,15 +37,15 @@ class PeiChecklist extends Component
         $this->isDismissed = true;
     }
 
-    public function refreshGuidance($id = null, PeiGuidanceService $service = null)
+    public function refreshGuidance($id = null, ?PeiGuidanceService $service = null)
     {
         $service = $service ?? app(PeiGuidanceService::class);
         $this->guidance = $service->analyzeCompleteness($id);
-        
+
         // Ao trocar de PEI, verifica novamente se está arquivado
         $peiId = $id ?? ($this->guidance['pei_id'] ?? 'default');
         $this->isDismissed = session("mentor_dismissed_{$peiId}", false);
-        
+
         // Se o progresso não for 100%, ele deve aparecer de novo
         if ($this->guidance['progress'] < 100) {
             $this->isDismissed = false;

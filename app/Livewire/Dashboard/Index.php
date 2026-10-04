@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Dashboard;
 
+use App\Concerns\RevalidaUnidadeNaRequisicao;
 use App\Models\ActionPlan\Entrega;
 use App\Models\ActionPlan\EntregaComentario;
 use App\Models\ActionPlan\PlanoDeAcao;
@@ -27,6 +28,8 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Index extends Component
 {
+    use RevalidaUnidadeNaRequisicao;
+
     // Locked: o painel recalcula a cada poll com este id; vindo do navegador,
     // bastaria trocá-lo para ler o painel de qualquer unidade.
     #[Locked]
@@ -129,6 +132,12 @@ class Index extends Component
 
     public function generateAiSummary()
     {
+        // Chamada paga ao provedor de IA com os números da unidade: autoriza e
+        // revalida a unidade aqui, porque o método é chamável direto do navegador.
+        $this->authorize('modulo.acessar', 'planejamento-estrategico');
+        abort_unless(! $this->organizacaoId || auth()->user()->podeAcessarOrganizacao($this->organizacaoId), 403);
+        $this->carregarNomeOrganizacao();
+
         $aiService = AiServiceFactory::make();
         if (! $aiService) {
             return;

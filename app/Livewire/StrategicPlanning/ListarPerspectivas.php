@@ -63,6 +63,7 @@ class ListarPerspectivas extends Component
 
     public $num_peso_planos = 0;
 
+    #[Locked]
     public bool $aiEnabled = false;
 
     public $aiSuggestion = '';

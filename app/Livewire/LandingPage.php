@@ -71,7 +71,11 @@ class LandingPage extends Component
 
                 $org = Organization::whereColumn('cod_organizacao', 'rel_cod_organizacao')->first()
                            ?? Organization::first();
-                $identidade = MissaoVisaoValores::where('cod_pei', $pei->cod_pei)->first();
+                // A missão exibida é a da unidade exibida (a raiz). Sem o filtro, saía a
+                // primeira identidade do ciclo — de qualquer unidade — sob o nome da raiz.
+                $identidade = MissaoVisaoValores::where('cod_pei', $pei->cod_pei)
+                    ->when($org, fn ($q) => $q->where('cod_organizacao', $org->cod_organizacao))
+                    ->first();
 
                 // Perspectivas com objetivos (desc: nível mais alto no topo)
                 $perspectivas = Perspectiva::where('cod_pei', $pei->cod_pei)
