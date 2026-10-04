@@ -24,8 +24,9 @@
  *     preenchimento do ciclo, com objetivo sem indicador e iniciativa sem
  *     entrega. Explodir aí é o modo de falha mais provável em produção.
  *
- *  5. O ANO É O EXERCÍCIO RELATADO, não o ano corrente. Relatório de 2025
- *     emitido em 2026 tem de trazer o ciclo vigente em 2025.
+ *  5. O ANO É O EXERCÍCIO RELATADO, não o ano corrente; o CICLO é o
+ *     selecionado no topo (decisão de 04/10/2026). Relatório de 2025 emitido
+ *     em 2026: seleciona-se o ciclo de 2025.
  */
 
 use App\Models\Organization;
@@ -235,21 +236,25 @@ test('a variante autoral não traz nenhuma seção vazia nem marcação de fonte
 
 // ----------------------------------------------------------------- robustez
 
-test('o ciclo é o vigente no exercício relatado, não o ciclo corrente', function () {
+test('o ciclo é o selecionado no topo: relatar 2022 exige selecionar o ciclo de 2022', function () {
+    // Decisão de 04/10/2026: o ciclo de todo relatório é PEI::doContexto().
+    // Antes, o ciclo era buscado pelo ano com first() sem ORDER BY — com dois
+    // ciclos sobrepostos, saía um qualquer (RelatoriosCicloEFiltrosTest).
     [, , $org] = cenarioGestao(2024, 2027);
 
-    // Um segundo ciclo, encerrado antes: relatar 2022 tem de trazer ESTE.
-    PEI::create([
+    $antigo = PEI::create([
         'dsc_pei' => 'PEI 2020-2023',
         'num_ano_inicio_pei' => 2020,
         'num_ano_fim_pei' => 2023,
     ]);
 
-    $antigo = (new EstruturaRelatorioGestao)->montar($org->cod_organizacao, 2022);
-    $atual = (new EstruturaRelatorioGestao)->montar($org->cod_organizacao, 2026);
+    $comAtual = (new EstruturaRelatorioGestao)->montar($org->cod_organizacao, 2026);
 
-    expect($antigo['capa']['ciclo'])->toBe('PEI 2020-2023')
-        ->and($atual['capa']['ciclo'])->toBe('PEI 2024-2027');
+    Session::put('pei_selecionado_id', $antigo->cod_pei);
+    $comAntigo = (new EstruturaRelatorioGestao)->montar($org->cod_organizacao, 2022);
+
+    expect($comAtual['capa']['ciclo'])->toBe('PEI 2024-2027')
+        ->and($comAntigo['capa']['ciclo'])->toBe('PEI 2020-2023');
 });
 
 test('o relatório é gerado mesmo com o PEI ainda pela metade', function () {

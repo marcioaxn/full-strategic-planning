@@ -105,7 +105,7 @@
                             </select>
                         </div>
                         <div class="filter-group" style="min-width: 150px;">
-                            <select wire:model.live="perspectivaSelecionada" class="form-select form-select-sm bg-light border-0 fw-bold text-secondary" style="cursor: pointer;">
+                            <select wire:model.live="perspectivaSelecionada" class="form-select form-select-sm bg-light border-0 fw-bold text-secondary" style="cursor: pointer;" title="A perspectiva filtra o Relatório Executivo e o de Objetivos Estratégicos.">
                                 <option value="">Todas Perspectivas</option>
                                 @foreach($perspectivas as $persp)
                                     <option value="{{ $persp->cod_perspectiva }}">{{ Str::limit($persp->dsc_perspectiva, 20) }}</option>
@@ -157,7 +157,14 @@
                         </div>
                     </div>
 
-                    @if($organizacaoId)
+                    @if($organizacaoId && $peiAtivo && ((int) $anoSelecionado < (int) $peiAtivo->num_ano_inicio_pei || (int) $anoSelecionado > (int) $peiAtivo->num_ano_fim_pei))
+                        {{-- O Relatório de Gestão sai do ciclo selecionado: exercício fora
+                             dele é recusado no servidor, e a tela avisa antes do clique. --}}
+                        <p class="text-warning-emphasis small mb-0">
+                            <i class="bi bi-exclamation-triangle me-1"></i>O exercício {{ $anoSelecionado }} não pertence ao ciclo selecionado
+                            ({{ $peiAtivo->dsc_pei }}, {{ $peiAtivo->num_ano_inicio_pei }}–{{ $peiAtivo->num_ano_fim_pei }}). Selecione no topo o ciclo desse exercício.
+                        </p>
+                    @elseif($organizacaoId)
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="border rounded-3 p-3 h-100">
@@ -231,7 +238,8 @@
                             'desc' => 'Visão holística da estratégia.',
                             'icon' => 'bi-briefcase',
                             'color' => 'success',
-                            'route_pdf' => route('relatorios.executivo', ['organizacaoId' => $organizacaoId, 'ano' => $anoSelecionado, 'periodo' => $periodoSelecionado]),
+                            // Perspectiva e "Incluir IA" da barra de filtros chegam ao PDF (antes só ao agendamento).
+                            'route_pdf' => route('relatorios.executivo', ['organizacaoId' => $organizacaoId, 'ano' => $anoSelecionado, 'periodo' => $periodoSelecionado, 'perspectiva' => $perspectivaSelecionada ?: null, 'include_ai' => $includeAi ? '1' : '0']),
                             'type' => 'executivo'
                         ],
                         [
@@ -249,7 +257,7 @@
                             'desc' => 'Status por perspectiva.',
                             'icon' => 'bi-bullseye',
                             'color' => 'info',
-                            'route_pdf' => route('relatorios.objetivos.pdf') . "?organizacao_id={$organizacaoId}&ano={$anoSelecionado}",
+                            'route_pdf' => route('relatorios.objetivos.pdf', ['organizacao_id' => $organizacaoId, 'ano' => $anoSelecionado, 'perspectiva' => $perspectivaSelecionada ?: null]),
                             'route_excel' => route('relatorios.objetivos.excel'),
                             'type' => 'objetivos'
                         ],
@@ -316,14 +324,14 @@
                                                 @if(App\Support\AgendadorDeRelatorios::ativo())
                                                 <li>
                                                     <button class="dropdown-item py-2" wire:click="$dispatch('abrirAgendamento', { tipo: '{{ $report['type'] }}', filtros: @js($this->getQueryParamsProperty()) })">
-                                                        <i class="bi bi-clock-history text-primary me-2"></i>Agendar Envio
+                                                        <i class="bi bi-clock-history text-primary me-2"></i>Agendar geração
                                                     </button>
                                                 </li>
                                                 @else
                                                 <li>
                                                     <span class="dropdown-item py-2 text-muted small" style="white-space: normal; max-width: 260px;">
                                                         <i class="bi bi-clock-history me-2"></i>
-                                                        Envio automático indisponível — a tarefa agendada do
+                                                        Geração automática indisponível — a tarefa agendada do
                                                         servidor não está em execução.
                                                     </span>
                                                 </li>

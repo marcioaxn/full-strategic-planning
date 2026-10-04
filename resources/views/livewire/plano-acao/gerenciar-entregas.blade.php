@@ -177,7 +177,7 @@
                                 @can('delete', $entrega)
                                     <button wire:click="delete('{{ $entrega->cod_entrega }}')" 
                                             class="btn btn-sm btn-outline-danger border-0"
-                                            onclick="return confirm('Excluir entrega?')">
+                                            wire:confirm="Excluir entrega?">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 @endcan

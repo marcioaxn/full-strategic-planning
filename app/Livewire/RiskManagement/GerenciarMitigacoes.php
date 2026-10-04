@@ -6,6 +6,7 @@ use App\Models\RiskManagement\Risco;
 use App\Models\RiskManagement\RiscoMitigacao;
 use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Arr;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -84,11 +85,32 @@ class GerenciarMitigacoes extends Component
     {
         $this->authorize('update', $this->risco);
 
+        // Campo numérico apagado chega como "" (o Livewire não converte string
+        // vazia em null): gravado assim, o PostgreSQL recusava e a tela mostrava
+        // "não encontrado". Vazio = sem custo informado.
+        if (($this->form['vlr_custo_estimado'] ?? null) === '') {
+            $this->form['vlr_custo_estimado'] = null;
+        }
+
         $this->validate([
-            'form.dsc_tipo' => 'required',
+            // Sem "in:" no tipo e na situação: o banco tem valor legado ("Reduzir")
+            // que a edição precisa continuar aceitando.
+            'form.dsc_tipo' => 'required|string|max:50',
             'form.txt_descricao' => 'required|string|max:1000',
             'form.cod_responsavel' => 'required|exists:users,id',
             'form.dte_prazo' => 'required|date',
+            'form.dsc_status' => 'required|string|max:50',
+            'form.vlr_custo_estimado' => 'nullable|numeric|min:0|max:9999999999999.99',
+        ], [
+            'form.dsc_tipo.*' => 'Escolha o tipo de plano.',
+            'form.txt_descricao.required' => 'Descreva a ação de mitigação.',
+            'form.txt_descricao.max' => 'A descrição pode ter até 1.000 caracteres.',
+            'form.cod_responsavel.required' => 'Escolha o responsável.',
+            'form.cod_responsavel.exists' => 'Escolha o responsável.',
+            'form.dte_prazo.required' => 'Informe o prazo.',
+            'form.dte_prazo.date' => 'Informe uma data válida.',
+            'form.dsc_status.*' => 'Escolha a situação do plano.',
+            'form.vlr_custo_estimado.*' => 'Informe um custo válido (número maior ou igual a zero) ou deixe em branco.',
         ]);
 
         // O responsável vem do navegador: só pessoa da unidade do risco (a
@@ -103,7 +125,8 @@ class GerenciarMitigacoes extends Component
             return;
         }
 
-        $data = $this->form;
+        // Só os campos do formulário (o array público aceita chave nova vinda do navegador).
+        $data = Arr::only($this->form, ['dsc_tipo', 'txt_descricao', 'cod_responsavel', 'dte_prazo', 'dsc_status', 'vlr_custo_estimado']);
         $data['cod_risco'] = $this->risco->cod_risco;
 
         // Edição: o registro tem de ser deste risco — senão o updateOrCreate abaixo

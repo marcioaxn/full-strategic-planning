@@ -92,6 +92,57 @@ Legenda: ✅ funciona como prometido · ❌ defeito · 🔧 defeito corrigido ·
 | 72 | Seções educativas de todas as telas (varredura das 38 views) | Cada uma só sobre o tema da tela | 🔧 `/pei`: tirado o card de Valores; `/temas-norteadores`: tirada a comparação com Valores/Objetivos e os "Níveis de Planejamento"; `/objetivos`: tirada a aula de BSC/4 perspectivas (é o tema de `/pei/perspectivas`), entrou "O que é um Objetivo Estratégico". As três conferidas abertas na tela; HTML conferido sem o texto removido |
 | 73 | `/entregas` (escolha da iniciativa) | Ter seção educativa | 🔧 Faltava; criada "O que são Entregas?" (conferida no HTML da tela, 200) |
 
+## 04/10/2026 — continuação (Super Administrador, localhost, unidade TST, ciclo [TESTE])
+
+Em paralelo: quatro revisões de código por módulo (Indicadores; Iniciativas/Entregas; Riscos/RAE/outros; Relatórios/Usuários), relatórios em scratchpad da sessão.
+
+| # | Tela | Ação | Esperado | Resultado |
+|---|---|---|---|---|
+| 74 | `/pei/perspectivas` | Nova → (abre limpo, nível sugerido 1) → Salvar → Continuar | Cria | ✅ |
+| 75 | `/pei/perspectivas` | Nova de novo | Sugere o próximo nível | ✅ sugeriu 2 |
+| 76 | `/pei/perspectivas` | Editar → alterar → Salvar | Abre preenchido e grava | ✅ |
+| 77 | `/pei/perspectivas` | Pedir ajuda à IA → Aplicar uma sugestão | Cria a perspectiva sugerida | 🔧 4 sugestões; a aplicada ("Aprendizado e Crescimento", ordem 1) foi gravada **no nível 1, já ocupado** — duas perspectivas no mesmo degrau do mapa. O cadastro manual também aceitava. Agora o nível é único no ciclo (mensagem "Já existe uma perspectiva neste nível…") e a sugestão da IA vai para o próximo nível livre. Teste `PerspectivaNivelUnicoTest` (falhava antes). Conferido na tela: a mensagem aparece; com nível 2, grava |
+| 79 | `/objetivos` | "Adicionar o primeiro" da perspectiva → título, descrição, ODS 3 → Salvar | Cria na perspectiva do botão, com o ODS | ✅ perspectiva já vinha escolhida; banco: ODS 3 |
+| 80 | `/objetivos` | Editar → contribuição ao ODS + título → Salvar | Grava | ✅ banco: "3:Saúde digital", título (rev) |
+| 81 | `/objetivos` | Novo objetivo **sem ODS**, desdobrado de outro (Hoshin Kanri) | Aceita sem ODS; grava o pai | ✅ ODS opcional confirmado; pai gravado |
+| 82 | Indicadores (revisão de código) | 5 defeitos graves + ~15 médios/baixos | — | ❌ Relatório em scratchpad (`revisao-indicadores.md`); correção entregue a um agente dedicado, com teste por defeito. Conferência na tela depois da correção |
+| 83 | `/planos` | Nova Iniciativa → objetivo, descrição, unidade TST, tipo Projeto, início 2025 | Recusa início antes do ciclo | ✅ "A data de início deve ser igual ou posterior ao início do PEI (2026)" |
+| 84 | `/planos` | Mesma, 01/01/2026 a 31/12/2028 → Salvar | Cria | ✅ |
+| 85 | `/planos` | Filtro de ano 2026 / **2027** / 2028 | Iniciativa vigente nos três anos aparece nos três | ❌ Aparece em 2026 e 2028; **some em 2027** (filtro só olha o ano de início e o de fim) |
+| 86 | `/planos/{id}/entregas` | Criação rápida de 3 entregas | Cria na iniciativa | ✅ |
+| 87 | quadro | Mover A→Concluído, B→Cancelado, C→Em Andamento (método do arrasto) | Muda e registra no histórico | ❌ Status muda, mas **o histórico não registra** (banco: 1 linha de histórico em cada, só a criação) |
+| 88 | quadro × detalhe | Progresso da mesma iniciativa | Mesmo número nas duas telas | ❌ Quadro **33,3%**, detalhe **75,0%** |
+| 89 | quadro | Filtro Responsável com uma pessoa | Filtra | ❌ **404** (id da pessoa convertido em número); filtro fica na URL e recarregar repete o erro |
+| 90 | quadro, visão Lista | Seletor Responsável | Grava | ❌ chama `atualizarResponsavel`, que não existe (lista de pessoas também vazia nesta unidade) |
+| 91 | Riscos/RAE/outros e Relatórios/Usuários (revisão de código) | — | — | ❌ 23 e 20 achados; relatórios em scratchpad (`revisao-riscos-rae-outros.md`, `revisao-relatorios-usuarios.md`) |
+| 92 | migration | `2026_10_04_000001_amplia_precisao_valores_indicador` no dev | 4 casas nas 4 colunas | ✅ DONE; conferido em information_schema: numeric(19,4) |
+| 93 | `/indicadores` | Novo indicador (Objetivo, Monetário, TST) → Salvar | Cria; sem lançamento aparece "Sem medição" cinza | ✅ |
+| 94 | `/indicadores` | Metas → digitar **20000000000,00** pelo teclado → Adicionar | Máscara R$ e grava R$ 20 bi | 🔧✅ Antes era campo numérico que recusava; agora mostra "20.000.000.000,00", lista "R$ 20.000.000.000,00", banco 20000000000.0000. Lixeira da meta pede confirmação |
+| 95 | Lançar Evolução | Previsto 1.000.000,00, **Realizado vazio**, switch desligado → Salvar | Grava NULL e "Não"; sem farol | 🔧✅ banco: realizado NULL, "Não"; histórico "Sem medição" (antes: 0 e farol verde na polaridade Negativa; o switch impedia salvar) |
+| 96 | Lançar Evolução | Recarregar o mês | Switch volta desligado, Realizado vazio | 🔧✅ |
+| 97 | `/indicadores` | Indicador Índice (0-1), não acumulado → meta **0,875** | Grava 4 casas | 🔧✅ "0,8750" na lista |
+| 98 | Lançar Evolução | Realizado 0,875 com Previsto vazio | Atingimento ≈ 100% (antes ≈ 1.133% pela meta ÷ 12) | 🔧✅ banco 0.8750; histórico "0,8750 — 100,0%" |
+| 99 | Lançar Evolução | Alterar Realizado para 0,9 → Salvar | Histórico atualiza sem recarregar | ✅ "0,9000 — 102,9%" |
+| 100 | Lançar Evolução | Salvar com os dois valores vazios | — | ⚠️ grava um mês "Sem medição" sem nenhum valor (aceitável se houver comentário/evidência; anotado) |
+| 101 | `/planos` (após correção) | Filtro 2027 / 2028 / 2029 na iniciativa 2026–2028 | Aparece enquanto vigente | 🔧✅ 2027 sim, 2028 sim, 2029 não. ⚠️ `?filtroAno=2027` na URL é trocado pelo ano de referência ao abrir |
+| 102 | quadro × detalhe (após correção) | Progresso | Mesmo número | 🔧✅ quadro 75,0% = detalhe 75,0%; com C concluída, 100% (cancelada fora da conta) |
+| 103 | quadro (após correção) | Mover entrega para Concluído (como o arrasto chama) | Grava e entra no histórico | 🔧✅ banco: 2 linhas de histórico (criação + mudança) |
+| 104 | quadro (após correção) | Filtro Responsável | Filtra sem erro | 🔧✅ 200 (0 cards: ninguém atribuído nesta iniciativa) |
+| 105 | Graus de satisfação (código) | Régua do ano × geral; valor no buraco entre faixas | Régua do ano substitui a geral; buraco recebe a faixa de baixo | 🔧 testes novos em `GrauSatisfacaoTest` (falhavam antes); 19 passam |
+| 106 | `/riscos` | Novo risco na TST (unidade sem usuários) → Salvar | Exige responsável | ✅ "O campo responsável pelo monitoramento é obrigatório." — lista vazia porque a TST não tem usuário vinculado. Próximo: criar usuário [TESTE] na TST pela tela de Usuários |
+| 107 | **incidente** | Corretor de Relatórios/Usuários incluiu `tests/Seeders` numa lista de testes; a seed rodou no banco de **dev** às 10:47 | — | ❌ Organização raiz renomeada para "ORG / Organização Padrão"; criada conta Super Admin `admin@pei.gov.br` (senha desconhecida) com 1 vínculo; os 5 perfis só tiveram `updated_at` alterado (texto igual). Restauração **autorizada pelo gestor e feita** (1 UPDATE + 1 DELETE em transação): conferido no banco — MIDR com o nome original, conta e vínculo removidos. Trava criada: `SeederTestCase` só roda com `SEED_TEST_ALLOW=true` (conferido: 25 pulados, banco intocado) |
+| 108 | `/usuarios` | Novo usuário "[TESTE] Gestora de Riscos" (link por e-mail) + vínculo Admin da Unidade na TST | Cria com vínculo | ✅ |
+| 109 | `/riscos` | Novo risco P3×I3 com a Gestora como responsável | Cria; prévia "Médio" | ✅ |
+| 110 | `/riscos/{id}/mitigacao` | Nova mitigação com **custo vazio** → Salvar | Grava custo nulo (antes: 404) | 🔧✅ banco: custo NULL |
+| 111 | mitigação | Excluir → **Cancelar** / Excluir → Confirmar | Cancelar mantém; confirmar exclui | 🔧✅ (antes o Cancelar excluía mesmo assim) |
+| 112 | `/riscos/matriz` | Clicar no risco | Abre a lista já filtrada | 🔧✅ busca preenchida, 1 linha |
+| 113 | `/usuarios` | Excluir a Gestora (tem histórico) | Recusa, mostra o histórico, oferece Desativar | 🔧✅ "não pode ser excluído… Riscos que monitora: 1" + Desativar. Corrigido "1 riscos" → "Riscos que monitora: 1" |
+| 114 | `/admin/perfis` | Assumir a Gestora (troca de senha pendente) → editar risco → Encerrar Impersonação | Não fica preso em /trocar-senha; volta ao admin; auditoria com o autor real | 🔧✅ entrou no dashboard; voltou como Usuário Administrador; `pei.audits`: autor user_adm + tag `impersonando:<Gestora>` |
+| 115 | `/relatorios` | Os 15 links da página (Gestão PDF/Word ×2, Integrado, Executivo, Identidade, Objetivos PDF/Excel, Indicadores PDF/Excel, Iniciativas PDF/Excel, Riscos PDF/Excel) | Geram sem erro | ✅ todos 200 (PDF 0,9–1,3 MB; Excel/Word 6–14 KB). Conteúdo de cada arquivo conferido só pelos testes automáticos dos corretores, não aberto um a um |
+| 116 | suíte completa | 2ª rodada, sozinha (sem Seeders) | Tudo passa | ⚠️ 523 passaram, 4 pulados, **1 falhou**: minha mudança na régua usava as faixas de outro ano quando o ano não tinha régua própria nem geral. Corrigido (ano sem régua = sem farol); os 28 testes de régua e atingimento passam. 3ª rodada após a revisão final |
+| 117 | revisão hostil do conjunto | Conflitos entre os 4 corretores | — | 🔧 7 achados: (1) régua de outro ano — já corrigido na linha 116; (2) legenda/PDF de indicadores com régua diferente da do farol; (3) gráfico do Dashboard ignorava "acumulado" (100% × 8,3%); (4) detalhe da faixa punha indicador "sem medição" na pior faixa; (5) indicador automático sem iniciativa sem forma de receber valor; (7) selo de nível de risco com cor diferente da matriz e PDF/Excel de riscos sem as subordinadas; S4 nome de evidência com barra → 500. Todos corrigidos; `RevisaoFinalReguaETelasTest` (5 testes) **validado por mutação**: as 5 correções desfeitas → 5 falhas; restauradas → 5 passam. (6) `.htaccess` fica fora do commit |
+| 78 | suíte completa | 1ª rodada | — | ⚠️ 11 falhas "tabela não existe": colisão — rodei outro teste no mesmo banco de teste durante a suíte. Refazer sozinha |
+
 ## Pedidos do gestor durante o teste (obrigatórios)
 
 - Seção educativa de cada tela restrita ao tema da tela; conferir as telas onde ela falta.
@@ -99,7 +150,7 @@ Legenda: ✅ funciona como prometido · ❌ defeito · 🔧 defeito corrigido ·
 
 ## Pendências criadas por este teste
 
-- [TESTE] Órgão Central existe no banco de dev e **deve ser excluída** ao final.
+- [TESTE] Órgão Central e o ciclo [TESTE] ficam no banco: o gestor informou em 04/10/2026 que este ambiente é de teste.
 - ~~Migration `2026_10_03_230000_entrega_exige_iniciativa` precisa rodar no dev~~ — rodada (linha 16).
 - Seções educativas mantidas de propósito: `/pei/ciclos` (o roteiro de montagem do ciclo é o tema do ciclo). Sem seção: as 11 telas de detalhe (`/…/{id}/detalhes`, a explicação está na tela da lista), `/relatorios/historico` (tem aviso "O que é esta tela") e `/ajuda/papeis` (a tela inteira é ajuda).
 - ~~SWOT ainda sem teste:~~ testado (linhas 69–71). Cenários (novo/editar/excluir) e TOWS (novo/editar/salvar/excluir).

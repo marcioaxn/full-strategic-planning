@@ -46,7 +46,7 @@ class MetaPorAno extends Model
      */
     protected $casts = [
         'num_ano' => 'integer',
-        'meta' => 'decimal:2',
+        'meta' => 'decimal:4',
     ];
 
     /**

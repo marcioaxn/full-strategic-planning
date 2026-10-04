@@ -146,5 +146,25 @@ test('cada unidade grava com a precisão que lhe cabe', function () {
 
     $evolucao = EvolucaoIndicador::where('cod_indicador', $indicador->cod_indicador)->first();
 
-    expect((float) $evolucao->vlr_realizado)->toBe(0.88); // numeric(15,2) no banco
+    // A4 (04/10/2026): a coluna era numeric(15,2) e este teste esperava 0.88 —
+    // conferia a PERDA. Agora numeric(19,4) guarda o que a máscara aceita.
+    expect((float) $evolucao->vlr_realizado)->toBe(0.875);
+});
+
+test('índice com valor pequeno não vira zero', function () {
+    [$user, $indicador] = indicadorDeUnidade('Índice (0-1)');
+
+    $componente = Livewire::actingAs($user)
+        ->test(LancarEvolucao::class, ['indicadorId' => $indicador->cod_indicador])
+        ->set('ano', (int) date('Y'))
+        ->set('mes', 1)
+        ->set('vlr_realizado', '0,0049')
+        ->call('salvar')
+        ->assertHasNoErrors();
+
+    $evolucao = EvolucaoIndicador::where('cod_indicador', $indicador->cod_indicador)->first();
+
+    expect((float) $evolucao->vlr_realizado)->toBe(0.0049)
+        // Ao reabrir, o campo mostra o que foi gravado — sem zero fingindo precisão.
+        ->and($componente->set('mes', 2)->set('mes', 1)->get('vlr_realizado'))->toBe('0,0049');
 });

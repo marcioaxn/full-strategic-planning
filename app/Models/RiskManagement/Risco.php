@@ -107,6 +107,26 @@ class Risco extends Model implements Auditable
         return $query->where('num_nivel_risco', '>=', 16);
     }
 
+    /**
+     * O recorte de unidade da gestão de riscos: a unidade selecionada e as
+     * subordinadas, dentro do que o usuário alcança; sem unidade, o escopo
+     * inteiro do usuário. A lista e a matriz usam este mesmo recorte — a
+     * matriz filtrava só a unidade exata e mostrava menos riscos que a lista.
+     */
+    public function scopeNoRecorteDaUnidade($query, ?string $codOrganizacao, User $usuario)
+    {
+        if (! $codOrganizacao) {
+            return $usuario->aplicarEscopoOrganizacional($query);
+        }
+
+        $orgIds = Organization::descendentesEProprio($codOrganizacao);
+        if (! $usuario->isSuperAdmin()) {
+            $orgIds = array_values(array_intersect($orgIds, $usuario->organizacaoIdsPermitidas()->all()));
+        }
+
+        return $query->whereIn('risk_management.tab_risco.cod_organizacao', $orgIds);
+    }
+
     public function scopePorCategoria($query, $categoria)
     {
         return $query->where('dsc_categoria', $categoria);
@@ -132,55 +152,63 @@ class Risco extends Model implements Auditable
         return $this->num_nivel_risco;
     }
 
+    /**
+     * A régua do nível de risco (P × I), num lugar só: lista, pré-visualização
+     * do formulário, matriz, Excel e telas leem daqui. O Excel usava ≥ 15 para
+     * Crítico e a pré-visualização cortava em 8 — o mesmo risco tinha duas cores.
+     */
+    public const NIVEL_CRITICO = 16;
+
+    public const NIVEL_ALTO = 10;
+
+    public const NIVEL_MEDIO = 5;
+
+    public static function rotuloDoNivel(?int $nivel): string
+    {
+        $nivel = (int) $nivel;
+
+        return match (true) {
+            $nivel >= self::NIVEL_CRITICO => 'Crítico',
+            $nivel >= self::NIVEL_ALTO => 'Alto',
+            $nivel >= self::NIVEL_MEDIO => 'Médio',
+            default => 'Baixo',
+        };
+    }
+
+    public static function corDoNivel(?int $nivel): string
+    {
+        $nivel = (int) $nivel;
+
+        return match (true) {
+            $nivel >= self::NIVEL_CRITICO => '#dc2626', // Vermelho
+            $nivel >= self::NIVEL_ALTO => '#f97316',    // Laranja
+            $nivel >= self::NIVEL_MEDIO => '#eab308',   // Amarelo
+            default => '#65a30d',                       // Verde
+        };
+    }
+
     public function getNivelRiscoLabel()
     {
-        $nivel = $this->num_nivel_risco;
-
-        if ($nivel >= 16) {
-            return 'Crítico';
-        }
-        if ($nivel >= 10) {
-            return 'Alto';
-        }
-        if ($nivel >= 5) {
-            return 'Médio';
-        }
-
-        return 'Baixo';
+        return self::rotuloDoNivel($this->num_nivel_risco);
     }
 
     public function getNivelRiscoCor()
     {
-        $nivel = $this->num_nivel_risco;
-
-        if ($nivel >= 16) {
-            return '#dc2626';
-        } // Vermelho
-        if ($nivel >= 10) {
-            return '#f97316';
-        } // Laranja
-        if ($nivel >= 5) {
-            return '#eab308';
-        }  // Amarelo
-
-        return '#65a30d'; // Verde
+        return self::corDoNivel($this->num_nivel_risco);
     }
 
-    public function getNivelRiscoBadgeClass()
+    /**
+     * Estilo do selo do nível: a MESMA cor da matriz e da pré-visualização
+     * (corDoNivel). As classes Bootstrap antigas pintavam Médio de azul e Alto
+     * de amarelo — o mesmo risco tinha duas cores conforme a tela.
+     * No amarelo (Médio) o texto é escuro, por contraste.
+     */
+    public function estiloDoSeloDeNivel(): string
     {
-        $nivel = $this->num_nivel_risco;
+        $nivel = (int) $this->num_nivel_risco;
+        $texto = $nivel >= self::NIVEL_MEDIO && $nivel < self::NIVEL_ALTO ? '#1f2937' : '#ffffff';
 
-        if ($nivel >= 16) {
-            return 'bg-danger';
-        }
-        if ($nivel >= 10) {
-            return 'bg-warning';
-        }
-        if ($nivel >= 5) {
-            return 'bg-info';
-        }
-
-        return 'bg-success';
+        return 'background-color: '.self::corDoNivel($nivel).'; color: '.$texto.';';
     }
 
     public function isCritico()
@@ -248,7 +276,9 @@ class Risco extends Model implements Auditable
 
             // Auto-incrementar código do risco
             if (! $risco->num_codigo_risco) {
-                $ultimoCodigo = static::where('cod_pei', $risco->cod_pei)
+                // withTrashed: sem ele, excluir o último risco devolvia o número
+                // ao próximo cadastro, e dois riscos diferentes viravam "R-07".
+                $ultimoCodigo = static::withTrashed()->where('cod_pei', $risco->cod_pei)
                     ->max('num_codigo_risco') ?? 0;
                 $risco->num_codigo_risco = $ultimoCodigo + 1;
             }

@@ -179,6 +179,8 @@ class ListarGrausSatisfacao extends Component
                     }
                 },
             ],
+            // Vazio = "Todo o Ciclo" (normalizado para null em save()).
+            'num_ano' => 'nullable|integer|min:1900|max:2999',
             'dsc_grau_satisfacao' => 'required|string|max:100',
             // Só #rrggbb: a cor vai para atributo style= em várias telas e relatórios.
             'cor' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
@@ -235,6 +237,11 @@ class ListarGrausSatisfacao extends Component
      */
     private function faixaSobreposta(float $minimo, float $maximo): ?GrauSatisfacao
     {
+        // Ano inválido já tem a própria mensagem; consultar com ele quebraria a transação.
+        if ($this->num_ano !== null && $this->num_ano !== '' && ! ctype_digit((string) $this->num_ano)) {
+            return null;
+        }
+
         return GrauSatisfacao::query()
             ->where('cod_pei', $this->cod_pei ?? session('pei_selecionado_id'))
             ->when(
@@ -262,6 +269,7 @@ class ListarGrausSatisfacao extends Component
         'vlr_maximo.required' => 'O valor máximo é obrigatório.',
         'vlr_maximo.numeric' => 'O valor máximo deve ser numérico.',
         'vlr_maximo.gte' => 'O valor máximo deve ser maior ou igual ao mínimo.',
+        'num_ano.*' => 'Escolha um ano do ciclo ou "Todo o Ciclo".',
     ];
 
     public function updatingSearch()
@@ -304,6 +312,12 @@ class ListarGrausSatisfacao extends Component
         // quem tem apenas leitura (Gestor Responsável e Substituto).
         $this->autorizarInstitucional($this->isEditing ? 'editar' : 'criar');
 
+        // "Todo o Ciclo" chega do select como "": gravado assim numa coluna
+        // integer, o PostgreSQL recusava e a tela mostrava "erro técnico".
+        if ($this->num_ano === '') {
+            $this->num_ano = null;
+        }
+
         $this->validate();
 
         try {
@@ -313,7 +327,7 @@ class ListarGrausSatisfacao extends Component
                 'vlr_minimo' => UnidadeMedida::paraFloat($this->vlr_minimo),
                 'vlr_maximo' => UnidadeMedida::paraFloat($this->vlr_maximo),
                 'cod_pei' => $this->cod_pei ?? session('pei_selecionado_id'),
-                'num_ano' => $this->num_ano,
+                'num_ano' => $this->num_ano === null ? null : (int) $this->num_ano,
             ];
 
             if ($this->isEditing && $this->cod_grau_satisfacao) {
@@ -409,9 +423,11 @@ class ListarGrausSatisfacao extends Component
                     $q->where('cod_pei', $peiId)->orWhereNull('cod_pei');
                 }
             })
+            // Agrupado: sem os parênteses, o OR escapava do filtro de ciclo e a
+            // busca trazia (editáveis) as faixas de todos os ciclos.
             ->when($this->search, function ($query) {
-                $query->where('dsc_grau_satisfacao', 'ilike', '%'.$this->search.'%')
-                    ->orWhere('cor', 'ilike', '%'.$this->search.'%');
+                $query->where(fn ($q) => $q->where('dsc_grau_satisfacao', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('cor', 'ilike', '%'.$this->search.'%'));
             })
             ->orderBy('num_ano', 'asc') // Agrupa por ano (maturidade)
             ->orderBy('vlr_minimo', 'asc')

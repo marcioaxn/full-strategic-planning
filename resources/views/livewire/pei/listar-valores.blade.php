@@ -52,7 +52,7 @@
                                     <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
                                         <li><button class="dropdown-item" wire:click="edit('{{ $valor->cod_valor }}')"><i class="bi bi-pencil me-2"></i>Editar</button></li>
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><button class="dropdown-item text-danger" wire:click="delete('{{ $valor->cod_valor }}')" onclick="return confirm('Tem certeza?')"><i class="bi bi-trash me-2"></i>Excluir</button></li>
+                                        <li><button class="dropdown-item text-danger" wire:click="delete('{{ $valor->cod_valor }}')" wire:confirm="Tem certeza?"><i class="bi bi-trash me-2"></i>Excluir</button></li>
                                     </ul>
                                 </div>
                             </div>

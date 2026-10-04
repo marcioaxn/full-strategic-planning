@@ -147,8 +147,8 @@
                                         <td class="text-end pe-4">
                                             @can('designarGestores', $plano)
                                             <button wire:click="remover('{{ $resp->id }}')"
-                                                    class="btn btn-sm btn-outline-danger border-0"
-                                                    onclick="return confirm('Remover atribuição?')">
+                                                    wire:confirm="Remover {{ $resp->name }} da gestão desta iniciativa?"
+                                                    class="btn btn-sm btn-outline-danger border-0">
                                                 <i class="bi bi-person-x fs-5"></i>
                                             </button>
                                             @endcan
@@ -222,7 +222,7 @@
                                     </div>
                                     <div class="d-flex gap-1 flex-shrink-0">
                                         <button wire:click="editarRaci('{{ $raci->cod_raci }}')" class="btn btn-xs btn-link p-0 text-muted"><i class="bi bi-pencil" style="font-size:.65rem;"></i></button>
-                                        <button wire:click="excluirRaci('{{ $raci->cod_raci }}')" class="btn btn-xs btn-link p-0 text-danger"><i class="bi bi-x" style="font-size:.75rem;"></i></button>
+                                        <button wire:click="excluirRaci('{{ $raci->cod_raci }}')" wire:confirm="Excluir este papel RACI?" class="btn btn-xs btn-link p-0 text-danger"><i class="bi bi-x" style="font-size:.75rem;"></i></button>
                                     </div>
                                 </div>
                                 @endforeach
@@ -331,7 +331,7 @@
                                 <td>{{ $com->nom_responsavel ?? '—' }}</td>
                                 <td class="text-end pe-4">
                                     <button wire:click="editarComunicacao('{{ $com->cod_comunicacao }}')" class="btn btn-xs btn-outline-primary me-1 py-1 px-2"><i class="bi bi-pencil"></i></button>
-                                    <button wire:click="excluirComunicacao('{{ $com->cod_comunicacao }}')" class="btn btn-xs btn-outline-danger py-1 px-2"><i class="bi bi-trash"></i></button>
+                                    <button wire:click="excluirComunicacao('{{ $com->cod_comunicacao }}')" wire:confirm="Excluir este item do plano de comunicação?" class="btn btn-xs btn-outline-danger py-1 px-2"><i class="bi bi-trash"></i></button>
                                 </td>
                             </tr>
                             @endforeach
@@ -361,7 +361,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-uppercase text-muted">Responsável pela Comunicação</label>
-                                <input type="text" wire:model="formComun.nom_responsavel" class="form-control" placeholder="Nome do responsável...">
+                                <input type="text" wire:model="formComun.nom_responsavel" maxlength="100" class="form-control @error('formComun.nom_responsavel') is-invalid @enderror" placeholder="Nome do responsável...">
+                                @error('formComun.nom_responsavel') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-12">
                                 <label class="form-label fw-bold small text-uppercase text-muted">Mensagem-Chave <span class="text-danger">*</span></label>

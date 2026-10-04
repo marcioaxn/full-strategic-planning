@@ -221,7 +221,10 @@ class GerenciarRae extends Component
             'txt_problemas_identificados' => $this->form['txt_problemas_identificados'] ?: null,
             'txt_encaminhamentos' => $this->form['txt_encaminhamentos'] ?: null,
             'json_participantes' => $participantes ?: null,
-            'num_progresso_geral' => $this->form['num_progresso_geral'] ?: null,
+            // "0" é falso em PHP: com ?: null, quem informava 0% ficava sem barra.
+            'num_progresso_geral' => in_array($this->form['num_progresso_geral'], ['', null], true)
+                ? null
+                : (float) $this->form['num_progresso_geral'],
         ];
 
         $this->raeEditId
@@ -408,6 +411,8 @@ class GerenciarRae extends Component
 
     public function confirmarExclusaoEnc(string $id): void
     {
+        // Método público: autoriza já na abertura do modal, como confirmarExclusao().
+        $this->garantirAcessoPorRae(RaeEncaminhamento::findOrFail($id)->cod_rae, 'excluir');
         $this->encDeleteId = $id;
         $this->showEncDelete = true;
     }
@@ -469,7 +474,12 @@ class GerenciarRae extends Component
             'json_cinco_porques' => array_slice($porques, 0, 5),
             'dsc_causa_raiz' => $causa->dsc_causa_raiz ?? '',
             'dsc_categoria_ishikawa' => $causa->dsc_categoria_ishikawa ?? '',
-            'cod_encaminhamento_vinculado' => $causa->cod_encaminhamento_vinculado ?? '',
+            // Encaminhamento excluído (lógico) é vínculo ausente: o select já
+            // mostrava "Nenhum", mas o estado guardava o id e o salvar dava 403.
+            'cod_encaminhamento_vinculado' => $causa->cod_encaminhamento_vinculado
+                && RaeEncaminhamento::whereKey($causa->cod_encaminhamento_vinculado)->exists()
+                ? $causa->cod_encaminhamento_vinculado
+                : '',
         ];
         $this->showCausaModal = true;
     }
@@ -485,9 +495,11 @@ class GerenciarRae extends Component
         ], ['causaForm.dsc_problema.required' => 'Descreva o problema observado.']);
 
         // O encaminhamento vinculado vem do formulário: só os do mesmo RAE.
+        // Excluído (lógico) do mesmo RAE = vínculo ausente, não tentativa indevida.
         $encVinculado = $this->causaForm['cod_encaminhamento_vinculado'] ?: null;
         if ($encVinculado && ! RaeEncaminhamento::where('cod_rae', $this->causaRaeId)->whereKey($encVinculado)->exists()) {
-            abort(403);
+            abort_unless(RaeEncaminhamento::onlyTrashed()->where('cod_rae', $this->causaRaeId)->whereKey($encVinculado)->exists(), 403);
+            $encVinculado = null;
         }
 
         $porques = array_values(array_filter($this->causaForm['json_cinco_porques'], fn ($p) => trim($p) !== ''));
@@ -498,7 +510,7 @@ class GerenciarRae extends Component
             'json_cinco_porques' => $porques,
             'dsc_causa_raiz' => $this->causaForm['dsc_causa_raiz'] ?: null,
             'dsc_categoria_ishikawa' => $this->causaForm['dsc_categoria_ishikawa'] ?: null,
-            'cod_encaminhamento_vinculado' => $this->causaForm['cod_encaminhamento_vinculado'] ?: null,
+            'cod_encaminhamento_vinculado' => $encVinculado,
         ];
 
         // Na edição, a análise tem de ser do RAE já autorizado acima.

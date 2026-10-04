@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Model de Anexo em Entrega.
@@ -111,6 +112,21 @@ class EntregaAnexo extends Model
     // ========================================
     // MÉTODOS AUXILIARES
     // ========================================
+
+    /**
+     * Apaga o arquivo físico do anexo, de onde estiver: o disco privado atual
+     * ou o público (anexo antigo, de antes da mudança para o disco privado).
+     */
+    public function apagarArquivo(): void
+    {
+        if (! $this->dsc_caminho) {
+            return;
+        }
+
+        foreach ([self::DISCO, 'public'] as $disco) {
+            Storage::disk($disco)->delete($this->dsc_caminho);
+        }
+    }
 
     /**
      * Verifica se é uma imagem

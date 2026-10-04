@@ -12,7 +12,7 @@
                 <i class="bi bi-crosshair me-2 text-primary"></i>Detalhes do Objetivo
             </h2>
             <p class="text-muted mb-0">
-                {{ $objetivo->perspectiva->dsc_perspectiva }} • {{ $objetivo->perspectiva->pei->dsc_pei }}
+                {{ $objetivo->perspectiva?->dsc_perspectiva }} • {{ $objetivo->perspectiva?->pei?->dsc_pei }}
             </p>
         </div>
         <div class="d-flex gap-2">
@@ -331,7 +331,7 @@
                     <div class="mb-3">
                         <small class="text-muted d-block mb-1">Perspectiva</small>
                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">
-                            {{ $objetivo->perspectiva->dsc_perspectiva }}
+                            {{ $objetivo->perspectiva?->dsc_perspectiva }}
                         </span>
                     </div>
                     <div class="mb-3">

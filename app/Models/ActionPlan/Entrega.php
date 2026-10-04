@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -73,6 +74,14 @@ class Entrega extends Model
         'json_propriedades' => 'array',
         'dte_prazo' => 'date',
     ];
+
+    /**
+     * Anexos lidos no forceDeleting, para apagar os arquivos no forceDeleted.
+     * Propriedade declarada: não é atributo do Model (não vai ao banco).
+     *
+     * @var Collection<int, EntregaAnexo>|null
+     */
+    protected $anexosParaApagar = null;
 
     /**
      * Opções de status disponíveis
@@ -222,15 +231,23 @@ class Entrega extends Model
     }
 
     /**
-     * Verifica se entrega está atrasada
+     * Status em que a entrega não conta como atrasada: já terminou (Concluído),
+     * foi abandonada (Cancelado) ou está parada por decisão (Suspenso).
+     */
+    public const STATUS_SEM_ATRASO = ['Concluído', 'Cancelado', 'Suspenso'];
+
+    /**
+     * Atrasada: prazo ANTES de hoje e status em aberto. O prazo de hoje ainda
+     * está no prazo. Critério único do quadro, do calendário, do Gantt e de
+     * Minhas Entregas (antes: prazo de hoje já era atraso e Cancelada contava).
      */
     public function isAtrasada(): bool
     {
-        if (! $this->dte_prazo || $this->isConcluida()) {
+        if (! $this->dte_prazo || in_array($this->bln_status, self::STATUS_SEM_ATRASO, true)) {
             return false;
         }
 
-        return now()->greaterThan($this->dte_prazo);
+        return $this->dte_prazo->copy()->startOfDay()->lt(today());
     }
 
     /**
@@ -400,21 +417,22 @@ class Entrega extends Model
     }
 
     /**
-     * Scope: Por responsável
+     * Scope: Por responsável — a relação de responsáveis (a mesma do modal de
+     * edição), não a coluna legada cod_responsavel. users.id é uuid.
      */
-    public function scopePorResponsavel($query, int $userId)
+    public function scopePorResponsavel($query, string $userId)
     {
-        return $query->where('cod_responsavel', $userId);
+        return $query->whereHas('responsaveis', fn ($q) => $q->where('users.id', $userId));
     }
 
     /**
-     * Scope: Atrasadas
+     * Scope: Atrasadas (mesmo critério de isAtrasada()).
      */
     public function scopeAtrasadas($query)
     {
         return $query->whereNotNull('dte_prazo')
-            ->where('dte_prazo', '<', now())
-            ->where('bln_status', '!=', 'Concluído');
+            ->whereDate('dte_prazo', '<', today())
+            ->whereNotIn('bln_status', self::STATUS_SEM_ATRASO);
     }
 
     /**
@@ -423,15 +441,6 @@ class Entrega extends Model
     public function scopeTarefas($query)
     {
         return $query->where('dsc_tipo', 'task');
-    }
-
-    /**
-     * Scope: Deletadas recentemente (últimas 24 horas)
-     */
-    public function scopeDeletadasRecentemente($query)
-    {
-        return $query->onlyTrashed()
-            ->where('deleted_at', '>=', now()->subHours(24));
     }
 
     // ========================================
@@ -464,9 +473,27 @@ class Entrega extends Model
             }
         });
 
-        // Ao deletar, registrar no histórico
+        // Ao deletar, registrar no histórico (só a ida para a lixeira: na
+        // exclusão definitiva o histórico vai junto, por cascata).
         static::deleting(function ($entrega) {
+            if ($entrega->isForceDeleting()) {
+                return;
+            }
+
             $entrega->registrarHistorico('deleted', null, null, null, 'Entrega movida para lixeira');
+        });
+
+        // Exclusão definitiva: os registros dos anexos saem por cascata no banco,
+        // mas os arquivos ficavam no disco. Guarda os anexos antes e apaga os
+        // arquivos só depois que o banco confirmou a exclusão.
+        static::forceDeleting(function ($entrega) {
+            $entrega->anexosParaApagar = $entrega->anexos()->withTrashed()->get();
+        });
+
+        static::forceDeleted(function ($entrega) {
+            foreach ($entrega->anexosParaApagar ?? [] as $anexo) {
+                $anexo->apagarArquivo();
+            }
         });
 
         // Ao restaurar, registrar no histórico

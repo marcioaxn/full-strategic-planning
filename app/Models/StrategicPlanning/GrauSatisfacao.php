@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 
 class GrauSatisfacao extends Model
 {
@@ -95,15 +96,43 @@ class GrauSatisfacao extends Model
      */
     public static function faixaDe(float $percentual, ?string $codPei, ?int $ano = null): ?self
     {
+        return static::reguaEfetiva($codPei, $ano)
+            ->first(fn (self $f) => (float) $f->vlr_minimo <= $percentual && (float) $f->vlr_maximo >= $percentual);
+    }
+
+    /**
+     * As faixas que de fato julgam um valor no ano.
+     *
+     * 🔴 A régua do ano SUBSTITUI a geral do ciclo, não se mistura com ela.
+     * Misturadas e ordenadas por mínimo, a faixa geral (mínimo 0) vinha antes
+     * e pintava 80% de "Neutro" num ano cuja régua dizia "Bom".
+     * Ano sem régua própria usa só as faixas gerais (nenhuma = sem farol).
+     * Sem ano informado: as gerais; ciclo sem faixa geral usa o que houver.
+     *
+     * @return Collection<int, self>
+     */
+    public static function reguaEfetiva(?string $codPei, ?int $ano): Collection
+    {
         if ($codPei === null) {
-            return null;
+            return collect();
         }
 
-        return static::doPei($codPei, $ano)
-            ->where('vlr_minimo', '<=', $percentual)
-            ->where('vlr_maximo', '>=', $percentual)
-            ->orderByRaw('CASE WHEN num_ano IS NULL THEN 1 ELSE 0 END')
-            ->first();
+        $faixas = static::doPei($codPei)->get();
+
+        if ($ano !== null && ($doAno = $faixas->where('num_ano', $ano))->isNotEmpty()) {
+            return $doAno->values();
+        }
+
+        $gerais = $faixas->whereNull('num_ano')->values();
+
+        // Com ano informado, a régua de OUTRO ano nunca julga: sem régua do ano
+        // nem geral, não há farol (cinza). Sem ano (chamadas antigas), vale o
+        // que houver no ciclo.
+        if ($ano !== null || $gerais->isNotEmpty()) {
+            return $gerais;
+        }
+
+        return $faixas->values();
     }
 
     /** Cinza neutro: "não há régua para julgar isto", não "isto está ruim". */
@@ -148,30 +177,35 @@ class GrauSatisfacao extends Model
     /** O ciclo tem régua configurada? Sem ela, não se pinta farol nenhum. */
     public static function temRegua(?string $codPei, ?int $ano = null): bool
     {
-        return $codPei !== null && static::doPei($codPei, $ano)->exists();
+        return static::reguaEfetiva($codPei, $ano)->isNotEmpty();
     }
 
     /**
-     * A faixa das pontas, para um valor que caiu fora de todas.
+     * A faixa para um valor que não caiu dentro de nenhuma.
+     *
+     * Abaixo da primeira: a primeira. No buraco entre duas faixas (70,5 entre
+     * 0–70 e 71–89): a de BAIXO — o sistema nunca promove um valor à cor
+     * melhor por falta de corte. Acima da última: a última (superar a meta não
+     * vira alarme).
      *
      * Devolve null quando não há faixa alguma — e é esse null que distingue
      * "não há régua" de "está fora da régua".
      */
     private static function faixaMaisProxima(float $percentual, ?string $codPei, ?int $ano = null): ?self
     {
-        if ($codPei === null) {
-            return null;
-        }
-
-        $faixas = static::doPei($codPei, $ano)->get();
+        $faixas = static::reguaEfetiva($codPei, $ano);
 
         if ($faixas->isEmpty()) {
             return null;
         }
 
-        return $percentual < (float) $faixas->first()->vlr_minimo
-            ? $faixas->first()
-            : $faixas->last();
+        if ($percentual < (float) $faixas->first()->vlr_minimo) {
+            return $faixas->first();
+        }
+
+        return $faixas->filter(fn (self $f) => (float) $f->vlr_maximo < $percentual)
+            ->sortBy(fn (self $f) => (float) $f->vlr_maximo)
+            ->last() ?? $faixas->last();
     }
 
     /**

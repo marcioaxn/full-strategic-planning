@@ -71,16 +71,12 @@ class DetalharPlano extends Component
                 ->concat($responsaveisEntregas->whereNotIn('id', $gestores->pluck('id')))
                 ->values();
 
-            // Plano de comunicação e lições aprendidas (com try/catch até migrations aplicadas)
-            try {
-                $comunicacoes = PlanoComunicacao::where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)
-                    ->orderBy('num_ordem')->get();
-                $licoes = LicaoAprendida::where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)
-                    ->orderBy('dsc_tipo')->get();
-            } catch (\Exception) {
-                $comunicacoes = collect();
-                $licoes = collect();
-            }
+            // Plano de comunicação e lições aprendidas. Sem try/catch: as tabelas
+            // existem, e uma falha de verdade não pode virar lista vazia calada.
+            $comunicacoes = PlanoComunicacao::where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)
+                ->orderBy('num_ordem')->get();
+            $licoes = LicaoAprendida::where('cod_plano_de_acao', $this->plano->cod_plano_de_acao)
+                ->orderBy('dsc_tipo')->get();
         }
 
         $auditoria = $podeVerAuditoria

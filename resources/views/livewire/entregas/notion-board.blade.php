@@ -418,7 +418,15 @@
                             <div class="d-flex align-items-center gap-3 mb-3">
                                 <span class="notion-status-dot" style="background-color: {{ \App\Models\ActionPlan\Entrega::STATUS_COLORS[$quickAddStatus] ?? '#e3e2e0' }}"></span>
                                 <span class="text-muted small">{{ $quickAddStatus }}</span>
+                                @if($quickAddPrazo)
+                                    <span class="text-muted small ms-auto">
+                                        <i class="bi bi-calendar-event me-1"></i>Prazo: {{ \Carbon\Carbon::parse($quickAddPrazo)->format('d/m/Y') }}
+                                    </span>
+                                @endif
                             </div>
+                            @error('quickAddPrazo')
+                                <div class="alert alert-warning py-2 small">{{ $message }}</div>
+                            @enderror
                             <input 
                                 type="text" 
                                 wire:model="quickAddTitulo" 
@@ -678,7 +686,7 @@
                 </p>
                 <div class="alert alert-warning bg-warning-subtle border-0">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    {{ $isPermanentDelete ? __('Atenção: Os dados serão apagados definitivamente do banco de dados.') : __('Ela poderá ser restaurada da lixeira em até 24 horas.') }}
+                    {{ $isPermanentDelete ? __('Atenção: a entrega, os comentários, o histórico e os arquivos anexados serão apagados definitivamente.') : __('Ela vai para a lixeira, de onde pode ser restaurada.') }}
                 </div>
             </div>
         </x-slot>

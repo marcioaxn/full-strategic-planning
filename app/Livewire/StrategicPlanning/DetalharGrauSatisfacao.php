@@ -43,9 +43,21 @@ class DetalharGrauSatisfacao extends Component
                 'cod' => $ind->cod_indicador,
                 'nome' => $ind->nom_indicador,
                 'objetivo' => $ind->objetivo?->nom_objetivo,
-                'atingimento' => round($ind->calcularAtingimento($this->ano), 1),
+                // atingimentoMedido(): a mesma conta do farol. Sem medição (NULL) o
+                // farol fica cinza — o indicador não pertence a faixa nenhuma.
+                'bruto' => $ind->atingimentoMedido($this->ano),
             ])
-            ->filter(fn ($i) => GrauSatisfacao::faixaDe($i['atingimento'], $codPei, $this->ano)?->cod_grau_satisfacao === $this->grau->cod_grau_satisfacao)
+            ->reject(fn ($i) => $i['bruto'] === null)
+            // Classifica pelo valor CRU, como Indicador::getCorFarol(): arredondar
+            // antes (50,04 → 50,0) jogava o indicador na faixa de baixo e a lista
+            // discordava da cor do mapa. O arredondamento é só para exibir.
+            ->filter(fn ($i) => GrauSatisfacao::faixaDe($i['bruto'], $codPei, $this->ano)?->cod_grau_satisfacao === $this->grau->cod_grau_satisfacao)
+            ->map(fn ($i) => [
+                'cod' => $i['cod'],
+                'nome' => $i['nome'],
+                'objetivo' => $i['objetivo'],
+                'atingimento' => round($i['bruto'], 1),
+            ])
             ->values()
             ->all();
     }

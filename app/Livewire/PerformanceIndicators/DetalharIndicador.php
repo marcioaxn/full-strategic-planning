@@ -27,6 +27,7 @@ class DetalharIndicador extends Component
     public function atualizarAno($ano)
     {
         $this->anoFiltro = (int) $ano;
+        $this->ajustarAnoAoSeletor();
         $this->prepareChartData();
         $this->dispatch('updateChart', data: $this->chartData);
     }
@@ -34,8 +35,8 @@ class DetalharIndicador extends Component
     public function mount($id)
     {
         $this->indicador = Indicador::with([
-            'objetivo',
-            'planoDeAcao',
+            'objetivo.perspectiva',
+            'planoDeAcao.objetivo.perspectiva',
             'evolucoes',
             'metasPorAno',
             'linhaBase',
@@ -46,7 +47,21 @@ class DetalharIndicador extends Component
         $this->anoFiltro = (int) session('ano_selecionado', now()->year);
 
         $this->carregarAnosDisponiveis();
+        $this->ajustarAnoAoSeletor();
         $this->prepareChartData();
+    }
+
+    /**
+     * O ano tem de estar entre as opções do seletor. Senão o select MOSTRA um
+     * ano (o primeiro da lista) e o gráfico desenha outro (o da sessão) — mesmo
+     * defeito que LancarEvolucao já corrigia.
+     */
+    private function ajustarAnoAoSeletor(): void
+    {
+        if (! in_array($this->anoFiltro, $this->anosDisponiveis, true)) {
+            $anoAtual = (int) now()->year;
+            $this->anoFiltro = in_array($anoAtual, $this->anosDisponiveis, true) ? $anoAtual : (int) $this->anosDisponiveis[0];
+        }
     }
 
     protected function carregarAnosDisponiveis()
@@ -54,7 +69,7 @@ class DetalharIndicador extends Component
         // Busca anos dos PEIs para consistência com o seletor global
         $this->anosDisponiveis = PEI::orderBy('num_ano_inicio_pei', 'desc')
             ->get()
-            ->flatMap(fn ($pei) => range($pei->num_ano_fim_pei, $pei->num_ano_inicio_pei))
+            ->flatMap(fn ($pei) => range((int) $pei->num_ano_fim_pei, (int) $pei->num_ano_inicio_pei))
             ->unique()
             ->sortDesc()
             ->values()
@@ -69,6 +84,7 @@ class DetalharIndicador extends Component
 
     public function updatedAnoFiltro()
     {
+        $this->ajustarAnoAoSeletor();
         $this->prepareChartData();
         $this->dispatch('updateChart', data: $this->chartData);
     }

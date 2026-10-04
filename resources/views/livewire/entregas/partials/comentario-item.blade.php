@@ -15,7 +15,7 @@
             {{-- Ações do comentário --}}
             <div class="d-flex gap-3 mt-1">
                 {{-- Botão Responder (até o nível 2, para que a resposta seja nível 3) --}}
-                @if($level < 3)
+                @if($level < 3 && ($editavel ?? false))
                     <button 
                         wire:click="setRespondendo('{{ $comentario->cod_comentario }}')" 
                         class="btn btn-sm btn-link p-0 text-muted text-decoration-none small"
@@ -25,9 +25,11 @@
                     </button>
                 @endif
 
-                @if($comentario->cod_usuario === auth()->id())
+                {{-- Com respostas, o comentário não é excluído (as respostas sumiriam junto). --}}
+                @if(($editavel ?? false) && $comentario->cod_usuario === auth()->id() && $comentario->respostas->isEmpty())
                     <button 
                         wire:click="excluirComentario('{{ $comentario->cod_comentario }}')"
+                        wire:confirm="Excluir este comentário?"
                         class="btn btn-sm btn-link p-0 text-danger text-decoration-none small"
                         style="font-size: 0.7rem;"
                     >

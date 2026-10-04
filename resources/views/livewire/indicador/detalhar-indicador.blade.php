@@ -18,7 +18,8 @@
                 <i class="bi bi-arrow-left me-1"></i> Voltar
             </a>
             {{-- A ficha também é pública: o botão só para quem pode lançar neste indicador. --}}
-            @if(auth()->user()?->can('update', $indicador))
+            {{-- Indicador automático não recebe lançamento manual (o valor vem das entregas). --}}
+            @if($indicador->dsc_calculation_type !== 'action_plan' && auth()->user()?->can('update', $indicador))
             <a href="{{ route('indicadores.evolucao', $indicador->cod_indicador) }}" wire:navigate class="btn btn-success rounded-pill px-3">
                 <i class="bi bi-graph-up-arrow me-1"></i> Lançar Resultados
             </a>
@@ -140,8 +141,8 @@
                                         $lbAno = $indicador->linhaBase->where('num_ano', $ano)->first()?->num_linha_base;
                                         $metaAno = $indicador->metasPorAno->where('num_ano', $ano)->first()?->meta;
                                     @endphp
-                                    <td>@if($lbAno === null) <span class="text-muted">—</span> @else @brazil_number($lbAno, 2) @endif</td>
-                                    <td class="fw-bold">@if($metaAno === null) <span class="text-muted fw-normal">—</span> @else @brazil_number($metaAno, 2) @endif</td>
+                                    <td>@if($lbAno === null) <span class="text-muted">—</span> @else {{ \App\Support\UnidadeMedida::formatar($lbAno, $indicador->dsc_unidade_medida) }} @endif</td>
+                                    <td class="fw-bold">@if($metaAno === null) <span class="text-muted fw-normal">—</span> @else {{ \App\Support\UnidadeMedida::formatar($metaAno, $indicador->dsc_unidade_medida) }} @endif</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -292,21 +293,29 @@
                         <tbody>
                             @php
                                 $mesesNomes = [1=>'Jan', 2=>'Fev', 3=>'Mar', 4=>'Abr', 5=>'Mai', 6=>'Jun', 7=>'Jul', 8=>'Ago', 9=>'Set', 10=>'Out', 11=>'Nov', 12=>'Dez'];
+                                $unidadeFicha = $indicador->dsc_unidade_medida;
+                                $informativo = \App\Support\CalculoPolaridade::ehInformativo($indicador->dsc_polaridade);
+                                $codPeiFicha = $indicador->codPeiDoCiclo();
                             @endphp
                             @foreach($mesesNomes as $num => $nome)
                                 @php
                                     $ev = $indicador->evolucoes->where('num_ano', (int)$anoFiltro)->where('num_mes', $num)->first();
-                                    $ating = $ev ? $ev->calcularAtingimento() : 0;
+                                    $ating = $ev ? $ev->calcularAtingimento() : null;
                                 @endphp
                                 <tr>
                                     <td class="ps-4">{{ $nome }}</td>
-                                    <td>@if($ev) @brazil_number($ev->vlr_previsto, 2) @else - @endif</td>
-                                    <td class="fw-bold">@if($ev) @brazil_number($ev->vlr_realizado, 2) @else - @endif</td>
+                                    <td>{{ $ev && $ev->vlr_previsto !== null ? \App\Support\UnidadeMedida::formatar($ev->vlr_previsto, $unidadeFicha) : '-' }}</td>
+                                    <td class="fw-bold">{{ $ev && $ev->vlr_realizado !== null ? \App\Support\UnidadeMedida::formatar($ev->vlr_realizado, $unidadeFicha) : '-' }}</td>
                                     <td>
-                                        @if($ev)
+                                        {{-- Cor pela régua do ciclo (GrauSatisfacao), não por cortes fixos de 100/80;
+                                             informativo não tem juízo de valor — nunca vermelho. --}}
+                                        @if($ev && $informativo)
+                                            <span class="text-muted small">Informativo</span>
+                                        @elseif($ating !== null)
+                                            @php $corAting = \App\Models\StrategicPlanning\GrauSatisfacao::corDe($ating, $codPeiFicha, (int) $anoFiltro); @endphp
                                             <div class="d-flex align-items-center">
                                                 <div class="progress flex-grow-1 me-2" style="height: 6px;">
-                                                    <div class="progress-bar bg-{{ $ating >= 100 ? 'success' : ($ating >= 80 ? 'warning' : 'danger') }}" style="width: {{ min($ating, 100) }}%"></div>
+                                                    <div class="progress-bar" style="width: {{ min($ating, 100) }}%; background-color: {{ $corAting }};"></div>
                                                 </div>
                                                 <span class="fw-bold">@brazil_percent($ating, 1)</span>
                                             </div>

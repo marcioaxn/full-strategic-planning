@@ -28,17 +28,20 @@ class MinhasEntregas extends Component
         $peiId = Session::get('pei_selecionado_id');
 
         $query = Entrega::whereHas('responsaveis', fn ($q) => $q->where('users.id', $userId))
-            ->where('bln_status', '!=', 'Concluído')
             ->where('bln_arquivado', false)
-            ->whereNull('deleted_at')
             ->with(['planoDeAcao.objetivo.perspectiva', 'responsaveis']);
 
         if ($peiId) {
             $query->whereHas('planoDeAcao.objetivo.perspectiva', fn ($q) => $q->where('cod_pei', $peiId));
         }
 
+        // Sem filtro, a tela é a fila de trabalho (sem as concluídas). Com o
+        // filtro "Concluído", mostra as concluídas — antes vinha sempre vazio,
+        // porque a exclusão das concluídas valia também com o filtro.
         if ($this->filtroStatus) {
             $query->where('bln_status', $this->filtroStatus);
+        } else {
+            $query->where('bln_status', '!=', 'Concluído');
         }
 
         if ($this->filtroPrioridade) {
@@ -55,8 +58,9 @@ class MinhasEntregas extends Component
             'entregasAgrupadas' => $entregas,
             'statusOptions' => Entrega::STATUS_OPTIONS,
             'prioridades' => Entrega::PRIORIDADE_OPTIONS,
-            'totalPendente' => $entregas->flatten()->count(),
-            'totalAtrasadas' => $entregas->flatten()->filter(fn ($e) => $e->dte_prazo && $e->dte_prazo->isPast())->count(),
+            'totalPendente' => $entregas->flatten()->reject(fn (Entrega $e) => $e->isConcluida())->count(),
+            // Mesmo critério do quadro (Entrega::isAtrasada).
+            'totalAtrasadas' => $entregas->flatten()->filter(fn (Entrega $e) => $e->isAtrasada())->count(),
         ]);
     }
 }

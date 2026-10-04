@@ -9,6 +9,7 @@ use App\Models\SystemSetting;
 use App\Services\AI\AiServiceFactory;
 use App\Services\PeiGuidanceService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
@@ -147,6 +148,16 @@ class ListarPerspectivas extends Component
 
     public function aplicarSugestao($nome, $ordem)
     {
+        $this->autorizarInstitucional('criar');
+
+        // A IA numera de 1 a 4 sem saber o que já existe: nível ocupado vai
+        // para o próximo livre, senão duas perspectivas disputam o mesmo
+        // degrau do mapa.
+        if ($this->peiAtivo && $this->nivelOcupado((int) $ordem)) {
+            $ordem = (Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)->max('num_nivel_hierarquico_apresentacao') ?? 0) + 1;
+        }
+
+        $this->perspectivaId = null;
         $this->dsc_perspectiva = $nome;
         $this->num_nivel_hierarquico_apresentacao = $ordem;
 
@@ -258,6 +269,12 @@ class ListarPerspectivas extends Component
             'num_peso_planos' => 'required|integer|min:0|max:100',
         ]);
 
+        if ($this->nivelOcupado((int) $this->num_nivel_hierarquico_apresentacao, $this->perspectivaId)) {
+            $this->addError('num_nivel_hierarquico_apresentacao', 'Já existe uma perspectiva neste nível do ciclo. Escolha outro nível.');
+
+            return;
+        }
+
         if (($this->num_peso_indicadores + $this->num_peso_planos) != 100) {
             $this->addError('num_peso_indicadores', 'A soma dos pesos deve ser exatamente 100%.');
 
@@ -303,6 +320,17 @@ class ListarPerspectivas extends Component
         }
     }
 
+    /**
+     * O nível define o degrau da perspectiva no mapa: é único dentro do ciclo.
+     */
+    private function nivelOcupado(int $nivel, ?string $ignorarPerspectivaId = null): bool
+    {
+        return Perspectiva::where('cod_pei', $this->peiAtivo->cod_pei)
+            ->where('num_nivel_hierarquico_apresentacao', $nivel)
+            ->when($ignorarPerspectivaId, fn ($q) => $q->whereKeyNot($ignorarPerspectivaId))
+            ->exists();
+    }
+
     public function confirmDelete($id)
     {
         $this->autorizarInstitucional('excluir');
@@ -317,7 +345,9 @@ class ListarPerspectivas extends Component
         $this->autorizarInstitucional('excluir');
         $p = Perspectiva::findOrFail($this->perspectivaId);
         abort_unless($this->peiAtivo && $p->cod_pei === $this->peiAtivo->cod_pei, 403);
-        $p->delete();
+        // A exclusão leva objetivos, iniciativas, indicadores, futuro almejado e
+        // comentários (Perspectiva::booted): tudo ou nada.
+        DB::transaction(fn () => $p->delete());
         $this->showDeleteModal = false;
         $this->perspectivaId = null;
         $this->carregarPerspectivas();

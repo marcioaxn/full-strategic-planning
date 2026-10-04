@@ -2,7 +2,6 @@
 
 namespace App\Livewire\RiskManagement;
 
-use App\Models\Organization;
 use App\Models\RiskManagement\Risco;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\PEI;
@@ -17,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -26,6 +26,8 @@ class ListarRiscos extends Component
     use AuthorizesRequests;
     use WithPagination;
 
+    // Na URL: o link de cada risco na matriz chega com ?search= e abre a lista filtrada.
+    #[Url(except: '')]
     public $search = '';
 
     public $filtroNivel = '';
@@ -152,7 +154,11 @@ class ListarRiscos extends Component
 
     public function aplicarSugestao($titulo, $categoria, $descricao)
     {
+        // Método público: abre o formulário de cadastro, então exige poder criar.
+        $this->authorize('create', [Risco::class, $this->organizacaoId]);
+
         $this->resetForm();
+        $this->carregarUsuarios($this->organizacaoId);
         $this->form['dsc_titulo'] = $titulo;
         $this->form['dsc_categoria'] = $categoria;
         $this->form['txt_descricao'] = $descricao;
@@ -211,11 +217,22 @@ class ListarRiscos extends Component
             })->toArray();
         }
 
-        if ($this->organizacaoId) {
-            $this->usuarios = User::whereHas('organizacoes', function ($q) {
-                $q->where('tab_organizacoes.cod_organizacao', $this->organizacaoId);
-            })->orderBy('name')->get();
-        }
+        $this->carregarUsuarios($this->organizacaoId);
+    }
+
+    /**
+     * Pessoas que podem ser responsáveis por um risco da unidade informada —
+     * o mesmo critério que save() confere (vínculo com a unidade ou perfil nela).
+     * Na edição, é a unidade DO RISCO: com a unidade-mãe selecionada, o risco
+     * da filha abria com a lista da mãe, e nenhuma escolha passava na validação.
+     */
+    private function carregarUsuarios(?string $codOrganizacao): void
+    {
+        $this->usuarios = $codOrganizacao
+            ? User::where(fn ($q) => $q->whereHas('organizacoes', fn ($o) => $o->where('tab_organizacoes.cod_organizacao', $codOrganizacao))
+                ->orWhereHas('perfisAcesso', fn ($p) => $p->where('rel_users_tab_organizacoes_tab_perfil_acesso.cod_organizacao', $codOrganizacao)))
+                ->orderBy('name')->get()
+            : collect();
     }
 
     public function updatingSearch()
@@ -227,6 +244,7 @@ class ListarRiscos extends Component
     {
         $this->authorize('create', [Risco::class, $this->organizacaoId]);
         $this->resetForm();
+        $this->carregarUsuarios($this->organizacaoId);
         if (! $this->organizacaoId) {
             $this->dispatch('notify', message: 'Selecione uma organização.', style: 'warning');
 
@@ -241,6 +259,7 @@ class ListarRiscos extends Component
         $this->authorize('update', $risco);
 
         $this->riscoId = $id;
+        $this->carregarUsuarios($risco->cod_organizacao);
         $this->form = [
             'dsc_titulo' => $risco->dsc_titulo,
             'txt_descricao' => $risco->txt_descricao,
@@ -414,16 +433,8 @@ class ListarRiscos extends Component
         // A unidade selecionada e as subordinadas, dentro do que o usuário
         // alcança. 🔴 Sem organização, a lista trazia os riscos (causas,
         // responsáveis) de TODAS as unidades a qualquer usuário.
-        $usuario = Auth::user();
-        if ($this->organizacaoId) {
-            $orgIds = Organization::descendentesEProprio($this->organizacaoId);
-            if (! $usuario->isSuperAdmin()) {
-                $orgIds = array_values(array_intersect($orgIds, $usuario->organizacaoIdsPermitidas()->all()));
-            }
-            $query->whereIn('cod_organizacao', $orgIds);
-        } else {
-            $usuario->aplicarEscopoOrganizacional($query);
-        }
+        // O mesmo recorte da matriz (Risco::scopeNoRecorteDaUnidade).
+        $query->noRecorteDaUnidade($this->organizacaoId, Auth::user());
 
         // Só o ciclo selecionado no topo: a lista misturava riscos de todos os ciclos.
         if ($this->peiAtivo) {

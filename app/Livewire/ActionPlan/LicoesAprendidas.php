@@ -105,11 +105,16 @@ class LicoesAprendidas extends Component
     public function salvar(): void
     {
         $this->validate([
-            'form.cod_plano_de_acao' => 'required|string',
-            'form.dsc_tipo' => 'required|string',
+            'form.cod_plano_de_acao' => 'required|uuid',
+            // varchar(20) e varchar(50) no banco: texto maior era erro 500.
+            'form.dsc_tipo' => 'required|string|max:20',
+            'form.dsc_categoria' => 'nullable|string|max:50',
             'form.txt_descricao' => 'required|string|max:2000',
         ], [
             'form.cod_plano_de_acao.required' => 'Selecione a iniciativa.',
+            'form.cod_plano_de_acao.uuid' => 'Selecione a iniciativa.',
+            'form.dsc_tipo.max' => 'O tipo aceita até 20 caracteres.',
+            'form.dsc_categoria.max' => 'A categoria aceita até 50 caracteres.',
             'form.txt_descricao.required' => 'Descreva a lição aprendida.',
         ]);
 

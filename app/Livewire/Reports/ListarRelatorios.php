@@ -80,9 +80,11 @@ class ListarRelatorios extends Component
         $this->organizacoes = Organization::whereIn('cod_organizacao', Auth::user()->organizacaoIdsPermitidas())
             ->orderBy('nom_organizacao')->get();
 
-        // Carregar Anos (baseado nos ciclos PEI ativos/recentes)
-        $this->anos = range(date('Y') - 1, date('Y') + 4);
-        $this->anoSelecionado = Session::get('ano_selecionado', date('Y'));
+        // Anos dos ciclos cadastrados (os mesmos do seletor global de ano).
+        // 🔴 Era range(ano-1, ano+4): com o ano global em 2023, o <select> não
+        // tinha 2023 e mostrava outro valor, enquanto os links usavam 2023.
+        $this->anoSelecionado = (int) Session::get('ano_selecionado', date('Y'));
+        $this->anos = $this->anosDosCiclos($this->anoSelecionado);
 
         // Carregar PEI
         $this->carregarPEI();
@@ -111,17 +113,30 @@ class ListarRelatorios extends Component
         $this->carregarIdentidade();
     }
 
+    /**
+     * Do primeiro ao último ano dos ciclos cadastrados, mais o ano global se
+     * estiver fora deles — o <select> sempre mostra o ano que os links usam.
+     *
+     * @return list<int>
+     */
+    private function anosDosCiclos(int $anoGlobal): array
+    {
+        $inicio = PEI::min('num_ano_inicio_pei');
+        $fim = PEI::max('num_ano_fim_pei');
+
+        $anos = $inicio && $fim ? range((int) $inicio, (int) $fim) : [];
+        $anos[] = $anoGlobal;
+
+        $anos = array_values(array_unique(array_map('intval', $anos)));
+        sort($anos);
+
+        return $anos;
+    }
+
+    /** O ciclo da tela é o mesmo dos PDFs: o selecionado no topo. */
     private function carregarPEI()
     {
-        $peiId = Session::get('pei_selecionado_id');
-
-        if ($peiId) {
-            $this->peiAtivo = PEI::find($peiId);
-        }
-
-        if (! $this->peiAtivo) {
-            $this->peiAtivo = PEI::ativos()->first();
-        }
+        $this->peiAtivo = PEI::doContexto();
 
         $this->carregarPerspectivas();
         $this->carregarIdentidade();

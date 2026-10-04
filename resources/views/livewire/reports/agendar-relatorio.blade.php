@@ -11,6 +11,7 @@
                     <div class="p-2 bg-light rounded border">
                         <span class="fw-bold text-primary">{{ ucfirst($tipoRelatorio) }}</span>
                     </div>
+                    @error('tipoRelatorio') <span class="text-danger small d-block mt-1">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="col-md-6">
@@ -30,7 +31,7 @@
                 <div class="col-12">
                     <div class="alert alert-info py-2 small mb-0">
                         <i class="bi bi-info-circle me-1"></i>
-                        {{ __('O relatório será gerado automaticamente e ficará disponível no seu histórico.') }}
+                        {{ __('O relatório será gerado automaticamente, com o ciclo e a unidade selecionados agora, e ficará disponível no seu histórico. Nada é enviado por e-mail.') }}
                     </div>
                 </div>
             </div>

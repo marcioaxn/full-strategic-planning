@@ -9,12 +9,13 @@ use Illuminate\Support\Facades\Log;
 /**
  * Observer para atualização automática de indicadores
  * quando entregas são modificadas.
- * 
+ *
  * Sempre que uma entrega é criada, atualizada ou deletada,
  * os indicadores do tipo 'action_plan' vinculados ao plano
  * são recalculados automaticamente.
- * 
+ *
  * @author SEAE Strategic Planning Team
+ *
  * @since 2026-02
  */
 class EntregaObserver
@@ -36,7 +37,7 @@ class EntregaObserver
 
     /**
      * Handle the Entrega "updated" event.
-     * 
+     *
      * Só recalcula se campos relevantes foram alterados:
      * - bln_status (status da entrega)
      * - num_peso (peso da entrega)
@@ -46,7 +47,7 @@ class EntregaObserver
     public function updated(Entrega $entrega): void
     {
         $camposRelevantes = ['bln_status', 'num_peso', 'cod_entrega_pai', 'bln_arquivado'];
-        
+
         // Verificar se algum campo relevante foi alterado
         $foiAlterado = false;
         foreach ($camposRelevantes as $campo) {
@@ -84,13 +85,13 @@ class EntregaObserver
     {
         try {
             // Verificar se tem plano vinculado
-            if (!$entrega->cod_plano_de_acao) {
+            if (! $entrega->cod_plano_de_acao) {
                 return;
             }
 
             // Carregar plano se necessário
             $plano = $entrega->planoDeAcao;
-            if (!$plano) {
+            if (! $plano) {
                 return;
             }
 
@@ -101,8 +102,9 @@ class EntregaObserver
                 Log::info("EntregaObserver: {$count} indicador(es) recalculado(s) para o plano '{$plano->dsc_plano_de_acao}'");
             }
         } catch (\Exception $e) {
-            // Log do erro mas não interrompe a operação
-            Log::error("EntregaObserver: Erro ao recalcular indicadores - " . $e->getMessage());
+            // Não interrompe a gravação da entrega, mas a falha fica registrada
+            // com o rastro completo (antes, só a mensagem ia ao log).
+            report($e);
         }
     }
 }

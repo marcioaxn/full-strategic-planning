@@ -13,12 +13,14 @@ use App\Models\StrategicPlanning\PEI;
 use App\Models\SystemSetting;
 use App\Services\AI\AiServiceFactory;
 use App\Services\PeiGuidanceService;
+use App\Support\UnidadeMedida;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -42,6 +44,13 @@ class ListarIndicadores extends Component
     public $organizacaoId;
 
     public $peiAtivo;
+
+    /**
+     * Ano de referência (o do seletor do topo). Farol e legenda usam a régua
+     * DESTE ano — antes usavam a de qualquer ano, com prioridade à específica.
+     */
+    #[Locked]
+    public int $anoReferencia;
 
     // IA e Mentor
     #[Locked]
@@ -118,6 +127,10 @@ class ListarIndicadores extends Component
 
     public $unidadesMedida = [];
 
+    /** Unidade gravada que não está mais na lista (ex.: "Índice"), mostrada como opção na edição. */
+    #[Locked]
+    public ?string $unidadeLegada = null;
+
     public $polaridades = [];
 
     public $calculationTypes = [];
@@ -136,10 +149,13 @@ class ListarIndicadores extends Component
     protected $listeners = [
         'organizacaoSelecionada' => 'atualizarOrganizacao',
         'peiSelecionado' => 'atualizarPEI',
+        'anoSelecionado' => 'atualizarAno',
     ];
 
     public function mount()
     {
+        $this->anoReferencia = (int) session('ano_selecionado', now()->year);
+
         // Logado: organização validada contra o escopo. Visitante da
         // Transparência: a seleção pública da sessão, como antes.
         $this->organizacaoId = Auth::check()
@@ -184,13 +200,21 @@ class ListarIndicadores extends Component
         $this->resetPage();
     }
 
+    /** Ouvinte do seletor de ano do topo: só muda o ano da régua e do farol. */
+    public function atualizarAno($ano)
+    {
+        $this->anoReferencia = (int) $ano;
+        $this->carregarListasAuxiliares();
+    }
+
     public function carregarListasAuxiliares()
     {
-        $this->grausSatisfacao = GrauSatisfacao::doPei($this->peiAtivo?->cod_pei)->get();
+        // A legenda mostra a mesma régua que pinta o farol (a do ano substitui a geral).
+        $this->grausSatisfacao = GrauSatisfacao::reguaEfetiva($this->peiAtivo?->cod_pei, $this->anoReferencia);
         $this->unidadesMedida = Indicador::UNIDADES_MEDIDA;
         $this->polaridades = Indicador::POLARIDADES;
         $this->calculationTypes = Indicador::CALCULATION_TYPES;
-        $this->organizacoesOptions = Organization::getTreeForSelector();
+        $this->organizacoesOptions = $this->arvoreDeUnidadesDoUsuario();
 
         if ($this->peiAtivo) {
             // Agrupar objetivos por perspectiva para o select
@@ -231,6 +255,50 @@ class ListarIndicadores extends Component
                 });
             })->toArray();
         }
+    }
+
+    /**
+     * Árvore de unidades do formulário, só com as do escopo do usuário.
+     *
+     * 🔴 Mostrava TODAS as unidades do sistema: o Administrador da unidade A
+     * via (e marcava) a B, e o salvar respondia com a página de 403.
+     *
+     * @return array<int, array{id: string, label: string, level: int}>
+     */
+    private function arvoreDeUnidadesDoUsuario(): array
+    {
+        if (! Auth::check()) {
+            return [];
+        }
+
+        $arvore = Organization::getTreeForSelector();
+
+        if (Auth::user()->isSuperAdmin()) {
+            return $arvore;
+        }
+
+        $permitidas = Auth::user()->organizacaoIdsPermitidas()->all();
+
+        return array_values(array_filter($arvore, fn (array $org) => in_array($org['id'], $permitidas, true)));
+    }
+
+    /**
+     * Unidades que o formulário aceita: as do escopo do usuário e, na edição,
+     * as que o indicador já tem (o vínculo existente não some só porque o
+     * usuário não alcança uma delas).
+     *
+     * @return list<string>
+     */
+    private function unidadesAceitasNoFormulario(?Indicador $existente): array
+    {
+        $usuario = Auth::user();
+        $escopo = $usuario?->isSuperAdmin()
+            ? Organization::query()->pluck('cod_organizacao')->all()
+            : ($usuario?->organizacaoIdsPermitidas()->all() ?? []);
+
+        $atuais = $existente ? $existente->organizacoes()->pluck('tab_organizacoes.cod_organizacao')->all() : [];
+
+        return array_values(array_unique(array_merge($escopo, $atuais)));
     }
 
     public function create(PeiGuidanceService $service)
@@ -281,6 +349,9 @@ class ListarIndicadores extends Component
             'organizacoes_ids' => $indicador->organizacoes->pluck('cod_organizacao')->toArray(),
             'smart' => $indicador->json_smart ?? ['especifico' => false, 'mensuravel' => false, 'atingivel' => false, 'relevante' => false, 'temporal' => false],
         ];
+        $this->unidadeLegada = in_array($indicador->dsc_unidade_medida, Indicador::UNIDADES_MEDIDA, true)
+            ? null
+            : $indicador->dsc_unidade_medida;
         $this->showModal = true;
     }
 
@@ -294,35 +365,64 @@ class ListarIndicadores extends Component
             $this->form['dsc_tipo'] = 'Iniciativa';
         }
 
+        $existente = $this->indicadorId ? Indicador::find($this->indicadorId) : null;
+
+        // Unidades de medida: a lista do sistema e, na edição, a que o
+        // indicador já tem (os legados "Índice" e "Horas" não estão na lista e
+        // não podem travar a edição do resto da ficha).
+        $unidadesAceitas = array_values(array_unique(array_filter(array_merge(
+            Indicador::UNIDADES_MEDIDA,
+            [$existente?->dsc_unidade_medida]
+        ))));
+
         // Regras de validação base
         $rules = [
             'form.nom_indicador' => 'required|string|max:255',
             'form.dsc_tipo' => ['required', Rule::in(['Objetivo', 'Iniciativa'])],
             'form.dsc_calculation_type' => ['required', Rule::in(['manual', 'action_plan'])],
             'form.dsc_polaridade' => ['nullable', Rule::in(array_keys(Indicador::POLARIDADES))],
-            'form.dsc_unidade_medida' => 'required|string|max:191',
+            'form.dsc_unidade_medida' => ['required', 'string', 'max:191', Rule::in($unidadesAceitas)],
             'form.organizacoes_ids' => 'required|array|min:1',
-            'form.organizacoes_ids.*' => 'uuid',
+            'form.organizacoes_ids.*' => ['uuid', Rule::in($this->unidadesAceitasNoFormulario($existente))],
         ];
 
-        // Validação condicional: Se tipo é Plano E cálculo é automático, plano é obrigatório
         if ($this->form['dsc_tipo'] === 'Iniciativa') {
             $rules['form.cod_plano_de_acao'] = 'required|uuid|exists:tab_plano_de_acao,cod_plano_de_acao';
-
-            // Se cálculo automático, reforçar mensagem
-            if ($this->form['dsc_calculation_type'] === 'action_plan') {
-                $rules['form.cod_plano_de_acao'] = 'required|uuid|exists:tab_plano_de_acao,cod_plano_de_acao';
-            }
         } elseif ($this->form['dsc_tipo'] === 'Objetivo') {
-            $rules['form.cod_objetivo'] = 'required|uuid|exists:tab_objetivo,cod_objetivo';
+            // Só objetivo do ciclo em tela: `exists` aceitava objetivo de
+            // qualquer ciclo, inclusive mandado pelo DevTools.
+            $objetivosDoCiclo = $this->peiAtivo
+                ? Objetivo::whereHas('perspectiva', fn ($q) => $q->where('cod_pei', $this->peiAtivo->cod_pei))
+                    ->pluck('cod_objetivo')->all()
+                : [];
+            $rules['form.cod_objetivo'] = ['required', 'uuid', Rule::in($objetivosDoCiclo)];
         }
 
         $messages = [
-            'form.cod_plano_de_acao.required' => 'Para indicadores com cálculo automático, é obrigatório selecionar uma Iniciativa.',
+            'form.cod_plano_de_acao.required' => 'Selecione a Iniciativa vinculada a este indicador.',
             'form.cod_objetivo.required' => 'Selecione o Objetivo Estratégico vinculado a este indicador.',
+            'form.cod_objetivo.in' => 'Escolha um objetivo do ciclo PEI selecionado.',
+            'form.dsc_unidade_medida.in' => 'Escolha uma unidade de medida da lista.',
+            'form.organizacoes_ids.*.in' => 'Esta unidade está fora do seu escopo de acesso.',
         ];
 
         $this->validate($rules, $messages);
+
+        // O Gestor da iniciativa não transforma o indicador em indicador de
+        // Objetivo: a regra valia só na criação, e na edição bastava trocar a
+        // origem. Só quem administra uma das unidades faz essa troca.
+        if ($existente && ! $existente->cod_objetivo && $this->form['dsc_tipo'] === 'Objetivo') {
+            $usuario = Auth::user();
+            $orgs = array_values(array_filter((array) ($this->form['organizacoes_ids'] ?? [])));
+            $administra = $usuario?->isSuperAdmin()
+                || collect($orgs)->contains(fn ($org) => $usuario?->ehAdministradorEm($org));
+
+            if (! $administra) {
+                throw ValidationException::withMessages([
+                    'form.dsc_tipo' => 'Só o Administrador da unidade vincula o indicador a um Objetivo. Mantenha a origem "Iniciativa".',
+                ]);
+            }
+        }
 
         $this->autorizarGravacao();
 
@@ -450,14 +550,18 @@ class ListarIndicadores extends Component
         abort_unless($this->indicadorSelecionado, 403);
         $this->authorize('update', $this->indicadorSelecionado);
 
+        // Texto no formato brasileiro, com a máscara da unidade (como no Lançar
+        // Evolução). Era type="number" + 'numeric': "20.000.000.000,00" era
+        // recusado e 0,875 barrado pelo step.
         $this->validate([
             'metaAno' => 'required|integer|min:2000|max:2100',
-            'metaValor' => 'required|numeric',
+            'metaValor' => 'required|string|max:30',
         ]);
+        $this->validarValorDaUnidade('metaValor', $this->metaValor);
 
         MetaPorAno::updateOrCreate(
             ['cod_indicador' => $this->indicadorSelecionado->cod_indicador, 'num_ano' => $this->metaAno],
-            ['meta' => $this->metaValor]
+            ['meta' => UnidadeMedida::paraFloat($this->metaValor)]
         );
 
         $this->abrirMetas($this->indicadorSelecionado->cod_indicador); // Refresh
@@ -501,16 +605,25 @@ class ListarIndicadores extends Component
 
         $this->validate([
             'linhaBaseAno' => 'required|integer|min:2000|max:2100',
-            'linhaBaseValor' => 'required|numeric',
+            'linhaBaseValor' => 'required|string|max:30',
         ]);
+        $this->validarValorDaUnidade('linhaBaseValor', $this->linhaBaseValor);
 
         LinhaBaseIndicador::updateOrCreate(
             ['cod_indicador' => $this->indicadorSelecionado->cod_indicador, 'num_ano' => $this->linhaBaseAno],
-            ['num_linha_base' => $this->linhaBaseValor]
+            ['num_linha_base' => UnidadeMedida::paraFloat($this->linhaBaseValor)]
         );
 
         $this->abrirLinhaBase($this->indicadorSelecionado->cod_indicador);
         $this->dispatch('notify', message: 'Linha de base salva!', style: 'success');
+    }
+
+    /** Número, dentro do teto da coluna e inteiro quando a unidade é contagem. */
+    private function validarValorDaUnidade(string $campo, mixed $valor): void
+    {
+        if ($erro = UnidadeMedida::erroDeValor($valor, $this->indicadorSelecionado->dsc_unidade_medida)) {
+            throw ValidationException::withMessages([$campo => $erro]);
+        }
     }
 
     /** Mesmo defeito de excluirMeta(): apagava por id, sem dono e sem guarda. */
@@ -552,6 +665,7 @@ class ListarIndicadores extends Component
     public function resetForm()
     {
         $this->indicadorId = null;
+        $this->unidadeLegada = null;
         $this->form = [
             'nom_indicador' => '', 'dsc_indicador' => '', 'dsc_tipo' => 'Objetivo',
             'dsc_calculation_type' => 'manual',
@@ -654,7 +768,8 @@ class ListarIndicadores extends Component
 
     public function render()
     {
-        $query = Indicador::query()->with(['objetivo', 'planoDeAcao', 'evolucoes', 'metasPorAno', 'planosDeAcaoVinculados']);
+        // objetivo/iniciativa até a perspectiva: o farol lê o ciclo por esse caminho.
+        $query = Indicador::query()->with(['objetivo.perspectiva', 'planoDeAcao.objetivo.perspectiva', 'evolucoes', 'metasPorAno', 'planosDeAcaoVinculados']);
 
         // Se há filtro por objetivo específico, prioriza esse filtro
         if ($this->filtroObjetivo) {

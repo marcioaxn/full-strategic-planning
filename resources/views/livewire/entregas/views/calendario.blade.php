@@ -148,23 +148,30 @@
 
                         <div
                             class="notion-calendario-day {{ !$isMesAtual ? 'other-month' : '' }} {{ $isHoje ? 'today' : '' }} {{ $isWeekend ? 'weekend' : '' }} {{ $entregasAtrasadas > 0 ? 'has-overdue' : '' }}"
-                            @can('create', [\App\Models\ActionPlan\Entrega::class, $plano])
-                                wire:click="openQuickAdd('Não Iniciado')"
-                                style="cursor: pointer;"
-                            @endcan
+                            {{-- O clique no dia cria a entrega já com aquele prazo, e só
+                                 nos dias dentro do período da iniciativa. --}}
+                            @if(! $mostrarLixeira && (! $plano->dte_inicio || $dia->gte($plano->dte_inicio->copy()->startOfDay())) && (! $plano->dte_fim || $dia->lte($plano->dte_fim->copy()->startOfDay())))
+                                @can('create', [\App\Models\ActionPlan\Entrega::class, $plano])
+                                    wire:click="openQuickAdd('Não Iniciado', '{{ $diaKey }}')"
+                                    style="cursor: pointer;"
+                                @endcan
+                            @endif
                             title="{{ $dia->format('d/m/Y') }}{{ $entregasDoDia->count() > 0 ? ' - ' . $entregasDoDia->count() . ' entrega(s)' : '' }}"
                         >
                             <div class="notion-calendario-daynum {{ $isHoje ? 'active' : '' }}">
                                 {{ $dia->format('d') }}
                             </div>
 
-                            <div class="notion-calendario-events">
-                                @foreach($entregasDoDia->take(3) as $entrega)
+                            {{-- "+N mais" abre a lista do dia ali mesmo (antes disparava um
+                                 evento que nada escutava). --}}
+                            <div class="notion-calendario-events" x-data="{ todas: false }">
+                                @foreach($entregasDoDia as $entrega)
                                     <div
                                         class="notion-calendario-event {{ $entrega->isConcluida() ? 'completed' : '' }} {{ $entrega->isAtrasada() ? 'overdue' : '' }}"
                                         style="background-color: {{ $entrega->getStatusColor() }};"
                                         wire:click.stop="openDetails('{{ $entrega->cod_entrega }}')"
                                         title="{{ $entrega->dsc_entrega }} - {{ $entrega->bln_status }}"
+                                        @if($loop->index >= 3) x-show="todas" x-cloak @endif
                                     >
                                         <span class="notion-calendario-event-text">
                                             {{ Str::limit($entrega->dsc_entrega, 18) }}
@@ -175,7 +182,9 @@
                                 @if($entregasDoDia->count() > 3)
                                     <div
                                         class="notion-calendario-more"
-                                        wire:click.stop="$dispatch('show-day-entregas', { date: '{{ $diaKey }}' })"
+                                        role="button"
+                                        @click.stop="todas = !todas"
+                                        x-text="todas ? 'mostrar menos' : '+{{ $entregasDoDia->count() - 3 }} mais'"
                                     >
                                         +{{ $entregasDoDia->count() - 3 }} mais
                                     </div>

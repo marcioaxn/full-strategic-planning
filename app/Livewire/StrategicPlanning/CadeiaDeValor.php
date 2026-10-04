@@ -128,7 +128,11 @@ class CadeiaDeValor extends Component
         $this->formAtividade = [
             'dsc_atividade' => $a->dsc_atividade,
             'dsc_tipo' => $a->dsc_tipo ?? 'Finalística',
-            'cod_perspectiva' => $a->cod_perspectiva ?? '',
+            // Perspectiva excluída = sem perspectiva (o select já mostrava
+            // "Nenhuma", mas o estado guardava o id e o salvar travava).
+            'cod_perspectiva' => $a->cod_perspectiva && Perspectiva::whereKey($a->cod_perspectiva)->exists()
+                ? $a->cod_perspectiva
+                : '',
             'num_ordem' => $a->num_ordem ?? 0,
         ];
         $this->showModalAtividade = true;
@@ -141,7 +145,12 @@ class CadeiaDeValor extends Component
         $this->validate([
             'formAtividade.dsc_atividade' => 'required|string|max:500',
             'formAtividade.dsc_tipo' => ['required', Rule::in(AtividadeCadeiaValor::TIPOS)],
-        ], ['formAtividade.dsc_atividade.required' => 'Informe a descrição da atividade.']);
+            // Coluna integer: sem limite, 99999999999 estourava no banco (500).
+            'formAtividade.num_ordem' => 'nullable|integer|min:0|max:9999',
+        ], [
+            'formAtividade.dsc_atividade.required' => 'Informe a descrição da atividade.',
+            'formAtividade.num_ordem.*' => 'Informe a ordem como um número de 0 a 9999.',
+        ]);
 
         if (! $this->peiAtivo) {
             $this->dispatch('notify', message: 'Nenhum ciclo PEI selecionado.', style: 'danger');

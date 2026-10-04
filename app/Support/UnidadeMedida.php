@@ -120,6 +120,39 @@ class UnidadeMedida
         return is_numeric($texto) ? (float) $texto : null;
     }
 
+    /**
+     * Teto das colunas de valor do indicador: numeric(19,4) guarda 15 dígitos
+     * inteiros. Acima disso o PostgreSQL recusa (22003) e a tela caía em 500.
+     */
+    public const LIMITE_ABSOLUTO = 1e15;
+
+    /**
+     * Confere o texto digitado num campo de valor e devolve a mensagem de erro,
+     * ou null quando está bom. Campo vazio é aceito (vira NULL).
+     */
+    public static function erroDeValor(mixed $entrada, ?string $unidade): ?string
+    {
+        if ($entrada === null || trim((string) $entrada) === '') {
+            return null;
+        }
+
+        $valor = self::paraFloat($entrada);
+
+        if ($valor === null) {
+            return 'Informe um número. '.self::ajuda($unidade);
+        }
+
+        if (abs($valor) >= self::LIMITE_ABSOLUTO) {
+            return 'Valor acima do máximo aceito (999.999.999.999.999,9999).';
+        }
+
+        if (self::regra($unidade)['inteiro'] && floor($valor) != $valor) {
+            return 'Esta unidade aceita só números inteiros.';
+        }
+
+        return null;
+    }
+
     /** Texto de apoio abaixo do campo, para o usuário saber o que digitar. */
     public static function ajuda(?string $unidade): string
     {

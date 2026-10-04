@@ -54,8 +54,8 @@ class EvolucaoIndicador extends Model
     protected $casts = [
         'num_ano' => 'integer',
         'num_mes' => 'integer',
-        'vlr_previsto' => 'decimal:2',
-        'vlr_realizado' => 'decimal:2',
+        'vlr_previsto' => 'decimal:4',
+        'vlr_realizado' => 'decimal:4',
     ];
 
     /**
@@ -81,15 +81,27 @@ class EvolucaoIndicador extends Model
     /**
      * Calcular percentual de atingimento considerando a polaridade
      */
-    public function calcularAtingimento(): float
+    public function calcularAtingimento(): ?float
     {
+        // Realizado em branco = mês sem medição: não há atingimento (nem 0%,
+        // nem os 100% que a polaridade negativa dava ao zero).
+        if ($this->vlr_realizado === null) {
+            return null;
+        }
+
+        // Previsto em branco: vale a meta anual, pela mesma regra do indicador.
+        $previsto = $this->vlr_previsto;
+        if ($previsto === null || (float) $previsto == 0) {
+            $previsto = $this->indicador?->previstoPelaMeta((int) $this->num_ano) ?? $previsto;
+        }
+
         // Era uma CÓPIA da conta que vive em Indicador — com os mesmos três
         // erros. Duas cópias da mesma regra divergem sozinhas: a tela lia de
         // uma classe e o relatório da outra. Agora as duas chamam o mesmo
         // lugar: App\Support\CalculoPolaridade.
         return CalculoPolaridade::atingimento(
-            $this->vlr_realizado,
-            $this->vlr_previsto,
+            (float) $this->vlr_realizado,
+            $previsto === null ? null : (float) $previsto,
             $this->indicador?->dsc_polaridade
         );
     }

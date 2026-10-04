@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -48,6 +49,10 @@ class ListarPlanos extends Component
     public bool $showModal = false;
 
     public bool $showDeleteModal = false;
+
+    /** O que vai junto com a iniciativa (PlanoDeAcao::booted), para o modal dizer a verdade. */
+    #[Locked]
+    public array $impactoExclusao = [];
 
     // Só o servidor define (edit/confirmDelete, ambos autorizados).
     #[Locked]
@@ -97,7 +102,10 @@ class ListarPlanos extends Component
 
     public $tiposExecucao = [];
 
-    public $statusOptions = ['Não Iniciado', 'Em Andamento', 'Concluído', 'Atrasado', 'Suspenso', 'Cancelado'];
+    /** Lista fixa do servidor: a validação não lê a propriedade pública (o navegador poderia trocá-la). */
+    public const STATUS_OPCOES = ['Não Iniciado', 'Em Andamento', 'Concluído', 'Atrasado', 'Suspenso', 'Cancelado'];
+
+    public $statusOptions = self::STATUS_OPCOES;
 
     public $grausSatisfacao = [];
 
@@ -350,7 +358,8 @@ class ListarPlanos extends Component
         abort_unless(Auth::check(), 403);
 
         $usuario = Auth::user();
-        $orgsInformadas = array_values(array_filter((array) $this->organizacoes_ids));
+        $orgsInformadas = array_values(array_unique(array_filter((array) $this->organizacoes_ids, 'is_string')));
+        $principal = $this->unidadePrincipal($orgsInformadas, $planoExistente);
 
         if ($planoExistente) {
             $this->authorize('update', $planoExistente);
@@ -358,14 +367,14 @@ class ListarPlanos extends Component
             // O Gestor edita a SUA iniciativa, mas não a transfere de unidade:
             // cada unidade acrescentada exige ser Administrador dela.
             $atuais = $planoExistente->organizacoes->pluck('cod_organizacao')->all();
-            // Unidade acrescentada OU retirada, e troca da unidade principal (a 1ª,
-            // que vira cod_organizacao e decide a Policy): só quem administra.
+            // Unidade acrescentada OU retirada, e troca da unidade principal (que
+            // vira cod_organizacao e decide a Policy): só quem administra.
             // 🔴 Antes só a acrescentada era conferida — o Gestor reordenava ou
             // reduzia a lista e tirava a iniciativa do Administrador original.
             $alteradas = array_merge(array_diff($orgsInformadas, $atuais), array_diff($atuais, $orgsInformadas));
-            if (($orgsInformadas[0] ?? null) !== $planoExistente->cod_organizacao) {
+            if ($principal !== $planoExistente->cod_organizacao) {
                 $alteradas[] = $planoExistente->cod_organizacao;
-                $alteradas[] = $orgsInformadas[0] ?? null;
+                $alteradas[] = $principal;
             }
             foreach (array_unique(array_filter($alteradas)) as $codOrg) {
                 abort_unless($usuario->isSuperAdmin() || $usuario->ehAdministradorEm($codOrg), 403);
@@ -434,8 +443,19 @@ class ListarPlanos extends Component
                 },
             ],
             'vlr_orcamento_previsto' => 'nullable|numeric|min:0',
+            // varchar(191) no banco: sem o limite, texto maior era erro 500.
+            'cod_ppa' => 'nullable|string|max:191',
+            'cod_loa' => 'nullable|string|max:191',
+            'bln_status' => 'nullable|in:'.implode(',', self::STATUS_OPCOES),
+            'modelo_logico' => 'array',
+            'modelo_logico.*' => 'nullable|string|max:5000',
             'organizacoes_ids' => 'required|array|min:1',
-        ], $messages);
+        ], $messages + [
+            'cod_ppa.max' => 'O código do PPA aceita até 191 caracteres.',
+            'cod_loa.max' => 'O código da LOA aceita até 191 caracteres.',
+            'dsc_plano_de_acao.max' => 'A descrição da iniciativa aceita até 255 caracteres.',
+            'modelo_logico.*.max' => 'Cada campo do modelo lógico aceita até 5.000 caracteres.',
+        ]);
 
         $data = [
             'dsc_plano_de_acao' => $this->dsc_plano_de_acao,
@@ -448,7 +468,7 @@ class ListarPlanos extends Component
             'bln_status' => $this->bln_status,
             'cod_ppa' => $this->cod_ppa,
             'cod_loa' => $this->cod_loa,
-            'cod_organizacao' => $this->organizacoes_ids[0],
+            'cod_organizacao' => $principal,
             'num_nivel_hierarquico_apresentacao' => 3,
             'json_modelo_logico' => array_filter($this->modelo_logico) ?: null,
         ];
@@ -456,10 +476,10 @@ class ListarPlanos extends Component
         if ($planoExistente) {
             $plano = $planoExistente;
             $plano->update($data);
-            $plano->organizacoes()->sync($this->organizacoes_ids);
+            $plano->organizacoes()->sync($orgsInformadas);
         } else {
             $plano = PlanoDeAcao::create($data);
-            $plano->organizacoes()->sync($this->organizacoes_ids);
+            $plano->organizacoes()->sync($orgsInformadas);
         }
 
         // Capture details for success modal before resetting
@@ -474,10 +494,42 @@ class ListarPlanos extends Component
         $this->showSuccessModal = true;
     }
 
+    /**
+     * Unidade principal (cod_organizacao, que decide a Policy) sem depender da
+     * ordem em que as unidades foram marcadas. Antes era a 1ª da lista: marcar
+     * em outra ordem trocava a principal em silêncio (ou dava 403 ao Gestor).
+     * Edição: mantém a já gravada enquanto ela continuar marcada. Nova (ou a
+     * gravada foi desmarcada): a unidade selecionada no topo, se marcada;
+     * senão, a primeira marcada.
+     *
+     * @param  array<int, string>  $orgsInformadas
+     */
+    private function unidadePrincipal(array $orgsInformadas, ?PlanoDeAcao $planoExistente): ?string
+    {
+        if ($planoExistente && in_array($planoExistente->cod_organizacao, $orgsInformadas, true)) {
+            return $planoExistente->cod_organizacao;
+        }
+
+        if ($this->organizacaoId && in_array($this->organizacaoId, $orgsInformadas, true)) {
+            return $this->organizacaoId;
+        }
+
+        return $orgsInformadas[0] ?? null;
+    }
+
     public function confirmDelete($id)
     {
-        $this->authorize('delete', PlanoDeAcao::findOrFail($id));
+        $plano = PlanoDeAcao::findOrFail($id);
+        $this->authorize('delete', $plano);
         $this->planoId = $id;
+        $this->impactoExclusao = [
+            'entregas' => $plano->entregas()->count(),
+            'indicadores' => $plano->indicadores()->count(),
+            'gestores' => DB::table('organization.rel_users_tab_organizacoes_tab_perfil_acesso')
+                ->where('cod_plano_de_acao', $plano->cod_plano_de_acao)
+                ->whereNull('deleted_at')
+                ->count(),
+        ];
         $this->showDeleteModal = true;
     }
 
@@ -490,8 +542,8 @@ class ListarPlanos extends Component
         $this->showDeleteModal = false;
 
         $this->dispatch('mentor-notification',
-            title: 'Plano Removido',
-            message: 'A iniciativa foi excluída do sistema.',
+            title: 'Iniciativa excluída',
+            message: 'A iniciativa e o que dependia dela saíram das telas. Os registros ficam guardados e só o suporte técnico os recupera.',
             icon: 'bi-trash',
             type: 'warning'
         );
@@ -564,11 +616,13 @@ class ListarPlanos extends Component
             $query->where('cod_tipo_execucao', $this->filtroTipo);
         }
 
-        if ($this->filtroAno) {
-            $query->where(function ($q) {
-                $q->whereYear('dte_inicio', $this->filtroAno)
-                    ->orWhereYear('dte_fim', $this->filtroAno);
-            });
+        // Iniciativa VIGENTE no ano: começa até 31/12 e termina a partir de
+        // 01/01. Antes só entrava se começasse ou terminasse no ano — a
+        // plurianual (2026–2028) sumia no filtro 2027.
+        if ($this->filtroAno && ctype_digit((string) $this->filtroAno)) {
+            $ano = (int) $this->filtroAno;
+            $query->whereDate('dte_inicio', '<=', "{$ano}-12-31")
+                ->whereDate('dte_fim', '>=', "{$ano}-01-01");
         }
 
         // Layout dinâmico: o visitante chega aqui pelo Mapa Estratégico público

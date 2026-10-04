@@ -25,7 +25,7 @@
         icone="arrow-repeat"
         por-que="A RAE é o principal momento de revisar a estratégia: nela o órgão confirma o rumo ou corrige objetivos, metas, indicadores e a carteira de iniciativas."
         :passos="[
-            'Clique em Nova RAE e informe a data da reunião, o período de referência e o tipo (trimestral, semestral ou anual).',
+            'Clique em Nova RAE e informe a data da reunião, o período de referência e o tipo (RAE, revisão semestral, revisão anual ou reunião de monitoramento).',
             'Antes da reunião, reúna os resultados dos indicadores, metas e iniciativas em pauta.',
             'Registre os destaques positivos e os problemas encontrados.',
             'Para cada problema, investigue a causa-raiz (por exemplo, com os “5 porquês”).',
@@ -83,7 +83,7 @@
                                 <div>
                                     <span class="badge bg-primary-subtle text-primary rounded-pill px-3">{{ $rae->dsc_tipo_reuniao }}</span>
                                     <h6 class="fw-bold mb-0 mt-1">
-                                        Ref.: {{ $rae->dte_referencia->format('M/Y') }}
+                                        Ref.: {{ ucfirst($rae->dte_referencia->translatedFormat('M/Y')) }}
                                         @if($rae->dte_reuniao)
                                             <span class="text-muted fw-normal small ms-2">— Reunião: {{ $rae->dte_reuniao->format('d/m/Y') }}</span>
                                         @endif
@@ -314,7 +314,7 @@
                                             <button wire:click="editarCausa('{{ $causa->cod_causa }}')" class="btn btn-xs btn-light border"><i class="bi bi-pencil"></i></button>
                                             @endif
                                             @if($podeExcluir)
-                                            <button wire:click="excluirCausa('{{ $causa->cod_causa }}')" class="btn btn-xs btn-light border text-danger"><i class="bi bi-trash"></i></button>
+                                            <button type="button" wire:click="excluirCausa('{{ $causa->cod_causa }}')" wire:confirm="Excluir esta análise de causa raiz? Os 5 porquês registrados serão perdidos." class="btn btn-xs btn-light border text-danger" title="Excluir"><i class="bi bi-trash"></i></button>
                                             @endif
                                         </div>
                                     </div>

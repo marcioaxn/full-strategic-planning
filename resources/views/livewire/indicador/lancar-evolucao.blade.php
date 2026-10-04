@@ -147,8 +147,14 @@
                                     <div class="list-group list-group-flush border rounded-3">
                                         @foreach($arquivosExistentes as $arq)
                                             <div class="list-group-item d-flex justify-content-between align-items-center py-2">
-                                                <small class="text-truncate" style="max-width: 80%;"><i class="bi bi-file-earmark-check me-2"></i>{{ $arq->txt_assunto }}</small>
-                                                <button type="button" wire:click="excluirArquivo('{{ $arq->cod_arquivo }}')" class="btn btn-link text-danger p-0"><i class="bi bi-x-circle"></i></button>
+                                                <a href="{{ route('indicadores.evidencia', $arq->cod_arquivo) }}" target="_blank" rel="noopener"
+                                                   class="small text-truncate text-decoration-none" style="max-width: 80%;"
+                                                   title="Abrir ou baixar a evidência">
+                                                    <i class="bi bi-file-earmark-arrow-down me-2"></i>{{ $arq->txt_assunto }}
+                                                </a>
+                                                <button type="button" wire:click="excluirArquivo('{{ $arq->cod_arquivo }}')"
+                                                        wire:confirm="Excluir a evidência &quot;{{ $arq->txt_assunto }}&quot;? O arquivo será apagado do servidor."
+                                                        class="btn btn-link text-danger p-0" title="Excluir evidência"><i class="bi bi-x-circle"></i></button>
                                             </div>
                                         @endforeach
                                     </div>
@@ -157,9 +163,13 @@
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center border-top pt-4">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" id="blnAtualizado" wire:model="bln_atualizado" true-value="Sim" false-value="Não">
-                                <label class="form-check-label small fw-bold" for="blnAtualizado">Marcar como Atualizado</label>
+                            <div>
+                                {{-- Booleano: o wire:model do Livewire 4 não lê true-value/false-value. "Sim"/"Não" só no servidor. --}}
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="blnAtualizado" wire:model="bln_atualizado">
+                                    <label class="form-check-label small fw-bold" for="blnAtualizado">Marcar como Atualizado</label>
+                                </div>
+                                @error('bln_atualizado') <div class="text-danger x-small">{{ $message }}</div> @enderror
                             </div>
                             <button type="submit" class="btn btn-primary gradient-theme-btn px-5 py-2 fw-bold shadow-sm">
                                 <i class="bi bi-save me-2"></i>Salvar Lançamento
@@ -194,13 +204,20 @@
                                             <span class="fw-bold small">{{ $ev->getNomeMes() }} / {{ $ev->num_ano }}</span>
                                         </td>
                                         <td>
-                                            <small class="fw-mono">{{ number_format($ev->vlr_realizado, 2, ',', '.') }}</small>
+                                            <small class="fw-mono">{{ $ev->vlr_realizado === null ? '—' : \App\Support\UnidadeMedida::formatar($ev->vlr_realizado, $indicador->dsc_unidade_medida) }}</small>
                                         </td>
                                         <td>
+                                            {{-- Cor pela régua do ciclo (GrauSatisfacao), não por cortes fixos de 100/80. --}}
                                             @php $ating = $ev->calcularAtingimento(); @endphp
-                                            <span class="fw-bold small text-{{ $ating >= 100 ? 'success' : ($ating >= 80 ? 'warning' : 'danger') }}">
-                                                @brazil_percent($ating, 1)
-                                            </span>
+                                            @if(\App\Support\CalculoPolaridade::ehInformativo($indicador->dsc_polaridade))
+                                                <small class="text-muted">Informativo</small>
+                                            @elseif($ating === null)
+                                                <small class="text-muted">Sem medição</small>
+                                            @else
+                                                <span class="fw-bold small" style="color: {{ \App\Models\StrategicPlanning\GrauSatisfacao::corDe($ating, $indicador->codPeiDoCiclo(), (int) $ev->num_ano) }};">
+                                                    @brazil_percent($ating, 1)
+                                                </span>
+                                            @endif
                                         </td>
                                         <td class="text-end pe-4">
                                             @if($ev->bln_atualizado === 'Sim')

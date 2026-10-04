@@ -1,4 +1,7 @@
 {{-- Side Panel de Detalhes da Entrega --}}
+{{-- Na lixeira, só Restaurar e Excluir definitivo: as edições davam 404 ou
+     mensagem falsa (a entrega excluída não é encontrada pelos métodos de escrita). --}}
+@php $editavel = $podeEditar && ! $entrega->trashed(); @endphp
 <div class="notion-side-panel-backdrop" wire:click="closeDetails"></div>
 
 <div class="notion-side-panel">
@@ -27,11 +30,11 @@
             </div>
             
             <div class="d-flex gap-1 ms-3">
-                @can('update', $plano)
+                @if($editavel)
                     <button class="btn btn-icon-notion" wire:click="openEditModal('{{ $entrega->cod_entrega }}')" title="Editar entrega">
                         <i class="bi bi-pencil-square"></i>
                     </button>
-                @endcan
+                @endif
                 <button class="btn btn-icon-notion text-danger" wire:click="closeDetails" title="Fechar">
                     <i class="bi bi-x-lg"></i>
                 </button>
@@ -48,7 +51,7 @@
                     <i class="bi bi-record-circle me-2"></i>Status
                 </div>
                 <div class="notion-property-value">
-                    @can('update', $plano)
+                    @if($editavel)
                         <div class="dropdown w-100" wire:key="status-dropdown-{{ $entrega->cod_entrega }}" wire:ignore.self>
                             <button class="notion-property-btn dropdown-toggle w-100 text-start" 
                                     type="button" 
@@ -73,7 +76,7 @@
                         <span class="notion-badge-status status-{{ Str::slug($entrega->bln_status) }}">
                             {{ $entrega->bln_status }}
                         </span>
-                    @endcan
+                    @endif
                 </div>
             </div>
 
@@ -83,7 +86,7 @@
                     <i class="bi bi-flag me-2"></i>Prioridade
                 </div>
                 <div class="notion-property-value">
-                    @can('update', $plano)
+                    @if($editavel)
                         @php $prio = $entrega->getPrioridadeInfo(); @endphp
                         <div class="dropdown w-100" wire:key="prio-dropdown-{{ $entrega->cod_entrega }}" wire:ignore.self>
                             <button class="notion-property-btn dropdown-toggle w-100 text-start" 
@@ -109,7 +112,7 @@
                         <span class="notion-badge-priority notion-priority-{{ $entrega->cod_prioridade }}">
                             {{ $entrega->getPrioridadeInfo()['label'] }}
                         </span>
-                    @endcan
+                    @endif
                 </div>
             </div>
 
@@ -119,16 +122,18 @@
                     <i class="bi bi-calendar-event me-2"></i>Prazo
                 </div>
                 <div class="notion-property-value">
-                    @can('update', $plano)
+                    @if($editavel)
                         <input type="date" 
                                value="{{ $entrega->dte_prazo?->format('Y-m-d') }}"
+                               min="{{ $plano->dte_inicio?->format('Y-m-d') }}"
+                               max="{{ $plano->dte_fim?->format('Y-m-d') }}"
                                wire:change="atualizarPrazo('{{ $entrega->cod_entrega }}', $event.target.value)"
                                class="notion-inline-input {{ $entrega->isAtrasada() ? 'text-danger fw-bold' : '' }}">
                     @else
                         <span class="small {{ $entrega->isAtrasada() ? 'text-danger fw-bold' : '' }}">
                             {{ $entrega->dte_prazo?->format('d/m/Y') ?? 'Vazio' }}
                         </span>
-                    @endcan
+                    @endif
                 </div>
             </div>
 
@@ -139,7 +144,7 @@
                 </div>
                 <div class="notion-property-value">
                     <div x-data="{ open: false }" class="position-relative">
-                        @can('update', $plano)
+                        @if($editavel)
                             <div class="notion-property-btn d-flex flex-wrap gap-1 align-items-center" @click="open = !open">
                                 @forelse($entrega->responsaveis as $resp)
                                     <div class="notion-user-tag">
@@ -179,7 +184,7 @@
                                     <span class="text-muted small">Sem responsáveis</span>
                                 @endforelse
                             </div>
-                        @endcan
+                        @endif
                     </div>
                 </div>
             </div>
@@ -190,22 +195,22 @@
     <div class="notion-side-panel-section">
         <h6 class="notion-section-header">
             <i class="bi bi-tags me-2"></i>LABELS
-            @can('update', $plano)
+            @if($editavel)
                 <button class="btn btn-plus-section" wire:click="openLabelsModal('{{ $entrega->cod_entrega }}')">
                     <i class="bi bi-plus-lg"></i>
                 </button>
-            @endcan
+            @endif
         </h6>
         
         <div class="d-flex flex-wrap gap-2">
             @forelse($entrega->labels as $label)
                 <span class="notion-badge-label" style="background-color: {{ $label->dsc_cor }}20; color: {{ $label->dsc_cor }}; border: 1px solid {{ $label->dsc_cor }}40;">
                     {{ $label->dsc_label }}
-                    @can('update', $plano)
+                    @if($editavel)
                         <button wire:click="toggleLabel('{{ $entrega->cod_entrega }}', '{{ $label->cod_label }}')" class="btn-remove-tag">
                             <i class="bi bi-x"></i>
                         </button>
-                    @endcan
+                    @endif
                 </span>
             @empty
                 <span class="text-muted small fst-italic">Nenhuma etiqueta atribuída</span>
@@ -217,7 +222,7 @@
     <div class="notion-side-panel-section">
         <div class="d-flex justify-content-between align-items-center mb-2">
             <h6 class="notion-section-header mb-0"><i class="bi bi-paperclip me-2"></i>ANEXOS</h6>
-            @can('update', $plano)
+            @if($editavel)
                 <div x-data="{ uploading: false }" 
                      x-on:livewire-upload-start="uploading = true"
                      x-on:livewire-upload-finish="uploading = false"
@@ -228,7 +233,7 @@
                     <input type="file" id="upload-anexos" wire:model="anexosUpload" multiple class="d-none">
                     <div x-show="uploading" class="spinner-border spinner-border-sm text-primary ms-2" role="status"></div>
                 </div>
-            @endcan
+            @endif
         </div>
         
         @if($entrega->anexos->count() > 0)
@@ -242,19 +247,21 @@
                                 <div class="text-muted" style="font-size: 0.65rem;">{{ $anexo->getTamanhoFormatado() }} • {{ $anexo->created_at->format('d/m/Y') }}</div>
                             </div>
                         </a>
-                        @can('update', $plano)
+                        @if($editavel)
                             <button wire:click="excluirAnexo('{{ $anexo->cod_anexo }}')" wire:confirm="Excluir este anexo permanentemente?" class="btn-delete-item">
                                 <i class="bi bi-trash3"></i>
                             </button>
-                        @endcan
+                        @endif
                     </div>
                 @endforeach
             </div>
-        @else
+        @elseif($editavel)
             <div class="notion-empty-area" onclick="document.getElementById('upload-anexos').click()">
                 <i class="bi bi-cloud-arrow-up fs-4 mb-1"></i>
-                <span>Arraste ou clique para anexar</span>
+                <span>Clique para anexar</span>
             </div>
+        @else
+            <span class="text-muted small fst-italic">Nenhum anexo.</span>
         @endif
     </div>
 
@@ -283,7 +290,7 @@
     <div class="notion-side-panel-section bg-light bg-opacity-25">
         <h6 class="notion-section-header mb-3"><i class="bi bi-chat-left-text me-2"></i>COMENTÁRIOS</h6>
         
-        @can('update', $plano)
+        @if($editavel)
             <div class="notion-comment-input-container mb-4" x-data="{ comentario: '', submitting: false }">
                 <textarea x-model="comentario" class="form-control notion-textarea" rows="2" placeholder="Adicionar comentário..."></textarea>
                 <div class="d-flex justify-content-end mt-2">
@@ -294,7 +301,7 @@
                     </button>
                 </div>
             </div>
-        @endcan
+        @endif
         
         <div class="notion-comments-thread">
             @forelse($entrega->comentarios as $comentario)
@@ -329,7 +336,20 @@
 
     {{-- Footer Fixo --}}
     <div class="notion-side-panel-footer">
-        @can('update', $plano)
+        @if($entrega->trashed())
+            @can('delete', $entrega)
+                <div class="d-flex justify-content-between w-100">
+                    <button class="btn btn-sm btn-notion-secondary" wire:click="restaurar('{{ $entrega->cod_entrega }}')">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Restaurar
+                    </button>
+                    <button class="btn btn-sm btn-notion-danger" wire:click="confirmDeleteEntrega('{{ $entrega->cod_entrega }}', true)">
+                        <i class="bi bi-trash3 me-1"></i> Excluir definitivamente
+                    </button>
+                </div>
+            @else
+                <span class="text-muted small">Entrega na lixeira.</span>
+            @endcan
+        @elseif($editavel)
             <div class="d-flex justify-content-between w-100">
                 <button class="btn btn-sm btn-notion-secondary" wire:click="{{ $entrega->bln_arquivado ? 'desarquivar' : 'arquivar' }}('{{ $entrega->cod_entrega }}')">
                     <i class="bi bi-archive me-1"></i> {{ $entrega->bln_arquivado ? 'Desarquivar' : 'Arquivar' }}
@@ -340,7 +360,7 @@
                 </button>
                 @endcan
             </div>
-        @endcan
+        @endif
     </div>
 </div>
 

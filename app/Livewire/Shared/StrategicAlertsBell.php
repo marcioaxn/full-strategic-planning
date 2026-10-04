@@ -3,8 +3,8 @@
 namespace App\Livewire\Shared;
 
 use App\Models\StrategicAlert;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 
 class StrategicAlertsBell extends Component
@@ -27,37 +27,45 @@ class StrategicAlertsBell extends Component
             return;
         }
 
-        $orgId = (Auth::user()?->organizacaoSelecionadaId() ?? (Auth::check() ? null : Session::get('organizacao_selecionada_id')));
-
-        $this->unreadCount = StrategicAlert::where('user_id', Auth::id())
-            ->where(function ($q) use ($orgId) {
-                if ($orgId) {
-                    $q->where('cod_organizacao', $orgId)->orWhereNull('cod_organizacao');
-                }
-            })
-            ->unread()
-            ->count();
+        $this->unreadCount = $this->alertasDoEscopo()->unread()->count();
     }
 
+    /**
+     * Marca como lidos só os alertas que o sino mostra no escopo atual (a
+     * unidade selecionada e os gerais). 🔴 Usava só o user_id: estando na
+     * unidade A, os alertas da B — que o usuário nunca viu — viravam "lidos".
+     * Teste: MarcarNotificacoesLidasTest.
+     */
     public function markAllAsRead()
     {
-        StrategicAlert::where('user_id', Auth::id())->unread()->update(['read_at' => now()]);
+        if (! Auth::check()) {
+            return;
+        }
+
+        $this->alertasDoEscopo()->unread()->update(['read_at' => now()]);
         $this->refreshCount();
     }
 
     public function getRecentAlerts()
     {
-        $orgId = (Auth::user()?->organizacaoSelecionadaId() ?? (Auth::check() ? null : Session::get('organizacao_selecionada_id')));
+        return $this->alertasDoEscopo()
+            ->latest()
+            ->take(5)
+            ->get();
+    }
 
-        return StrategicAlert::where('user_id', Auth::id())
+    /** Os alertas do usuário no escopo que o sino exibe: a contagem, a lista e o "marcar todas" usam o mesmo. */
+    private function alertasDoEscopo(): Builder
+    {
+        $orgId = Auth::user()?->organizacaoSelecionadaId();
+
+        return StrategicAlert::query()
+            ->where('user_id', Auth::id())
             ->where(function ($q) use ($orgId) {
                 if ($orgId) {
                     $q->where('cod_organizacao', $orgId)->orWhereNull('cod_organizacao');
                 }
-            })
-            ->latest()
-            ->take(5)
-            ->get();
+            });
     }
 
     public function render()

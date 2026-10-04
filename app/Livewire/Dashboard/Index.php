@@ -439,7 +439,9 @@ class Index extends Component
         // Buscar evoluções do ano selecionado vinculadas ao PEI
         // Só conta o que foi de fato lançado (realizado preenchido). Indicador
         // informativo (polaridade "Não Aplicável") não entra em média.
-        $evolucoes = EvolucaoIndicador::with('indicador:cod_indicador,dsc_polaridade')
+        // bln_acumulado vai junto: com Previsto em branco, o atingimento usa a
+        // meta do mês (acumulado) ou a anual (não acumulado), decidido por ele.
+        $evolucoes = EvolucaoIndicador::with('indicador:cod_indicador,dsc_polaridade,bln_acumulado')
             ->where('num_ano', $this->anoSelecionado)
             ->whereNotNull('vlr_realizado')
             ->whereHas('indicador.objetivo.perspectiva', fn ($q) => $q->where('cod_pei', $this->peiAtivo->cod_pei))

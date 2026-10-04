@@ -27,6 +27,7 @@ use App\Models\StrategicPlanning\Valor;
 use App\Models\SystemSetting;
 use App\Services\AI\AiServiceFactory;
 use App\Services\IndicadorCalculoService;
+use App\Support\VigenciaNoAno;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReportGenerationService
@@ -64,12 +65,74 @@ class ReportGenerationService
 
     protected $calculoService;
 
+    /** Ciclo fixado pelo chamador (o agendador); null = o ciclo do contexto. */
+    private ?string $codPeiFixo = null;
+
     public function __construct(IndicadorCalculoService $calculoService)
     {
         $this->calculoService = $calculoService;
     }
 
-    public function generateExecutivo($organizacaoId, $ano, $periodo, $perspectivaId = null)
+    /**
+     * Fixa o ciclo dos próximos relatórios.
+     *
+     * 🔴 O agendador roda sem sessão: PEI::doContexto() caía no "ativo" e o
+     * relatório agendado no ciclo A saía do ciclo B. O agendamento grava o
+     * ciclo escolhido e o comando o fixa aqui antes de gerar.
+     */
+    public function usarCiclo(?string $codPei): static
+    {
+        $this->codPeiFixo = $codPei ?: null;
+
+        return $this;
+    }
+
+    /** O ciclo do relatório: o fixado (agendador) ou o selecionado no topo. */
+    private function ciclo(): ?PEI
+    {
+        return $this->codPeiFixo ? PEI::find($this->codPeiFixo) : PEI::doContexto();
+    }
+
+    /**
+     * Missão e visão DO CICLO e da unidade. Sem o filtro de ciclo, o PDF
+     * imprimia a missão de outro ciclo sob o ciclo selecionado.
+     */
+    private function identidadeDe(?string $organizacaoId, ?PEI $pei): MissaoVisaoValores
+    {
+        if (! $pei || ! $organizacaoId) {
+            return new MissaoVisaoValores;
+        }
+
+        return MissaoVisaoValores::where('cod_pei', $pei->cod_pei)
+            ->where('cod_organizacao', $organizacaoId)
+            ->first() ?? new MissaoVisaoValores;
+    }
+
+    /**
+     * Iniciativas da unidade, do ciclo e vigentes no ano — o mesmo recorte em
+     * todos os relatórios (Executivo, Integrado, Iniciativas e o Excel).
+     */
+    private function iniciativasDoRelatorio(?string $organizacaoId, ?PEI $pei, int $ano)
+    {
+        $query = PlanoDeAcao::query();
+
+        if ($organizacaoId) {
+            $query->where('action_plan.tab_plano_de_acao.cod_organizacao', $organizacaoId);
+        }
+
+        if ($pei) {
+            $query->whereHas('objetivo.perspectiva', fn ($q) => $q->where('cod_pei', $pei->cod_pei));
+        }
+
+        return VigenciaNoAno::aplicar(
+            $query,
+            $ano,
+            'action_plan.tab_plano_de_acao.dte_inicio',
+            'action_plan.tab_plano_de_acao.dte_fim'
+        );
+    }
+
+    public function generateExecutivo($organizacaoId, $ano, $periodo, $perspectivaId = null, bool $includeAi = false)
     {
         $mesLimite = 12;
         switch ($periodo) {
@@ -89,9 +152,8 @@ class ReportGenerationService
         }
 
         $organizacao = Organization::findOrFail($organizacaoId);
-        $identidade = MissaoVisaoValores::where('cod_organizacao', $organizacaoId)->first() ?? new MissaoVisaoValores;
-
-        $pei = PEI::doContexto();
+        $pei = $this->ciclo();
+        $identidade = $this->identidadeDe($organizacaoId, $pei);
 
         // 1. Valores (Identidade Cultural)
         $valores = Valor::where('cod_pei', $pei?->cod_pei)
@@ -104,15 +166,23 @@ class ReportGenerationService
         if ($perspectivaId) {
             $queryPerspectivas->where('cod_perspectiva', $perspectivaId);
         }
-        $perspectivas = $queryPerspectivas->with(['objetivos.indicadores', 'objetivos.ods'])->ordenadoPorNivel()->get();
+        // Indicadores do objetivo: só os ligados à unidade do relatório (e às
+        // subordinadas), como no Integrado e no Mapa. Antes, o Executivo da
+        // unidade A contava os indicadores da unidade B.
+        $orgsDoRelatorio = Organization::descendentesEProprio($organizacaoId);
+        $perspectivas = $queryPerspectivas->with([
+            'objetivos.indicadores' => fn ($q) => $q->whereIn(
+                'performance_indicators.tab_indicador.cod_indicador',
+                fn ($sub) => $sub->select('cod_indicador')
+                    ->from('performance_indicators.rel_indicador_objetivo_organizacao')
+                    ->whereIn('cod_organizacao', $orgsDoRelatorio)
+            ),
+            'objetivos.ods',
+        ])->ordenadoPorNivel()->get();
 
         // 3. Iniciativas (Ordenados por Perspectiva > Objetivo > Plano)
-        $planos = PlanoDeAcao::where('cod_organizacao', $organizacaoId)
+        $planos = $this->iniciativasDoRelatorio($organizacaoId, $pei, (int) $ano)
             ->with(['entregas.responsaveis', 'objetivo.perspectiva'])
-            ->where(function ($q) use ($ano) {
-                $q->whereYear('dte_inicio', '<=', $ano)
-                    ->whereYear('dte_fim', '>=', $ano);
-            })
             ->get()
             ->map(function ($plano) use ($ano) {
                 // Calcular progresso real do ano usando o Service
@@ -145,7 +215,9 @@ class ReportGenerationService
             ->orderByRaw('(num_probabilidade * num_impacto) DESC')
             ->get();
 
+        // Sumário do MESMO recorte da lista detalhada (antes somava todos os ciclos).
         $riscosSummary = Risco::where('cod_organizacao', $organizacaoId)
+            ->where('cod_pei', $pei?->cod_pei)
             ->selectRaw("
                 CASE
                     WHEN (num_probabilidade * num_impacto) >= 16 THEN 'Crítico'
@@ -188,14 +260,17 @@ class ReportGenerationService
         $aiTrends = null;
         $aiEnabled = SystemSetting::getValue('ai_enabled', false);
 
-        if ($aiEnabled) {
+        // 🔴 Só com "Incluir IA" ligado: o Executivo chamava a IA (duas chamadas
+        // pagas, com o nome da unidade e séries de indicadores) mesmo com o
+        // switch desligado.
+        if ($aiEnabled && $includeAi) {
             $aiService = AiServiceFactory::make();
             if ($aiService) {
                 // Preparar Estatísticas para o Resumo
                 $stats = [
                     'totalObjetivos' => Objetivo::whereHas('perspectiva', fn ($q) => $q->where('cod_pei', $pei?->cod_pei))->count(),
                     'totalIndicadores' => Indicador::whereHas('objetivo.perspectiva', fn ($q) => $q->where('cod_pei', $pei?->cod_pei))->count(),
-                    'totalPlanos' => PlanoDeAcao::where('cod_organizacao', $organizacaoId)->count(),
+                    'totalPlanos' => $planos->count(),
                     'riscosCriticos' => Risco::where('cod_organizacao', $organizacaoId)->where('cod_pei', $pei?->cod_pei)->criticos()->count(),
                 ];
                 $aiSummary = $aiService->summarizeStrategy($stats, $organizacao->nom_organizacao);
@@ -257,9 +332,8 @@ class ReportGenerationService
     {
         $ano = $ano ?? date('Y');
         $organizacao = Organization::findOrFail($organizacaoId);
-        $identidade = MissaoVisaoValores::where('cod_organizacao', $organizacaoId)->first() ?? new MissaoVisaoValores;
-
-        $pei = PEI::doContexto();
+        $pei = $this->ciclo();
+        $identidade = $this->identidadeDe($organizacaoId, $pei);
 
         // Carregar Valores
         $valores = Valor::where('cod_pei', $pei?->cod_pei)
@@ -345,7 +419,7 @@ class ReportGenerationService
     public function generateObjetivos($organizacaoId = null, $ano = null, $perspectivaId = null)
     {
         $ano = $ano ?? date('Y');
-        $pei = PEI::doContexto();
+        $pei = $this->ciclo();
 
         if (! $pei) {
             throw new \Exception('Nenhum ciclo PEI ativo encontrado.');
@@ -397,7 +471,7 @@ class ReportGenerationService
         }
 
         // Só o ciclo em contexto: o relatório misturava indicadores de todos os ciclos.
-        if ($pei = PEI::doContexto()) {
+        if ($pei = $this->ciclo()) {
             $query->where(function ($q) use ($pei) {
                 $q->whereHas('objetivo.perspectiva', fn ($p) => $p->where('cod_pei', $pei->cod_pei))
                     ->orWhereHas('planoDeAcao.objetivo.perspectiva', fn ($p) => $p->where('cod_pei', $pei->cod_pei));
@@ -424,8 +498,8 @@ class ReportGenerationService
         // 🔴 A régua vai JUNTO. Sem ela, a view caía nos cortes 80/50 escritos
         // no próprio Blade — cortes que a organização nunca definiu, e que
         // divergem do farol do Mapa Estratégico para o mesmo indicador.
-        $pei = PEI::doContexto();
-        $grausSatisfacao = GrauSatisfacao::doPei($pei?->cod_pei, (int) $ano)->get();
+        $pei = $this->ciclo();
+        $grausSatisfacao = GrauSatisfacao::reguaEfetiva($pei?->cod_pei, (int) $ano);
 
         $pdf = Pdf::loadView('relatorios.indicadores', compact(
             'indicadores', 'organizacao', 'filtros', 'pei', 'ano', 'grausSatisfacao'
@@ -442,17 +516,10 @@ class ReportGenerationService
         $ano = $ano ?? date('Y');
         $organizacao = $organizacaoId ? Organization::find($organizacaoId) : null;
 
-        $query = PlanoDeAcao::query()->with(['objetivo.perspectiva', 'entregas', 'tipoExecucao']);
-
-        if ($organizacaoId) {
-            $query->where('cod_organizacao', $organizacaoId);
-        }
-
-        // Filtrar por ano (vigência no ano selecionado)
-        $query->where(function ($q) use ($ano) {
-            $q->whereYear('dte_inicio', '<=', $ano)
-                ->whereYear('dte_fim', '>=', $ano);
-        });
+        // Vigentes no ano, da unidade e do ciclo selecionado — o mesmo recorte do
+        // Excel (PlanosExport). Antes não havia filtro de ciclo.
+        $query = $this->iniciativasDoRelatorio($organizacaoId, $this->ciclo(), (int) $ano)
+            ->with(['objetivo.perspectiva', 'entregas', 'tipoExecucao']);
 
         // Calcular progresso e status reais via Service unificado
         $planos = $query->orderBy('dte_fim')->get()->map(function ($plano) use ($ano) {
@@ -490,12 +557,13 @@ class ReportGenerationService
 
         $query = Risco::query()->with(['mitigacoes', 'ocorrencias']);
 
+        // Mesmo recorte da lista e da matriz: a unidade e as subordinadas.
         if ($organizacaoId) {
-            $query->where('cod_organizacao', $organizacaoId);
+            $query->whereIn('risk_management.tab_risco.cod_organizacao', Organization::descendentesEProprio($organizacaoId));
         }
 
         // Só o ciclo em contexto, como a tela de riscos.
-        if ($pei = PEI::doContexto()) {
+        if ($pei = $this->ciclo()) {
             $query->where('cod_pei', $pei->cod_pei);
         }
 
@@ -532,8 +600,8 @@ class ReportGenerationService
         }
 
         $organizacao = Organization::findOrFail($organizacaoId);
-        $identidade = MissaoVisaoValores::where('cod_organizacao', $organizacaoId)->first() ?? new MissaoVisaoValores;
-        $pei = PEI::doContexto();
+        $pei = $this->ciclo();
+        $identidade = $this->identidadeDe($organizacaoId, $pei);
 
         // Identidade & Valores
         $valores = Valor::where('cod_pei', $pei?->cod_pei)
@@ -567,12 +635,8 @@ class ReportGenerationService
             ->get();
 
         // Iniciativas
-        $planos = PlanoDeAcao::where('cod_organizacao', $organizacaoId)
+        $planos = $this->iniciativasDoRelatorio($organizacaoId, $pei, (int) $ano)
             ->with(['entregas.responsaveis', 'objetivo.perspectiva'])
-            ->where(function ($q) use ($ano) {
-                $q->whereYear('dte_inicio', '<=', $ano)
-                    ->whereYear('dte_fim', '>=', $ano);
-            })
             ->get()
             ->map(function ($plano) use ($ano) {
                 // Calcular progresso real do ano usando o Service
@@ -606,8 +670,9 @@ class ReportGenerationService
             ->orderByRaw('(num_probabilidade * num_impacto) DESC')
             ->get();
 
-        // Riscos Summary
+        // Riscos Summary (do mesmo ciclo da lista detalhada)
         $riscosSummary = Risco::where('cod_organizacao', $organizacaoId)
+            ->where('cod_pei', $pei?->cod_pei)
             ->selectRaw("
                 CASE
                     WHEN (num_probabilidade * num_impacto) >= 16 THEN 'Crítico'
@@ -622,9 +687,14 @@ class ReportGenerationService
             ->toArray();
 
         // Indicadores Completos
+        // Só os do ciclo do relatório (antes misturava todos os ciclos).
         $indicadoresDetalhados = Indicador::whereHas('organizacoes', function ($q) use ($organizacaoId) {
             $q->where('tab_organizacoes.cod_organizacao', $organizacaoId);
         })
+            ->where(function ($q) use ($pei) {
+                $q->whereHas('objetivo.perspectiva', fn ($p) => $p->where('cod_pei', $pei?->cod_pei))
+                    ->orWhereHas('planoDeAcao.objetivo.perspectiva', fn ($p) => $p->where('cod_pei', $pei?->cod_pei));
+            })
             ->with(['objetivo', 'evolucoes' => function ($q) use ($ano) {
                 $q->where('num_ano', $ano)->orderBy('num_mes');
             }])

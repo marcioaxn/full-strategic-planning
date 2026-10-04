@@ -57,13 +57,10 @@ class MatrizRiscos extends Component
             }
         }
 
-        $query = Risco::query();
-        if ($this->organizacaoId) {
-            $query->where('cod_organizacao', $this->organizacaoId);
-        } else {
-            // Sem organização selecionada: só o que está no alcance do usuário.
-            Auth::user()->aplicarEscopoOrganizacional($query);
-        }
+        // O mesmo recorte da lista de riscos: a unidade e as subordinadas, dentro
+        // do alcance do usuário. Filtrava só a unidade exata e a matriz mostrava
+        // menos riscos que a lista.
+        $query = Risco::query()->noRecorteDaUnidade($this->organizacaoId, Auth::user());
 
         // Só o ciclo selecionado no topo, como a lista de riscos.
         if ($pei = PEI::doContexto()) {

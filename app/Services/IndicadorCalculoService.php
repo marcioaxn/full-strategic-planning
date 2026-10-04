@@ -10,6 +10,7 @@ use App\Models\StrategicAlert;
 use App\Models\StrategicPlanning\GrauSatisfacao;
 use App\Models\StrategicPlanning\Objetivo;
 use App\Models\StrategicPlanning\Perspectiva;
+use App\Support\CalculoPolaridade;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -298,7 +299,8 @@ class IndicadorCalculoService
             [
                 'vlr_realizado' => $progresso,
                 'vlr_previsto' => 100, // Meta padrão: 100% de conclusão
-                'txt_observacao' => 'Valor calculado automaticamente com base no progresso das entregas ponderadas da iniciativa.',
+                // (Havia aqui 'txt_observacao', coluna que tab_evolucao_indicador
+                // não tem e que não está no $fillable: era descartada em silêncio.)
             ]
         );
 
@@ -848,11 +850,12 @@ class IndicadorCalculoService
         $variacaoPct = $meanY != 0 ? round(($slope / abs($meanY)) * 100, 1) : 0.0;
 
         // Favorável depende da polaridade
-        $polaridade = $indicador->dsc_polaridade ?? 'Positiva';
-        $favoravel = match ($polaridade) {
-            'Positiva' => $direcao === 'Crescente',
-            'Negativa' => $direcao === 'Decrescente',
-            'Estabilidade' => $direcao === 'Estável',
+        // Normalizada: o rótulo longo ("Negativa (Quanto menor, melhor)"), que
+        // vem do legado e de importação, caía no default e ficava sem juízo.
+        $favoravel = match (CalculoPolaridade::normalizar($indicador->dsc_polaridade)) {
+            CalculoPolaridade::POSITIVA => $direcao === 'Crescente',
+            CalculoPolaridade::NEGATIVA => $direcao === 'Decrescente',
+            CalculoPolaridade::ESTABILIDADE => $direcao === 'Estável',
             default => null,
         };
 

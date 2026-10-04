@@ -480,6 +480,9 @@
                                 </label>
                             </div>
                             <span class="text-muted small d-block mt-1">{{ __('Usuários inativos não conseguem acessar o sistema.') }}</span>
+                            @error('form.ativo')
+                                <span class="text-danger small d-block mt-1">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="col-12 col-md-7">
@@ -628,20 +631,43 @@
                     <i class="bi bi-exclamation-triangle"></i>
                 </div>
                 <div>
-                    <h5 class="mb-1 fw-bold">{{ __('Excluir Usuário') }}</h5>
-                    <p class="text-muted small mb-0">{{ __('Esta ação é definitiva') }}</p>
+                    @if(! empty($historicoDoExcluido))
+                        <h5 class="mb-1 fw-bold">{{ __('Este usuário não pode ser excluído') }}</h5>
+                        <p class="text-muted small mb-0">{{ __('Ele tem registros no sistema') }}</p>
+                    @else
+                        <h5 class="mb-1 fw-bold">{{ __('Excluir Usuário') }}</h5>
+                        <p class="text-muted small mb-0">{{ __('Esta ação é definitiva') }}</p>
+                    @endif
                 </div>
             </div>
         </x-slot>
 
         <x-slot name="content">
             <div class="delete-confirmation">
-                <p class="mb-2">
-                    {{ __('Tem certeza que deseja excluir o usuário') }} <strong class="text-body-emphasis">{{ $editing?->name }}</strong>?
-                </p>
-                <p class="text-muted small mb-0">
-                    {{ __('O usuário perderá o acesso ao sistema imediatamente.') }}
-                </p>
+                {{-- O modal diz o que de fato acontece: a exclusão física apagaria
+                     em cascata a auditoria, o RACI e os comentários da pessoa.
+                     Por isso, quem tem histórico só pode ser desativado. --}}
+                @if(! empty($historicoDoExcluido))
+                    <p class="mb-2">
+                        <strong class="text-body-emphasis">{{ $editing?->name }}</strong>
+                        {{ __('não pode ser excluído: a exclusão apagaria estes registros, que precisam ser preservados.') }}
+                    </p>
+                    <ul class="small mb-3">
+                        @foreach($historicoDoExcluido as $rotulo => $quantidade)
+                            <li>{{ ucfirst($rotulo) }}: {{ $quantidade }}</li>
+                        @endforeach
+                    </ul>
+                    <p class="text-muted small mb-0">
+                        {{ __('Desativar bloqueia o acesso imediatamente e mantém todo o histórico. A conta pode ser reativada depois, se preciso.') }}
+                    </p>
+                @else
+                    <p class="mb-2">
+                        {{ __('Tem certeza que deseja excluir o usuário') }} <strong class="text-body-emphasis">{{ $editing?->name }}</strong>?
+                    </p>
+                    <p class="text-muted small mb-0">
+                        {{ __('A conta e os vínculos de acesso serão apagados definitivamente. Ela não tem nenhum registro no sistema (auditoria, iniciativas, entregas, comentários, riscos ou relatórios), por isso pode ser excluída.') }}
+                    </p>
+                @endif
             </div>
         </x-slot>
 
@@ -650,15 +676,27 @@
                 {{ __('Cancelar') }}
             </x-secondary-button>
 
-            <x-danger-button wire:click="delete" wire:loading.attr="disabled" class="btn-delete-modern">
-                <span wire:loading.remove wire:target="delete">
-                    <i class="bi bi-trash me-1"></i>{{ __('Excluir Permanentemente') }}
-                </span>
-                <span wire:loading wire:target="delete">
-                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                    {{ __('Excluindo...') }}
-                </span>
-            </x-danger-button>
+            @if(! empty($historicoDoExcluido))
+                <x-danger-button wire:click="desativar" wire:loading.attr="disabled" class="btn-delete-modern">
+                    <span wire:loading.remove wire:target="desativar">
+                        <i class="bi bi-person-dash me-1"></i>{{ __('Desativar') }}
+                    </span>
+                    <span wire:loading wire:target="desativar">
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        {{ __('Desativando...') }}
+                    </span>
+                </x-danger-button>
+            @else
+                <x-danger-button wire:click="delete" wire:loading.attr="disabled" class="btn-delete-modern">
+                    <span wire:loading.remove wire:target="delete">
+                        <i class="bi bi-trash me-1"></i>{{ __('Excluir Permanentemente') }}
+                    </span>
+                    <span wire:loading wire:target="delete">
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        {{ __('Excluindo...') }}
+                    </span>
+                </x-danger-button>
+            @endif
         </x-slot>
     </x-confirmation-modal>
 

@@ -114,9 +114,13 @@ return Application::configure(basePath: dirname(__DIR__))
                     ->with('error', 'Você não tem permissão para acessar este recurso.');
             }
 
+            // O layout só exibe flash.banner: com 'error' sozinho, o usuário
+            // caía no dashboard sem saber por quê (MensagemDeAcessoNegadoTest).
             return redirect()
                 ->route('dashboard')
-                ->with('error', 'Você não tem permissão para realizar esta ação.');
+                ->with('error', 'Você não tem permissão para realizar esta ação.')
+                ->with('flash.banner', 'Você não tem permissão para realizar esta ação.')
+                ->with('flash.bannerStyle', 'danger');
         });
 
         // Handle 404 Not Found (Não Encontrado)

@@ -63,17 +63,15 @@
                                 @for($j=1; $j<=5; $j++)
                                     @php
                                         $nivel = $i * $j;
-                                        $bgColor = '#65a30d'; // Verde (Baixo)
-                                        if ($nivel >= 16) $bgColor = '#dc2626'; // Vermelho (Crítico)
-                                        elseif ($nivel >= 10) $bgColor = '#f97316'; // Laranja (Alto)
-                                        elseif ($nivel >= 5) $bgColor = '#eab308'; // Amarelo (Médio)
-                                        
+                                        // A régua única do nível (a mesma da lista, do formulário e do Excel).
+                                        $bgColor = \App\Models\RiskManagement\Risco::corDoNivel($nivel);
+
                                         $riscosNaCelula = $matriz[$i][$j] ?? [];
                                     @endphp
                                     <div class="risk-cell border d-flex flex-wrap align-items-start justify-content-start p-2" 
                                          style="background-color: {{ $bgColor }}15; min-height: 110px; flex: 1; border-color: {{ $bgColor }}33 !important;">
                                         @foreach($riscosNaCelula as $r)
-                                            <a href="{{ route('riscos.index') }}?search={{ urlencode($r->dsc_titulo) }}" 
+                                            <a href="{{ route('riscos.index', ['search' => $r->dsc_titulo]) }}" 
                                                class="risk-matrix-item animate-pop" 
                                                data-bs-toggle="tooltip"
                                                data-bs-placement="top"
