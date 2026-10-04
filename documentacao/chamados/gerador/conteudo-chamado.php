@@ -37,7 +37,10 @@
  * 2026_10_03_180000, 2026_10_03_200000, 2026_10_03_220000 (e 2026_09_05_223000
  * em cópia anterior a 05/09); PerfilAcessoSeeder (perfil Consulta);
  * composer.lock (Symfony 7.4, PHP 8.2); JS (app.js, session-timer.js);
- * comando entregas:proteger-anexos; envio de e-mail obrigatório (autocadastro).
+ * comando entregas:proteger-anexos.
+ * E-mail: SEM pré-requisito nesta versão (gestor, 04/10/2026: a Infra ainda não
+ * configurou a mensageria). O autocadastro foi desligado; contas novas usam
+ * "Senha definida pelo gestor" no cadastro de usuários.
  * 2.1.0: sem composer/npm novos, sem comando, fila, cron ou variável de .env
  * novos. config/audit.php, config/fortify.php (autocadastro desligado — rota
  * /register some) e config/versao.php mudaram → optimize:clear (passo 3).
@@ -69,7 +72,6 @@ return function (array $f): array {
         ['Branch', 'main'],
         ['Prioridade', 'Alta'],
         ['Banco de dados', 'Até 10 migrations (php artisan migrate --force aplica só as pendentes) e 2 seeders. Nenhum registro é apagado'],
-        ['Pré-requisito', 'O servidor precisa conseguir enviar e-mail (variáveis MAIL_* do .env, já usadas pela aplicação)'],
     ]);
 
     $b[] = $alerta('Antes de começar: fazer o backup do banco de dados pelo procedimento usual da equipe.');
