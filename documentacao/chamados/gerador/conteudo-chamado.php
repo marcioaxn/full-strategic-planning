@@ -22,8 +22,6 @@
  *    exclusão LÓGICA (deleted_at) do que pertence a ciclos PEI já excluídos.
  *  - PerformanceIndicators/2026_10_04_000001_amplia_precisao_valores_indicador —
  *    numeric(15,2) → numeric(19,4) em 4 colunas (ALTER TYPE, PG 9.3).
- * Ordem por nome de arquivo: se a 1ª parar, as duas seguintes não rodam (cada
- * migration roda na própria transação; nada fica pela metade).
  * Da 2.0.0 (se o chamado de 03/10 não foi executado): 2026_10_03_120000,
  * 2026_10_03_180000, 2026_10_03_200000, 2026_10_03_220000 (e 2026_09_05_223000
  * em cópia anterior a 05/09); PerfilAcessoSeeder (perfil Consulta);
@@ -36,6 +34,10 @@
  *
  * ── REGRAS ──────────────────────────────────────────────────────────────────
  * Só o que fazer.
+ * Linguagem só técnica: a Infra (outro órgão) não conhece o negócio. Nada de
+ * "entrega", "iniciativa", "indicador", "risco" ou caminho de menu no texto que
+ * ela lê — só servidor, comandos, arquivos e o que conferir. Nomes de migration
+ * e de comando aparecem como identificadores, sem explicação de negócio.
  */
 
 return function (array $f): array {
@@ -46,16 +48,16 @@ return function (array $f): array {
     $b = [];
 
     $b[] = $titulo('CHAMADO DE IMPLANTAÇÃO — SISTEMA PEI v2.1.0');
-    $b[] = $subtitulo('Planejamento Estratégico Integrado · correções do teste funcional (indicadores, iniciativas, entregas, riscos, relatórios e usuários) · 04/10/2026 · 3 passos');
+    $b[] = $subtitulo('Atualização de código, dependências e banco de dados · 04/10/2026 · 3 passos');
 
     $b[] = $tabela([
-        ['Sistema', 'Sistema PEI — Planejamento Estratégico Integrado'],
+        ['Sistema', 'Sistema PEI (aplicação Laravel / PHP, banco PostgreSQL)'],
         ['Versão', '2.1.0 (substitui a 2.0.0 do chamado de 03/10/2026)'],
         ['Repositório Git', 'https://github.com/marcioaxn/full-strategic-planning'],
         ['Branch', 'main'],
         ['Prioridade', 'Alta'],
-        ['Banco de dados', 'Até 7 migrations (php artisan migrate --force aplica só as pendentes) e 1 perfil de acesso (seeder). Nenhum dado é apagado de fato: as exclusões são lógicas'],
-        ['Pré-requisito', 'O servidor precisa enviar e-mail (configuração MAIL_* do .env, a mesma do "Esqueci minha senha")'],
+        ['Banco de dados', 'Até 7 migrations (php artisan migrate --force aplica só as pendentes) e 2 seeders. Nenhum registro é apagado'],
+        ['Pré-requisito', 'O servidor precisa conseguir enviar e-mail (variáveis MAIL_* do .env, já usadas pela aplicação)'],
     ]);
 
     $b[] = $alerta('Antes de começar: fazer o backup do banco de dados pelo procedimento usual da equipe.');
@@ -66,7 +68,7 @@ return function (array $f): array {
     $b[] = $texto('Na pasta do projeto:');
     $b[] = $comando('php artisan down');
     $b[] = $comando('git pull origin main');
-    $b[] = $texto('O rodapé de todas as telas (inclusive a de login) mostra a versão, o commit e a data e hora do último deploy, lidos da pasta .git que o próprio "git pull" grava. '
+    $b[] = $texto('A aplicação lê a versão, o commit e a data do último deploy diretamente da pasta .git (gravada pelo próprio "git pull"). '
         .'A pasta .git deve permanecer no servidor e ser legível pelo usuário do servidor web.');
 
     // ── PASSO 2 ─────────────────────────────────────────────────────────────
@@ -81,10 +83,10 @@ return function (array $f): array {
     $b[] = $comando('php artisan storage:link');
     $b[] = $comando('php artisan entregas:proteger-anexos');
     $b[] = $texto('O "--force" é obrigatório em produção: sem ele o comando pede confirmação e, sem terminal interativo, é cancelado. '
-        .'Os seeders, o storage:link e o entregas:proteger-anexos podem ser repetidos com segurança: não duplicam nem apagam dados. '
-        .'O "entregas:proteger-anexos" move anexos de entrega e evidências de indicadores da pasta pública para a privada (de storage/app/public para storage/app/private).');
+        .'Os dois seeders, o storage:link e o entregas:proteger-anexos podem ser repetidos com segurança: não duplicam nem apagam dados. '
+        .'O "entregas:proteger-anexos" move os arquivos enviados pelos usuários de storage/app/public para storage/app/private (fora do acesso público).');
 
-    $b[] = $texto('Limite de envio de arquivos (menu Documentos, PDF de até 20 MB). No php.ini usado pelo servidor web (não o da linha de comando), confirmar ou ajustar:');
+    $b[] = $texto('Limite de upload: a aplicação aceita arquivos PDF de até 20 MB. No php.ini usado pelo servidor web (não o da linha de comando), confirmar ou ajustar:');
     $b[] = $comando('upload_max_filesize = 20M');
     $b[] = $comando('post_max_size = 25M');
     $b[] = $texto('Se houver nginx na frente da aplicação, ajustar também client_max_body_size 25m. Depois de alterar, reiniciar o PHP-FPM ou o Apache. '
@@ -95,7 +97,7 @@ return function (array $f): array {
     $b[] = $comando('php artisan optimize:clear');
     $b[] = $comando('php artisan queue:restart');
     $b[] = $comando('php artisan up');
-    $b[] = $texto('O "optimize:clear" é obrigatório nesta versão: a configuração da auditoria (config/audit.php) e a da versão (config/versao.php) mudaram. '
+    $b[] = $texto('O "optimize:clear" é obrigatório nesta versão: dois arquivos de configuração mudaram (config/audit.php e config/versao.php). '
         .'O "queue:restart" faz o worker da fila (já em execução pelo Supervisor/systemd) recarregar o código novo. Cron e worker não mudam.');
 
     // ── CONFERÊNCIA ─────────────────────────────────────────────────────────
@@ -111,11 +113,10 @@ return function (array $f): array {
         .'2026_10_04_000001_amplia_precisao_valores_indicador.');
     $b[] = $comando('php artisan entregas:proteger-anexos --simular');
     $b[] = $texto('Deve informar "Seriam movidos: 0 arquivo(s)".');
-    $b[] = $texto('No sistema: Indicadores → em um indicador, menu ⋮ → Gerenciar Metas → digitar 20000000000,00 no campo da meta. O campo deve mostrar 20.000.000.000,00 e a meta deve ser adicionada.');
-    $b[] = $texto('No sistema: Gestão de Riscos → abrir um risco → Planos de Mitigação → Novo Plano, sem preencher o custo. O plano deve ser salvo sem erro.');
-    $b[] = $texto('No sistema: Administração → Usuários → Novo Usuário. O campo de perfil deve oferecer a opção "Consulta".');
+    $b[] = $comando('php artisan about --only=environment');
+    $b[] = $texto('Deve listar o ambiente sem erro: confirma que o código novo carrega com a configuração do servidor.');
     $b[] = $comando('git log -1 --format=%h');
-    $b[] = $texto('Na tela de login, sem entrar no sistema: o rodapé deve mostrar "v2.1.0 · <commit> · último deploy <data e hora do git pull>", com o mesmo código de 7 caracteres exibido pelo comando acima. '
+    $b[] = $texto('Abrir no navegador a página de login da aplicação, sem entrar no sistema: o rodapé deve mostrar "v2.1.0 · <commit> · último deploy <data e hora do git pull>", com o mesmo código de 7 caracteres exibido pelo comando acima. '
         .'Se aparecer "deploy não identificado", o usuário do servidor web não está conseguindo ler a pasta .git.');
 
     $b[] = $secao('Contato do solicitante');
@@ -124,7 +125,7 @@ return function (array $f): array {
         ['E-mail', 'marcio.neto@mdr.gov.br'],
     ]);
 
-    $b[] = $rodape('Chamado Técnico — Sistema PEI v2.1.0 · Planejamento Estratégico Integrado · 04/10/2026');
+    $b[] = $rodape('Chamado Técnico — Sistema PEI v2.1.0 · 04/10/2026');
 
     return $b;
 };
