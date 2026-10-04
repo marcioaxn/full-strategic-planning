@@ -130,7 +130,7 @@
                             <div class="col-12">
                                 <label class="form-label fw-bold small text-uppercase text-muted">Iniciativa <span class="text-danger">*</span></label>
                                 <select wire:model="form.cod_plano_de_acao" class="form-select @error('form.cod_plano_de_acao') is-invalid @enderror">
-                                    <option value="">Selecione o plano...</option>
+                                    <option value="">Selecione a iniciativa...</option>
                                     @foreach($planos as $pl)
                                         <option value="{{ $pl->cod_plano_de_acao }}">{{ $pl->dsc_plano_de_acao }}</option>
                                     @endforeach

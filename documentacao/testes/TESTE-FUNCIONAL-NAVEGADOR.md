@@ -168,6 +168,19 @@ Em paralelo: quatro revisões de código por módulo (Indicadores; Iniciativas/E
 | 142 | RAE | Causa raiz: problema, Ishikawa, 5 porquês, causa, vínculo ao encaminhamento | Grava e reabre preenchido | ✅; excluir pede confirmação |
 | 143 | RAE | Excluir o encaminhamento vinculado → editar a causa | Sem 403; vínculo vira "nenhum" | ✅ |
 | 144 | RAE | Editar a RAE | Grava | ✅ |
+| 145 | `/pei/cadeia-valor` | Nova atividade com ordem 99999 → recusa; ordem 1 → grava; processo novo; editar os dois | CRUD com validação | ✅ "Informe a ordem como um número de 0 a 9999." |
+| 146 | cadeia de valor | Excluir processo (modal) | Exclui | ✅ |
+| 147 | cadeia de valor | Excluir atividade com processos | Processos vão junto | 🔧 Processos ficavam vivos. `AtividadeCadeiaValor` exclui os processos (lógica); `ExcluirAtividadeLevaProcessosTest` (falhava antes). Dev: 0 órfãos antigos |
+| 148 | `/objetivos/{id}/futuro` | Novo item, editar meta 90→95, excluir → Cancelar | CRUD; Cancelar mantém | ✅ banco: 95.0000, horizonte 2030-12-31 |
+| 149 | `/graus-satisfacao` | Faixas "Todo o Ciclo" 0–59,99 / 60–89,99 / 90–100 | Grava | ✅ (decimal com vírgula, como a máscara exige) |
+| 150 | graus | Faixa 50–65 cruzando outra | Recusa | ✅ "Esta faixa se sobrepõe a … um mesmo resultado teria duas cores." |
+| 151 | graus | Excluir faixa (modal) | Exclui | ✅ |
+| 152 | `/indicadores` | Farol com a régua nova | 102,9% verde da faixa "No alvo"; sem medição cinza | ✅ #1e8449 e #6b7280 |
+| 153 | `/licoes-aprendidas` | Nova lição (iniciativa, tipo, categoria) → editar → filtrar por iniciativa → excluir | CRUD | ✅ 🔧 texto "Selecione o plano…" → "Selecione a iniciativa…"; mensagens de validação de Iniciativas que diziam "plano" também ajustadas |
+| 154 | `/acervo-documentos` | Novo documento só com link | Exige PDF | ✅ "Selecione o arquivo PDF." |
+| 155 | documentos | Enviar PDF pela tela → abrir → editar → busca → limpar filtros | Funciona | ✅ PDF abre (200, application/pdf) |
+| 156 | Lançar Evolução | Anexar evidência (PDF) → salvar → abrir; sem login | Abre logado; sem login não | ✅ 200 application/pdf; sem login redireciona; "Excluir a evidência…? O arquivo será apagado do servidor." |
+| 157 | quadro de entregas | Anexar PDF à entrega → abrir; sem login | Idem | ✅ 200 application/pdf; sem login redireciona; excluir pede confirmação |
 | 78 | suíte completa | 1ª rodada | — | ⚠️ 11 falhas "tabela não existe": colisão — rodei outro teste no mesmo banco de teste durante a suíte. Refazer sozinha |
 
 ## Pedidos do gestor durante o teste (obrigatórios)

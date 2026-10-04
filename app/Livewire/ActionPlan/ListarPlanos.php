@@ -393,8 +393,8 @@ class ListarPlanos extends Component
         }
 
         $messages = [
-            'dsc_plano_de_acao.required' => 'A descrição do plano é obrigatória.',
-            'cod_objetivo.required' => 'Vincule o plano a um objetivo estratégico.',
+            'dsc_plano_de_acao.required' => 'A descrição da iniciativa é obrigatória.',
+            'cod_objetivo.required' => 'Vincule a iniciativa a um objetivo estratégico.',
             'cod_tipo_execucao.required' => 'Defina o tipo de execução (Projeto, Atividade, etc).',
             'dte_inicio.required' => 'A data de início é obrigatória.',
             'dte_fim.required' => 'A data de término é obrigatória.',
