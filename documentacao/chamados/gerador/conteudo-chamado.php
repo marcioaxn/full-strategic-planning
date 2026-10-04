@@ -15,7 +15,9 @@
  * Migrations novas desde a 2.0.0 (git diff origin/main...HEAD, 04/10/2026):
  *  - ActionPlan/2026_10_03_230000_entrega_exige_iniciativa — SET NOT NULL em
  *    tab_entregas.cod_plano_de_acao. PARA com mensagem se houver entrega sem
- *    iniciativa (não apaga nem inventa vínculo). No dev: 0. No cliente: não medido.
+ *    iniciativa (não apaga nem inventa vínculo). No dev: 0. No cliente: o gestor
+ *    informou em 04/10/2026 que ainda não há entregas cadastradas — sem aviso
+ *    no roteiro, para não complicar o que não acontece.
  *  - StrategicPlanning/2026_10_03_233000_exclui_dependentes_de_ciclos_ja_excluidos —
  *    exclusão LÓGICA (deleted_at) do que pertence a ciclos PEI já excluídos.
  *  - PerformanceIndicators/2026_10_04_000001_amplia_precisao_valores_indicador —
@@ -74,9 +76,6 @@ return function (array $f): array {
     $b[] = $comando('npm ci');
     $b[] = $comando('npm run build');
     $b[] = $comando('php artisan migrate --force');
-    $b[] = $alerta('Se o migrate parar com a mensagem "Há N entrega(s) sem iniciativa em action_plan.tab_entregas", NÃO tente corrigir o banco: '
-        .'siga os passos seguintes normalmente (o sistema funciona) e envie a mensagem completa ao solicitante. '
-        .'Nada fica pela metade: as migrations que já rodaram estão completas e as restantes serão aplicadas por um novo "php artisan migrate --force" depois que o solicitante tratar essas entregas.');
     $b[] = $comando('php artisan db:seed --class=PerfilAcessoSeeder --force');
     $b[] = $comando('php artisan db:seed --class=TipoExecucaoSeeder --force');
     $b[] = $comando('php artisan storage:link');
@@ -109,8 +108,7 @@ return function (array $f): array {
         .'2026_10_03_220000_marca_email_verificado_de_contas_com_perfil, '
         .'2026_10_03_230000_entrega_exige_iniciativa, '
         .'2026_10_03_233000_exclui_dependentes_de_ciclos_ja_excluidos e '
-        .'2026_10_04_000001_amplia_precisao_valores_indicador. '
-        .'(Exceção: se o migrate parou pelas entregas sem iniciativa, as três últimas aparecem como "Pending" — é o esperado, conforme o aviso do passo 2.)');
+        .'2026_10_04_000001_amplia_precisao_valores_indicador.');
     $b[] = $comando('php artisan entregas:proteger-anexos --simular');
     $b[] = $texto('Deve informar "Seriam movidos: 0 arquivo(s)".');
     $b[] = $texto('No sistema: Indicadores → em um indicador, menu ⋮ → Gerenciar Metas → digitar 20000000000,00 no campo da meta. O campo deve mostrar 20.000.000.000,00 e a meta deve ser adicionada.');
