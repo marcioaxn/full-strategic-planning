@@ -1,7 +1,10 @@
 <?php
 
 /**
- * CONTEÚDO DO CHAMADO — implantação da versão 2.1.0 (04/10/2026).
+ * CONTEÚDO DO CHAMADO — deploy da versão 2.1.0 (04/10/2026).
+ *
+ * "Implantação" só na primeira instalação num cliente; atualização de versão
+ * é "deploy" (decisão do gestor, 04/10/2026).
  *
  * Substitui o chamado de 03/10/2026 (versão 2.0.0). Não se sabe daqui se aquele
  * foi executado no cliente; por isso este roteiro é CUMULATIVO e todos os passos
@@ -34,10 +37,14 @@
  * 2026_10_03_180000, 2026_10_03_200000, 2026_10_03_220000 (e 2026_09_05_223000
  * em cópia anterior a 05/09); PerfilAcessoSeeder (perfil Consulta);
  * composer.lock (Symfony 7.4, PHP 8.2); JS (app.js, session-timer.js);
- * comando entregas:proteger-anexos; envio de e-mail obrigatório (autocadastro).
+ * comando entregas:proteger-anexos.
+ * E-mail: SEM pré-requisito nesta versão (gestor, 04/10/2026: a Infra ainda não
+ * configurou a mensageria). O autocadastro foi desligado; contas novas usam
+ * "Senha definida pelo gestor" no cadastro de usuários.
  * 2.1.0: sem composer/npm novos, sem comando, fila, cron ou variável de .env
  * novos. config/audit.php, config/fortify.php (autocadastro desligado — rota
  * /register some) e config/versao.php mudaram → optimize:clear (passo 3).
+ * OdsSeeder novo (05/10/2026): tab_ods vazia em instalação nova; idempotente.
  * Rota nova indicadores.evidencia (dentro do grupo autenticado). Código novo com
  * worker no ar → queue:restart. Rodapé passa a mostrar v2.1.0.
  *
@@ -56,7 +63,7 @@ return function (array $f): array {
 
     $b = [];
 
-    $b[] = $titulo('CHAMADO DE IMPLANTAÇÃO — SISTEMA PEI v2.1.0');
+    $b[] = $titulo('CHAMADO DE DEPLOY — SISTEMA PEI v2.1.0');
     $b[] = $subtitulo('Atualização de código, dependências e banco de dados · 04/10/2026 · 3 passos');
 
     $b[] = $tabela([
@@ -65,8 +72,7 @@ return function (array $f): array {
         ['Repositório Git', 'https://github.com/marcioaxn/full-strategic-planning'],
         ['Branch', 'main'],
         ['Prioridade', 'Alta'],
-        ['Banco de dados', 'Até 10 migrations (php artisan migrate --force aplica só as pendentes) e 2 seeders. Nenhum registro é apagado'],
-        ['Pré-requisito', 'O servidor precisa conseguir enviar e-mail (variáveis MAIL_* do .env, já usadas pela aplicação)'],
+        ['Banco de dados', 'Até 10 migrations (php artisan migrate --force aplica só as pendentes) e 3 seeders. Nenhum registro é apagado'],
     ]);
 
     $b[] = $alerta('Antes de começar: fazer o backup do banco de dados pelo procedimento usual da equipe.');
@@ -89,10 +95,11 @@ return function (array $f): array {
     $b[] = $comando('php artisan migrate --force');
     $b[] = $comando('php artisan db:seed --class=PerfilAcessoSeeder --force');
     $b[] = $comando('php artisan db:seed --class=TipoExecucaoSeeder --force');
+    $b[] = $comando('php artisan db:seed --class=OdsSeeder --force');
     $b[] = $comando('php artisan storage:link');
     $b[] = $comando('php artisan entregas:proteger-anexos');
     $b[] = $texto('O "--force" é obrigatório em produção: sem ele o comando pede confirmação e, sem terminal interativo, é cancelado. '
-        .'Os dois seeders, o storage:link e o entregas:proteger-anexos podem ser repetidos com segurança: não duplicam nem apagam dados. '
+        .'Os três seeders, o storage:link e o entregas:proteger-anexos podem ser repetidos com segurança: não duplicam nem apagam dados. '
         .'O "entregas:proteger-anexos" move os arquivos enviados pelos usuários de storage/app/public para storage/app/private (fora do acesso público).');
 
     $b[] = $texto('Limite de upload: a aplicação aceita arquivos PDF de até 20 MB. No php.ini usado pelo servidor web (não o da linha de comando), confirmar ou ajustar:');
