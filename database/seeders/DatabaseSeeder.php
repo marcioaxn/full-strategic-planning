@@ -47,6 +47,7 @@ class DatabaseSeeder extends Seeder
             OrganizacaoRaizSeeder::class,
             SuperAdministradorSeeder::class,
             TipoExecucaoSeeder::class,
+            OdsSeeder::class,
         ]);
 
         $this->exibirCredenciais();

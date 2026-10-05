@@ -44,6 +44,7 @@
  * 2.1.0: sem composer/npm novos, sem comando, fila, cron ou variável de .env
  * novos. config/audit.php, config/fortify.php (autocadastro desligado — rota
  * /register some) e config/versao.php mudaram → optimize:clear (passo 3).
+ * OdsSeeder novo (05/10/2026): tab_ods vazia em instalação nova; idempotente.
  * Rota nova indicadores.evidencia (dentro do grupo autenticado). Código novo com
  * worker no ar → queue:restart. Rodapé passa a mostrar v2.1.0.
  *
@@ -71,7 +72,7 @@ return function (array $f): array {
         ['Repositório Git', 'https://github.com/marcioaxn/full-strategic-planning'],
         ['Branch', 'main'],
         ['Prioridade', 'Alta'],
-        ['Banco de dados', 'Até 10 migrations (php artisan migrate --force aplica só as pendentes) e 2 seeders. Nenhum registro é apagado'],
+        ['Banco de dados', 'Até 10 migrations (php artisan migrate --force aplica só as pendentes) e 3 seeders. Nenhum registro é apagado'],
     ]);
 
     $b[] = $alerta('Antes de começar: fazer o backup do banco de dados pelo procedimento usual da equipe.');
@@ -94,10 +95,11 @@ return function (array $f): array {
     $b[] = $comando('php artisan migrate --force');
     $b[] = $comando('php artisan db:seed --class=PerfilAcessoSeeder --force');
     $b[] = $comando('php artisan db:seed --class=TipoExecucaoSeeder --force');
+    $b[] = $comando('php artisan db:seed --class=OdsSeeder --force');
     $b[] = $comando('php artisan storage:link');
     $b[] = $comando('php artisan entregas:proteger-anexos');
     $b[] = $texto('O "--force" é obrigatório em produção: sem ele o comando pede confirmação e, sem terminal interativo, é cancelado. '
-        .'Os dois seeders, o storage:link e o entregas:proteger-anexos podem ser repetidos com segurança: não duplicam nem apagam dados. '
+        .'Os três seeders, o storage:link e o entregas:proteger-anexos podem ser repetidos com segurança: não duplicam nem apagam dados. '
         .'O "entregas:proteger-anexos" move os arquivos enviados pelos usuários de storage/app/public para storage/app/private (fora do acesso público).');
 
     $b[] = $texto('Limite de upload: a aplicação aceita arquivos PDF de até 20 MB. No php.ini usado pelo servidor web (não o da linha de comando), confirmar ou ajustar:');
