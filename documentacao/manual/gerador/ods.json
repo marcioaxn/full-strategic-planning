@@ -1,0 +1,146 @@
+[
+    {
+        "num_ods": 1,
+        "nom_ods": "Erradicação da Pobreza",
+        "nom_ods_abreviado": "Sem Pobreza",
+        "dsc_ods": "Acabar com a pobreza em todas as suas formas, em todos os lugares.",
+        "cod_cor": "#e5243b",
+        "nom_icone": "ods-01.png"
+    },
+    {
+        "num_ods": 2,
+        "nom_ods": "Fome Zero e Agricultura Sustentável",
+        "nom_ods_abreviado": "Fome Zero",
+        "dsc_ods": "Acabar com a fome, alcançar a segurança alimentar e melhoria da nutrição e promover a agricultura sustentável.",
+        "cod_cor": "#dda63a",
+        "nom_icone": "ods-02.png"
+    },
+    {
+        "num_ods": 3,
+        "nom_ods": "Saúde e Bem-Estar",
+        "nom_ods_abreviado": "Saúde e Bem-Estar",
+        "dsc_ods": "Assegurar uma vida saudável e promover o bem-estar para todos, em todas as idades.",
+        "cod_cor": "#4c9f38",
+        "nom_icone": "ods-03.png"
+    },
+    {
+        "num_ods": 4,
+        "nom_ods": "Educação de Qualidade",
+        "nom_ods_abreviado": "Educação de Qualidade",
+        "dsc_ods": "Assegurar a educação inclusiva e equitativa de qualidade, e promover oportunidades de aprendizagem ao longo da vida para todos.",
+        "cod_cor": "#c5192d",
+        "nom_icone": "ods-04.png"
+    },
+    {
+        "num_ods": 5,
+        "nom_ods": "Igualdade de Gênero",
+        "nom_ods_abreviado": "Igualdade de Gênero",
+        "dsc_ods": "Alcançar a igualdade de gênero e empoderar todas as mulheres e meninas.",
+        "cod_cor": "#ff3a21",
+        "nom_icone": "ods-05.png"
+    },
+    {
+        "num_ods": 6,
+        "nom_ods": "Água Potável e Saneamento",
+        "nom_ods_abreviado": "Água e Saneamento",
+        "dsc_ods": "Assegurar a disponibilidade e gestão sustentável da água e saneamento para todos.",
+        "cod_cor": "#26bde2",
+        "nom_icone": "ods-06.png"
+    },
+    {
+        "num_ods": 7,
+        "nom_ods": "Energia Limpa e Acessível",
+        "nom_ods_abreviado": "Energia Limpa",
+        "dsc_ods": "Assegurar o acesso confiável, sustentável, moderno e a preço acessível à energia para todos.",
+        "cod_cor": "#fcc30b",
+        "nom_icone": "ods-07.png"
+    },
+    {
+        "num_ods": 8,
+        "nom_ods": "Trabalho Decente e Crescimento Econômico",
+        "nom_ods_abreviado": "Trabalho e Crescimento",
+        "dsc_ods": "Promover o crescimento econômico sustentado, inclusivo e sustentável, emprego pleno e produtivo e trabalho decente para todos.",
+        "cod_cor": "#a21942",
+        "nom_icone": "ods-08.png"
+    },
+    {
+        "num_ods": 9,
+        "nom_ods": "Indústria, Inovação e Infraestrutura",
+        "nom_ods_abreviado": "Indústria e Inovação",
+        "dsc_ods": "Construir infraestrutura resiliente, promover a industrialização inclusiva e sustentável e fomentar a inovação.",
+        "cod_cor": "#fd6925",
+        "nom_icone": "ods-09.png"
+    },
+    {
+        "num_ods": 10,
+        "nom_ods": "Redução das Desigualdades",
+        "nom_ods_abreviado": "Redução das Desigualdades",
+        "dsc_ods": "Reduzir as desigualdades dentro dos países e entre eles.",
+        "cod_cor": "#dd1367",
+        "nom_icone": "ods-10.png"
+    },
+    {
+        "num_ods": 11,
+        "nom_ods": "Cidades e Comunidades Sustentáveis",
+        "nom_ods_abreviado": "Cidades Sustentáveis",
+        "dsc_ods": "Tornar as cidades e os assentamentos humanos inclusivos, seguros, resilientes e sustentáveis.",
+        "cod_cor": "#fd9d24",
+        "nom_icone": "ods-11.png"
+    },
+    {
+        "num_ods": 12,
+        "nom_ods": "Consumo e Produção Responsáveis",
+        "nom_ods_abreviado": "Consumo Responsável",
+        "dsc_ods": "Assegurar padrões de produção e de consumo sustentáveis.",
+        "cod_cor": "#bf8b2e",
+        "nom_icone": "ods-12.png"
+    },
+    {
+        "num_ods": 13,
+        "nom_ods": "Ação Contra a Mudança Global do Clima",
+        "nom_ods_abreviado": "Ação Climática",
+        "dsc_ods": "Tomar medidas urgentes para combater a mudança do clima e seus impactos.",
+        "cod_cor": "#3f7e44",
+        "nom_icone": "ods-13.png"
+    },
+    {
+        "num_ods": 14,
+        "nom_ods": "Vida na Água",
+        "nom_ods_abreviado": "Vida na Água",
+        "dsc_ods": "Conservação e uso sustentável dos oceanos, dos mares e dos recursos marinhos para o desenvolvimento sustentável.",
+        "cod_cor": "#0a97d9",
+        "nom_icone": "ods-14.png"
+    },
+    {
+        "num_ods": 15,
+        "nom_ods": "Vida Terrestre",
+        "nom_ods_abreviado": "Vida Terrestre",
+        "dsc_ods": "Proteger, recuperar e promover o uso sustentável dos ecossistemas terrestres, gerir de forma sustentável as florestas, combater a desertificação, deter e reverter a degradação da terra e deter a perda de biodiversidade.",
+        "cod_cor": "#56c02b",
+        "nom_icone": "ods-15.png"
+    },
+    {
+        "num_ods": 16,
+        "nom_ods": "Paz, Justiça e Instituições Eficazes",
+        "nom_ods_abreviado": "Paz e Justiça",
+        "dsc_ods": "Promover sociedades pacíficas e inclusivas para o desenvolvimento sustentável, proporcionar o acesso à justiça para todos e construir instituições eficazes, responsáveis e inclusivas em todos os níveis.",
+        "cod_cor": "#00689d",
+        "nom_icone": "ods-16.png"
+    },
+    {
+        "num_ods": 17,
+        "nom_ods": "Parcerias e Meios de Implementação",
+        "nom_ods_abreviado": "Parcerias e Meios",
+        "dsc_ods": "Fortalecer os meios de implementação e revitalizar a parceria global para o desenvolvimento sustentável.",
+        "cod_cor": "#19486a",
+        "nom_icone": "ods-17.png"
+    },
+    {
+        "num_ods": 18,
+        "nom_ods": "Igualdade Étnico-Racial",
+        "nom_ods_abreviado": "Igualdade Étnico-Racial",
+        "dsc_ods": "Promover a igualdade étnico-racial, combater o racismo e a discriminação e garantir os direitos e a inclusão das populações negras, indígenas e demais grupos étnico-raciais — objetivo adicional instituído pelo Brasil.",
+        "cod_cor": "#6c321a",
+        "nom_icone": "ods-18.png"
+    }
+]
