@@ -63,7 +63,8 @@ class DeliverablesBoard extends Component
     public bool $mostrarLixeira = false;
 
     /** @var float Progresso geral do plano */
-    public float $progresso = 0;
+    /** NULL = sem entrega a medir: a tela diz isso, nunca "0%". */
+    public ?float $progresso = null;
 
     /** @var array Lista de planos para o seletor */
     public $planosDisponiveis = [];
@@ -448,7 +449,7 @@ class DeliverablesBoard extends Component
      */
     protected function calcularProgresso(): void
     {
-        $this->progresso = app(IndicadorCalculoService::class)->calcularProgressoPlano($this->plano);
+        $this->progresso = app(IndicadorCalculoService::class)->progressoDaIniciativa($this->plano);
     }
 
     /** Entrega deste plano pelo id vindo do navegador (sem as da lixeira). */

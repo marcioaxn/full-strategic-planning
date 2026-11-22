@@ -33,7 +33,8 @@ class DetalharPlano extends Component
     {
         // Calcula progresso baseado nas entregas (Regra Unificada via Service)
         $service = app(IndicadorCalculoService::class);
-        $progresso = $service->calcularProgressoPlano($this->plano);
+        // NULL = sem entrega a medir: a tela diz isso, nunca "0%" (também na transparência).
+        $progresso = $service->progressoDaIniciativa($this->plano);
 
         // Esta tela também é servida ao visitante da Transparência. Nomes de
         // servidores (equipe, RACI), plano de comunicação e lições são gestão

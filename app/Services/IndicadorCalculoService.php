@@ -92,89 +92,82 @@ class IndicadorCalculoService
      */
     public function calcularProgressoPlano(PlanoDeAcao $plano, bool $apenasRaiz = true): float
     {
-        $entregas = $this->getEntregasValidas($plano, $apenasRaiz);
-
-        if ($entregas->isEmpty()) {
-            return 0.0;
-        }
-
-        // Filtrar entregas canceladas (não participam do cálculo)
-        $entregasAtivas = $entregas->filter(
-            fn (Entrega $e) => $e->bln_status !== 'Cancelado'
-        );
-
-        if ($entregasAtivas->isEmpty()) {
-            return 0.0;
-        }
-
-        // Verificar se plano usa pesos
-        $somaPesos = $entregasAtivas->sum('num_peso');
-
-        // Se nenhum peso definido, usar média simples
-        if ($somaPesos <= 0) {
-            return $this->calcularMediaSimples($entregasAtivas);
-        }
-
-        // Cálculo ponderado: Σ(peso × progresso) / Σ(peso) × 100
-        return $this->calcularMediaPonderada($entregasAtivas, $somaPesos);
+        return $this->progressoDaIniciativa($plano, $apenasRaiz) ?? 0.0;
     }
 
     /**
-     * Calcula média simples quando não há pesos definidos.
-     *
-     * Fórmula: (Σ Progresso_i) / N × 100
-     *
-     * @param  Collection  $entregas  Entregas para calcular
-     * @return float Percentual de progresso (0.0 a 100.0)
+     * Progresso da iniciativa (0 a 100) pela regra única; NULL quando não há
+     * entrega a medir — "sem entregas", nunca 0%.
      */
-    protected function calcularMediaSimples(Collection $entregas): float
+    public function progressoDaIniciativa(PlanoDeAcao $plano, bool $apenasRaiz = true): ?float
     {
-        if ($entregas->isEmpty()) {
-            return 0.0;
-        }
-
-        $somaProgresso = 0.0;
-
-        foreach ($entregas as $entrega) {
-            $somaProgresso += $this->getProgressoEntrega($entrega);
-        }
-
-        // Média simples × 100 para converter decimal para percentual
-        $media = $somaProgresso / $entregas->count();
-
-        return round($media * 100, 2);
+        return $this->progressoDasEntregas($this->entregasQueContam($plano->entregas()->get(), null, $apenasRaiz));
     }
 
     /**
-     * Calcula média ponderada com base nos pesos das entregas.
+     * 🔴 A REGRA ÚNICA das entregas que contam no progresso (22/11/2026).
      *
-     * Fórmula: Σ(peso × progresso) / Σ(peso) × 100
-     *
-     * @param  Collection  $entregas  Entregas para calcular
-     * @param  float  $somaPesos  Soma total dos pesos
-     * @return float Percentual de progresso (0.0 a 100.0)
+     * Havia cinco contas diferentes para a mesma coisa (iniciativa, ano, objetivo,
+     * perspectiva e Mapa Estratégico), e a mesma iniciativa saía com quatro números
+     * diferentes. Agora todas passam por aqui:
+     * - só a entrega raiz conta — a sub-entrega entra no progresso da entrega pai;
+     * - a arquivada e a cancelada ficam fora (a excluída já sai pelo SoftDeletes);
+     * - com $ano, só as de prazo naquele ano.
      */
-    protected function calcularMediaPonderada(Collection $entregas, float $somaPesos): float
+    public function entregasQueContam(Collection $entregas, ?int $ano = null, bool $apenasRaiz = true): Collection
     {
-        if ($somaPesos <= 0) {
-            return 0.0;
+        return $entregas->filter(fn (Entrega $e): bool => (! $apenasRaiz || $e->cod_entrega_pai === null)
+            && ! $e->bln_arquivado
+            && $e->bln_status !== 'Cancelado'
+            && ($ano === null || ($e->dte_prazo && (int) $e->dte_prazo->year === $ano)))
+            ->values();
+    }
+
+    /**
+     * Peso efetivo: o peso informado; sem peso, 1.
+     *
+     * Sem nenhum peso, isso é a média simples; com pesos, a entrega sem peso
+     * continua contando (pouco) em vez de sumir do cálculo — concluí-la nunca
+     * deixa o progresso parado. validarPesosPlano() avisa o peso que falta.
+     */
+    public static function pesoEfetivo(Entrega $entrega): float
+    {
+        $peso = (float) $entrega->num_peso;
+
+        return $peso > 0 ? $peso : 1.0;
+    }
+
+    /**
+     * Soma ponderada (Σ peso × fração) e soma dos pesos de entregas que já contam.
+     *
+     * @return array{0: float, 1: float}
+     */
+    public function acumularEntregas(Collection $entregasQueContam): array
+    {
+        $soma = 0.0;
+        $pesos = 0.0;
+
+        foreach ($entregasQueContam as $entrega) {
+            $peso = self::pesoEfetivo($entrega);
+            $soma += $peso * $this->progressoDaEntrega($entrega);
+            $pesos += $peso;
         }
 
-        $progressoAcumulado = 0.0;
+        return [$soma, $pesos];
+    }
 
-        foreach ($entregas as $entrega) {
-            // Ignorar entregas sem peso no cálculo ponderado
-            if ($entrega->num_peso <= 0) {
-                continue;
-            }
+    /** Progresso (0 a 100, duas casas) de entregas que já contam; NULL sem nada a medir. */
+    public function progressoDasEntregas(Collection $entregasQueContam): ?float
+    {
+        [$soma, $pesos] = $this->acumularEntregas($entregasQueContam);
 
-            $progressoEntrega = $this->getProgressoEntrega($entrega); // 0.0 a 1.0
-            $progressoAcumulado += $entrega->num_peso * $progressoEntrega;
-        }
+        return $pesos > 0 ? round($soma / $pesos * 100, 2) : null;
+    }
 
-        // Resultado: (peso × decimal) / somaPesos × 100
-        // Exemplo: (40 × 1.0 + 30 × 0.5) / 100 × 100 = 55%
-        return round(($progressoAcumulado / $somaPesos) * 100, 2);
+    /** Fração (0,0 a 1,0) de uma entrega: as sub-entregas que contam, ou a situação dela. */
+    public function progressoDaEntrega(Entrega $entrega): float
+    {
+        return $this->getProgressoEntrega($entrega);
     }
 
     /**
@@ -205,39 +198,12 @@ class IndicadorCalculoService
      */
     protected function calcularProgressoSubEntregas(Entrega $entrega): float
     {
-        $subEntregas = $entrega->subEntregas()
-            ->where('bln_arquivado', false)
-            ->whereNull('deleted_at')
-            ->where('bln_status', '!=', 'Cancelado')
-            ->get();
+        // A mesma regra das entregas raiz: arquivada e cancelada fora, peso efetivo.
+        [$soma, $pesos] = $this->acumularEntregas($this->entregasQueContam($entrega->subEntregas()->get(), null, false));
 
-        if ($subEntregas->isEmpty()) {
-            // Se não tem sub-entregas válidas, usar status da própria entrega
-            return self::STATUS_DECIMAL[$entrega->bln_status] ?? 0.0;
-        }
-
-        $somaPesos = $subEntregas->sum('num_peso');
-
-        // Se sub-entregas não têm pesos, usar média simples
-        if ($somaPesos <= 0) {
-            $somaProgresso = 0.0;
-            foreach ($subEntregas as $sub) {
-                $somaProgresso += $this->getProgressoEntrega($sub);
-            }
-
-            return $somaProgresso / $subEntregas->count();
-        }
-
-        // Cálculo ponderado das sub-entregas
-        $progressoAcumulado = 0.0;
-        foreach ($subEntregas as $sub) {
-            if ($sub->num_peso > 0) {
-                $progressoAcumulado += $sub->num_peso * $this->getProgressoEntrega($sub);
-            }
-        }
-
-        // Retorna decimal (0.0 a 1.0), não percentual
-        return $progressoAcumulado / $somaPesos;
+        // Sem sub-entrega que conte, vale a situação da própria entrega.
+        // Retorna fração (0,0 a 1,0), não percentual.
+        return $pesos > 0 ? $soma / $pesos : (self::STATUS_DECIMAL[$entrega->bln_status] ?? 0.0);
     }
 
     /**
@@ -282,8 +248,15 @@ class IndicadorCalculoService
             return null;
         }
 
-        // Calcular progresso do plano
-        $progresso = $this->calcularProgressoPlano($indicador->planoDeAcao);
+        // Calcular progresso do plano. Sem entrega a medir não há medição: gravar 0
+        // pintava o farol de vermelho por algo que ninguém mediu (22/11/2026).
+        $progresso = $this->progressoDaIniciativa($indicador->planoDeAcao);
+
+        if ($progresso === null) {
+            Log::info("Indicador {$indicador->cod_indicador} sem medição: a iniciativa ainda não tem entrega a medir.");
+
+            return null;
+        }
 
         // Obter ano e mês atual
         $ano = now()->year;
@@ -356,17 +329,31 @@ class IndicadorCalculoService
             ];
         }
 
-        $totalPesos = $entregas->sum('num_peso');
+        $totalPesos = (float) $entregas->sum('num_peso');
+        $semPeso = $entregas->filter(fn (Entrega $e): bool => (float) $e->num_peso <= 0)->count();
 
         // Tolerância de 0.01 para erros de arredondamento
-        $isValid = abs($totalPesos - 100) < 0.01;
+        $somaCem = abs($totalPesos - 100) < 0.01;
+
+        // Com pesos em uso, a entrega sem peso conta com peso 1 (pesoEfetivo): a
+        // soma pode dar 100 e o cálculo ainda não ser o que a pessoa distribuiu.
+        $semPesoEmUso = $semPeso > 0 && $totalPesos > 0;
+        $isValid = $somaCem && ! $semPesoEmUso;
+
+        $formatado = number_format($totalPesos, 2, ',', '.');
+        $formatado = str_ends_with($formatado, ',00') ? substr($formatado, 0, -3) : $formatado;
+
+        $mensagem = match (true) {
+            $isValid => 'Pesos corretamente distribuídos (100%).',
+            $somaCem => "A soma dos pesos é 100%, mas {$semPeso} ".($semPeso === 1 ? 'entrega está sem peso e conta' : 'entregas estão sem peso e contam')
+                .' com peso 1. Dê um peso a '.($semPeso === 1 ? 'ela' : 'elas').' ou redistribua os pesos.',
+            default => "A soma dos pesos é {$formatado}%. Ajuste para totalizar 100%.",
+        };
 
         return [
             'valid' => $isValid,
             'total' => round($totalPesos, 2),
-            'message' => $isValid
-                ? 'Pesos corretamente distribuídos (100%).'
-                : "A soma dos pesos é {$totalPesos}%. Ajuste para totalizar 100%.",
+            'message' => $mensagem,
         ];
     }
 
@@ -458,7 +445,7 @@ class IndicadorCalculoService
             }
 
             $progresso = $this->getProgressoEntrega($entrega);
-            $peso = $entrega->num_peso > 0 ? $entrega->num_peso : 0;
+            $peso = self::pesoEfetivo($entrega);
             $contribuicao = $peso * $progresso;
 
             $detalhes[] = [
@@ -492,12 +479,7 @@ class IndicadorCalculoService
     {
         // 1. Filtrar entregas do ano (usando a relação já carregada se possível, ou query)
         // Preferir filter na coleção se já estiver carregada para evitar N+1 em loops
-        $entregasAno = $plano->entregas->filter(function ($entrega) use ($ano) {
-            return $entrega->dte_prazo &&
-                   $entrega->dte_prazo->year == $ano &&
-                   $entrega->bln_status !== 'Cancelado' &&
-                   $entrega->cod_entrega_pai === null; // Apenas raiz
-        });
+        $entregasAno = $this->entregasQueContam($plano->entregas, $ano);
 
         if ($entregasAno->isEmpty()) {
             return [
@@ -508,47 +490,15 @@ class IndicadorCalculoService
             ];
         }
 
-        // 2. Calcular Progresso (Ponderado ou Simples)
-        $somaPesos = $entregasAno->sum('num_peso');
-        $progressoGeral = 0.0;
-        $detalhes = [];
-
-        if ($somaPesos > 0) {
-            // Média Ponderada
-            $progressoAcumulado = 0.0;
-            foreach ($entregasAno as $entrega) {
-                if ($entrega->num_peso <= 0) {
-                    continue;
-                }
-                $progressoUnitario = $this->getProgressoEntrega($entrega);
-                $progressoAcumulado += $entrega->num_peso * $progressoUnitario;
-
-                $detalhes[] = [
-                    'entrega' => $entrega->dsc_entrega,
-                    'prazo' => $entrega->dte_prazo->format('d/m/Y'),
-                    'status' => $entrega->bln_status,
-                    'peso' => $entrega->num_peso,
-                    'progresso_item' => $progressoUnitario,
-                ];
-            }
-            $progressoGeral = round(($progressoAcumulado / $somaPesos) * 100, 2);
-        } else {
-            // Média Simples
-            $somaProgresso = 0.0;
-            foreach ($entregasAno as $entrega) {
-                $progressoUnitario = $this->getProgressoEntrega($entrega);
-                $somaProgresso += $progressoUnitario;
-
-                $detalhes[] = [
-                    'entrega' => $entrega->dsc_entrega,
-                    'prazo' => $entrega->dte_prazo->format('d/m/Y'),
-                    'status' => $entrega->bln_status,
-                    'peso' => 0, // Peso zero ou indefinido
-                    'progresso_item' => $progressoUnitario,
-                ];
-            }
-            $progressoGeral = round(($somaProgresso / $entregasAno->count()) * 100, 2);
-        }
+        // 2. Calcular o progresso pela regra única (peso efetivo, sub-entregas no pai)
+        $progressoGeral = $this->progressoDasEntregas($entregasAno) ?? 0.0;
+        $detalhes = $entregasAno->map(fn (Entrega $entrega): array => [
+            'entrega' => $entrega->dsc_entrega,
+            'prazo' => $entrega->dte_prazo->format('d/m/Y'),
+            'status' => $entrega->bln_status,
+            'peso' => self::pesoEfetivo($entrega),
+            'progresso_item' => $this->getProgressoEntrega($entrega),
+        ])->all();
 
         return [
             'progresso' => $progressoGeral,
@@ -595,30 +545,10 @@ class IndicadorCalculoService
 
         foreach ($perspectiva->objetivos as $obj) {
             foreach ($obj->planosAcao as $plano) {
-                // Filtrar entregas do ano
-                $entregasAno = $plano->entregas->filter(function ($entrega) use ($ano) {
-                    return $entrega->dte_prazo &&
-                           $entrega->dte_prazo->year == $ano &&
-                           $entrega->bln_status !== 'Cancelado' &&
-                           $entrega->cod_entrega_pai === null;
-                });
-
-                if ($entregasAno->isEmpty()) {
-                    continue;
-                }
-
-                foreach ($entregasAno as $entrega) {
-                    $statusDecimal = match ($entrega->bln_status) {
-                        'Concluído' => 1.0,
-                        'Em Andamento' => 0.5,
-                        'Suspenso' => 0.25,
-                        default => 0.0
-                    };
-                    $peso = $entrega->num_peso > 0 ? $entrega->num_peso : 1;
-
-                    $somaProgressoPlan += ($peso * $statusDecimal);
-                    $somaPesoPlan += $peso;
-                }
+                // As entregas do ano pela regra única (entregasQueContam).
+                [$soma, $pesos] = $this->acumularEntregas($this->entregasQueContam($plano->entregas, $ano));
+                $somaProgressoPlan += $soma;
+                $somaPesoPlan += $pesos;
             }
         }
 
@@ -691,30 +621,10 @@ class IndicadorCalculoService
         $somaPesoPlan = 0;
 
         foreach ($objetivo->planosAcao as $plano) {
-            // Filtrar entregas do ano
-            $entregasAno = $plano->entregas->filter(function ($entrega) use ($ano) {
-                return $entrega->dte_prazo &&
-                       $entrega->dte_prazo->year == $ano &&
-                       $entrega->bln_status !== 'Cancelado' &&
-                       $entrega->cod_entrega_pai === null;
-            });
-
-            if ($entregasAno->isEmpty()) {
-                continue;
-            }
-
-            foreach ($entregasAno as $entrega) {
-                $statusDecimal = match ($entrega->bln_status) {
-                    'Concluído' => 1.0,
-                    'Em Andamento' => 0.5,
-                    'Suspenso' => 0.25,
-                    default => 0.0
-                };
-                $peso = $entrega->num_peso > 0 ? $entrega->num_peso : 1;
-
-                $somaProgressoPlan += ($peso * $statusDecimal);
-                $somaPesoPlan += $peso;
-            }
+            // As entregas do ano pela regra única (entregasQueContam).
+            [$soma, $pesos] = $this->acumularEntregas($this->entregasQueContam($plano->entregas, $ano));
+            $somaProgressoPlan += $soma;
+            $somaPesoPlan += $pesos;
         }
 
         $mediaPlanos = $somaPesoPlan > 0 ? ($somaProgressoPlan / $somaPesoPlan) * 100 : null;

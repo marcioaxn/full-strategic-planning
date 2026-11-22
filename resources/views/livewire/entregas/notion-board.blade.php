@@ -359,16 +359,22 @@
         <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h6 class="fw-bold mb-0">Progresso Consolidado</h6>
-                <span class="fw-bold text-primary fs-5">@brazil_percent($progresso, 1)</span>
+                @if ($progresso === null)
+                    <span class="fw-bold text-muted fs-5">Sem entregas a medir</span>
+                @else
+                    <span class="fw-bold text-primary fs-5">@brazil_percent($progresso, 1)</span>
+                @endif
             </div>
-            <div class="progress rounded-pill" style="height: 10px;">
-                <div class="progress-bar gradient-theme" 
-                     role="progressbar" 
-                     style="width: {{ $progresso }}%; transition: width 0.5s ease-in-out;" 
-                     aria-valuenow="{{ $progresso }}" 
-                     aria-valuemin="0" 
-                     aria-valuemax="100"></div>
-            </div>
+            @if ($progresso !== null)
+                <div class="progress rounded-pill" style="height: 10px;">
+                    <div class="progress-bar gradient-theme"
+                         role="progressbar"
+                         style="width: {{ $progresso }}%; transition: width 0.5s ease-in-out;"
+                         aria-valuenow="{{ $progresso }}"
+                         aria-valuemin="0"
+                         aria-valuemax="100"></div>
+                </div>
+            @endif
         </div>
     </div>
 

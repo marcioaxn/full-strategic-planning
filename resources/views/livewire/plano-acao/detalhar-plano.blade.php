@@ -111,11 +111,17 @@
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="small text-muted">Progresso via Entregas</span>
-                            <span class="fw-bold text-primary">@brazil_percent($progresso, 1)</span>
+                            @if ($progresso === null)
+                                <span class="fw-bold text-muted">Sem entregas a medir</span>
+                            @else
+                                <span class="fw-bold text-primary">@brazil_percent($progresso, 1)</span>
+                            @endif
                         </div>
-                        <div class="progress rounded-pill" style="height: 10px;">
-                            <div class="progress-bar gradient-theme" style="width: {{ $progresso }}%"></div>
-                        </div>
+                        @if ($progresso !== null)
+                            <div class="progress rounded-pill" style="height: 10px;">
+                                <div class="progress-bar gradient-theme" style="width: {{ $progresso }}%"></div>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="list-group list-group-flush border-top">

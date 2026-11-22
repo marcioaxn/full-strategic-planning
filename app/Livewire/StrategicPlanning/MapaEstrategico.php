@@ -220,14 +220,17 @@ class MapaEstrategico extends Component
                     $objSomaProgressoPlan = 0;
                     $objSomaPesoPlan = 0;
 
-                    foreach ($obj->planosAcao as $plano) {
-                        // Cálculo Granular para Perspectiva (Usando Collection Filter agora)
-                        $entregasAno = $plano->entregas->filter(function ($entrega) use ($anoSelecionado) {
-                            return $entrega->dte_prazo && $entrega->dte_prazo->year == $anoSelecionado;
-                        });
+                    $calculo = app(IndicadorCalculoService::class);
 
-                        // Se não houver entregas no ano, ignorar este plano para o cálculo e contagem
-                        if ($entregasAno->count() === 0) {
+                    foreach ($obj->planosAcao as $plano) {
+                        // A iniciativa entra no ano se tem entrega raiz, não arquivada, com
+                        // prazo no ano (a cancelada conta aqui: a iniciativa aparece como
+                        // "sem medição", não some). A sub-entrega conta dentro do pai.
+                        $temEntregaNoAno = $plano->entregas->contains(fn ($entrega) => $entrega->cod_entrega_pai === null
+                            && ! $entrega->bln_arquivado
+                            && $entrega->dte_prazo && (int) $entrega->dte_prazo->year === (int) $anoSelecionado);
+
+                        if (! $temEntregaNoAno) {
                             continue;
                         }
 
@@ -236,32 +239,18 @@ class MapaEstrategico extends Component
                             $objConcluidosAno++;
                         }
 
-                        // Acumuladores Locais do Plano
-                        $planoSomaProgresso = 0;
-                        $planoSomaPeso = 0;
-                        $entregasMemoria = [];
+                        // O progresso pela regra única do serviço (22/11/2026): antes o Mapa
+                        // contava a sub-entrega solta e a arquivada, e dava outro número.
+                        $entregasQueContam = $calculo->entregasQueContam($plano->entregas, (int) $anoSelecionado);
+                        [$planoSomaProgresso, $planoSomaPeso] = $calculo->acumularEntregas($entregasQueContam);
 
-                        foreach ($entregasAno as $entrega) {
-                            if ($entrega->bln_status === 'Cancelado') {
-                                continue;
-                            }
-
-                            $statusDecimal = match ($entrega->bln_status) {
-                                'Concluído' => 1.0, 'Em Andamento' => 0.5, 'Suspenso' => 0.25, default => 0.0
-                            };
-                            $peso = $entrega->num_peso > 0 ? $entrega->num_peso : 1;
-
-                            $planoSomaProgresso += ($peso * $statusDecimal);
-                            $planoSomaPeso += $peso;
-
-                            // Coletar para memória
-                            $entregasMemoria[] = [
-                                'entrega' => $entrega->dsc_entrega,
-                                'prazo' => $entrega->dte_prazo->format('d/m/Y'),
-                                'status' => $entrega->bln_status,
-                                'peso' => $peso,
-                            ];
-                        }
+                        // Memória de cálculo: só o que conta, com o peso efetivo.
+                        $entregasMemoria = $entregasQueContam->map(fn ($entrega) => [
+                            'entrega' => $entrega->dsc_entrega,
+                            'prazo' => $entrega->dte_prazo->format('d/m/Y'),
+                            'status' => $entrega->bln_status,
+                            'peso' => IndicadorCalculoService::pesoEfetivo($entrega),
+                        ])->all();
 
                         // Calcular atingimento deste plano específico no ano
                         // Só entregas canceladas no ano: não há o que medir (não é 0%).

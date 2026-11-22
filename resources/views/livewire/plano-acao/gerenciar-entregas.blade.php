@@ -62,16 +62,22 @@
                         <h6 class="fw-bold mb-0">
                             <i class="bi bi-speedometer me-1 text-success"></i>Progresso Ponderado
                         </h6>
-                        <span class="fw-bold text-success fs-5">{{ number_format($progressoPonderado, 1, ',', '.') }}%</span>
+                        @if ($progressoPonderado === null)
+                            <span class="fw-bold text-muted fs-5">Sem entregas a medir</span>
+                        @else
+                            <span class="fw-bold text-success fs-5">{{ number_format($progressoPonderado, 1, ',', '.') }}%</span>
+                        @endif
                     </div>
-                    <div class="progress rounded-pill" style="height: 10px;">
-                        <div class="progress-bar gradient-theme progress-bar-striped progress-bar-animated" 
-                             role="progressbar" 
-                             style="width: {{ $progressoPonderado }}%" 
-                             aria-valuenow="{{ $progressoPonderado }}" 
-                             aria-valuemin="0" 
-                             aria-valuemax="100"></div>
-                    </div>
+                    @if ($progressoPonderado !== null)
+                        <div class="progress rounded-pill" style="height: 10px;">
+                            <div class="progress-bar gradient-theme progress-bar-striped progress-bar-animated"
+                                 role="progressbar"
+                                 style="width: {{ $progressoPonderado }}%"
+                                 aria-valuenow="{{ $progressoPonderado }}"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100"></div>
+                        </div>
+                    @endif
                     <small class="text-muted mt-1 d-block">
                         <span data-bs-toggle="tooltip" 
                               data-bs-html="true"

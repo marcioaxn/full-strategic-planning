@@ -65,7 +65,8 @@ class GerenciarEntregas extends Component
 
         // Calcular progresso ponderado e validação de pesos usando o service
         $service = app(IndicadorCalculoService::class);
-        $this->progressoPonderado = $service->calcularProgressoPlano($this->plano);
+        // NULL = sem entrega a medir: a tela diz isso, nunca "0%".
+        $this->progressoPonderado = $service->progressoDaIniciativa($this->plano);
         $this->validacaoPesos = $service->validarPesosPlano($this->plano);
     }
 
