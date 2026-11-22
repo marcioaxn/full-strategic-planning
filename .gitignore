@@ -63,6 +63,12 @@ service-account*.json
 /CLAUDE.local.md
 **/CLAUDE.local.md
 
+# Travas de arquitetura do harness que moram em tests/: rodam na suíte local de
+# quem tem o harness, mas não vão ao repositório remoto (decisão do gestor).
+/tests/Unit/Arquitetura/
+/tests/Feature/Arquitetura/
+/tests/Feature/Seguranca/SuperficieDeRotasTest.php
+
 # Laravel Boost: MCP, escolha de agentes e diretrizes geradas
 /.mcp.json
 /boost.json
